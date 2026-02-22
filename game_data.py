@@ -483,6 +483,39 @@ TREND_GENRES = [
 ]
 
 
+# PUBLISHER
+PUBLISHERS = [
+    {
+        "name": "Global Audio Bits",
+        "description": "Ein solider Publisher mit gutem Vertrieb.",
+        "advance": 5000,
+        "royalty": 0.40,
+        "min_score": 6
+    },
+    {
+        "name": "Sony-Digital",
+        "description": "Premium-Partner für AAA-Titel.",
+        "advance": 25000,
+        "royalty": 0.60,
+        "min_score": 8
+    },
+    {
+        "name": "Indie-Sound-Labels",
+        "description": "Perfekt für Einsteiger, geringe Hürden.",
+        "advance": 1000,
+        "royalty": 0.20,
+        "min_score": 4
+    }
+]
+
+# MARKETING-OPTIONEN PH_5
+MARKETING_OPTIONS_PH5 = [
+    {"name": "Social Media Hype", "cost": 500, "hype": 10, "description": "Günstiger Hype auf X und TikTok."},
+    {"name": "Gaming Web-Ads", "cost": 2500, "hype": 25, "description": "Banner auf großen Audio-Seiten."},
+    {"name": "TV & Cinema Spots", "cost": 15000, "hype": 70, "description": "Massive Präsenz, sehr teuer."},
+    {"name": "Global PR Tour", "cost": 50000, "hype": 150, "description": "Die ultimative Werbekampagne."},
+]
+
 # ============================================================
 # TEMPLATES (E-Mails & Reviews)
 # ============================================================

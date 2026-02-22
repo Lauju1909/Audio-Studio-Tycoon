@@ -44,6 +44,9 @@ from menus import (
     SaveMenu,
     LoadMenu,
     HelpMenu,
+    RemasterSelectMenu,
+    PublisherMenu,
+    ExpoMenu,
 )
 
 
@@ -53,7 +56,7 @@ def main():
     screen = pygame.display.set_mode((500, 300))
     pygame.display.set_caption("Audio Studio Tycoon - Audio Edition")
     audio = AudioManager()
-    audio.speak("Audio Studio Tycoon.")
+    audio.speak(game_strings["main_title"])
     state = GameState()
 
     # ---- Menü-Instanzen ----
@@ -71,6 +74,9 @@ def main():
         "game_size_menu": GameSizeMenu(audio, state),
         "marketing_menu": MarketingMenu(audio, state),
         "engine_select_menu": EngineSelectMenu(audio, state),
+        "remaster_select": RemasterSelectMenu(audio, state),
+        "publisher_menu": PublisherMenu(audio, state),
+        "expo_menu": ExpoMenu(audio, state),
         "game_name_input": GameNameMenu(audio, state),
         "slider_menu": DevelopmentSliderMenu(audio, state),
         "dev_progress_menu": DevProgressMenu(audio, state),
@@ -108,13 +114,9 @@ def main():
     current_key = "main_menu"
     current_menu = menus[current_key]
 
+    from game_strings import game_strings
     # ---- Willkommensnachricht ----
-    audio.speak(
-        "Willkommen bei Audio Studio Tycoon, Audio Edition! "
-        "Gründe deine eigene Spielefirma, stelle Mitarbeiter ein, "
-        "erforsche Technologien und entwickle Bestseller! "
-        "Nutze die Pfeiltasten zum Navigieren und Enter zum Auswählen."
-    )
+    audio.speak(game_strings["main_welcome"])
     time.sleep(0.3)
     audio.play_music("music_back")
     current_menu.announce_entry()
@@ -122,8 +124,16 @@ def main():
     # ---- Hauptschleife ----
     running = True
     clock = pygame.time.Clock()
+    last_tick_time = pygame.time.get_ticks()
 
     while running:
+        current_time_ms = pygame.time.get_ticks()
+        dt = current_time_ms - last_tick_time
+        last_tick_time = current_time_ms
+
+        # Zeit-Logik im State aktualisieren
+        state.update_tick(dt)
+
         # Update-Logik (Fortschrittsbalken etc.)
         if hasattr(current_menu, 'update'):
             current_menu.update()
@@ -147,6 +157,40 @@ def main():
                     current_key = result
                     current_menu = menus[current_key]
                     current_menu.announce_entry()
+                
+                # Zeitsteuerung (Hotkeys)
+                elif event.key == pygame.K_SPACE:
+                    if state.time_speed > 0:
+                        state.time_speed = 0
+                        audio.speak("Pause")
+                    else:
+                        state.time_speed = 1.0
+                        audio.speak("Start")
+                elif event.key == pygame.K_1:
+                    state.time_speed = 1.0
+                    audio.speak(game_strings["time_speed_speech"].format(speed="Einfach"))
+                elif event.key == pygame.K_2:
+                    state.time_speed = 2.0
+                    audio.speak(game_strings["time_speed_speech"].format(speed="Zweifach"))
+                elif event.key == pygame.K_3:
+                    state.time_speed = 4.0
+                    audio.speak(game_strings["time_speed_speech"].format(speed="Vierfach"))
+                elif event.key == pygame.K_c:
+                    state.crunch_active = not state.crunch_active
+                    audio.speak(state.get_text('crunch_active' if state.crunch_active else 'crunch_off'))
+                    if state.crunch_active:
+                        audio.speak(state.get_text('crunch_info'), interrupt=False)
+                elif event.key == pygame.K_j:
+                    audio.speak(state.get_calendar_text())
+                elif event.key == pygame.K_m:
+                    if not state.is_developing:
+                        audio.speak("Marketing Menu Aufruf simuliert!")
+                        # M-Taste ruft simuliertes Marketing auf
+                        current_key = "marketing_menu"
+                        current_menu = menus[current_key]
+                        current_menu.announce_entry()
+                    else:
+                        audio.speak("Marketing ist während der Entwicklung nicht möglich.")
 
         # Fenster aktualisieren
         screen.fill((10, 10, 20))
@@ -159,11 +203,23 @@ def main():
                 f"[{state.company_name or 'Audio Studio Tycoon'}] "
                 f"{state.get_text('money', money=state.money)} | "
                 f"{state.get_text('fans')}: {state.fans:,} | "
-                f"{state.get_text('week')}: {state.week} | "
-                f"Games: {state.games_made}",
+                f"{state.get_calendar_text()} ({state.get_speed_text()})",
                 True, (80, 200, 80)
             )
             screen.blit(header, (10, 10))
+
+            # Dev-Status (falls aktiv)
+            if state.is_developing:
+                crunch_txt = f" | {state.get_text('crunch_active')}" if state.crunch_active else ""
+                dev_info = font.render(
+                    f"Fortschritt: {int(state.dev_progress)}/{state.dev_total_weeks} Ww. | "
+                    f"Bugs: {state.current_bugs}{crunch_txt}",
+                    True, (255, 150, 50)
+                )
+                screen.blit(dev_info, (10, 30))
+                y_offset = 50
+            else:
+                y_offset = 30
 
             # Team-Info
             from game_data import OFFICE_LEVELS
@@ -174,7 +230,7 @@ def main():
                 f"Engines: {len(state.engines)}",
                 True, (100, 150, 200)
             )
-            screen.blit(team_text, (10, 30))
+            screen.blit(team_text, (10, y_offset))
 
             # Menü-Info
             menu_info = font.render(f"Aktuelles Menü: {current_key}", True, (150, 150, 150))

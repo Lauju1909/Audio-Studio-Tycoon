@@ -8,6 +8,8 @@ import pygame
 import os
 import sys
 
+import ctypes
+
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
     try:
@@ -17,16 +19,35 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-
 class AudioManager:
     def __init__(self):
-        # NVDA-Ausgabe initialisieren
-        self.speaker = None
+        self.tolk = None
+        self.tolk_active = False
+        
+        # Tolk-Ausgabe initialisieren
         try:
-            from accessible_output2.outputs import nvda
-            self.speaker = nvda.NVDA()
+            # Versuche Tolk.dll zu laden (aus dem gleichen Ordner oder assets)
+            dll_path = os.path.join(os.path.abspath("."), "Tolk.dll")
+            if not os.path.exists(dll_path):
+                # Fallback für PyInstaller / assets
+                dll_path = resource_path("Tolk.dll")
+                
+            if os.path.exists(dll_path):
+                self.tolk = ctypes.windll.LoadLibrary(dll_path)
+                self.tolk.Tolk_Load()
+                self.tolk_active = self.tolk.Tolk_IsLoaded()
+                if self.tolk_active:
+                    # Damit Screenreader nicht quatschen bevor das Spiel spricht
+                    self.tolk.Tolk_TrySAPI(True)
+                else:
+                    print("[Tolk Init Fehler]: Tolk_Load() fehlgeschlagen.")
+            else:
+                print(f"[Tolk Fehler]: Tolk.dll nicht gefunden unter {dll_path}")
+                
         except Exception as e:
-            print(f"[NVDA Init Fehler]: {e}")
+            print(f"[Tolk Init Exception]: {e}")
+            
+        if not self.tolk_active:
             print("[INFO] Fallback auf Konsolen-Ausgabe aktiv.")
 
         # Pygame Mixer für SFX
@@ -46,14 +67,15 @@ class AudioManager:
 
     def speak(self, text, interrupt=True):
         """
-        Text an NVDA senden. Fallback: Konsolen-Ausgabe.
+        Text an Tolk senden. Fallback: Konsolen-Ausgabe.
         """
         print(f"[SPRACHE]: {text}")
-        if self.speaker:
+        if self.tolk_active and self.tolk:
             try:
-                self.speaker.speak(text, interrupt=interrupt)
+                # Tolk_Output erwartet wchar_t* (Unicode String)
+                self.tolk.Tolk_Output(ctypes.c_wchar_p(text), ctypes.c_bool(interrupt))
             except Exception as e:
-                print(f"[NVDA Fehler]: {e}")
+                print(f"[Tolk Speak Fehler]: {e}")
 
     def play_sound(self, sound_name):
         """Spielt einen Sound-Effekt ab (wav, ogg oder mp3)."""

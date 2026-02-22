@@ -14,7 +14,7 @@ from game_data import (
     get_compatibility, get_ideal_sliders, SLIDER_NAMES, GENRES,
     PLATFORMS, AUDIENCE_MULTI, AUDIENCE_PRICE,
     RANDOM_EVENTS, OFFICE_LEVELS, ENGINE_FEATURES,
-    EMPLOYEE_ROLES, DEV_PHASES, GAME_SIZES, MARKETING_CAMPAIGNS,
+    EMPLOYEE_ROLES, DEV_PHASES, GAME_SIZES,
     TREND_TOPICS, TREND_GENRES, TRAINING_OPTIONS,
     get_available_platforms, get_available_features,
 )
@@ -71,6 +71,19 @@ class GameState:
             "music_enabled": True
         }
 
+        # Echtzeit-Zeitsteuerung
+        self.time_speed = 1.0  # 0=Pause, 1=Normal, 2=Schnell, 4=Sehr Schnell
+        self.pause_for_menu = False # Flag für Menüs (z.B. Texteingabe)
+        self.week_progress = 0.0
+        self.is_developing = False
+        self.dev_progress = 0.0
+        self.dev_total_weeks = 0
+        self.active_project = None
+        self.crunch_active = False
+        self.current_bugs = 0
+        self.hype = 0.0
+        self.active_expo_hype = 0
+
     def _init_starter_engine(self):
         """Erstellt die Starter-Engine mit Basis-Features."""
         starter_features = []
@@ -107,6 +120,107 @@ class GameState:
             except Exception:
                 return text
         return text
+
+    def get_calendar_text(self):
+        """Gibt Jahr und Woche zurück (52 Wochen pro Jahr)."""
+        year = (self.week - 1) // 52 + 1
+        week_in_year = (self.week - 1) % 52 + 1
+        lang = self.settings.get("language", "de")
+        if lang == "de":
+            return f"Jahr {year}, Woche {week_in_year}"
+        else:
+            return f"Year {year}, Week {week_in_year}"
+
+    def get_speed_text(self):
+        """Gibt Text für aktuelle Geschwindigkeit zurück."""
+        if self.time_speed == 0: return self.get_text('paused')
+        if self.time_speed == 1: return self.get_text('speed_normal')
+        if self.time_speed == 2: return self.get_text('speed_fast')
+        return self.get_text('speed_ultra')
+
+    def update_tick(self, dt_ms):
+        """Aktualisiert Spielzeit basierend auf Millisekunden."""
+        if self.time_speed == 0 or self.pause_for_menu:
+            return
+
+        ms_per_week = 5000 / self.time_speed
+        self.week_progress += dt_ms / ms_per_week
+        
+        # Hype Decay (ca. 10% pro Woche)
+        if self.hype > 0:
+            decay_sec = 0.1 * (dt_ms / ms_per_week)
+            self.hype = max(0.0, self.hype - decay_sec)
+
+        if self.week_progress >= 1.0:
+            self.week_progress -= 1.0
+            self.week += 1
+            self._on_new_week()
+
+    def _on_new_week(self):
+        """Logik die jede Woche passiert (Gehalt, Zufallsereignisse)."""
+        # Gehälter abziehen
+        total_salary = sum(e.salary for e in self.employees)
+        self.money -= total_salary
+        
+        # Trend check (alle 20-40 Wochen)
+        if self.week - self.last_trend_week >= random.randint(20, 40):
+            from logic import GameState # Falls nötig, aber wir sind in GameState
+            # Trends alle paar Wochen neu würfeln
+            if self.week % 8 == 0:
+                self.generate_trend()
+            
+        # Projektfortschritt falls aktiv
+        if self.is_developing:
+            boost = 2 if self.crunch_active else 1
+            # Remaster-Bonus: 1.5x schneller
+            if self.current_draft.get("is_remaster"):
+                boost *= 1.5
+            
+            self.dev_progress += boost
+            
+            if self.crunch_active:
+                # Moral-Malus
+                for emp in self.employees:
+                    emp.morale = max(0, emp.morale - random.randint(2, 5))
+                # Bug-Zuwachs
+                self.current_bugs += random.randint(1, 3)
+            
+            # Zufällige Bugs auch ohne Crunch (seltener)
+            if random.random() < 0.1:
+                self.current_bugs += 1
+
+        # Zufällige Branchen-News (5% Chance pro Woche)
+        if random.random() < 0.05:
+            self._generate_industry_news()
+
+        # Expo Trigger (Woche 26 jedes Jahr)
+        week_in_year = (self.week - 1) % 52 + 1
+        if week_in_year == 26:
+            from models import Email
+            self.emails.append(Email(
+                sender="Studio-Assistent",
+                subject="Audio Expo steht an!",
+                body="In dieser Woche findet die Audio Expo statt. Gehe ins Management-Menü, um teilzunehmen!",
+                date_week=self.week
+            ))
+
+    def _generate_industry_news(self):
+        """Erzeugt zufällige Markt-Ereignisse."""
+        from models import Email
+        news_types = [
+            {"text": "Ein neuer Hardware-Hype beflügelt den Markt! (Verkäufe +20%)", "multi": 1.2},
+            {"text": "Wirtschaftskrise bremst Konsumausgaben. (Verkäufe -15%)", "multi": 0.85},
+            {"text": "Ein großer Konkurrent hat Insolvenz angemeldet! (Fans +10%)", "multi": 1.0},
+        ]
+        news = random.choice(news_types)
+        # Email-Objekt erstellen
+        mail = Email(
+            sender="News-Ticker",
+            subject=self.get_text('news_title'),
+            body=news["text"],
+            date_week=self.week
+        )
+        self.emails.append(mail)
 
     # ==========================================================
     # MITARBEITER
@@ -499,10 +613,6 @@ class GameState:
 
         fan_bonus = 1.0 + (self.fans / 100000)
 
-        # Marketing Multiplikator
-        mark_data = next((m for m in MARKETING_CAMPAIGNS if m["name"] == project.marketing), MARKETING_CAMPAIGNS[0])
-        marketing_multi = mark_data["sales_multi"]
-
         plat_multi = 1.0
         for p in PLATFORMS:
             if p["name"] == project.platform:
@@ -512,7 +622,7 @@ class GameState:
         audience_multi = AUDIENCE_MULTI.get(project.audience, 1.0)
         rand_m = random.uniform(0.8, 1.2)
 
-        sales = int(base_sales * score_m * fan_bonus * plat_multi * audience_multi * marketing_multi * rand_m)
+        sales = int(base_sales * score_m * fan_bonus * plat_multi * audience_multi * rand_m)
         return sales
 
     def calculate_dev_cost(self, project):
@@ -533,7 +643,8 @@ class GameState:
                 break
 
         # Marketing-Kosten
-        mark_data = next((m for m in MARKETING_CAMPAIGNS if m["name"] == project.marketing), MARKETING_CAMPAIGNS[0])
+        from game_data import MARKETING_OPTIONS_PH5
+        mark_data = next((m for m in MARKETING_OPTIONS_PH5 if m["name"] == project.marketing), {"cost": 0})
         marketing_cost = mark_data["cost"]
 
         return int(base_cost + salary_cost + license_fee + marketing_cost)
@@ -547,10 +658,27 @@ class GameState:
         self.money -= project.dev_cost
 
         project.review = self.calculate_review(project)
-        project.sales = self.calculate_sales(project)
+        # Hype-Bonus für Verkäufe
+        hype_multi = 1.0 + (self.hype / 100.0)
+        project.sales = int(self.calculate_sales(project) * hype_multi)
+
+        # Reset Crunch & Bugs & Hype
+        self.crunch_active = False
+        self.current_bugs = 0
+        self.hype = 0 # Hype wird beim Release verbraucht
 
         price = AUDIENCE_PRICE.get(project.audience, 30)
-        project.revenue = project.sales * price
+        total_revenue = project.sales * price
+        
+        # Publisher Royalties
+        publisher = self.current_draft.get("publisher")
+        if publisher:
+            royalty_cut = int(total_revenue * publisher["royalty"])
+            project.revenue = total_revenue - royalty_cut
+            # Einmaliger Bonus bei Vertragsabschluss (Advance)
+            self.money += publisher["advance"]
+        else:
+            project.revenue = total_revenue
 
         self.money += project.revenue
         self.fans += project.sales // 10
@@ -607,6 +735,25 @@ class GameState:
     # ==========================================================
     # STATUS
     # ==========================================================
+
+    def generate_trend(self):
+        """Erzeugt einen neuen Markttrend (Thema und Genre)."""
+        from game_data import TREND_TOPICS, TREND_GENRES
+        topic = random.choice(TREND_TOPICS)
+        genre = random.choice(TREND_GENRES)
+        self.current_trend = {
+            "topic": topic["topic"],
+            "genre": genre["genre"],
+            "text": f"{topic['text']} {genre['text']}"
+        }
+        # Benachrichtigung via Email
+        from models import Email
+        self.emails.append(Email(
+            sender="Marktforschung",
+            subject="Marktanalyse veröffentlicht",
+            body=f"Unsere Daten zeigen: {self.current_trend['text']}",
+            date_week=self.week
+        ))
 
     def get_status_text(self):
         """Statusübersicht als Text."""

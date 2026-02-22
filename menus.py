@@ -15,7 +15,7 @@ import time
 from models import GameProject, ReviewScore
 from game_data import (
     TOPICS, GENRES, SLIDER_NAMES, PLATFORMS, AUDIENCES,
-    OFFICE_LEVELS, ENGINE_FEATURES, GAME_SIZES, MARKETING_CAMPAIGNS,
+    OFFICE_LEVELS, ENGINE_FEATURES, GAME_SIZES,
     TRAINING_OPTIONS,
     get_compatibility, get_compatibility_text,
     get_available_platforms, get_available_features,
@@ -86,6 +86,7 @@ class TextInputMenu:
 
     def announce_entry(self):
         self.text = ""
+        self.game_state.pause_for_menu = True
         self.audio.speak(f"{self.title}. {self.prompt} Tippe den Namen und drücke Enter.")
 
     def handle_input(self, event):
@@ -93,6 +94,7 @@ class TextInputMenu:
             if self.text.strip():
                 self.audio.play_sound("confirm")
                 self.audio.speak(f"Bestätigt: {self.text}")
+                self.game_state.pause_for_menu = False
                 return self.on_confirm(self.text.strip())
             else:
                 self.audio.speak("Bitte gib einen Namen ein.")
@@ -105,6 +107,7 @@ class TextInputMenu:
             else:
                 self.audio.speak("Eingabe ist leer.")
         elif event.key == pygame.K_ESCAPE:
+            self.game_state.pause_for_menu = False
             return self.on_cancel()
         elif event.unicode and event.unicode.isprintable() and len(event.unicode) == 1:
             self.text += event.unicode
@@ -208,6 +211,7 @@ class SliderMenu:
         self.values = {name: 0 for name in self.slider_names}
         self.current_index = 0
         self._enter_warned = False
+        self.game_state.pause_for_menu = True
         self.audio.speak(
             f"{self.title}. "
             f"Verteile {self.budget} Punkte auf {len(self.slider_names)} Bereiche. "
@@ -258,14 +262,17 @@ class SliderMenu:
             if self.remaining > 0:
                 if hasattr(self, '_enter_warned') and self._enter_warned:
                     self.audio.play_sound("confirm")
+                    self.game_state.pause_for_menu = False
                     return self.on_confirm(dict(self.values))
                 self.audio.play_sound("error")
                 self.audio.speak(f"Noch {self.remaining} Punkte übrig. Nochmal Enter zum Bestätigen.")
                 self._enter_warned = True
             else:
                 self.audio.play_sound("confirm")
+                self.game_state.pause_for_menu = False
                 return self.on_confirm(dict(self.values))
         elif event.key == pygame.K_ESCAPE:
+            self.game_state.pause_for_menu = False
             return self.on_cancel()
 
         if event.key != pygame.K_RETURN:
@@ -347,6 +354,14 @@ class GameMenu(Menu):
             {'text': game_state.get_text('company_overview'), 'action': self.show_status},
             {'text': game_state.get_text('develop_new_game'), 'action': self.new_game},
             {'text': game_state.get_text('hr_department'), 'action': self.goto_hr},
+        ]
+        
+        # Audio Expo Spezial-Option
+        week_in_year = (self.game_state.week - 1) % 52 + 1
+        if week_in_year == 26:
+            options.append({'text': self.game_state.get_text('expo_title'), 'action': self.goto_expo})
+
+        options.extend([
             {'text': game_state.get_text('research_engines'), 'action': self.goto_research},
             {'text': game_state.get_text('service_support'), 'action': self.goto_service},
             {'text': game_state.get_text('inbox'), 'action': self.goto_inbox},
@@ -356,7 +371,7 @@ class GameMenu(Menu):
             {'text': game_state.get_text('wiki'), 'action': self.goto_help},
             {'text': game_state.get_text('settings'), 'action': self.goto_settings},
             {'text': game_state.get_text('quit'), 'action': self.quit_game_to_main},
-        ]
+        ])
         super().__init__(game_state.get_text('management_center'), options, audio, game_state)
 
     def announce_entry(self):
@@ -377,6 +392,9 @@ class GameMenu(Menu):
     def goto_service(self):
         return "service_menu"
 
+    def goto_expo(self):
+        return "expo_menu"
+
     def goto_inbox(self):
         return "email_inbox"
 
@@ -387,6 +405,9 @@ class GameMenu(Menu):
     def new_game(self):
         self.game_state.reset_draft()
         return "topic_menu"
+
+    def remaster_game(self):
+        return "remaster_select"
 
     def goto_hr(self):
         return "hr_menu"
@@ -558,6 +579,40 @@ class GameSizeMenu(Menu):
     def _cancel(self):
         return "audience_menu"
 
+class RemasterSelectMenu(Menu):
+    """Auswahl eines alten Spiels für ein Remaster."""
+
+    def __init__(self, audio, game_state):
+        super().__init__(game_state.get_text('select_remaster'), [], audio, game_state)
+
+    def announce_entry(self):
+        self.current_index = 0
+        classics = [g for g in self.game_state.game_history if g.review and g.review.average >= 7]
+        self.options = []
+        for g in classics:
+            self.options.append({
+                'text': f"{g.name} ({g.topic}/{g.genre}, Score: {g.review.average:.1f})",
+                'action': lambda p=g: self._select(p)
+            })
+        
+        if not self.options:
+            self.options.append({'text': self.game_state.get_text('no_remasters'), 'action': lambda: "game_menu"})
+        
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
+        self.speak_current()
+
+    def _select(self, project):
+        self.game_state.reset_draft()
+        self.game_state.current_draft.update({
+            "name": f"{project.name} Remastered",
+            "topic": project.topic,
+            "genre": project.genre,
+            "audience": project.audience,
+            "is_remaster": True
+        })
+        self.audio.speak(f"Klassiker {project.name} ausgewählt. Direkt weiter zur Plattform-Wahl.")
+        return "platform_menu"
+
 
 class MarketingMenu(Menu):
     """Auswahl der Marketing-Kampagne."""
@@ -565,23 +620,31 @@ class MarketingMenu(Menu):
     def __init__(self, audio, game_state):
         self.audio = audio
         self.game_state = game_state
-        options = []
-        for mark in MARKETING_CAMPAIGNS:
-            options.append({
-                'text': f"{mark['name']} - {mark['description']}",
+        super().__init__(game_state.get_text('marketing'), [], audio, game_state)
+
+    def announce_entry(self):
+        self.current_index = 0
+        from game_data import MARKETING_OPTIONS_PH5
+        self.options = []
+        for mark in MARKETING_OPTIONS_PH5:
+            self.options.append({
+                'text': f"{mark['name']} ({mark['cost']:,} Euro, +{mark['hype']} Hype)",
                 'action': lambda m=mark: self._select(m)
             })
-        options.append({'text': game_state.get_text('back'), 'action': self._cancel})
-        super().__init__(game_state.get_text('marketing'), options, audio, game_state)
+        self.options.append({'text': self.game_state.get_text('back'), 'action': self._cancel})
+        self.audio.speak(self.game_state.get_text('marketing'))
+        self.speak_current(interrupt=False)
 
     def _select(self, mark_data):
         if self.game_state.money < mark_data['cost']:
-            self.audio.speak(f"Nicht genug Geld für {mark_data['name']}. Du brauchst {mark_data['cost']:,} Euro.")
+            self.audio.speak(f"Nicht genug Geld. Du brauchst {mark_data['cost']:,} Euro.")
             return None
             
+        self.game_state.money -= mark_data['cost']
+        self.game_state.hype += mark_data['hype']
         self.game_state.current_draft['marketing'] = mark_data['name']
-        self.audio.speak(f"Marketing: {mark_data['name']}.")
-        return "engine_select_menu"
+        self.audio.speak(f"Marketing gebucht. Hype steigt um {mark_data['hype']}. Aktueller Hype: {self.game_state.hype:.1f}.")
+        return "publisher_menu"
 
     def _cancel(self):
         return "game_size_menu"
@@ -692,54 +755,94 @@ class DevelopmentSliderMenu(SliderMenu):
         return "game_name_input"
 
 
-class DevProgressMenu:
+class DevProgressMenu(Menu):
     """Zeigt Entwicklungsfortschritt in Phasen."""
 
     def __init__(self, audio, game_state):
-        self.audio = audio
-        self.game_state = game_state
-        self.phase_index = 0
-        self.start_time = 0.0
-        self.completed = False
-        self.phases = []
+        super().__init__(game_state.get_text('dev_progress'), [], audio, game_state)
+        self.last_announced_percent = -1
+        self.is_polishing = False
+        self.last_bug_count = -1
 
     def announce_entry(self):
-        from game_data import DEV_PHASES
-        self.phases = DEV_PHASES
-        self.phase_index = 0
-        self.start_time = time.time()
-        self.completed = False
-        self.audio.speak(
-            f"Phase 1 von {len(self.phases)}: {self.phases[0]['name']}..."
-        )
+        self.game_state.is_developing = True
+        self.game_state.dev_progress = 0
+        self.game_state.current_bugs = 0
+        
+        # Zeit berechnen
+        from game_data import GAME_SIZES, DEV_PHASES
+        size_data = next((s for s in GAME_SIZES if s["name"] == self.game_state.current_draft["size"]), GAME_SIZES[1])
+        self.game_state.dev_total_weeks = int(sum(p["duration_weeks"] for p in DEV_PHASES) * size_data["time_multi"])
+        
+        self.audio.speak(f"Entwicklung von {self.game_state.current_draft['name']} gestartet. "
+                        f"Dauer: {self.game_state.dev_total_weeks} Wochen. "
+                        f"Nutze 1, 2, 3 für Tempo und C für Crunch.")
+        self.options = []
+        self.last_announced_percent = -1
 
     def update(self):
-        if self.completed:
+        if not self.game_state.is_developing:
             return
-        from game_data import DEV_PHASES
-        elapsed = time.time() - self.start_time
-        phase_duration = 1.5  # Sekunden pro Phase
 
-        if elapsed >= phase_duration:
-            self.phase_index += 1
-            self.start_time = time.time()
+        percent = int((self.game_state.dev_progress / self.game_state.dev_total_weeks) * 100)
+        
+        if percent % 25 == 0 and percent != self.last_announced_percent and percent <= 100:
+            self.audio.speak(f"{percent} Prozent fertig. {self.game_state.current_bugs} Bugs. Hype: {self.game_state.hype:.1f}.")
+            self.last_announced_percent = percent
 
-            if self.phase_index >= len(DEV_PHASES):
-                self.completed = True
-                self.audio.speak(
-                    self.game_state.get_text('dev_completed')
-                )
-            else:
-                phase = DEV_PHASES[self.phase_index]
-                # Phase name might be in game_data, still hardcoded there?
-                self.audio.speak(
-                    f"Phase {self.phase_index+1} von {len(DEV_PHASES)}: {phase['name']}..."
-                )
+        if self.game_state.dev_progress >= self.game_state.dev_total_weeks:
+            if not self.is_polishing and not self.options:
+                self._show_finish_options()
+            elif self.is_polishing:
+                # Während Polishing: Ansage bei Bug-Änderung
+                if self.game_state.current_bugs != self.last_bug_count:
+                    self.audio.speak(f"Polishing: {self.game_state.current_bugs} Bugs übrig.")
+                    self.last_bug_count = self.game_state.current_bugs
+                    # Menü wieder einblenden nach jeder Woche oder per Taste?
+                    # Wir lassen es über handle_input steuern.
+
+    def _show_finish_options(self):
+        self.options = [
+            {'text': self.game_state.get_text('finish_dev'), 'action': self._finalize},
+            {'text': self.game_state.get_text('polishing'), 'action': self._polish},
+        ]
+        self.current_index = 0
+        self.audio.speak("Entwicklung abgeschlossen! Veröffentlichen oder Polishing?")
+        self.speak_current()
+
+    def _finalize(self):
+        from models import GameProject
+        self.game_state.is_developing = False
+        project = GameProject(
+            name=self.game_state.current_draft['name'],
+            topic=self.game_state.current_draft['topic'],
+            genre=self.game_state.current_draft['genre'],
+            sliders=self.game_state.current_draft['sliders'],
+            platform=self.game_state.current_draft['platform'],
+            audience=self.game_state.current_draft['audience'],
+            engine=self.game_state.current_draft['engine'],
+            size=self.game_state.current_draft['size'],
+            marketing=self.game_state.current_draft['marketing']
+        )
+        project.bugs = self.game_state.current_bugs
+        self.game_state.finalize_game(project)
+        return "review_result"
+
+    def _polish(self):
+        self.audio.speak("Polishing aktiv. Drücke Pfeiltaste oder Enter, um das Menü jederzeit wieder zu öffnen.")
+        self.is_polishing = True
+        self.last_bug_count = self.game_state.current_bugs
+        self.options = [] 
+        return None
 
     def handle_input(self, event):
-        if self.completed and event.key == pygame.K_RETURN:
-            return "review_result"
-        return None
+        if not self.options:
+            # Wenn kein Menü da ist (während Entwicklung oder Polishing), 
+            # öffne es bei Enter während Polishing wieder
+            if self.is_polishing and event.key in [pygame.K_RETURN, pygame.K_UP, pygame.K_DOWN]:
+                self._show_finish_options()
+            return None
+        return super().handle_input(event)
 
 
 # ============================================================
@@ -1455,7 +1558,54 @@ class HelpMenu(Menu):
         self.audio.speak(self.game_state.get_text(key))
         return None
 
+class PublisherMenu(Menu):
+    """Auswahl eines Publishers."""
+
+    def __init__(self, audio, game_state):
+        super().__init__(game_state.get_text('select_publisher'), [], audio, game_state)
+
     def announce_entry(self):
         self.current_index = 0
-        self.audio.speak(self.game_state.get_text('wiki_welcome'))
-        self.speak_current(interrupt=False)
+        from game_data import PUBLISHERS
+        self.options = [
+            {'text': self.game_state.get_text('self_publish'), 'action': lambda: self._select(None)}
+        ]
+        for pub in PUBLISHERS:
+            self.options.append({
+                'text': f"{pub['name']} (Vorschuss: {pub['advance']:,}, Royalties: {int(pub['royalty']*100)}%)",
+                'action': lambda p=pub: self._select(p)
+            })
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "marketing_menu"})
+        self.speak_current()
+
+    def _select(self, publisher):
+        self.game_state.current_draft['publisher'] = publisher
+        if publisher:
+            self.audio.speak(f"Vertrag mit {publisher['name']} unterzeichnet.")
+        else:
+            self.audio.speak("Spiel wird im Selbstverlag veröffentlicht.")
+        return "engine_select_menu"
+
+class ExpoMenu(Menu):
+    """Die Audio Expo (Woche 26)."""
+    def __init__(self, audio, game_state):
+        super().__init__(game_state.get_text('expo_title'), [], audio, game_state)
+
+    def announce_entry(self):
+        self.current_index = 0
+        self.options = [
+            {'text': "Kleiner Stand (5.000 Euro, +20 Hype)", 'action': lambda: self._attend(5000, 20)},
+            {'text': "Großer Stand (20.000 Euro, +60 Hype)", 'action': lambda: self._attend(20000, 60)},
+            {'text': "Keine Teilnahme", 'action': lambda: "game_menu"}
+        ]
+        self.audio.speak("Audio Expo! Möchtest du dein Studio präsentieren?")
+        self.speak_current()
+
+    def _attend(self, cost, hype):
+        if self.game_state.money < cost:
+            self.audio.speak("Nicht genug Geld für diesen Stand.")
+            return None
+        self.game_state.money -= cost
+        self.game_state.hype += hype
+        self.audio.speak(f"Erfolgreicher Messeauftritt! Hype steigt massiv um {hype}.")
+        return "game_menu"
