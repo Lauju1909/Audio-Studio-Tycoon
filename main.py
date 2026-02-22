@@ -10,6 +10,7 @@ import pygame
 import time
 from audio import AudioManager
 from logic import GameState
+from game_strings import game_strings
 from menus import (
     MainMenu,
     CompanyNameMenu,
@@ -114,7 +115,6 @@ def main():
     current_key = "main_menu"
     current_menu = menus[current_key]
 
-    from game_strings import game_strings
     # ---- Willkommensnachricht ----
     audio.speak(game_strings["main_welcome"])
     time.sleep(0.3)
