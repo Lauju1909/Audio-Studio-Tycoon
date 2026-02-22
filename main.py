@@ -10,7 +10,7 @@ import pygame
 import time
 from audio import AudioManager
 from logic import GameState
-from game_strings import game_strings
+from translations import get_text, set_language
 from menus import (
     MainMenu,
     CompanyNameMenu,
@@ -48,6 +48,11 @@ from menus import (
     RemasterSelectMenu,
     PublisherMenu,
     ExpoMenu,
+    BankMenu,
+    LoanMenu,
+    HardwareDevMenu,
+    ConsoleNameInput,
+    ConsoleSpecsMenu,
 )
 
 
@@ -57,66 +62,72 @@ def main():
     screen = pygame.display.set_mode((500, 300))
     pygame.display.set_caption("Audio Studio Tycoon - Audio Edition")
     audio = AudioManager()
-    audio.speak(game_strings["main_title"])
+    audio.speak(get_text("main_title"))
     state = GameState()
+    set_language(state.settings['language'])
 
     # ---- Menü-Instanzen ----
-    menus = {
+    menu_factories = {
         # Haupt-Flow
-        "main_menu": MainMenu(audio, state),
-        "company_name_input": CompanyNameMenu(audio, state),
-        "game_menu": GameMenu(audio, state),
+        "main_menu": lambda: MainMenu(audio, state),
+        "company_name_input": lambda: CompanyNameMenu(audio, state),
+        "game_menu": lambda: GameMenu(audio, state),
 
         # Spielentwicklung
-        "topic_menu": TopicMenu(audio, state),
-        "genre_menu": GenreMenu(audio, state),
-        "platform_menu": PlatformMenu(audio, state),
-        "audience_menu": AudienceMenu(audio, state),
-        "game_size_menu": GameSizeMenu(audio, state),
-        "marketing_menu": MarketingMenu(audio, state),
-        "engine_select_menu": EngineSelectMenu(audio, state),
-        "remaster_select": RemasterSelectMenu(audio, state),
-        "publisher_menu": PublisherMenu(audio, state),
-        "expo_menu": ExpoMenu(audio, state),
-        "game_name_input": GameNameMenu(audio, state),
-        "slider_menu": DevelopmentSliderMenu(audio, state),
-        "dev_progress_menu": DevProgressMenu(audio, state),
-        "review_result": ReviewResultMenu(audio, state),
+        "topic_menu": lambda: TopicMenu(audio, state),
+        "genre_menu": lambda: GenreMenu(audio, state),
+        "platform_menu": lambda: PlatformMenu(audio, state),
+        "audience_menu": lambda: AudienceMenu(audio, state),
+        "game_size_menu": lambda: GameSizeMenu(audio, state),
+        "marketing_menu": lambda: MarketingMenu(audio, state),
+        "engine_select_menu": lambda: EngineSelectMenu(audio, state),
+        "remaster_select": lambda: RemasterSelectMenu(audio, state),
+        "publisher_menu": lambda: PublisherMenu(audio, state),
+        "expo_menu": lambda: ExpoMenu(audio, state),
+        "game_name_input": lambda: GameNameMenu(audio, state),
+        "slider_menu": lambda: DevelopmentSliderMenu(audio, state),
+        "dev_progress_menu": lambda: DevProgressMenu(audio, state),
+        "review_result": lambda: ReviewResultMenu(audio, state),
 
         # Personal
-        "hr_menu": HRMenu(audio, state),
-        "hire_menu": HireMenu(audio, state),
-        "fire_menu": FireMenu(audio, state),
-        "training_employee_select": TrainingEmployeeSelectMenu(audio, state),
-        "training_option_select": TrainingOptionMenu(audio, state),
+        "hr_menu": lambda: HRMenu(audio, state),
+        "hire_menu": lambda: HireMenu(audio, state),
+        "fire_menu": lambda: FireMenu(audio, state),
+        "training_employee_select": lambda: TrainingEmployeeSelectMenu(audio, state),
+        "training_option_select": lambda: TrainingOptionMenu(audio, state),
 
         # Forschung & Engines
-        "research_menu": ResearchMenu(audio, state),
-        "feature_research_menu": FeatureResearchMenu(audio, state),
-        "engine_create_name": EngineCreateNameMenu(audio, state),
-        "engine_feature_select": EngineFeatureSelectMenu(audio, state),
+        "research_menu": lambda: ResearchMenu(audio, state),
+        "feature_research_menu": lambda: FeatureResearchMenu(audio, state),
+        "engine_create_name": lambda: EngineCreateNameMenu(audio, state),
+        "engine_feature_select": lambda: EngineFeatureSelectMenu(audio, state),
+        "hardware_dev_menu": lambda: HardwareDevMenu(audio, state),
+        "console_name_input": lambda: ConsoleNameInput(audio, state),
+        "console_specs_menu": lambda: ConsoleSpecsMenu(audio, state),
 
         # Büro
-        "office_menu": OfficeMenu(audio, state),
+        "office_menu": lambda: OfficeMenu(audio, state),
 
         # Spezial
-        "bankruptcy": BankruptcyMenu(audio, state),
-        "email_inbox": EmailInboxMenu(audio, state),
-        "email_detail": EmailDetailMenu(audio, state),
-        "service_menu": ServiceMenu(audio, state),
-        "game_service_options": GameServiceOptionsMenu(audio, state),
-        "settings_menu": SettingsMenu(audio, state, lambda: "main_menu"),
-        "settings_menu_ingame": SettingsMenu(audio, state, lambda: "game_menu"),
-        "save_menu": SaveMenu(audio, state),
-        "load_menu": LoadMenu(audio, state),
-        "help_menu": HelpMenu(audio, state),
+        "bankruptcy": lambda: BankruptcyMenu(audio, state),
+        "email_inbox": lambda: EmailInboxMenu(audio, state),
+        "email_detail": lambda: EmailDetailMenu(audio, state),
+        "service_menu": lambda: ServiceMenu(audio, state),
+        "game_service_options": lambda: GameServiceOptionsMenu(audio, state),
+        "bank_menu": lambda: BankMenu(audio, state),
+        "loan_menu": lambda: LoanMenu(audio, state),
+        "settings_menu": lambda: SettingsMenu(audio, state, lambda: "main_menu"),
+        "settings_menu_ingame": lambda: SettingsMenu(audio, state, lambda: "game_menu"),
+        "save_menu": lambda: SaveMenu(audio, state),
+        "load_menu": lambda: LoadMenu(audio, state),
+        "help_menu": lambda: HelpMenu(audio, state),
     }
 
     current_key = "main_menu"
-    current_menu = menus[current_key]
+    current_menu = menu_factories[current_key]()
 
     # ---- Willkommensnachricht ----
-    audio.speak(game_strings["main_welcome"])
+    audio.speak(get_text("main_welcome"))
     time.sleep(0.3)
     audio.play_music("music_back")
     current_menu.announce_entry()
@@ -141,7 +152,7 @@ def main():
         # Pleite-Check
         if state.is_bankrupt() and current_key != "bankruptcy":
             current_key = "bankruptcy"
-            current_menu = menus[current_key]
+            current_menu = menu_factories[current_key]()
             current_menu.announce_entry()
 
         for event in pygame.event.get():
@@ -153,28 +164,28 @@ def main():
 
                 if result == "quit":
                     running = False
-                elif result and result in menus:
+                elif result and result in menu_factories:
                     current_key = result
-                    current_menu = menus[current_key]
+                    current_menu = menu_factories[current_key]()
                     current_menu.announce_entry()
                 
                 # Zeitsteuerung (Hotkeys)
                 elif event.key == pygame.K_SPACE:
                     if state.time_speed > 0:
                         state.time_speed = 0
-                        audio.speak("Pause")
+                        audio.speak(state.get_text('paused_msg'))
                     else:
                         state.time_speed = 1.0
-                        audio.speak("Start")
+                        audio.speak(state.get_text('start_msg'))
                 elif event.key == pygame.K_1:
                     state.time_speed = 1.0
-                    audio.speak(game_strings["time_speed_speech"].format(speed="Einfach"))
+                    audio.speak(state.get_text('time_speed_speech', speed=state.get_text('speed_1')))
                 elif event.key == pygame.K_2:
                     state.time_speed = 2.0
-                    audio.speak(game_strings["time_speed_speech"].format(speed="Zweifach"))
+                    audio.speak(state.get_text('time_speed_speech', speed=state.get_text('speed_2')))
                 elif event.key == pygame.K_3:
                     state.time_speed = 4.0
-                    audio.speak(game_strings["time_speed_speech"].format(speed="Vierfach"))
+                    audio.speak(state.get_text('time_speed_speech', speed=state.get_text('speed_3')))
                 elif event.key == pygame.K_c:
                     state.crunch_active = not state.crunch_active
                     audio.speak(state.get_text('crunch_active' if state.crunch_active else 'crunch_off'))
@@ -184,13 +195,13 @@ def main():
                     audio.speak(state.get_calendar_text())
                 elif event.key == pygame.K_m:
                     if not state.is_developing:
-                        audio.speak("Marketing Menu Aufruf simuliert!")
+                        audio.speak(state.get_text('marketing_simulated'))
                         # M-Taste ruft simuliertes Marketing auf
                         current_key = "marketing_menu"
-                        current_menu = menus[current_key]
+                        current_menu = menu_factories[current_key]()
                         current_menu.announce_entry()
                     else:
-                        audio.speak("Marketing ist während der Entwicklung nicht möglich.")
+                        audio.speak(state.get_text('marketing_blocked'))
 
         # Fenster aktualisieren
         screen.fill((10, 10, 20))
@@ -200,7 +211,7 @@ def main():
 
             # Header
             header = font.render(
-                f"[{state.company_name or 'Audio Studio Tycoon'}] "
+                f"[{state.company_name or get_text('main_title')}] "
                 f"{state.get_text('money', money=state.money)} | "
                 f"{state.get_text('fans')}: {state.fans:,} | "
                 f"{state.get_calendar_text()} ({state.get_speed_text()})",
@@ -212,7 +223,7 @@ def main():
             if state.is_developing:
                 crunch_txt = f" | {state.get_text('crunch_active')}" if state.crunch_active else ""
                 dev_info = font.render(
-                    f"Fortschritt: {int(state.dev_progress)}/{state.dev_total_weeks} Ww. | "
+                    f"{state.get_text('progress')}: {int(state.dev_progress)}/{state.dev_total_weeks} Ww. | "
                     f"Bugs: {state.current_bugs}{crunch_txt}",
                     True, (255, 150, 50)
                 )
@@ -225,7 +236,7 @@ def main():
             from game_data import OFFICE_LEVELS
             office = OFFICE_LEVELS[state.office_level]
             team_text = font.render(
-                f"Büro: {office['name']} | "
+                f"{state.get_text('office')}: {office['name']} | "
                 f"Mitarbeiter: {len(state.employees)}/{office['max_employees']} | "
                 f"Engines: {len(state.engines)}",
                 True, (100, 150, 200)
@@ -233,19 +244,18 @@ def main():
             screen.blit(team_text, (10, y_offset))
 
             # Menü-Info
-            menu_info = font.render(f"Aktuelles Menü: {current_key}", True, (150, 150, 150))
+            menu_info = font.render(f"{state.get_text('current_menu')}: {current_key}", True, (150, 150, 150))
             screen.blit(menu_info, (10, 50))
 
             # Trend-Info
             if state.current_trend:
-                txt = f"TREND: {state.current_trend['topic']} / {state.current_trend['genre']}"
+                txt = f"{state.get_text('trend')}: {state.current_trend['topic']} / {state.current_trend['genre']}"
                 trend_v = font.render(txt, True, (255, 100, 100))
                 screen.blit(trend_v, (10, 70))
 
             # Screenreader-Hinweis
             hint = font.render(
-                "Dieses Spiel ist für Screenreader (NVDA) optimiert. "
-                "Das Fenster dient nur der Tastatureingabe.",
+                get_text('main_screenreader_hint'),
                 True, (60, 60, 60)
             )
             screen.blit(hint, (10, 275))

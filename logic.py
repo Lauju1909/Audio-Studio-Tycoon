@@ -8,7 +8,7 @@ Spielhistorie, Ereignisse und die Bewertungslogik.
 import random
 import json
 import os
-from models import GameProject, ReviewScore, Employee, Engine, EngineFeature
+from models import GameProject, ReviewScore, Employee, Engine, EngineFeature, RivalStudio, RivalGame
 from translations import TRANSLATIONS
 from game_data import (
     get_compatibility, get_ideal_sliders, SLIDER_NAMES, GENRES,
@@ -83,6 +83,47 @@ class GameState:
         self.current_bugs = 0
         self.hype = 0.0
         self.active_expo_hype = 0
+        
+        # NEU: Phase 7 - Konkurrenz & GOTY
+        self.rivals = self._init_rivals()
+        self.last_goty_year = 0
+        
+        # NEU: Phase 7 - DevKits & Hardware Markt
+        self.bought_platforms = ["PC (MS-DOS)"]
+        self.active_platforms = [p['name'] for p in get_available_platforms(1)]
+        
+        # NEU: Phase 7 - Finanzen & Buchhaltung
+        self.bank_loan = None
+        self.accounting = {"income": 0, "expenses": 0, "loan_paid": 0}
+        
+        # NEU: Phase 7 - Eigene Konsole
+        self.custom_consoles = []
+        self.is_developing_console = False
+        self.console_progress = 0
+        self.console_total_weeks = 50
+        self.current_console_draft = None
+
+    def get_market_platforms(self):
+        from game_data import get_available_platforms
+        base = get_available_platforms(self.week)
+        out = list(base)
+        for cc in getattr(self, "custom_consoles", []):
+            if self.week >= cc.release_week:
+                # Für spielereigene Konsole zahlt man 0 Lizenzgebühr
+                out.append({
+                    "name": cc.name,
+                    "market_multi": cc.market_share,
+                    "license_fee": 0
+                })
+        return out
+
+    def _init_rivals(self):
+        """Erstellt 3 Konkurrenz-Studios."""
+        return [
+            RivalStudio("MicroHard", target_market_share=30, next_release_week=random.randint(5, 20)),
+            RivalStudio("Electric Farts", target_market_share=25, next_release_week=random.randint(15, 30)),
+            RivalStudio("Nintengo", target_market_share=20, next_release_week=random.randint(25, 40))
+        ]
 
     def _init_starter_engine(self):
         """Erstellt die Starter-Engine mit Basis-Features."""
@@ -158,9 +199,31 @@ class GameState:
 
     def _on_new_week(self):
         """Logik die jede Woche passiert (Gehalt, Zufallsereignisse)."""
+        # Jahres-Reset für Buchhaltung
+        if (self.week - 1) % 52 == 0:
+            self.accounting = {"income": 0, "expenses": 0, "loan_paid": 0}
+            
         # Gehälter abziehen
         total_salary = sum(e.salary for e in self.employees)
         self.money -= total_salary
+        self.accounting["expenses"] += total_salary
+        
+        # Kreditabzahlung
+        if getattr(self, "bank_loan", None):
+            payment = self.bank_loan.weekly_payment
+            self.money -= payment
+            self.accounting["loan_paid"] += payment
+            self.bank_loan.amount_remaining -= payment
+            self.bank_loan.weeks_remaining -= 1
+            if self.bank_loan.weeks_remaining <= 0 or self.bank_loan.amount_remaining <= 0:
+                self.bank_loan = None
+                from models import Email
+                self.emails.insert(0, Email(
+                    sender=self.get_text('sender_bank'),
+                    subject=self.get_text('subject_loan_paid'),
+                    body=self.get_text('body_loan_paid'),
+                    date_week=self.week
+                ))
         
         # Trend check (alle 20-40 Wochen)
         if self.week - self.last_trend_week >= random.randint(20, 40):
@@ -168,6 +231,11 @@ class GameState:
             # Trends alle paar Wochen neu würfeln
             if self.week % 8 == 0:
                 self.generate_trend()
+                
+        # Marktanteil der eigenen Konsole erhöhen
+        if hasattr(self, "custom_consoles"):
+            for cc in self.custom_consoles:
+                cc.market_share = min(0.5, cc.market_share + (cc.tech_level * 0.0005))
             
         # Projektfortschritt falls aktiv
         if self.is_developing:
@@ -189,6 +257,24 @@ class GameState:
             if random.random() < 0.1:
                 self.current_bugs += 1
 
+        # Konsolenentwicklung
+        if getattr(self, "is_developing_console", False):
+            self.console_progress += 1
+            if self.console_progress >= self.console_total_weeks:
+                self.is_developing_console = False
+                c = self.current_console_draft
+                from models import CustomConsole, Email
+                new_console = CustomConsole(c['name'], c['tech_level'], c['cost'], self.week)
+                if not hasattr(self, "custom_consoles"): self.custom_consoles = []
+                self.custom_consoles.append(new_console)
+                self.emails.insert(0, Email(
+                    sender=self.get_text('sender_hardware'),
+                    subject=self.get_text('subject_console_done'),
+                    body=self.get_text('body_console_done', name=c['name']),
+                    date_week=self.week
+                ))
+                self.current_console_draft = None
+
         # Zufällige Branchen-News (5% Chance pro Woche)
         if random.random() < 0.05:
             self._generate_industry_news()
@@ -198,24 +284,143 @@ class GameState:
         if week_in_year == 26:
             from models import Email
             self.emails.append(Email(
-                sender="Studio-Assistent",
-                subject="Audio Expo steht an!",
-                body="In dieser Woche findet die Audio Expo statt. Gehe ins Management-Menü, um teilzunehmen!",
+                sender=self.get_text('sender_assistant'),
+                subject=self.get_text('subject_expo'),
+                body=self.get_text('body_expo'),
                 date_week=self.week
             ))
+            
+        # NEU: Phase 7 - Hardware-Markt Updates
+        current_platforms = [p['name'] for p in get_available_platforms(self.week)]
+        for p in current_platforms:
+            if p not in self.active_platforms:
+                self.active_platforms.append(p)
+                from models import Email
+                self.emails.insert(0, Email(
+                    sender=self.get_text('sender_hardware_news'),
+                    subject=self.get_text('subject_new_console', name=p),
+                    body=self.get_text('body_new_console', name=p),
+                    date_week=self.week
+                ))
+        for p in list(self.active_platforms):
+            if p not in current_platforms:
+                self.active_platforms.remove(p)
+                from models import Email
+                self.emails.insert(0, Email(
+                    sender=self.get_text('sender_hardware_news'),
+                    subject=self.get_text('subject_console_dead', name=p),
+                    body=self.get_text('body_console_dead', name=p),
+                    date_week=self.week
+                ))
+            
+        # NEU: Phase 7 - Rivalen und GOTY evaluieren
+        self._process_rivals()
+        if week_in_year == 52:
+            self._check_goty()
+
+    def _process_rivals(self):
+        """Lässt Rivalen Spiele veröffentlichen und Marktanteile beeinflussen."""
+        from game_data import TREND_TOPICS, TREND_GENRES
+        from models import Email
+        
+        for rival in self.rivals:
+            if self.week >= rival.next_release_week:
+                # Rivale veröffentlicht ein Spiel!
+                topic = random.choice(TREND_TOPICS)["topic"]
+                genre = random.choice(TREND_GENRES)["genre"]
+                
+                # Konkurrenz wird im Laufe der Jahre etwas besser
+                base_score = random.uniform(5.5, 8.5)
+                year = (self.week - 1) // 52 + 1
+                base_score += min(1.5, year * 0.1) # Max +1.5 über Zeit
+                score = round(min(10.0, base_score), 1)
+                
+                r_game = RivalGame(f"{rival.name} {genre}", topic, genre, score)
+                rival.games.append(r_game)
+                rival.next_release_week = self.week + random.randint(20, 50)
+                
+                # Benachrichtigung
+                if score >= 8.5:
+                    self.emails.append(Email(
+                        sender=self.get_text('sender_industry_news'),
+                        subject=self.get_text('subject_rival_hit', name=rival.name),
+                        body=self.get_text('body_rival_hit', name=rival.name, game=r_game.name, score=score, genre=self.get_text(genre)),
+                        date_week=self.week
+                    ))
+                
+                # Marktauswirkung: Zieht Hype und Verkäufe ab, wenn wir auch ein Spiel im gleichen Genre haben
+                for my_game in self.game_history:
+                    if my_game.is_active and my_game.genre == genre:
+                        # Unser Spiel verliert Hype
+                        self.hype = max(0, self.hype - 10)
+                        # Verkäufe sinken für diese Woche (implizit verringert, da Hype sinkt)
+
+    def _check_goty(self):
+        """Ermittelt das Spiel des Jahres."""
+        from models import Email
+        year = (self.week - 1) // 52 + 1
+        
+        # Bereits vergeben?
+        if year == self.last_goty_year: return
+        self.last_goty_year = year
+        
+        # Alle Spiele dieses Jahres (Spieler)
+        my_games_this_year = [g for g in self.game_history if ((g.week_developed - 1) // 52 + 1) == year]
+        my_best = max(my_games_this_year, key=lambda g: getattr(g.review, 'average', 0)) if my_games_this_year else None
+        
+        # Alle Spiele dieses Jahres (Rivalen)
+        rival_games_this_year = []
+        for r in self.rivals:
+            for rg in r.games:
+                # rg.weeks_on_market könnte man zurückrechnen, einfacher: wenn sie im letzten 52-Wochen Fenster kamen
+                pass # Für Einfachheit ignorieren wir das Release-Datum im Modell und nehmen einfach das zuletzt hinzugefügte
+            if r.games:
+                rival_games_this_year.append((r.name, r.games[-1]))
+                
+        rival_best_tuple = max(rival_games_this_year, key=lambda t: t[1].score) if rival_games_this_year else None
+        
+        my_score = my_best.review.average if my_best and my_best.review else 0
+        rival_score = rival_best_tuple[1].score if rival_best_tuple else 0
+        
+        if my_score == 0 and rival_score == 0:
+            return # Kein Spiel erschienen
+            
+        if my_score > rival_score and my_score >= 8.0:
+            # GEWONNEN!
+            self.fans += 5000
+            self.money += 200000
+            self.emails.insert(0, Email(
+                sender=self.get_text('sender_goty'),
+                subject=self.get_text('subject_goty_win'),
+                body=self.get_text('body_goty_win', name=my_best.name, year=year),
+                date_week=self.week
+            ))
+        else:
+            # RIVALE GEWONNEN oder unser bestes Spiel war zu schlecht
+            winner_name = rival_best_tuple[0] if rival_best_tuple else "Niemand"
+            win_game = rival_best_tuple[1].name if rival_best_tuple else "Nichts"
+            win_score = rival_score if rival_best_tuple else 0
+            
+            if win_score >= 8.0:
+                self.emails.insert(0, Email(
+                    sender=self.get_text('sender_goty'),
+                    subject=self.get_text('subject_goty_lose', name=winner_name, year=year),
+                    body=self.get_text('body_goty_lose', name=winner_name, game=win_game, score=win_score),
+                    date_week=self.week
+                ))
 
     def _generate_industry_news(self):
         """Erzeugt zufällige Markt-Ereignisse."""
         from models import Email
         news_types = [
-            {"text": "Ein neuer Hardware-Hype beflügelt den Markt! (Verkäufe +20%)", "multi": 1.2},
-            {"text": "Wirtschaftskrise bremst Konsumausgaben. (Verkäufe -15%)", "multi": 0.85},
-            {"text": "Ein großer Konkurrent hat Insolvenz angemeldet! (Fans +10%)", "multi": 1.0},
+            {"text": self.get_text('news_hardware_boom'), "multi": 1.2},
+            {"text": self.get_text('news_recession'), "multi": 0.85},
+            {"text": self.get_text('news_rival_bankrupt'), "multi": 1.0},
         ]
         news = random.choice(news_types)
         # Email-Objekt erstellen
         mail = Email(
-            sender="News-Ticker",
+            sender=self.get_text('sender_industry_news'),
             subject=self.get_text('news_title'),
             body=news["text"],
             date_week=self.week
@@ -305,7 +510,6 @@ class GameState:
     def process_emails(self):
         """Generiert zufällige E-Mails."""
         from models import Email
-        from game_data import MAIL_TEMPLATES
         
         if not self.game_history:
             return
@@ -317,9 +521,9 @@ class GameState:
                 # Bug Report
                 game.bugs += random.randint(1, 5)
                 mail = Email(
-                    sender="Ein enttäuschter Spieler",
-                    subject=MAIL_TEMPLATES["bug_report"]["subject"].format(game=game.name),
-                    body=MAIL_TEMPLATES["bug_report"]["body"].format(game=game.name),
+                    sender=self.get_text('sender_disappointed'),
+                    subject=self.get_text('subject_bug_report', game=game.name),
+                    body=self.get_text('body_bug_report', game=game.name),
                     date_week=self.week,
                     game_name=game.name,
                     is_bug=True
@@ -327,9 +531,9 @@ class GameState:
             else:
                 # Fan Mail
                 mail = Email(
-                    sender="Fan",
-                    subject=MAIL_TEMPLATES["fan_praise"]["subject"].format(game=game.name),
-                    body=MAIL_TEMPLATES["fan_praise"]["body"].format(game=game.name, topic=game.topic),
+                    sender=self.get_text('sender_fan'),
+                    subject=self.get_text('subject_fan_praise', game=game.name),
+                    body=self.get_text('body_fan_praise', game=game.name, topic=self.get_text(game.topic)),
                     date_week=self.week,
                     game_name=game.name
                 )
@@ -566,26 +770,29 @@ class GameState:
             scores.append(s)
 
         # NEU: Review-Texte generieren
-        from game_data import REVIEW_TEMPLATES
         comments = []
         
         # Intro
-        intro = random.choice(REVIEW_TEMPLATES["intro"]).format(company=self.company_name, game=project.name)
+        intro_key = random.choice(['review_intro_1', 'review_intro_2', 'review_intro_3'])
+        intro = self.get_text(intro_key, company=self.company_name, game=project.name)
         comments.append(intro)
         
         # Positiv/Negativ basierend auf Slidern/Synergie
         if synergy >= 0.8:
-            comments.append(random.choice(REVIEW_TEMPLATES["positive"]).format(genre=project.genre, topic=project.topic))
+            key = random.choice(['review_pos_1', 'review_pos_2', 'review_pos_3'])
+            comments.append(self.get_text(key, genre=self.get_text(project.genre), topic=self.get_text(project.topic)))
         elif synergy < 0.5:
-            comments.append(random.choice(REVIEW_TEMPLATES["negative"]).format(genre=project.genre, topic=project.topic))
+            key = random.choice(['review_neg_1', 'review_neg_2', 'review_neg_3'])
+            comments.append(self.get_text(key, genre=self.get_text(project.genre), topic=self.get_text(project.topic)))
             
         if slider_match < 0.6:
-            comments.append("Das Gameplay fühlt sich hölzern an.")
+            comments.append(self.get_text('review_bad_gameplay'))
         elif slider_match >= 0.9:
-            comments.append("Die Spielmechaniken sind perfekt aufeinander abgestimmt.")
+            comments.append(self.get_text('review_good_gameplay'))
 
         # Fazit
-        comments.append(random.choice(REVIEW_TEMPLATES["conclusion"]))
+        concl_key = random.choice(['review_concl_1', 'review_concl_2', 'review_concl_3'])
+        comments.append(self.get_text(concl_key))
 
         review = ReviewScore(scores, comments=comments)
         if review.average > self.high_score:
@@ -635,19 +842,12 @@ class GameState:
         dev_weeks = sum(p["duration_weeks"] for p in DEV_PHASES) * size_data["time_multi"]
         salary_cost = sum(e.salary for e in self.employees) * dev_weeks
 
-        # Lizenzgebühren
-        license_fee = 0
-        for p in PLATFORMS:
-            if p["name"] == project.platform:
-                license_fee = p["license_fee"]
-                break
-
         # Marketing-Kosten
         from game_data import MARKETING_OPTIONS_PH5
         mark_data = next((m for m in MARKETING_OPTIONS_PH5 if m["name"] == project.marketing), {"cost": 0})
         marketing_cost = mark_data["cost"]
 
-        return int(base_cost + salary_cost + license_fee + marketing_cost)
+        return int(base_cost + salary_cost + marketing_cost)
 
     def finalize_game(self, project):
         """Schließt die Spielentwicklung ab."""
@@ -656,6 +856,8 @@ class GameState:
         # Kosten und Marketing abziehen
         project.dev_cost = self.calculate_dev_cost(project)
         self.money -= project.dev_cost
+        if hasattr(self, "accounting"):
+            self.accounting["expenses"] += project.dev_cost
 
         project.review = self.calculate_review(project)
         # Hype-Bonus für Verkäufe
@@ -681,6 +883,9 @@ class GameState:
             project.revenue = total_revenue
 
         self.money += project.revenue
+        if hasattr(self, "accounting"):
+            self.accounting["income"] += project.revenue
+            
         self.fans += project.sales // 10
         self.games_made += 1
         self.total_revenue += project.revenue
@@ -800,6 +1005,13 @@ class GameState:
                 {"category": f.category, "name": f.name, "tech_bonus": f.tech_bonus}
                 for f in self.unlocked_features
             ],
+            "bought_platforms": getattr(self, "bought_platforms", []),
+            "active_platforms": getattr(self, "active_platforms", []),
+            "rivals": [r.to_dict() for r in getattr(self, "rivals", [])],
+            "last_goty_year": getattr(self, "last_goty_year", 0),
+            "bank_loan": self.bank_loan.to_dict() if getattr(self, "bank_loan", None) else None,
+            "accounting": getattr(self, "accounting", {"income": 0, "expenses": 0, "loan_paid": 0}),
+            "custom_consoles": [c.to_dict() for c in getattr(self, "custom_consoles", [])],
             "emails": [
                 {
                     "sender": m.sender, "subject": m.subject, "body": m.body,
@@ -905,6 +1117,47 @@ class GameState:
             self.emails.append(mail)
 
         self.settings = data.get("settings", {"language": "de", "music_enabled": True})
+
+        # Rivalen laden
+        self.rivals = []
+        for r_data in data.get("rivals", []):
+            games = []
+            for g_data in r_data.get("games", []):
+                rg = RivalGame(g_data["name"], g_data["topic"], g_data["genre"], g_data["score"], g_data["weeks_on_market"])
+                rg.is_active = g_data.get("is_active", True)
+                games.append(rg)
+            rival = RivalStudio(r_data["name"], r_data.get("target_market_share", 10), games, r_data.get("next_release_week"))
+            self.rivals.append(rival)
+            
+        if not self.rivals:
+            self.rivals = self._init_rivals()
+            
+        self.last_goty_year = data.get("last_goty_year", 0)
+        self.bought_platforms = data.get("bought_platforms", ["PC (MS-DOS)"])
+        self.active_platforms = data.get("active_platforms", [p['name'] for p in get_available_platforms(self.week)])
+        
+        # Finanzen laden
+        self.accounting = data.get("accounting", {"income": 0, "expenses": 0, "loan_paid": 0})
+        loan_data = data.get("bank_loan")
+        if loan_data:
+            from models import BankLoan
+            self.bank_loan = BankLoan(
+                loan_data["amount_borrowed"], 0, loan_data["weeks_remaining"], 
+                amount_remaining=loan_data["amount_remaining"], 
+                weeks_remaining=loan_data["weeks_remaining"]
+            )
+            self.bank_loan.weekly_payment = loan_data["weekly_payment"]
+        else:
+            self.bank_loan = None
+            
+        # Custom Consoles laden
+        self.custom_consoles = []
+        if "custom_consoles" in data:
+            from models import CustomConsole
+            for c_data in data["custom_consoles"]:
+                cc = CustomConsole(c_data["name"], c_data["tech_level"], c_data["dev_cost"], c_data["release_week"])
+                cc.market_share = c_data.get("market_share", 0.05)
+                self.custom_consoles.append(cc)
 
         self.reset_draft()
         return True

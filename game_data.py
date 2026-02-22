@@ -128,20 +128,20 @@ TOPIC_GENRE_COMPAT = {
 # name, Lizenzgebühr, Markt-Multiplikator, verfügbar ab Woche, Ende Woche (None = nie), Typ
 # ============================================================
 PLATFORMS = [
-    {"name": "PC (MS-DOS)",     "license_fee": 0,      "market_multi": 1.0,  "available_week": 1,  "end_week": 40,   "type": "PC"},
-    {"name": "PC (Windows)",    "license_fee": 0,      "market_multi": 1.2,  "available_week": 30, "end_week": None, "type": "PC"},
-    {"name": "PC (Linux)",      "license_fee": 0,      "market_multi": 0.5,  "available_week": 50, "end_week": None, "type": "PC"},
+    {"name": "Zenith-Core 88",  "license_fee": 0,      "market_multi": 1.0,  "available_week": 1,  "end_week": 40,   "type": "PC"},
+    {"name": "Micro-Gate",      "license_fee": 0,      "market_multi": 1.2,  "available_week": 30, "end_week": None, "type": "PC"},
+    {"name": "Penguin-OS",      "license_fee": 0,      "market_multi": 0.5,  "available_week": 50, "end_week": None, "type": "PC"},
     
-    {"name": "Playsystem 1",    "license_fee": 20000,  "market_multi": 1.5,  "available_week": 1,  "end_week": 100,  "type": "Konsole"},
-    {"name": "Playsystem 2",    "license_fee": 40000,  "market_multi": 2.2,  "available_week": 80, "end_week": 250,  "type": "Konsole"},
+    {"name": "Nova-Station 1",  "license_fee": 20000,  "market_multi": 1.5,  "available_week": 1,  "end_week": 100,  "type": "Konsole"},
+    {"name": "Nova-Station 2",  "license_fee": 40000,  "market_multi": 2.2,  "available_week": 80, "end_week": 250,  "type": "Konsole"},
     
-    {"name": "Ninvento GS",     "license_fee": 15000,  "market_multi": 1.3,  "available_week": 1,  "end_week": 60,   "type": "Handheld"},
-    {"name": "Ninvento Duo",    "license_fee": 30000,  "market_multi": 1.8,  "available_week": 70, "end_week": 200,  "type": "Konsole"},
+    {"name": "Kuro-Hand",       "license_fee": 15000,  "market_multi": 1.3,  "available_week": 1,  "end_week": 60,   "type": "Handheld"},
+    {"name": "Kuro-Classic",    "license_fee": 30000,  "market_multi": 1.8,  "available_week": 70, "end_week": 200,  "type": "Konsole"},
     
-    {"name": "mBox",            "license_fee": 25000,  "market_multi": 1.4,  "available_week": 20, "end_week": 150,  "type": "Konsole"},
-    {"name": "mBox 360",        "license_fee": 45000,  "market_multi": 2.0,  "available_week": 140,"end_week": 350,  "type": "Konsole"},
+    {"name": "Orion-Box",       "license_fee": 25000,  "market_multi": 1.4,  "available_week": 20, "end_week": 150,  "type": "Konsole"},
+    {"name": "Orion-Box 360",   "license_fee": 45000,  "market_multi": 2.0,  "available_week": 140,"end_week": 350,  "type": "Konsole"},
     
-    {"name": "Handheld X",      "license_fee": 10000,  "market_multi": 0.8,  "available_week": 1,  "end_week": 80,   "type": "Handheld"},
+    {"name": "Pocket-Play",     "license_fee": 10000,  "market_multi": 0.8,  "available_week": 1,  "end_week": 80,   "type": "Handheld"},
     {"name": "Smartphone",      "license_fee": 5000,   "market_multi": 2.5,  "available_week": 160,"end_week": None, "type": "Mobile"},
     {"name": "Tablet OS",       "license_fee": 7000,   "market_multi": 1.8,  "available_week": 200,"end_week": None, "type": "Mobile"},
 ]
@@ -486,21 +486,21 @@ TREND_GENRES = [
 # PUBLISHER
 PUBLISHERS = [
     {
-        "name": "Global Audio Bits",
+        "name": "Global-Play",
         "description": "Ein solider Publisher mit gutem Vertrieb.",
         "advance": 5000,
         "royalty": 0.40,
         "min_score": 6
     },
     {
-        "name": "Sony-Digital",
+        "name": "Titan-Publishing",
         "description": "Premium-Partner für AAA-Titel.",
         "advance": 25000,
         "royalty": 0.60,
         "min_score": 8
     },
     {
-        "name": "Indie-Sound-Labels",
+        "name": "Star-Distribute",
         "description": "Perfekt für Einsteiger, geringe Hürden.",
         "advance": 1000,
         "royalty": 0.20,
@@ -588,8 +588,10 @@ def get_available_platforms(week):
     current_week = float(week)
     available = []
     for p in PLATFORMS:
-        start = float(p["available_week"]) if p["available_week"] is not None else 0.0
-        end = float(p["end_week"]) if p["end_week"] is not None else 99999.0
+        aw = p.get("available_week")
+        ew = p.get("end_week")
+        start = float(aw) if aw is not None else 0.0
+        end = float(ew) if ew is not None else 99999.0
         if start <= current_week <= end:
             available.append(p)
     return available

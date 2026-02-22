@@ -6,6 +6,7 @@ Enthält: ReviewScore, GameProject, Employee, Engine, EngineFeature
 
 import random
 from game_data import EMPLOYEE_FIRST_NAMES, EMPLOYEE_LAST_NAMES
+from translations import get_text
 
 
 class ReviewScore:
@@ -24,8 +25,8 @@ class ReviewScore:
         return sum(self.scores)
 
     def __str__(self):
-        parts = [f"Reviewer {i+1}: {s}/10" for i, s in enumerate(self.scores)]
-        return ", ".join(parts) + f" (Durchschnitt: {self.average:.1f})"
+        parts = [get_text('reviewer_score', i=i+1, score=s) for i, s in enumerate(self.scores)]
+        return ", ".join(parts) + " " + get_text('reviewer_average', avg=self.average)
 
 
 class GameProject:
@@ -60,12 +61,12 @@ class GameProject:
     def summary(self):
         """Zusammenfassung für NVDA."""
         parts = [
-            f"'{self.name}' - {self.topic} {self.genre} auf {self.platform}",
+            get_text('game_summary_base', name=self.name, topic=get_text(self.topic), genre=get_text(self.genre), platform=get_text(self.platform)),
         ]
         if self.review:
-            parts.append(f"Bewertung: {self.review.average:.1f} von 10")
-            parts.append(f"Verkäufe: {self.sales:,}")
-            parts.append(f"Einnahmen: {self.revenue:,} Euro")
+            parts.append(get_text('game_summary_review', score=self.review.average))
+            parts.append(get_text('game_summary_sales', sales=self.sales))
+            parts.append(get_text('game_summary_revenue', revenue=self.revenue))
         return ". ".join(parts)
 
     def to_dict(self):
@@ -139,8 +140,8 @@ class Engine:
 
     def summary(self):
         """Zusammenfassung für NVDA."""
-        feat_names = ", ".join(f.name for f in self.features) if self.features else "Keine"
-        return f"Engine '{self.name}', Tech-Level: {self.tech_level}. Features: {feat_names}"
+        feat_names = ", ".join(get_text(f.name) for f in self.features) if self.features else get_text('none')
+        return get_text('engine_summary', name=self.name, tech_level=self.tech_level, features=feat_names)
 
     def __str__(self):
         return f"{self.name} (Tech: {self.tech_level})"
@@ -207,25 +208,18 @@ class Employee:
 
     def summary(self):
         """Zusammenfassung für NVDA."""
-        return (
-            f"{self.name}, {self.role}. "
-            f"Level {self.skill_level}. "
-            f"Gehalt: {self.salary} Euro pro Woche. "
-            f"Moral: {self.morale} Prozent."
-        ) + (f" Spezialisierung: {self.specialization['name']}." if self.specialization else "")
+        base = get_text('employee_summary', name=self.name, role=get_text(self.role), level=self.skill_level, salary=self.salary, morale=self.morale)
+        if self.specialization:
+            base += get_text('employee_spec', spec=get_text(self.specialization['name']))
+        return base
 
     def detail(self):
         """Detaillierte Info für NVDA."""
         from game_data import SLIDER_NAMES
         skill_text = ". ".join(
-            f"{s}: {self.skills[s]}" for s in SLIDER_NAMES
+            f"{get_text(s)}: {self.skills[s]}" for s in SLIDER_NAMES
         )
-        return (
-            f"{self.name}, {self.role}, Level {self.skill_level}. "
-            f"Gehalt: {self.salary} Euro pro Woche. "
-            f"Fähigkeiten: {skill_text}. "
-            f"Moral: {self.morale} Prozent."
-        )
+        return get_text('employee_detail', name=self.name, role=get_text(self.role), level=self.skill_level, salary=self.salary, skills=skill_text, morale=self.morale)
 
     def to_dict(self):
         """Für Speichern."""
@@ -241,3 +235,78 @@ class Employee:
             "morale": self.morale,
             "weeks_employed": self.weeks_employed,
         }
+
+class RivalGame:
+    """Spiel, das von der KI-Konkurrenz veröffentlicht wird."""
+    
+    def __init__(self, name, topic, genre, score, weeks_on_market=0):
+        self.name = name
+        self.topic = topic
+        self.genre = genre
+        self.score = score
+        self.weeks_on_market = weeks_on_market
+        self.is_active = True
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "topic": self.topic,
+            "genre": self.genre,
+            "score": self.score,
+            "weeks_on_market": self.weeks_on_market,
+            "is_active": self.is_active
+        }
+
+class RivalStudio:
+    """KI-gesteuertes Konkurrenz-Studio."""
+    
+    def __init__(self, name, target_market_share=10, games=None, next_release_week=None):
+        self.name = name
+        self.target_market_share = target_market_share
+        self.games = games or []
+        self.next_release_week = next_release_week or random.randint(10, 30)
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "target_market_share": self.target_market_share,
+            "games": [g.to_dict() for g in self.games],
+            "next_release_week": self.next_release_week
+        }
+
+class BankLoan:
+    """Aktiver Kredit bei der Bank."""
+    def __init__(self, amount_borrowed, interest_rate, duration_weeks, amount_remaining=None, weeks_remaining=None):
+        self.amount_borrowed = amount_borrowed
+        # Feste Gesamtrückzahlung: z.B. 100k + 20% = 120k
+        total_repayment = int(amount_borrowed * (1.0 + interest_rate))
+        self.amount_remaining = amount_remaining if amount_remaining is not None else total_repayment
+        self.weeks_remaining = weeks_remaining if weeks_remaining is not None else duration_weeks
+        self.weekly_payment = int(total_repayment / duration_weeks)
+
+    def to_dict(self):
+        return {
+            "amount_borrowed": self.amount_borrowed,
+            "amount_remaining": self.amount_remaining,
+            "weekly_payment": self.weekly_payment,
+            "weeks_remaining": self.weeks_remaining
+        }
+
+class CustomConsole:
+    """Vom Spieler entwickelte Konsole."""
+    def __init__(self, name, tech_level, dev_cost, release_week):
+        self.name = name
+        self.tech_level = tech_level
+        self.dev_cost = dev_cost
+        self.release_week = release_week
+        self.market_share = 0.05 # Startet mit 5% Marktanteil
+        
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "tech_level": self.tech_level,
+            "dev_cost": self.dev_cost,
+            "release_week": self.release_week,
+            "market_share": self.market_share
+        }
+
