@@ -58,6 +58,32 @@ class AudioManager:
 
         self.music_enabled = True
         self.current_loop = None
+        self.tts_engine = "auto"
+        
+    def update_tts_engine(self, engine_mode):
+        """Wechselt den TTS-Modus: auto, nvda, sapi"""
+        self.tts_engine = engine_mode
+        if not self.tolk_active or not self.tolk:
+            return
+            
+        try:
+            if engine_mode == "auto":
+                if hasattr(self.tolk, 'Tolk_PreferSAPI'):
+                    self.tolk.Tolk_PreferSAPI(False)
+                if hasattr(self.tolk, 'Tolk_TrySAPI'):
+                    self.tolk.Tolk_TrySAPI(True)
+            elif engine_mode == "nvda":
+                if hasattr(self.tolk, 'Tolk_PreferSAPI'):
+                    self.tolk.Tolk_PreferSAPI(False)
+                if hasattr(self.tolk, 'Tolk_TrySAPI'):
+                    self.tolk.Tolk_TrySAPI(False)
+            elif engine_mode == "sapi":
+                if hasattr(self.tolk, 'Tolk_PreferSAPI'):
+                    self.tolk.Tolk_PreferSAPI(True)
+                if hasattr(self.tolk, 'Tolk_TrySAPI'):
+                    self.tolk.Tolk_TrySAPI(True)
+        except Exception as e:
+            print(f"[Tolk Mode Change Fehler]: {e}")
 
     def set_music_enabled(self, enabled):
         """Aktiviert oder deaktiviert Musik."""

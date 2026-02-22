@@ -8,6 +8,7 @@ Steuerung: Pfeiltasten + Enter + Buchstaben für Texteingabe.
 
 import pygame
 import time
+import os
 from audio import AudioManager
 from logic import GameState
 from translations import get_text, set_language
@@ -62,11 +63,18 @@ def main():
     screen = pygame.display.set_mode((500, 300))
     pygame.display.set_caption("Audio Studio Tycoon - Audio Edition")
     audio = AudioManager()
-    audio.speak(get_text("main_title"))
-    state = GameState()
-    set_language(state.settings['language'])
+    os.system("cls" if os.name == "nt" else "clear")
 
-    # ---- Menü-Instanzen ----
+    state = GameState()
+    state.audio = audio  # Audio-Instanz für globale Text-Ausgaben in Models
+    
+    # NEU: Globale Einstellungen sofort beim Start laden
+    state.load_global_settings()
+    set_language(state.settings.get('language', 'de'))
+    audio.set_music_enabled(state.settings.get('music_enabled', True))
+    audio.update_tts_engine(state.settings.get('tts_engine', 'auto'))
+
+    # Umbau: Dynamische Menü-Generierung über Lambda-Funktionen
     menu_factories = {
         # Haupt-Flow
         "main_menu": lambda: MainMenu(audio, state),

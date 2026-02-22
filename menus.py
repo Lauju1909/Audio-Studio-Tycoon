@@ -139,15 +139,45 @@ class SettingsMenu:
         s = self.game_state.settings
         lang_name = "Deutsch" if s['language'] == 'de' else "English"
         music_status = self.game_state.get_text('on') if s['music_enabled'] else self.game_state.get_text('off')
+        
+        tts_mode = s.get('tts_engine', 'auto')
+        if tts_mode == 'nvda':
+            tts_name = "NVDA / Screen Reader"
+        elif tts_mode == 'sapi':
+            tts_name = "SAPI (MS David)"
+        else:
+            tts_name = "Auto"
 
         self.options = [
             {'text': f"{self.game_state.get_text('music')}: {music_status}", 'action': self._toggle_music},
             {'text': f"{self.game_state.get_text('language')}: {lang_name}", 'action': self._toggle_language},
+            {'text': f"{self.game_state.get_text('tts_mode')}: {tts_name}", 'action': self._toggle_tts},
             {'text': self.game_state.get_text('back'), 'action': self.on_back}
         ]
 
+    def _toggle_tts(self):
+        modes = ["auto", "nvda", "sapi"]
+        current = self.game_state.settings.get('tts_engine', 'auto')
+        try:
+            idx = modes.index(current)
+        except ValueError:
+            idx = 0
+        new_mode = modes[(idx + 1) % len(modes)]
+        self.game_state.settings['tts_engine'] = new_mode
+        self.game_state.save_global_settings()
+        
+        # Audio Engine anweisen, den Modus zu wechseln
+        if hasattr(self.audio, 'update_tts_engine'):
+            self.audio.update_tts_engine(new_mode)
+            
+        tts_name = "NVDA / Screen Reader" if new_mode == 'nvda' else ("SAPI" if new_mode == 'sapi' else "Auto")
+        self.audio.speak(self.game_state.get_text('tts_mode') + " " + tts_name)
+        self._update_options()
+        self.speak_current(interrupt=False)
+
     def _toggle_music(self):
         self.game_state.settings['music_enabled'] = not self.game_state.settings['music_enabled']
+        self.game_state.save_global_settings()
         self.audio.set_music_enabled(self.game_state.settings['music_enabled'])
         if self.game_state.settings['music_enabled']:
             self.audio.play_music("music_back")
@@ -158,6 +188,7 @@ class SettingsMenu:
         import translations
         new_lang = 'en' if self.game_state.settings['language'] == 'de' else 'de'
         self.game_state.settings['language'] = new_lang
+        self.game_state.save_global_settings()
         translations.set_language(new_lang)
         
         # Immediate text update for title and layout

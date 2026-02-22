@@ -68,7 +68,8 @@ class GameState:
         # Einstellungen
         self.settings = {
             "language": "de",
-            "music_enabled": True
+            "music_enabled": True,
+            "tts_engine": "auto" # mgl: auto, nvda, sapi
         }
 
         # Echtzeit-Zeitsteuerung
@@ -116,6 +117,28 @@ class GameState:
                     "license_fee": 0
                 })
         return out
+
+    def save_global_settings(self):
+        """Speichert die globalen Einstellungen (Sprache, Musik, TTS)."""
+        import json
+        import os
+        try:
+            with open("global_settings.json", "w", encoding="utf-8") as f:
+                json.dump(self.settings, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"Fehler beim Speichern der globalen Einstellungen: {e}")
+
+    def load_global_settings(self):
+        """Lädt die globalen Einstellungen beim Spielstart."""
+        import json
+        import os
+        if os.path.exists("global_settings.json"):
+            try:
+                with open("global_settings.json", "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    self.settings.update(data)
+            except Exception as e:
+                print(f"Fehler beim Laden der globalen Einstellungen: {e}")
 
     def _init_rivals(self):
         """Erstellt 3 Konkurrenz-Studios."""
