@@ -186,57 +186,58 @@ def main():
                     current_menu = menu_factories[current_key]()
                     current_menu.announce_entry()
                 
-                # Zeitsteuerung (Hotkeys)
-                elif event.key == pygame.K_SPACE:
-                    if state.time_speed > 0:
-                        state.time_speed = 0
-                        audio.speak(state.get_text('paused_msg'))
-                    else:
+                # Zeitsteuerung und Hotkeys (nur wenn kein Text-Input aktiv ist)
+                elif not getattr(current_menu, 'is_text_input', False):
+                    if event.key == pygame.K_SPACE:
+                        if state.time_speed > 0:
+                            state.time_speed = 0
+                            audio.speak(state.get_text('paused_msg'))
+                        else:
+                            state.time_speed = 1.0
+                            audio.speak(state.get_text('start_msg'))
+                    elif event.key == pygame.K_1:
                         state.time_speed = 1.0
-                        audio.speak(state.get_text('start_msg'))
-                elif event.key == pygame.K_1:
-                    state.time_speed = 1.0
-                    audio.speak(state.get_text('time_speed_speech', speed=state.get_text('speed_1')))
-                elif event.key == pygame.K_2:
-                    state.time_speed = 2.0
-                    audio.speak(state.get_text('time_speed_speech', speed=state.get_text('speed_2')))
-                elif event.key == pygame.K_3:
-                    state.time_speed = 4.0
-                    audio.speak(state.get_text('time_speed_speech', speed=state.get_text('speed_3')))
-                elif event.key == pygame.K_s:
-                    if current_key not in ["main_menu", "company_name_input", "bankruptcy"]:
-                        state.save_game(slot=1)
-                        # Bonus: Kurzes Speichergeräusch abspielen
-                        if hasattr(audio, 'play_sound'): audio.play_sound('blip')
-                        audio.speak(state.get_text('quicksave_msg'))
-                elif event.key == pygame.K_l:
-                    if current_key not in ["company_name_input", "bankruptcy"]:
-                        if state.load_game(slot=1):
-                            # Bonus: Lade-Geräusch
+                        audio.speak(state.get_text('time_speed_speech', speed=state.get_text('speed_1')))
+                    elif event.key == pygame.K_2:
+                        state.time_speed = 2.0
+                        audio.speak(state.get_text('time_speed_speech', speed=state.get_text('speed_2')))
+                    elif event.key == pygame.K_3:
+                        state.time_speed = 4.0
+                        audio.speak(state.get_text('time_speed_speech', speed=state.get_text('speed_3')))
+                    elif event.key == pygame.K_s:
+                        if current_key not in ["main_menu", "company_name_input", "bankruptcy"]:
+                            state.save_game(slot=1)
+                            # Bonus: Kurzes Speichergeräusch abspielen
                             if hasattr(audio, 'play_sound'): audio.play_sound('blip')
-                            audio.speak(state.get_text('quickload_msg'))
-                            current_key = "game_menu"
+                            audio.speak(state.get_text('quicksave_msg'))
+                    elif event.key == pygame.K_l:
+                        if current_key not in ["company_name_input", "bankruptcy"]:
+                            if state.load_game(slot=1):
+                                # Bonus: Lade-Geräusch
+                                if hasattr(audio, 'play_sound'): audio.play_sound('blip')
+                                audio.speak(state.get_text('quickload_msg'))
+                                current_key = "game_menu"
+                                current_menu = menu_factories[current_key]()
+                                current_menu.announce_entry()
+                            else:
+                                if hasattr(audio, 'play_sound'): audio.play_sound('error')
+                                audio.speak(state.get_text('quickload_fail_msg'))
+                    elif event.key == pygame.K_c:
+                        state.crunch_active = not state.crunch_active
+                        audio.speak(state.get_text('crunch_active' if state.crunch_active else 'crunch_off'))
+                        if state.crunch_active:
+                            audio.speak(state.get_text('crunch_info'), interrupt=False)
+                    elif event.key == pygame.K_j:
+                        audio.speak(state.get_calendar_text())
+                    elif event.key == pygame.K_m:
+                        if not state.is_developing:
+                            audio.speak(state.get_text('marketing_simulated'))
+                            # M-Taste ruft simuliertes Marketing auf
+                            current_key = "marketing_menu"
                             current_menu = menu_factories[current_key]()
                             current_menu.announce_entry()
                         else:
-                            if hasattr(audio, 'play_sound'): audio.play_sound('error')
-                            audio.speak(state.get_text('quickload_fail_msg'))
-                elif event.key == pygame.K_c:
-                    state.crunch_active = not state.crunch_active
-                    audio.speak(state.get_text('crunch_active' if state.crunch_active else 'crunch_off'))
-                    if state.crunch_active:
-                        audio.speak(state.get_text('crunch_info'), interrupt=False)
-                elif event.key == pygame.K_j:
-                    audio.speak(state.get_calendar_text())
-                elif event.key == pygame.K_m:
-                    if not state.is_developing:
-                        audio.speak(state.get_text('marketing_simulated'))
-                        # M-Taste ruft simuliertes Marketing auf
-                        current_key = "marketing_menu"
-                        current_menu = menu_factories[current_key]()
-                        current_menu.announce_entry()
-                    else:
-                        audio.speak(state.get_text('marketing_blocked'))
+                            audio.speak(state.get_text('marketing_blocked'))
 
         # Fenster aktualisieren
         screen.fill((10, 10, 20))

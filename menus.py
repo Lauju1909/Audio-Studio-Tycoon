@@ -95,6 +95,7 @@ class TextInputMenu:
         self.on_confirm = on_confirm
         self.on_cancel = on_cancel
         self.text = ""
+        self.is_text_input = True
 
     def announce_entry(self):
         self.text = ""

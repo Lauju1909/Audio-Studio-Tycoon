@@ -1,11 +1,11 @@
 {
   "company_name": "",
-  "money": 448344,
-  "fans": 2859,
+  "money": 593860,
+  "fans": 3667,
   "week": 13,
   "high_score": 5.75,
   "games_made": 2,
-  "total_revenue": 334854,
+  "total_revenue": 480330,
   "office_level": 0,
   "last_event_week": 0,
   "last_trend_week": 0,
@@ -28,14 +28,14 @@
       "marketing": "Gaming Web-Ads",
       "engine_name": null,
       "review_scores": [
-        6,
         5,
-        6,
+        5,
+        7,
         6
       ],
       "review_average": 5.75,
-      "sales": 16006,
-      "revenue": 288108,
+      "sales": 14278,
+      "revenue": 257004,
       "dev_cost": 12500,
       "week_developed": 1,
       "bugs": 0,
@@ -54,15 +54,15 @@
       "marketing": "Gaming Web-Ads",
       "engine_name": null,
       "review_scores": [
-        3,
-        4,
-        3,
-        4
+        5,
+        6,
+        5,
+        6
       ],
-      "review_average": 3.5,
-      "sales": 2597,
-      "revenue": 46746,
-      "dev_cost": 19370,
+      "review_average": 5.5,
+      "sales": 12407,
+      "revenue": 223326,
+      "dev_cost": 19340,
       "week_developed": 7,
       "bugs": 0,
       "dlc_count": 1,
@@ -72,22 +72,27 @@
   ],
   "employees": [
     {
-      "name": "Ella Wolf",
-      "role": "Designer",
-      "primary_skill": "Grafik",
-      "secondary_skill": "Welt",
+      "name": "Sarah Fischer",
+      "role": "Sound-Engineer",
+      "primary_skill": "Sound",
+      "secondary_skill": "Gameplay",
       "skill_level": 1,
-      "specialization": null,
-      "skills": {
-        "Gameplay": 10,
-        "Grafik": 55,
-        "Sound": 13,
-        "Story": 15,
-        "KI": 10,
-        "Welt": 41
+      "specialization": {
+        "name": "Design-Gott",
+        "bonus_type": "Grafik",
+        "bonus_value": 0.2,
+        "description": "Ein Auge für erstklassige Grafik."
       },
-      "salary": 1220,
-      "morale": 90,
+      "skills": {
+        "Gameplay": 42,
+        "Grafik": 10,
+        "Sound": 62,
+        "Story": 9,
+        "KI": 10,
+        "Welt": 10
+      },
+      "salary": 1215,
+      "morale": 100,
       "weeks_employed": 6
     }
   ],
@@ -170,19 +175,19 @@
       "name": "MicroHard",
       "target_market_share": 30,
       "games": [],
-      "next_release_week": 7
+      "next_release_week": 17
     },
     {
       "name": "Electric Farts",
       "target_market_share": 25,
       "games": [],
-      "next_release_week": 25
+      "next_release_week": 20
     },
     {
       "name": "Nintengo",
       "target_market_share": 20,
       "games": [],
-      "next_release_week": 34
+      "next_release_week": 38
     }
   ],
   "last_goty_year": 0,
@@ -193,8 +198,8 @@
     "weeks_remaining": 104
   },
   "accounting": {
-    "income": 334854,
-    "expenses": 31870,
+    "income": 480330,
+    "expenses": 31840,
     "loan_paid": 0
   },
   "custom_consoles": [],
