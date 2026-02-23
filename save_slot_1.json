@@ -1,11 +1,11 @@
 {
   "company_name": "",
-  "money": 676360,
-  "fans": 3167,
+  "money": 667074,
+  "fans": 3117,
   "week": 13,
   "high_score": 5.75,
   "games_made": 2,
-  "total_revenue": 480330,
+  "total_revenue": 471204,
   "office_level": 0,
   "last_event_week": 0,
   "last_trend_week": 0,
@@ -29,13 +29,13 @@
       "engine_name": null,
       "review_scores": [
         5,
-        5,
-        7,
+        6,
+        6,
         6
       ],
       "review_average": 5.75,
-      "sales": 14278,
-      "revenue": 257004,
+      "sales": 14326,
+      "revenue": 257868,
       "dev_cost": 12500,
       "week_developed": 1,
       "bugs": 0,
@@ -54,15 +54,15 @@
       "marketing": "Gaming Web-Ads",
       "engine_name": null,
       "review_scores": [
+        4,
         5,
-        6,
         5,
-        6
+        4
       ],
-      "review_average": 5.5,
-      "sales": 12407,
-      "revenue": 223326,
-      "dev_cost": 19340,
+      "review_average": 4.5,
+      "sales": 11852,
+      "revenue": 213336,
+      "dev_cost": 19460,
       "week_developed": 7,
       "bugs": 0,
       "dlc_count": 0,
@@ -72,26 +72,26 @@
   ],
   "employees": [
     {
-      "name": "Sarah Fischer",
-      "role": "Sound-Engineer",
-      "primary_skill": "Sound",
+      "name": "Jonas Lang",
+      "role": "Programmierer",
+      "primary_skill": "KI",
       "secondary_skill": "Gameplay",
       "skill_level": 1,
       "specialization": {
-        "name": "Design-Gott",
-        "bonus_type": "Grafik",
-        "bonus_value": 0.2,
-        "description": "Ein Auge für erstklassige Grafik."
+        "name": "Marketing-Experte",
+        "bonus_type": "Marketing",
+        "bonus_value": 0.3,
+        "description": "Erhöht die Effektivität von Marketing."
       },
       "skills": {
-        "Gameplay": 37,
-        "Grafik": 10,
-        "Sound": 52,
-        "Story": 9,
-        "KI": 10,
-        "Welt": 10
+        "Gameplay": 40,
+        "Grafik": 15,
+        "Sound": 16,
+        "Story": 8,
+        "KI": 48,
+        "Welt": 5
       },
-      "salary": 1140,
+      "salary": 1160,
       "morale": 100,
       "weeks_employed": 6
     }
@@ -170,19 +170,19 @@
       "name": "MicroHard",
       "target_market_share": 30,
       "games": [],
-      "next_release_week": 17
+      "next_release_week": 9
     },
     {
       "name": "Electric Farts",
       "target_market_share": 25,
       "games": [],
-      "next_release_week": 20
+      "next_release_week": 17
     },
     {
       "name": "Nintengo",
       "target_market_share": 20,
       "games": [],
-      "next_release_week": 38
+      "next_release_week": 39
     }
   ],
   "last_goty_year": 0,
@@ -193,8 +193,8 @@
     "weeks_remaining": 104
   },
   "accounting": {
-    "income": 480330,
-    "expenses": 31840,
+    "income": 471204,
+    "expenses": 31960,
     "loan_paid": 0
   },
   "custom_consoles": [],

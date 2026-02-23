@@ -779,13 +779,17 @@ class GameState:
 
         # Basis-Score
         base_score = (
-            (synergy * 0.30) +
-            (slider_match * 0.30) +
+            (synergy * 0.35) +
+            (slider_match * 0.35) +
             (team_quality * 0.15) +
             (engine_quality * 0.10) +
-            (0.5 * 0.15)
+            (0.5 * 0.05)
         )
         base_score *= random_factor * trend_bonus
+
+        # Massive Bonus for perfect synergy and slider configuration
+        if synergy >= 0.8 and slider_match >= 0.8:
+            base_score += 1.5
 
         # Sequel Bonus/Malus
         if len(self.game_history) > 0:
@@ -828,6 +832,12 @@ class GameState:
         intro = self.get_text(intro_key, company=self.company_name, game=project.name)
         comments.append(intro)
         
+        # Story Text
+        story_key = f"story_{project.topic}"
+        story_text = self.get_text(story_key)
+        if story_text != story_key:
+            comments.append(story_text)
+        
         # Positiv/Negativ basierend auf Slidern/Synergie
         if synergy >= 0.8:
             key = random.choice(['review_pos_1', 'review_pos_2', 'review_pos_3'])
@@ -842,7 +852,12 @@ class GameState:
             comments.append(self.get_text('review_good_gameplay'))
 
         # Fazit
-        concl_key = random.choice(['review_concl_1', 'review_concl_2', 'review_concl_3'])
+        if base_review >= 8.0:
+            concl_key = 'review_concl_1'
+        elif base_review >= 5.0:
+            concl_key = 'review_concl_2'
+        else:
+            concl_key = 'review_concl_3'
         comments.append(self.get_text(concl_key))
 
         review = ReviewScore(scores, comments=comments)
@@ -861,13 +876,13 @@ class GameState:
         size_data = next((s for s in GAME_SIZES if s["name"] == project.size), GAME_SIZES[1])
         base_sales = 5000 * size_data["revenue_multi"]
 
-        if avg >= 9: score_m = 10.0
-        elif avg >= 8: score_m = 5.0
-        elif avg >= 7: score_m = 3.0
-        elif avg >= 6: score_m = 2.0
-        elif avg >= 5: score_m = 1.0
-        elif avg >= 4: score_m = 0.5
-        else: score_m = 0.2
+        if avg >= 9: score_m = 6.0
+        elif avg >= 8: score_m = 4.0
+        elif avg >= 7: score_m = 2.5
+        elif avg >= 6: score_m = 1.8
+        elif avg >= 5: score_m = 1.2
+        elif avg >= 4: score_m = 0.8
+        else: score_m = 0.3
 
         fan_bonus = 1.0 + (self.fans / 100000)
 

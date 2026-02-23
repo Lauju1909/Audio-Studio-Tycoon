@@ -18,3 +18,6 @@ Audio Studio Tycoon ist eine 100% Screenreader-optimierte Management-Simulation,
 - **Pfeiltasten**: Navigieren in Menüs und Slidern.
 - **Enter**: Auswahl bestätigen.
 - **Buchstaben**: Texteingabe für Firmen- und Spielnamen.
+
+## Credits & Attribution
+- **Sound Effects & Music** provided by Eric Matyas (www.soundimage.org)

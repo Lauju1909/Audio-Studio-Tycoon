@@ -93,6 +93,15 @@ GENRE_IDEAL_SLIDERS = {
     "Casual": {
         "Gameplay": 8, "Grafik": 5, "Sound": 6, "Story": 1, "KI": 3, "Welt": 3,
     },
+    "Horror": {
+        "Gameplay": 7, "Grafik": 8, "Sound": 9, "Story": 7, "KI": 4, "Welt": 6,
+    },
+    "Kampfspiel": {
+        "Gameplay": 9, "Grafik": 7, "Sound": 6, "Story": 2, "KI": 7, "Welt": 3,
+    },
+    "Rennspiel": {
+        "Gameplay": 8, "Grafik": 8, "Sound": 6, "Story": 1, "KI": 6, "Welt": 5,
+    },
 }
 
 # ============================================================
@@ -100,27 +109,32 @@ GENRE_IDEAL_SLIDERS = {
 # 3 = Super, 2 = Gut, 1 = Okay, 0 = Schlecht
 # ============================================================
 TOPIC_GENRE_COMPAT = {
-    #                    Action  RPG  Sim  Strat  Aben  Puzzle  Sport  Casual
-    "Fantasy":          [  2,     3,   1,    2,     3,    1,     0,     1  ],
-    "Sci-Fi":           [  3,     2,   2,    3,     2,    1,     0,     1  ],
-    "Mittelalter":      [  2,     3,   2,    3,     2,    0,     0,     0  ],
-    "Spionage":         [  3,     1,   1,    2,     3,    2,     0,     1  ],
-    "Piraten":          [  3,     2,   1,    2,     3,    1,     0,     1  ],
-    "Zombies":          [  3,     1,   0,    2,     2,    1,     0,     1  ],
-    "Sport":            [  1,     0,   2,    1,     0,    0,     3,     2  ],
-    "Rennen":           [  2,     0,   2,    0,     0,    0,     3,     2  ],
-    "Krankenhaus":      [  0,     0,   3,    1,     1,    2,     0,     2  ],
-    "Schule":           [  0,     1,   3,    1,     1,    2,     0,     2  ],
-    "Stadt":            [  0,     1,   3,    2,     1,    1,     0,     1  ],
-    "Weltraum":         [  3,     2,   2,    3,     2,    0,     0,     1  ],
-    "Krieg":            [  3,     1,   1,    3,     1,    0,     0,     0  ],
-    "Musik":            [  0,     0,   2,    0,     0,    3,     0,     3  ],
-    "Kochen":           [  0,     0,   3,    0,     0,    2,     0,     3  ],
-    "Tiere":            [  1,     1,   3,    1,     2,    2,     0,     3  ],
-    "Horror":           [  2,     1,   0,    1,     3,    1,     0,     0  ],
-    "Superheld":        [  3,     2,   0,    1,     3,    0,     0,     1  ],
-    "Cyberpunk":        [  3,     3,   1,    2,     2,    0,     0,     0  ],
-    "Detektiv":         [  1,     1,   1,    1,     3,    3,     0,     1  ],
+    #                    Act  RPG  Sim  Str  Abe  Puz  Spo  Cas  Hor  Kam  Ren
+    "Fantasy":          [  2,   3,   1,   2,   3,   1,   0,   1,   1,   2,   0  ],
+    "Sci-Fi":           [  3,   2,   2,   3,   2,   1,   0,   1,   2,   2,   2  ],
+    "Mittelalter":      [  2,   3,   2,   3,   2,   0,   0,   0,   1,   2,   0  ],
+    "Spionage":         [  3,   1,   1,   2,   3,   2,   0,   1,   1,   2,   1  ],
+    "Piraten":          [  3,   2,   1,   2,   3,   1,   0,   1,   1,   2,   1  ],
+    "Zombies":          [  3,   1,   0,   2,   2,   1,   0,   1,   3,   2,   0  ],
+    "Sport":            [  1,   0,   2,   1,   0,   0,   3,   2,   0,   1,   1  ],
+    "Rennen":           [  2,   0,   2,   0,   0,   0,   3,   2,   0,   0,   3  ],
+    "Krankenhaus":      [  0,   0,   3,   1,   1,   2,   0,   2,   2,   0,   0  ],
+    "Schule":           [  0,   1,   3,   1,   1,   2,   0,   2,   1,   1,   0  ],
+    "Stadt":            [  0,   1,   3,   2,   1,   1,   0,   1,   0,   2,   2  ],
+    "Weltraum":         [  3,   2,   2,   3,   2,   0,   0,   1,   2,   1,   2  ],
+    "Krieg":            [  3,   1,   1,   3,   1,   0,   0,   0,   1,   2,   1  ],
+    "Musik":            [  0,   0,   2,   0,   0,   3,   0,   3,   0,   0,   0  ],
+    "Kochen":           [  0,   0,   3,   0,   0,   2,   0,   3,   0,   0,   0  ],
+    "Tiere":            [  1,   1,   3,   1,   2,   2,   0,   3,   0,   1,   1  ],
+    "Horror":           [  2,   1,   0,   1,   3,   1,   0,   0,   3,   1,   0  ],
+    "Superheld":        [  3,   2,   0,   1,   3,   0,   0,   1,   0,   3,   1  ],
+    "Cyberpunk":        [  3,   3,   1,   2,   2,   0,   0,   0,   1,   2,   2  ],
+    "Detektiv":         [  1,   1,   1,   1,   3,   3,   0,   1,   2,   0,   0  ],
+    "Dinosaurier":      [  3,   2,   2,   1,   3,   1,   0,   1,   2,   2,   1  ],
+    "Vampire":          [  2,   3,   1,   1,   2,   1,   0,   1,   3,   2,   0  ],
+    "Feuerwehr":        [  2,   1,   3,   2,   1,   1,   0,   2,   0,   0,   2  ],
+    "Polizei":          [  3,   1,   2,   2,   2,   2,   0,   1,   1,   1,   2  ],
+    "Wilder Westen":    [  3,   2,   1,   2,   3,   0,   0,   1,   1,   1,   2  ],
 }
 
 # ============================================================
@@ -128,22 +142,22 @@ TOPIC_GENRE_COMPAT = {
 # name, Lizenzgebühr, Markt-Multiplikator, verfügbar ab Woche, Ende Woche (None = nie), Typ
 # ============================================================
 PLATFORMS = [
-    {"name": "Zenith-Core 88",  "license_fee": 0,      "market_multi": 1.0,  "available_week": 1,  "end_week": 40,   "type": "PC"},
+    {"name": "Zenith-Core 88",  "license_fee": 0,      "market_multi": 1.0,  "available_week": 1,  "end_week": 200,   "type": "PC"},
     {"name": "Micro-Gate",      "license_fee": 0,      "market_multi": 1.2,  "available_week": 30, "end_week": None, "type": "PC"},
     {"name": "Penguin-OS",      "license_fee": 0,      "market_multi": 0.5,  "available_week": 50, "end_week": None, "type": "PC"},
     
-    {"name": "Nova-Station 1",  "license_fee": 20000,  "market_multi": 1.5,  "available_week": 1,  "end_week": 100,  "type": "Konsole"},
-    {"name": "Nova-Station 2",  "license_fee": 40000,  "market_multi": 2.2,  "available_week": 80, "end_week": 250,  "type": "Konsole"},
+    {"name": "Nova-Station 1",  "license_fee": 20000,  "market_multi": 1.5,  "available_week": 1,  "end_week": 500,  "type": "Konsole"},
+    {"name": "Nova-Station 2",  "license_fee": 40000,  "market_multi": 2.2,  "available_week": 80, "end_week": 1250,  "type": "Konsole"},
     
-    {"name": "Kuro-Hand",       "license_fee": 15000,  "market_multi": 1.3,  "available_week": 1,  "end_week": 60,   "type": "Handheld"},
-    {"name": "Kuro-Classic",    "license_fee": 30000,  "market_multi": 1.8,  "available_week": 70, "end_week": 200,  "type": "Konsole"},
+    {"name": "Kuro-Hand",       "license_fee": 15000,  "market_multi": 1.3,  "available_week": 1,  "end_week": 300,   "type": "Handheld"},
+    {"name": "Kuro-Classic",    "license_fee": 30000,  "market_multi": 1.8,  "available_week": 70, "end_week": 1000,  "type": "Konsole"},
     
-    {"name": "Orion-Box",       "license_fee": 25000,  "market_multi": 1.4,  "available_week": 20, "end_week": 150,  "type": "Konsole"},
-    {"name": "Orion-Box 360",   "license_fee": 45000,  "market_multi": 2.0,  "available_week": 140,"end_week": 350,  "type": "Konsole"},
+    {"name": "Orion-Box",       "license_fee": 25000,  "market_multi": 1.4,  "available_week": 20, "end_week": 750,  "type": "Konsole"},
+    {"name": "Orion-Box 360",   "license_fee": 45000,  "market_multi": 2.0,  "available_week": 140,"end_week": 1750,  "type": "Konsole"},
     
-    {"name": "Pocket-Play",     "license_fee": 10000,  "market_multi": 0.8,  "available_week": 1,  "end_week": 80,   "type": "Handheld"},
-    {"name": "Smartphone",      "license_fee": 5000,   "market_multi": 2.5,  "available_week": 160,"end_week": None, "type": "Mobile"},
-    {"name": "Tablet OS",       "license_fee": 7000,   "market_multi": 1.8,  "available_week": 200,"end_week": None, "type": "Mobile"},
+    {"name": "Pocket-Play",     "license_fee": 10000,  "market_multi": 0.8,  "available_week": 1,  "end_week": 400,   "type": "Handheld"},
+    {"name": "Smartphone",      "license_fee": 5000,   "market_multi": 2.5,  "available_week": 360,"end_week": None, "type": "Mobile"},
+    {"name": "Tablet OS",       "license_fee": 7000,   "market_multi": 1.8,  "available_week": 400,"end_week": None, "type": "Mobile"},
 ]
 
 AUDIENCE_MULTI = {
@@ -214,24 +228,24 @@ MAIL_TEMPLATES = {
 ENGINE_FEATURES = [
     # Grafik
     {"category": "Grafik",    "name": "2D Grafik V1",        "tech_bonus": 1,  "cost": 0,      "week": 1},
-    {"category": "Grafik",    "name": "2D Grafik V2",        "tech_bonus": 2,  "cost": 15000,  "week": 10},
-    {"category": "Grafik",    "name": "3D Grafik V1",        "tech_bonus": 3,  "cost": 40000,  "week": 30},
-    {"category": "Grafik",    "name": "3D Grafik V2",        "tech_bonus": 5,  "cost": 80000,  "week": 60},
+    {"category": "Grafik",    "name": "2D Grafik V2",        "tech_bonus": 3,  "cost": 25000,  "week": 10},
+    {"category": "Grafik",    "name": "3D Grafik V1",        "tech_bonus": 5,  "cost": 80000,  "week": 30},
+    {"category": "Grafik",    "name": "3D Grafik V2",        "tech_bonus": 8,  "cost": 150000, "week": 60},
     # Sound
     {"category": "Sound",     "name": "Mono Sound",          "tech_bonus": 1,  "cost": 0,      "week": 1},
-    {"category": "Sound",     "name": "Stereo Sound",        "tech_bonus": 2,  "cost": 10000,  "week": 10},
-    {"category": "Sound",     "name": "Surround Sound",      "tech_bonus": 3,  "cost": 30000,  "week": 40},
+    {"category": "Sound",     "name": "Stereo Sound",        "tech_bonus": 3,  "cost": 15000,  "week": 10},
+    {"category": "Sound",     "name": "Surround Sound",      "tech_bonus": 5,  "cost": 50000,  "week": 40},
     # KI
     {"category": "KI",        "name": "Einfache KI",         "tech_bonus": 1,  "cost": 0,      "week": 1},
-    {"category": "KI",        "name": "Fortgeschrittene KI", "tech_bonus": 2,  "cost": 20000,  "week": 20},
-    {"category": "KI",        "name": "Lernende KI",         "tech_bonus": 4,  "cost": 60000,  "week": 50},
+    {"category": "KI",        "name": "Fortgeschrittene KI", "tech_bonus": 3,  "cost": 30000,  "week": 20},
+    {"category": "KI",        "name": "Lernende KI",         "tech_bonus": 6,  "cost": 90000,  "week": 50},
     # Gameplay
     {"category": "Gameplay",  "name": "Basis Steuerung",     "tech_bonus": 1,  "cost": 0,      "week": 1},
-    {"category": "Gameplay",  "name": "Physik-Engine",       "tech_bonus": 2,  "cost": 25000,  "week": 15},
-    {"category": "Gameplay",  "name": "Online-Multiplayer",  "tech_bonus": 4,  "cost": 70000,  "week": 45},
+    {"category": "Gameplay",  "name": "Physik-Engine",       "tech_bonus": 3,  "cost": 40000,  "week": 15},
+    {"category": "Gameplay",  "name": "Online-Multiplayer",  "tech_bonus": 6,  "cost": 120000, "week": 45},
     # Level-Design
     {"category": "Level",     "name": "Lineares Design",     "tech_bonus": 1,  "cost": 0,      "week": 1},
-    {"category": "Level",     "name": "Open World",          "tech_bonus": 3,  "cost": 50000,  "week": 35},
+    {"category": "Level",     "name": "Open World",          "tech_bonus": 5,  "cost": 80000,  "week": 35},
 ]
 
 # ============================================================

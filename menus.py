@@ -352,6 +352,7 @@ class MainMenu(Menu):
             {'text': game_state.get_text('start_new_game'), 'action': self.new_game},
             {'text': game_state.get_text('load_game'), 'action': self.load_game},
             {'text': game_state.get_text('settings'), 'action': self.goto_settings},
+            {'text': game_state.get_text('menu_credits'), 'action': self.show_credits},
             {'text': game_state.get_text('quit'), 'action': self.quit_game},
         ]
         super().__init__(game_state.get_text('main_menu'), options, audio, game_state)
@@ -365,6 +366,12 @@ class MainMenu(Menu):
 
     def load_game(self):
         return "load_menu"
+
+    def show_credits(self):
+        # Speak the credits text and return None to stay in the menu
+        # but re-announce the main menu so the user isn't lost
+        self.audio.speak(self.game_state.get_text('credits_text'))
+        return "main_menu"
 
     def quit_game(self):
         self.audio.speak(self.game_state.get_text('goodbye'))
@@ -767,6 +774,8 @@ class RemasterSelectMenu(Menu):
         self.audio.speak(self.game_state.get_text('remaster_selected', name=project.name))
         return "platform_menu"
 
+    def _cancel(self):
+        return "game_menu"
 
 class MarketingMenu(Menu):
     """Auswahl der Marketing-Kampagne."""
