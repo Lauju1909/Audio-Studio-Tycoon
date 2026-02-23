@@ -1,0 +1,202 @@
+{
+  "company_name": "",
+  "money": 448344,
+  "fans": 2859,
+  "week": 13,
+  "high_score": 5.75,
+  "games_made": 2,
+  "total_revenue": 334854,
+  "office_level": 0,
+  "last_event_week": 0,
+  "last_trend_week": 0,
+  "current_trend": {},
+  "active_events": [],
+  "settings": {
+    "language": "de",
+    "music_enabled": true,
+    "tts_engine": "auto"
+  },
+  "game_history": [
+    {
+      "name": "",
+      "topic": "Sci-Fi",
+      "genre": "RPG",
+      "sliders": {},
+      "platform": "Nova-Station 1",
+      "audience": "Jugendliche",
+      "size": "Mittel",
+      "marketing": "Gaming Web-Ads",
+      "engine_name": null,
+      "review_scores": [
+        6,
+        5,
+        6,
+        6
+      ],
+      "review_average": 5.75,
+      "sales": 16006,
+      "revenue": 288108,
+      "dev_cost": 12500,
+      "week_developed": 1,
+      "bugs": 0,
+      "dlc_count": 0,
+      "weeks_on_market": 0,
+      "is_active": true
+    },
+    {
+      "name": "",
+      "topic": "Sci-Fi",
+      "genre": "RPG",
+      "sliders": {},
+      "platform": "Nova-Station 1",
+      "audience": "Jugendliche",
+      "size": "Mittel",
+      "marketing": "Gaming Web-Ads",
+      "engine_name": null,
+      "review_scores": [
+        3,
+        4,
+        3,
+        4
+      ],
+      "review_average": 3.5,
+      "sales": 2597,
+      "revenue": 46746,
+      "dev_cost": 19370,
+      "week_developed": 7,
+      "bugs": 0,
+      "dlc_count": 1,
+      "weeks_on_market": 0,
+      "is_active": true
+    }
+  ],
+  "employees": [
+    {
+      "name": "Ella Wolf",
+      "role": "Designer",
+      "primary_skill": "Grafik",
+      "secondary_skill": "Welt",
+      "skill_level": 1,
+      "specialization": null,
+      "skills": {
+        "Gameplay": 10,
+        "Grafik": 55,
+        "Sound": 13,
+        "Story": 15,
+        "KI": 10,
+        "Welt": 41
+      },
+      "salary": 1220,
+      "morale": 90,
+      "weeks_employed": 6
+    }
+  ],
+  "engines": [
+    {
+      "name": "Basis-Engine",
+      "features": [
+        {
+          "category": "Grafik",
+          "name": "2D Grafik V1",
+          "tech_bonus": 1
+        },
+        {
+          "category": "Sound",
+          "name": "Mono Sound",
+          "tech_bonus": 1
+        },
+        {
+          "category": "KI",
+          "name": "Einfache KI",
+          "tech_bonus": 1
+        },
+        {
+          "category": "Gameplay",
+          "name": "Basis Steuerung",
+          "tech_bonus": 1
+        },
+        {
+          "category": "Level",
+          "name": "Lineares Design",
+          "tech_bonus": 1
+        }
+      ]
+    }
+  ],
+  "unlocked_features": [
+    {
+      "category": "Grafik",
+      "name": "2D Grafik V1",
+      "tech_bonus": 1
+    },
+    {
+      "category": "Sound",
+      "name": "Mono Sound",
+      "tech_bonus": 1
+    },
+    {
+      "category": "KI",
+      "name": "Einfache KI",
+      "tech_bonus": 1
+    },
+    {
+      "category": "Gameplay",
+      "name": "Basis Steuerung",
+      "tech_bonus": 1
+    },
+    {
+      "category": "Level",
+      "name": "Lineares Design",
+      "tech_bonus": 1
+    },
+    {
+      "category": "Sound",
+      "name": "Stereo Sound",
+      "tech_bonus": 2
+    }
+  ],
+  "bought_platforms": [
+    "PC (MS-DOS)",
+    "Nova-Station 1"
+  ],
+  "active_platforms": [
+    "Zenith-Core 88",
+    "Nova-Station 1",
+    "Kuro-Hand",
+    "Pocket-Play"
+  ],
+  "rivals": [
+    {
+      "name": "MicroHard",
+      "target_market_share": 30,
+      "games": [],
+      "next_release_week": 7
+    },
+    {
+      "name": "Electric Farts",
+      "target_market_share": 25,
+      "games": [],
+      "next_release_week": 25
+    },
+    {
+      "name": "Nintengo",
+      "target_market_share": 20,
+      "games": [],
+      "next_release_week": 34
+    }
+  ],
+  "last_goty_year": 0,
+  "bank_loan": {
+    "amount_borrowed": 250000,
+    "amount_remaining": 287500,
+    "weekly_payment": 2764,
+    "weeks_remaining": 104
+  },
+  "accounting": {
+    "income": 334854,
+    "expenses": 31870,
+    "loan_paid": 0
+  },
+  "custom_consoles": [],
+  "emails": []
+}

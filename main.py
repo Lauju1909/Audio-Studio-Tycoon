@@ -54,6 +54,7 @@ from menus import (
     HardwareDevMenu,
     ConsoleNameInput,
     ConsoleSpecsMenu,
+    GOTYMenu,
 )
 
 
@@ -129,6 +130,7 @@ def main():
         "save_menu": lambda: SaveMenu(audio, state),
         "load_menu": lambda: LoadMenu(audio, state),
         "help_menu": lambda: HelpMenu(audio, state),
+        "goty_menu": lambda: GOTYMenu(audio, state),
     }
 
     current_key = "main_menu"
@@ -160,6 +162,13 @@ def main():
         # Pleite-Check
         if state.is_bankrupt() and current_key != "bankruptcy":
             current_key = "bankruptcy"
+            current_menu = menu_factories[current_key]()
+            current_menu.announce_entry()
+            
+        # GOTY-Check
+        goty = getattr(state, "pending_goty_results", None)
+        if goty and current_key not in ["goty_menu", "bankruptcy"]:
+            current_key = "goty_menu"
             current_menu = menu_factories[current_key]()
             current_menu.announce_entry()
 
@@ -194,6 +203,24 @@ def main():
                 elif event.key == pygame.K_3:
                     state.time_speed = 4.0
                     audio.speak(state.get_text('time_speed_speech', speed=state.get_text('speed_3')))
+                elif event.key == pygame.K_s:
+                    if current_key not in ["main_menu", "company_name_input", "bankruptcy"]:
+                        state.save_game(slot=1)
+                        # Bonus: Kurzes Speichergeräusch abspielen
+                        if hasattr(audio, 'play_sound'): audio.play_sound('blip')
+                        audio.speak(state.get_text('quicksave_msg'))
+                elif event.key == pygame.K_l:
+                    if current_key not in ["company_name_input", "bankruptcy"]:
+                        if state.load_game(slot=1):
+                            # Bonus: Lade-Geräusch
+                            if hasattr(audio, 'play_sound'): audio.play_sound('blip')
+                            audio.speak(state.get_text('quickload_msg'))
+                            current_key = "game_menu"
+                            current_menu = menu_factories[current_key]()
+                            current_menu.announce_entry()
+                        else:
+                            if hasattr(audio, 'play_sound'): audio.play_sound('error')
+                            audio.speak(state.get_text('quickload_fail_msg'))
                 elif event.key == pygame.K_c:
                     state.crunch_active = not state.crunch_active
                     audio.speak(state.get_text('crunch_active' if state.crunch_active else 'crunch_off'))

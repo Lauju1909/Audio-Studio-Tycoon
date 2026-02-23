@@ -54,15 +54,23 @@ class Menu:
 
     def handle_input(self, event):
         if not self.options:
+            if event.key in [pygame.K_UP, pygame.K_DOWN, pygame.K_RETURN, pygame.K_LEFT, pygame.K_RIGHT]:
+                self.audio.play_sound("error")
             return None
         if event.key == pygame.K_UP:
-            self.current_index = (self.current_index - 1) % len(self.options)
-            self.audio.play_sound("click")
-            self.speak_current()
+            if self.current_index > 0:
+                self.current_index -= 1
+                self.audio.play_sound("click")
+                self.speak_current()
+            else:
+                self.audio.play_sound("error")
         elif event.key == pygame.K_DOWN:
-            self.current_index = (self.current_index + 1) % len(self.options)
-            self.audio.play_sound("click")
-            self.speak_current()
+            if self.current_index < len(self.options) - 1:
+                self.current_index += 1
+                self.audio.play_sound("click")
+                self.speak_current()
+            else:
+                self.audio.play_sound("error")
         elif event.key == pygame.K_RETURN:
             self.audio.play_sound("confirm")
             action = self.options[self.current_index].get('action')
@@ -207,13 +215,19 @@ class SettingsMenu:
 
     def handle_input(self, event):
         if event.key == pygame.K_UP:
-            self.current_index = (self.current_index - 1) % len(self.options)
-            self.audio.play_sound("click")
-            self.speak_current()
+            if self.current_index > 0:
+                self.current_index -= 1
+                self.audio.play_sound("click")
+                self.speak_current()
+            else:
+                self.audio.play_sound("error")
         elif event.key == pygame.K_DOWN:
-            self.current_index = (self.current_index + 1) % len(self.options)
-            self.audio.play_sound("click")
-            self.speak_current()
+            if self.current_index < len(self.options) - 1:
+                self.current_index += 1
+                self.audio.play_sound("click")
+                self.speak_current()
+            else:
+                self.audio.play_sound("error")
         elif event.key == pygame.K_RETURN:
             self.audio.play_sound("confirm")
             return self.options[self.current_index]['action']()
@@ -269,11 +283,17 @@ class SliderMenu:
 
     def handle_input(self, event):
         if event.key == pygame.K_UP:
-            self.current_index = (self.current_index - 1) % len(self.slider_names)
-            self._speak_current()
+            if self.current_index > 0:
+                self.current_index -= 1
+                self._speak_current()
+            else:
+                self.audio.play_sound("error")
         elif event.key == pygame.K_DOWN:
-            self.current_index = (self.current_index + 1) % len(self.slider_names)
-            self._speak_current()
+            if self.current_index < len(self.slider_names) - 1:
+                self.current_index += 1
+                self._speak_current()
+            else:
+                self.audio.play_sound("error")
         elif event.key == pygame.K_RIGHT:
             name = self.slider_names[self.current_index]
             if self.values[name] < 10 and self.remaining > 0:
@@ -1807,3 +1827,52 @@ class ConsoleSpecsMenu(Menu):
 
     def _cancel(self):
         return "console_name_input"
+
+# ============================================================
+# GAME OF THE YEAR CEREMONY
+# ============================================================
+
+class GOTYMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(self.game_state.get_text('goty_title'), [], audio, game_state)
+        
+    def announce_entry(self):
+        self.options = []
+        goty = getattr(self.game_state, "pending_goty_results", None)
+        if not goty:
+            self.options.append({'text': self.game_state.get_text('back'), 'action': self._cancel})
+            self.audio.speak(self.title)
+            self.speak_current(interrupt=False)
+            return
+
+        # Trommelwirbel (wenn Datei fehlt, wird es ignoriert)
+        self.audio.play_sound('drumroll') 
+
+        year = goty["year"]
+        my_score = goty["my_score"]
+        my_game = goty["my_game"]
+        rival_score = goty["rival_score"]
+        rival_name = goty["rival_name"]
+        rival_game = goty["rival_game"]
+
+        if my_score > rival_score and my_score >= 8.0:
+            msg = self.game_state.get_text('goty_ceremony_win', year=year, game=my_game)
+            # Bonus sound
+            self.audio.play_sound('success')
+        else:
+            winner = rival_name if rival_name else "Niemand"
+            win_game = rival_game if rival_game else "Nichts"
+            msg = self.game_state.get_text('goty_ceremony_lose', year=year, winner=winner, game=win_game)
+            
+        self.audio.speak(msg)
+        self.options.append({'text': self.game_state.get_text('continue_btn'), 'action': self._cancel})
+        # Wir warten kurz, damit der Sound wirkt
+        import time
+        time.sleep(1.0)
+        self.speak_current(interrupt=False)
+
+    def _cancel(self):
+        self.game_state.pending_goty_results = None
+        return "game_menu"

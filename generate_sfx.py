@@ -35,6 +35,13 @@ def main():
     generate_beep("assets/error.wav", 110, 0.15, volume=0.4)
     # Erfolg (fanfare-artig)
     generate_beep("assets/success.wav", 660, 0.2, volume=0.3)
+    # Blip (sehr kurz, mittelhoch)
+    generate_beep("assets/blip.wav", 550, 0.08, volume=0.3)
+    # Warnung (tief, pulsierend oder einfach etwas länger)
+    generate_beep("assets/warn.wav", 220, 0.3, volume=0.4)
+    # Trommelwirbel (kurzes Rauschen/Tiefes Wummern als Platzhalter)
+    generate_beep("assets/drumroll.wav", 150, 0.5, volume=0.4)
+    
     print("Fertig! Sounds in /assets gespeichert.")
 
 if __name__ == "__main__":

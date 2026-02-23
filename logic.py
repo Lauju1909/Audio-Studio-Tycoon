@@ -48,6 +48,7 @@ class GameState:
 
         # Ereignisse
         self.last_event_week = 0
+        self.active_events = []
 
         # Aktuelles Projekt
         self.current_draft = {
@@ -250,10 +251,19 @@ class GameState:
         
         # Trend check (alle 20-40 Wochen)
         if self.week - self.last_trend_week >= random.randint(20, 40):
-            from logic import GameState # Falls nötig, aber wir sind in GameState
-            # Trends alle paar Wochen neu würfeln
             if self.week % 8 == 0:
                 self.generate_trend()
+                
+        # Zufallsereignisse prüfen
+        self.check_random_event()
+        
+        # Abgelaufene Events entfernen
+        new_active = []
+        for e in self.active_events:
+            e["duration"] -= 1
+            if e["duration"] > 0:
+                new_active.append(e)
+        self.active_events = new_active
                 
         # Marktanteil der eigenen Konsole erhöhen
         if hasattr(self, "custom_consoles"):
@@ -266,6 +276,11 @@ class GameState:
             # Remaster-Bonus: 1.5x schneller
             if self.current_draft.get("is_remaster"):
                 boost *= 1.5
+                
+            # Burnout-Event Malus
+            for e in self.active_events:
+                if e["effect"] == "dev_speed_drop":
+                    boost *= e["multiplier"]
             
             self.dev_progress += boost
             
@@ -408,29 +423,16 @@ class GameState:
         if my_score == 0 and rival_score == 0:
             return # Kein Spiel erschienen
             
-        if my_score > rival_score and my_score >= 8.0:
-            # GEWONNEN!
-            self.fans += 5000
-            self.money += 200000
-            self.emails.insert(0, Email(
-                sender=self.get_text('sender_goty'),
-                subject=self.get_text('subject_goty_win'),
-                body=self.get_text('body_goty_win', name=my_best.name, year=year),
-                date_week=self.week
-            ))
-        else:
-            # RIVALE GEWONNEN oder unser bestes Spiel war zu schlecht
-            winner_name = rival_best_tuple[0] if rival_best_tuple else "Niemand"
-            win_game = rival_best_tuple[1].name if rival_best_tuple else "Nichts"
-            win_score = rival_score if rival_best_tuple else 0
-            
-            if win_score >= 8.0:
-                self.emails.insert(0, Email(
-                    sender=self.get_text('sender_goty'),
-                    subject=self.get_text('subject_goty_lose', name=winner_name, year=year),
-                    body=self.get_text('body_goty_lose', name=winner_name, game=win_game, score=win_score),
-                    date_week=self.week
-                ))
+        goty_data = {
+            "year": year,
+            "my_score": my_score,
+            "my_game": my_best.name if my_best else None,
+            "rival_score": rival_score,
+            "rival_name": rival_best_tuple[0] if rival_best_tuple else None,
+            "rival_game": rival_best_tuple[1].name if rival_best_tuple else None,
+        }
+        
+        self.pending_goty_results = goty_data
 
     def _generate_industry_news(self):
         """Erzeugt zufällige Markt-Ereignisse."""
@@ -517,6 +519,11 @@ class GameState:
                     new_sales = int(self.calculate_sales(g) / (1 + g.weeks_on_market * 0.2))
                     if g.bugs > 0:
                         new_sales = int(new_sales * 0.5) # Bugs halbieren Verkäufe
+                        
+                    # Hacker-Event Malus
+                    for e in self.active_events:
+                        if e["effect"] == "sales_drop":
+                            new_sales = int(new_sales * e["multiplier"])
                     
                     price = AUDIENCE_PRICE.get(g.audience, 30)
                     g.sales += new_sales
@@ -699,6 +706,27 @@ class GameState:
             self.money += event["value"]
         elif event["effect"] == "fans":
             self.fans = max(0, self.fans + event["value"])
+        elif event["effect"] == "hype_boost":
+            self.hype += event["hype_amount"]
+        else:
+            # Dauerhafte Events zur Liste hinzufügen (Kopie)
+            ev_copy = dict(event)
+            self.active_events.append(ev_copy)
+            
+        # Spieler benachrichtigen
+        from models import Email
+        body = self.get_text("event_" + event["id"], weeks=event.get("duration", 0), hype=event.get("hype_amount", 0))
+        self.emails.insert(0, Email(
+            sender="News Reader",
+            subject="Markt-Ereignis",
+            body=body,
+            date_week=self.week
+        ))
+        
+        # Audio Warnung
+        if hasattr(self, 'audio'):
+            self.audio.play_sound('warn') # Fallback wenn Datei fehlt
+            self.audio.speak(body, interrupt=True)
 
     # ==========================================================
     # BEWERTUNG
@@ -1015,6 +1043,7 @@ class GameState:
             "last_event_week": self.last_event_week,
             "last_trend_week": self.last_trend_week,
             "current_trend": self.current_trend,
+            "active_events": getattr(self, "active_events", []),
             "settings": self.settings,
             "game_history": [g.to_dict() for g in self.game_history],
             "employees": [e.to_dict() for e in self.employees],
@@ -1083,6 +1112,7 @@ class GameState:
         self.last_event_week = data.get("last_event_week", 0)
         self.last_trend_week = data.get("last_trend_week", 0)
         self.current_trend = data.get("current_trend")
+        self.active_events = data.get("active_events", [])
 
         # Engines laden
         self.unlocked_features = []

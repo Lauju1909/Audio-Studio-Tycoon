@@ -601,3 +601,30 @@ def get_available_features(week):
     """Gibt Engine-Features zurück, die in der aktuellen Woche erforschbar sind."""
     current_week = int(week)
     return [f for f in ENGINE_FEATURES if int(f["week"]) <= current_week]
+
+# ============================================================
+# ZUFÄLLIGE MARKTEREIGNISSE (Phase 8)
+# ============================================================
+RANDOM_EVENTS = [
+    {
+        "id": "hacker_attack",
+        "type": "negative",
+        "duration": 4, # Wochen
+        "effect": "sales_drop",
+        "multiplier": 0.5
+    },
+    {
+        "id": "viral_post",
+        "type": "positive",
+        "duration": 2, # Wochen
+        "effect": "hype_boost",
+        "hype_amount": 50
+    },
+    {
+        "id": "industry_burnout",
+        "type": "negative",
+        "duration": 3, # Wochen
+        "effect": "dev_speed_drop",
+        "multiplier": 0.5
+    }
+]
