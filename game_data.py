@@ -8,33 +8,38 @@ Plattformen, Engine-Features, Mitarbeiter-Daten und Zufallsereignisse.
 # ============================================================
 # THEMEN (Topics) - 20 verschiedene
 # ============================================================
-TOPICS = [
+START_TOPICS = [
     "Fantasy",
     "Sci-Fi",
     "Mittelalter",
-    "Spionage",
-    "Piraten",
-    "Zombies",
     "Sport",
     "Rennen",
-    "Krankenhaus",
-    "Schule",
-    "Stadt",
-    "Weltraum",
-    "Krieg",
-    "Musik",
-    "Kochen",
-    "Tiere",
-    "Horror",
-    "Superheld",
-    "Cyberpunk",
-    "Detektiv",
-    "Dinosaurier",
-    "Vampire",
-    "Feuerwehr",
-    "Polizei",
-    "Wilder Westen",
 ]
+
+RESEARCHABLE_TOPICS = [
+    {"name": "Spionage", "cost": 5000, "week": 2, "research_weeks": 2},
+    {"name": "Piraten", "cost": 8000, "week": 3, "research_weeks": 2},
+    {"name": "Zombies", "cost": 12000, "week": 5, "research_weeks": 3},
+    {"name": "Krankenhaus", "cost": 15000, "week": 8, "research_weeks": 3},
+    {"name": "Schule", "cost": 10000, "week": 10, "research_weeks": 2},
+    {"name": "Stadt", "cost": 18000, "week": 15, "research_weeks": 3},
+    {"name": "Weltraum", "cost": 25000, "week": 20, "research_weeks": 4},
+    {"name": "Krieg", "cost": 30000, "week": 25, "research_weeks": 4},
+    {"name": "Musik", "cost": 12000, "week": 12, "research_weeks": 3},
+    {"name": "Kochen", "cost": 8000, "week": 6, "research_weeks": 2},
+    {"name": "Tiere", "cost": 15000, "week": 15, "research_weeks": 3},
+    {"name": "Horror", "cost": 25000, "week": 22, "research_weeks": 4},
+    {"name": "Superheld", "cost": 40000, "week": 30, "research_weeks": 5},
+    {"name": "Cyberpunk", "cost": 50000, "week": 40, "research_weeks": 6},
+    {"name": "Detektiv", "cost": 20000, "week": 18, "research_weeks": 3},
+    {"name": "Dinosaurier", "cost": 35000, "week": 28, "research_weeks": 4},
+    {"name": "Vampire", "cost": 22000, "week": 20, "research_weeks": 3},
+    {"name": "Feuerwehr", "cost": 15000, "week": 14, "research_weeks": 3},
+    {"name": "Polizei", "cost": 18000, "week": 16, "research_weeks": 3},
+    {"name": "Wilder Westen", "cost": 28000, "week": 24, "research_weeks": 4},
+]
+
+TOPICS = START_TOPICS + [t["name"] for t in RESEARCHABLE_TOPICS]
 
 # ============================================================
 # GENRES - 8 verschiedene
@@ -51,6 +56,19 @@ GENRES = [
     "Horror",
     "Kampfspiel",
     "Rennspiel",
+]
+
+START_GENRES = ["Action", "Puzzle", "Casual"]
+
+RESEARCHABLE_GENRES = [
+    {"name": "RPG", "cost": 15000, "week": 5, "research_weeks": 4},
+    {"name": "Simulation", "cost": 10000, "week": 2, "research_weeks": 3},
+    {"name": "Strategie", "cost": 12000, "week": 3, "research_weeks": 3},
+    {"name": "Abenteuer", "cost": 15000, "week": 5, "research_weeks": 4},
+    {"name": "Sport", "cost": 8000, "week": 2, "research_weeks": 2},
+    {"name": "Horror", "cost": 20000, "week": 10, "research_weeks": 5},
+    {"name": "Kampfspiel", "cost": 18000, "week": 8, "research_weeks": 4},
+    {"name": "Rennspiel", "cost": 10000, "week": 4, "research_weeks": 3},
 ]
 
 # ============================================================
@@ -173,6 +191,21 @@ AUDIENCE_PRICE = {
 }
 
 AUDIENCES = list(AUDIENCE_PRICE.keys())
+START_AUDIENCES = ["Jeder"]
+
+RESEARCHABLE_AUDIENCES = [
+    {"name": "Jugendliche", "cost": 25000, "week": 15, "research_weeks": 5},
+]
+
+# ============================================================
+# ENDGAME-TECHNOLOGIEN (Forschung)
+# ============================================================
+RESEARCHABLE_TECHNOLOGIES = [
+    {"name": "Digitaler Vertrieb & Logistik", "cost": 150000, "week": 30, "research_weeks": 6, "description": "Erlaubt den Vertrieb ohne Publisher (Eigenvertrieb) und AAA-Spiele."},
+    {"name": "Live-Service Architektur",      "cost": 300000, "week": 40, "research_weeks": 8, "description": "Ermöglicht die Entwicklung und den Betrieb von MMOs und Live-Service Spielen."},
+    {"name": "Investment & M&A",              "cost": 500000, "week": 50, "research_weeks": 10, "description": "Ermöglicht den Aufkauf von Konkurrenz-Studios am Aktienmarkt."},
+    {"name": "Hardware Labor",                "cost": 1000000,"week": 60, "research_weeks": 15, "description": "Schaltet die Entwicklung eigener Konsolen frei."},
+]
 
 # ============================================================
 # REVIEW-TEXTE
@@ -223,29 +256,29 @@ MAIL_TEMPLATES = {
 
 # ============================================================
 # ENGINE-FEATURES (zum Freischalten / Erforschen)
-# category, name, tech_bonus, research_cost, available_week
+# category, name, tech_bonus, cost, week, research_weeks
 # ============================================================
 ENGINE_FEATURES = [
     # Grafik
-    {"category": "Grafik",    "name": "2D Grafik V1",        "tech_bonus": 1,  "cost": 0,      "week": 1},
-    {"category": "Grafik",    "name": "2D Grafik V2",        "tech_bonus": 3,  "cost": 25000,  "week": 10},
-    {"category": "Grafik",    "name": "3D Grafik V1",        "tech_bonus": 5,  "cost": 80000,  "week": 30},
-    {"category": "Grafik",    "name": "3D Grafik V2",        "tech_bonus": 8,  "cost": 150000, "week": 60},
+    {"category": "Grafik",    "name": "2D Grafik V1",        "tech_bonus": 1,  "cost": 0,      "week": 1,  "research_weeks": 1},
+    {"category": "Grafik",    "name": "2D Grafik V2",        "tech_bonus": 3,  "cost": 25000,  "week": 10, "research_weeks": 6},
+    {"category": "Grafik",    "name": "3D Grafik V1",        "tech_bonus": 5,  "cost": 80000,  "week": 30, "research_weeks": 12},
+    {"category": "Grafik",    "name": "3D Grafik V2",        "tech_bonus": 8,  "cost": 150000, "week": 60, "research_weeks": 20},
     # Sound
-    {"category": "Sound",     "name": "Mono Sound",          "tech_bonus": 1,  "cost": 0,      "week": 1},
-    {"category": "Sound",     "name": "Stereo Sound",        "tech_bonus": 3,  "cost": 15000,  "week": 10},
-    {"category": "Sound",     "name": "Surround Sound",      "tech_bonus": 5,  "cost": 50000,  "week": 40},
+    {"category": "Sound",     "name": "Mono Sound",          "tech_bonus": 1,  "cost": 0,      "week": 1,  "research_weeks": 1},
+    {"category": "Sound",     "name": "Stereo Sound",        "tech_bonus": 3,  "cost": 15000,  "week": 10, "research_weeks": 4},
+    {"category": "Sound",     "name": "Surround Sound",      "tech_bonus": 5,  "cost": 50000,  "week": 40, "research_weeks": 8},
     # KI
-    {"category": "KI",        "name": "Einfache KI",         "tech_bonus": 1,  "cost": 0,      "week": 1},
-    {"category": "KI",        "name": "Fortgeschrittene KI", "tech_bonus": 3,  "cost": 30000,  "week": 20},
-    {"category": "KI",        "name": "Lernende KI",         "tech_bonus": 6,  "cost": 90000,  "week": 50},
+    {"category": "KI",        "name": "Einfache KI",         "tech_bonus": 1,  "cost": 0,      "week": 1,  "research_weeks": 1},
+    {"category": "KI",        "name": "Fortgeschrittene KI", "tech_bonus": 3,  "cost": 30000,  "week": 20, "research_weeks": 7},
+    {"category": "KI",        "name": "Lernende KI",         "tech_bonus": 6,  "cost": 90000,  "week": 50, "research_weeks": 15},
     # Gameplay
-    {"category": "Gameplay",  "name": "Basis Steuerung",     "tech_bonus": 1,  "cost": 0,      "week": 1},
-    {"category": "Gameplay",  "name": "Physik-Engine",       "tech_bonus": 3,  "cost": 40000,  "week": 15},
-    {"category": "Gameplay",  "name": "Online-Multiplayer",  "tech_bonus": 6,  "cost": 120000, "week": 45},
+    {"category": "Gameplay",  "name": "Basis Steuerung",     "tech_bonus": 1,  "cost": 0,      "week": 1,  "research_weeks": 1},
+    {"category": "Gameplay",  "name": "Physik-Engine",       "tech_bonus": 3,  "cost": 40000,  "week": 15, "research_weeks": 10},
+    {"category": "Gameplay",  "name": "Online-Multiplayer",  "tech_bonus": 6,  "cost": 120000, "week": 45, "research_weeks": 18},
     # Level-Design
-    {"category": "Level",     "name": "Lineares Design",     "tech_bonus": 1,  "cost": 0,      "week": 1},
-    {"category": "Level",     "name": "Open World",          "tech_bonus": 5,  "cost": 80000,  "week": 35},
+    {"category": "Level",     "name": "Lineares Design",     "tech_bonus": 1,  "cost": 0,      "week": 1,  "research_weeks": 1},
+    {"category": "Level",     "name": "Open World",          "tech_bonus": 5,  "cost": 80000,  "week": 35, "research_weeks": 15},
 ]
 
 # ============================================================
@@ -267,10 +300,24 @@ EMPLOYEE_LAST_NAMES = [
 
 EMPLOYEE_ROLES = [
     {"role": "Programmierer",  "primary": "KI",       "secondary": "Gameplay"},
-    {"role": "Designer",       "primary": "Grafik",   "secondary": "Welt"},
-    {"role": "Sound-Engineer", "primary": "Sound",    "secondary": "Gameplay"},
-    {"role": "Autor",          "primary": "Story",    "secondary": "Welt"},
-    {"role": "Allrounder",     "primary": "Gameplay", "secondary": "Grafik"},
+    {"role": "Grafik-Designer","primary": "Grafik",   "secondary": "Welt"},
+    {"role": "Sound-Designer", "primary": "Sound",    "secondary": "Gameplay"},
+    {"role": "Supporter",      "primary": "Story",    "secondary": "Welt"},
+]
+
+# ============================================================
+# MITARBEITER-EIGENSCHAFTEN (Traits)
+# ============================================================
+EMPLOYEE_TRAITS = [
+    {"name": "Schneller Lerner", "effect": "speed", "value": 1.1, "description": "Arbeitet 10% schneller."},
+    {"name": "Perfektionist",    "effect": "quality", "value": 1.1, "description": "Steigert die Spielqualität um 10%."},
+    {"name": "Faulpelz",         "effect": "speed", "value": 0.8, "description": "Arbeitet 20% langsamer."},
+    {"name": "Teamplayer",       "effect": "morale_loss", "value": 0.5, "description": "Verliert nur halb so schnell Moral."},
+    {"name": "Griesgram",        "effect": "morale_loss", "value": 1.5, "description": "Verliert 50% schneller Moral."},
+    {"name": "Bug-Magnet",       "effect": "bugs", "value": 1.5, "description": "Verursacht 50% mehr Bugs."},
+    {"name": "Sauberer Coder",   "effect": "bugs", "value": 0.5, "description": "Verursacht 50% weniger Bugs."},
+    {"name": "Geldgeil",         "effect": "salary", "value": 1.2, "description": "Verlangt 20% mehr Gehalt."},
+    {"name": "Bescheiden",       "effect": "salary", "value": 0.8, "description": "Begnügt sich mit 20% weniger Gehalt."},
 ]
 
 # ============================================================
@@ -364,6 +411,33 @@ RANDOM_EVENTS = [
 ]
 
 # ============================================================
+# AAA DEV EVENTS
+# ============================================================
+AAA_DEV_EVENTS = [
+    {
+        "id": "aaa_cgi_leak",
+        "options": [
+            {"id": "finish", "cost": 2000000, "hype": 100, "bugs": 0, "morale": 0},
+            {"id": "ignore", "cost": 0, "hype": -50, "bugs": 0, "morale": 0}
+        ]
+    },
+    {
+        "id": "aaa_feature_creep",
+        "options": [
+            {"id": "implement", "cost": 1000000, "hype": 30, "bugs": 200, "morale": 0},
+            {"id": "focus", "cost": 0, "hype": 0, "bugs": 0, "morale": -10}
+        ]
+    },
+    {
+        "id": "aaa_celebrity_voice",
+        "options": [
+            {"id": "hire", "cost": 3000000, "hype": 150, "bugs": 0, "morale": 0},
+            {"id": "pass", "cost": 0, "hype": 0, "bugs": 0, "morale": 0}
+        ]
+    }
+]
+
+# ============================================================
 # BÜRO-STUFEN
 # ============================================================
 OFFICE_LEVELS = [
@@ -412,7 +486,19 @@ GAME_SIZES = [
         "revenue_multi": 5.0,
         "slider_budget": 50,
         "min_employees": 6,
-        "description": "Ein Blockbuster. Enorme Kosten, aber riesiges Umsatzpotenzial. Mindestens 6 Mitarbeiter.",
+        "min_tech_level": 5,
+        "description": "Ein Blockbuster. Enorme Kosten, aber riesiges Umsatzpotenzial. Mindestens 6 Mitarbeiter, Tech-Level 5.",
+    },
+    {
+        "name": "MMO",
+        "cost_multi": 8.0,
+        "time_multi": 3.0,
+        "revenue_multi": 1.0, # Revenue comes from subscriptions
+        "slider_budget": 60,
+        "min_employees": 10,
+        "min_tech_level": 6,
+        "req_tech": "Live-Service Architektur",
+        "description": "Ein Live-Service Spiel. Laufende Serverkosten, aber stetige Abo-Einnahmen. Benötigt Tech-Level 6 und spezielle Technologie.",
     },
 ]
 

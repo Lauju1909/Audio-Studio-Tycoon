@@ -509,11 +509,18 @@ class GameMenu(Menu):
 
 class TopicMenu(Menu):
     def __init__(self, audio, game_state):
-        options = []
-        for topic in TOPICS:
-            options.append({'text': topic, 'action': lambda t=topic: self._select(t)})
-        options.append({'text': game_state.get_text('back'), 'action': self._cancel})
-        super().__init__(game_state.get_text('select_topic'), options, audio, game_state)
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(game_state.get_text('select_topic'), [], audio, game_state)
+
+    def announce_entry(self):
+        self.current_index = 0
+        self.options = []
+        for topic in self.game_state.unlocked_topics:
+            self.options.append({'text': topic, 'action': lambda t=topic: self._select(t)})
+        self.options.append({'text': self.game_state.get_text('back'), 'action': self._cancel})
+        self.audio.speak(self.title)
+        self.speak_current(interrupt=False)
 
     def _select(self, topic):
         self.game_state.current_draft['topic'] = topic
@@ -732,6 +739,19 @@ class GameSizeMenu(Menu):
         if len(self.game_state.employees) < size_data['min_employees']:
             self.audio.speak(self.game_state.get_text('size_min_employees', size=size_data['name'], min_emp=size_data['min_employees'], current_emp=len(self.game_state.employees)))
             return None
+        
+        # Check min tech level
+        if 'min_tech_level' in size_data:
+            has_engine = any(e.tech_level >= size_data['min_tech_level'] for e in self.game_state.engines)
+            if not has_engine:
+                self.audio.speak(self.game_state.get_text('size_min_tech_level', size=size_data['name'], tech=size_data['min_tech_level']))
+                return None
+                
+        # Check req tech
+        if 'req_tech' in size_data:
+            if size_data['req_tech'] not in self.game_state.unlocked_technologies:
+                self.audio.speak(self.game_state.get_text('size_req_tech', size=size_data['name'], tech=size_data['req_tech']))
+                return None
         
         self.game_state.current_draft['size'] = size_data['name']
         self.audio.speak(self.game_state.get_text('size_selected', size=size_data['name']))
@@ -1067,6 +1087,59 @@ class ReviewResultMenu(Menu):
         self.audio.speak(self.game_state.get_text('game_saved_exit'))
         return "quit"
 
+# ============================================================
+# AAA EVENT MENU
+# ============================================================
+
+class AAADevEventMenu(Menu):
+    """Menü für zufällige Marketing-Events während der AAA-Entwicklung."""
+
+    def __init__(self, audio, game_state):
+        super().__init__("", [], audio, game_state)
+
+    def announce_entry(self):
+        self.current_index = 0
+        event = self.game_state.pending_dev_event
+        if not event:
+            return "dev_progress_menu"
+
+        title = self.game_state.get_text(f"event_{event['id']}_title")
+        text = self.game_state.get_text(f"event_{event['id']}_text")
+        
+        self.title_text = title
+        self.audio.speak(f"Event: {title}! {text}")
+        
+        self.options = []
+        for opt in event["options"]:
+            label = self.game_state.get_text(f"event_{event['id']}_opt_{opt['id']}")
+            self.options.append({
+                'text': label,
+                'action': lambda o=opt: self._apply_option(o)
+            })
+            
+        self.speak_current(interrupt=False)
+
+    def _apply_option(self, option):
+        if option["cost"] > 0 and self.game_state.money < option["cost"]:
+            self.audio.speak(self.game_state.get_text('research_not_enough_money'))
+            return None
+            
+        self.game_state.money -= option["cost"]
+        self.game_state.hype += option.get("hype", 0)
+        self.game_state.current_bugs += option.get("bugs", 0)
+        
+        if option.get("morale", 0) != 0:
+            for emp in self.game_state.employees:
+                emp.morale = max(0, min(100, emp.morale + option["morale"]))
+
+        self.audio.speak(self.game_state.get_text('event_aaa_resolved'))
+        
+        # Event zurücksetzen und wieder zurück zur Entwicklung
+        self.game_state.pending_dev_event = None
+        self.game_state.time_speed = 1.0 # Pause beenden
+        return "dev_progress_menu"
+
+
 
 # ============================================================
 # PERSONAL-ABTEILUNG
@@ -1207,7 +1280,11 @@ class ResearchMenu(Menu):
         self.audio = audio
         self.game_state = game_state
         options = [
-            {'text': game_state.get_text('research_feature'), 'action': self.research},
+            {'text': game_state.get_text('research_category_feature'), 'action': self.research_feature},
+            {'text': game_state.get_text('research_category_topic'), 'action': self.research_topic},
+            {'text': game_state.get_text('research_category_genre'), 'action': self.research_genre},
+            {'text': game_state.get_text('research_category_audience'), 'action': self.research_audience},
+            {'text': game_state.get_text('research_category_technology'), 'action': self.research_technology},
             {'text': game_state.get_text('create_engine_option'), 'action': self.create_engine},
             {'text': game_state.get_text('show_engines_option'), 'action': self.show_engines},
             {'text': game_state.get_text('hardware_dev_option'), 'action': self.goto_hardware},
@@ -1217,35 +1294,39 @@ class ResearchMenu(Menu):
 
     def announce_entry(self):
         self.current_index = 0
-        researchable = self.game_state.get_researchable_features()
-        self.audio.speak(self.game_state.get_text('research_menu_status', features=len(self.game_state.unlocked_features), new=len(researchable), engines=len(self.game_state.engines)))
+        researchable_feat = len(self.game_state.get_researchable_features())
+        researchable_top = len(self.game_state.get_researchable_topics())
+        researchable_gen = len(self.game_state.get_researchable_genres())
+        researchable_aud = len(self.game_state.get_researchable_audiences())
+        researchable_tech = len(self.game_state.get_researchable_technologies())
+        total_new = researchable_feat + researchable_top + researchable_gen + researchable_aud + researchable_tech
+        
+        self.audio.speak(self.game_state.get_text('research_menu_status', features=len(self.game_state.unlocked_features), new=total_new, engines=len(self.game_state.engines)))
         self.speak_current(interrupt=False)
 
-    def research(self):
-        return "feature_research_menu"
+    def research_feature(self): return "feature_research_menu"
+    def research_topic(self): return "topic_research_menu"
+    def research_genre(self): return "genre_research_menu"
+    def research_audience(self): return "audience_research_menu"
+    def research_technology(self): return "technology_research_menu"
 
-    def create_engine(self):
-        return "engine_create_name"
-
+    def create_engine(self): return "engine_create_name"
+    
     def show_engines(self):
         for eng in self.game_state.engines:
             self.audio.speak(eng.summary(), interrupt=False)
         return None
 
-    def goto_hardware(self):
-        return "hardware_dev_menu"
-
-    def back(self):
-        return "game_menu"
+    def goto_hardware(self): return "hardware_dev_menu"
+    def back(self): return "game_menu"
 
 
 class FeatureResearchMenu(Menu):
     """Zeigt erforschbare Features."""
-
     def __init__(self, audio, game_state):
         self.audio = audio
         self.game_state = game_state
-        super().__init__(game_state.get_text('research_feature'), [], audio, game_state)
+        super().__init__(game_state.get_text('research_category_feature'), [], audio, game_state)
 
     def announce_entry(self):
         self.current_index = 0
@@ -1253,7 +1334,7 @@ class FeatureResearchMenu(Menu):
         self.options = []
         for f in researchable:
             self.options.append({
-                'text': self.game_state.get_text('research_feature_desc', name=f['name'], category=f['category'], cost=f['cost'], bonus=f['tech_bonus']),
+                'text': f"{f['name']} ({f['category']}). {f.get('research_weeks', 4)} Wochen. Kosten: {f['cost']:,} Euro.",
                 'action': lambda fd=f: self._research(fd),
             })
         if not self.options:
@@ -1264,13 +1345,165 @@ class FeatureResearchMenu(Menu):
         self.speak_current(interrupt=False)
 
     def _research(self, feature_data):
-        if self.game_state.research_feature(feature_data):
-            self.audio.speak(self.game_state.get_text('research_success', name=feature_data['name'], money=self.game_state.money))
-            return "research_menu"
+        if self.game_state.start_research(feature_data, "feature"):
+            self.audio.speak(self.game_state.get_text('research_started', name=feature_data['name'], weeks=feature_data.get('research_weeks', 4)))
+            return "game_menu" # Zurück ins Hauptmenü
         else:
-            self.audio.speak(self.game_state.get_text('research_fail'))
+            if getattr(self.game_state, 'is_researching', False) or getattr(self.game_state, 'is_developing', False):
+                self.audio.speak(self.game_state.get_text('research_already_active'))
+            else:
+                self.audio.speak(self.game_state.get_text('research_not_enough_money'))
             return None
 
+    def _cancel(self):
+        return "research_menu"
+
+
+class GenreResearchMenu(Menu):
+    """Zeigt erforschbare Genres."""
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(game_state.get_text('research_category_genre'), [], audio, game_state)
+
+    def announce_entry(self):
+        self.current_index = 0
+        researchable = self.game_state.get_researchable_genres()
+        self.options = []
+        for g in researchable:
+            self.options.append({
+                'text': f"{g['name']}. {g.get('research_weeks', 4)} Wochen. Kosten: {g['cost']:,} Euro.",
+                'action': lambda gd=g: self._research(gd),
+            })
+        if not self.options:
+            self.options.append({'text': self.game_state.get_text('no_features_available'), 'action': lambda: None})
+        self.options.append({'text': self.game_state.get_text('back'), 'action': self._cancel})
+
+        self.audio.speak(self.game_state.get_text('research_features_available', count=len(researchable)))
+        self.speak_current(interrupt=False)
+
+    def _research(self, genre_data):
+        if self.game_state.start_research(genre_data, "genre"):
+            self.audio.speak(self.game_state.get_text('research_started', name=genre_data['name'], weeks=genre_data.get('research_weeks', 4)))
+            return "game_menu"
+        else:
+            if getattr(self.game_state, 'is_researching', False) or getattr(self.game_state, 'is_developing', False):
+                self.audio.speak(self.game_state.get_text('research_already_active'))
+            else:
+                self.audio.speak(self.game_state.get_text('research_not_enough_money'))
+            return None
+
+    def _cancel(self):
+        return "research_menu"
+
+
+class TopicResearchMenu(Menu):
+    """Zeigt erforschbare Themen."""
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(game_state.get_text('research_category_topic'), [], audio, game_state)
+
+    def announce_entry(self):
+        self.current_index = 0
+        researchable = self.game_state.get_researchable_topics()
+        self.options = []
+        for t in researchable:
+            self.options.append({
+                'text': f"{t['name']}. {t.get('research_weeks', 4)} Wochen. Kosten: {t['cost']:,} Euro.",
+                'action': lambda td=t: self._research(td),
+            })
+        if not self.options:
+            self.options.append({'text': self.game_state.get_text('no_features_available'), 'action': lambda: None})
+        self.options.append({'text': self.game_state.get_text('back'), 'action': self._cancel})
+
+        self.audio.speak(self.game_state.get_text('research_features_available', count=len(researchable)))
+        self.speak_current(interrupt=False)
+
+    def _research(self, topic_data):
+        if self.game_state.start_research(topic_data, "topic"):
+            self.audio.speak(self.game_state.get_text('research_started', name=topic_data['name'], weeks=topic_data.get('research_weeks', 4)))
+            return "game_menu"
+        else:
+            if getattr(self.game_state, 'is_researching', False) or getattr(self.game_state, 'is_developing', False):
+                self.audio.speak(self.game_state.get_text('research_already_active'))
+            else:
+                self.audio.speak(self.game_state.get_text('research_not_enough_money'))
+            return None
+
+    def _cancel(self):
+        return "research_menu"
+
+class AudienceResearchMenu(Menu):
+    """Zeigt erforschbare Zielgruppen."""
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(game_state.get_text('research_category_audience'), [], audio, game_state)
+
+    def announce_entry(self):
+        self.current_index = 0
+        researchable = self.game_state.get_researchable_audiences()
+        self.options = []
+        for a in researchable:
+            self.options.append({
+                'text': f"{a['name']}. {a.get('research_weeks', 4)} Wochen. Kosten: {a['cost']:,} Euro.",
+                'action': lambda ad=a: self._research(ad),
+            })
+        if not self.options:
+            self.options.append({'text': self.game_state.get_text('no_features_available'), 'action': lambda: None})
+        self.options.append({'text': self.game_state.get_text('back'), 'action': self._cancel})
+
+        self.audio.speak(self.game_state.get_text('research_features_available', count=len(researchable)))
+        self.speak_current(interrupt=False)
+
+    def _research(self, aud_data):
+        if self.game_state.start_research(aud_data, "audience"):
+            self.audio.speak(self.game_state.get_text('research_started', name=aud_data['name'], weeks=aud_data.get('research_weeks', 4)))
+            return "game_menu"
+        else:
+            if getattr(self.game_state, 'is_researching', False) or getattr(self.game_state, 'is_developing', False):
+                self.audio.speak(self.game_state.get_text('research_already_active'))
+            else:
+                self.audio.speak(self.game_state.get_text('research_not_enough_money'))
+            return None
+
+    def _cancel(self):
+        return "research_menu"
+
+class TechnologyResearchMenu(Menu):
+    """Zeigt erforschbare Technologien für das Endgame."""
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(game_state.get_text('research_category_technology'), [], audio, game_state)
+
+    def announce_entry(self):
+        self.current_index = 0
+        researchable = self.game_state.get_researchable_technologies()
+        self.options = []
+        for t in researchable:
+            self.options.append({
+                'text': f"{t['name']} - {t['description']}. {t.get('research_weeks', 4)} Wochen. Kosten: {t['cost']:,} Euro.",
+                'action': lambda td=t: self._research(td),
+            })
+        if not self.options:
+            self.options.append({'text': self.game_state.get_text('no_features_available'), 'action': lambda: None})
+        self.options.append({'text': self.game_state.get_text('back'), 'action': self._cancel})
+
+        self.audio.speak(self.game_state.get_text('research_features_available', count=len(researchable)))
+        self.speak_current(interrupt=False)
+
+    def _research(self, tech_data):
+        if self.game_state.start_research(tech_data, "technology"):
+            self.audio.speak(self.game_state.get_text('research_started', name=tech_data['name'], weeks=tech_data.get('research_weeks', 4)))
+            return "game_menu"
+        else:
+            if getattr(self.game_state, 'is_researching', False) or getattr(self.game_state, 'is_developing', False):
+                self.audio.speak(self.game_state.get_text('research_already_active'))
+            else:
+                self.audio.speak(self.game_state.get_text('research_not_enough_money'))
+            return None
     def _cancel(self):
         return "research_menu"
 
@@ -1561,13 +1794,24 @@ class ServiceMenu(Menu):
     def announce_entry(self):
         self.current_index = 0
         self.options = []
-        # Nur aktive oder verbuggte Spiele
+        # Nur aktive oder verbuggte Spiele, oder aktive MMOs
         for i, game in enumerate(self.game_state.game_history):
-            if game.is_active or game.bugs > 0:
-                self.options.append({
-                    'text': self.game_state.get_text('service_game_desc', name=game.name, bugs=game.bugs, dlcs=game.dlc_count),
-                    'action': lambda idx=i: self._manage_game(idx)
-                })
+            if game.is_active or game.bugs > 0 or game.size == "MMO":
+                
+                # Finde heraus ob es ein aktives MMO ist
+                is_active_mmo = False
+                if game.size == "MMO":
+                    for mmo in self.game_state.active_mmos:
+                        if mmo.game == game and mmo.game.is_active:
+                            is_active_mmo = True
+                            break
+                            
+                # Nur anzeigen wenn patchbar, dlc fähig, oder aktives MMO
+                if game.is_active or game.bugs > 0 or is_active_mmo:
+                    self.options.append({
+                        'text': self.game_state.get_text('service_game_desc', name=game.name, bugs=game.bugs, dlcs=game.dlc_count),
+                        'action': lambda idx=i: self._manage_game(idx)
+                    })
         
         self.options.append({'text': self.game_state.get_text('service_back'), 'action': lambda: "game_menu"})
         self.audio.speak(self.game_state.get_text('service_select'))
@@ -1589,11 +1833,19 @@ class GameServiceOptionsMenu(Menu):
         idx = getattr(self.game_state, '_pending_service_game_index', 0)
         game = self.game_state.game_history[idx]
         
-        self.options = [
-            {'text': self.game_state.get_text('free_patch', bugs=game.bugs), 'action': lambda: self._patch(idx)},
-            {'text': self.game_state.get_text('release_dlc_option'), 'action': lambda: self._dlc(idx)},
-            {'text': self.game_state.get_text('back'), 'action': lambda: "service_menu"}
-        ]
+        self.options = []
+        
+        # Patches and DLCs for non-MMOs or MMOs?
+        # Let's say MMOs also get patches, but DLC is replaced by Content Update
+        self.options.append({'text': self.game_state.get_text('free_patch', bugs=game.bugs), 'action': lambda: self._patch(idx)})
+        
+        if game.size == "MMO":
+            self.options.append({'text': self.game_state.get_text('mmo_update_option'), 'action': lambda: self._mmo_update(idx)})
+        else:
+            self.options.append({'text': self.game_state.get_text('release_dlc_option'), 'action': lambda: self._dlc(idx)})
+            
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "service_menu"})
+        
         self.audio.speak(self.game_state.get_text('service_options', name=game.name))
         self.speak_current(interrupt=False)
 
@@ -1609,6 +1861,20 @@ class GameServiceOptionsMenu(Menu):
             self.audio.speak(self.game_state.get_text('dlc_success'))
         else:
             self.audio.speak(self.game_state.get_text('dlc_fail'))
+        return "service_menu"
+
+    def _mmo_update(self, idx):
+        game = self.game_state.game_history[idx]
+        mmo_idx = -1
+        for i, m in enumerate(self.game_state.active_mmos):
+            if m.game == game:
+                mmo_idx = i
+                break
+                
+        if mmo_idx != -1 and self.game_state.release_mmo_update(mmo_idx):
+            self.audio.speak(self.game_state.get_text('mmo_update_success'))
+        else:
+            self.audio.speak(self.game_state.get_text('mmo_update_fail'))
         return "service_menu"
 
 

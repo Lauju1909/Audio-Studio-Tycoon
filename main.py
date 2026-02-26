@@ -31,6 +31,8 @@ from menus import (
     FireMenu,
     ResearchMenu,
     FeatureResearchMenu,
+    GenreResearchMenu,
+    AudienceResearchMenu,
     EngineCreateNameMenu,
     EngineFeatureSelectMenu,
     OfficeMenu,
@@ -108,6 +110,8 @@ def main():
         # Forschung & Engines
         "research_menu": lambda: ResearchMenu(audio, state),
         "feature_research_menu": lambda: FeatureResearchMenu(audio, state),
+        "genre_research_menu": lambda: GenreResearchMenu(audio, state),
+        "audience_research_menu": lambda: AudienceResearchMenu(audio, state),
         "engine_create_name": lambda: EngineCreateNameMenu(audio, state),
         "engine_feature_select": lambda: EngineFeatureSelectMenu(audio, state),
         "hardware_dev_menu": lambda: HardwareDevMenu(audio, state),
@@ -131,6 +135,7 @@ def main():
         "load_menu": lambda: LoadMenu(audio, state),
         "help_menu": lambda: HelpMenu(audio, state),
         "goty_menu": lambda: GOTYMenu(audio, state),
+        "aaa_dev_event_menu": lambda: AAADevEventMenu(audio, state),
     }
 
     current_key = "main_menu"
@@ -167,8 +172,15 @@ def main():
             
         # GOTY-Check
         goty = getattr(state, "pending_goty_results", None)
-        if goty and current_key not in ["goty_menu", "bankruptcy"]:
+        if goty and current_key not in ["goty_menu", "bankruptcy", "aaa_dev_event_menu"]:
             current_key = "goty_menu"
+            current_menu = menu_factories[current_key]()
+            current_menu.announce_entry()
+
+        # AAA Dev Event Check
+        dev_event = getattr(state, "pending_dev_event", None)
+        if dev_event and current_key == "dev_progress_menu":
+            current_key = "aaa_dev_event_menu"
             current_menu = menu_factories[current_key]()
             current_menu.announce_entry()
 
@@ -264,6 +276,13 @@ def main():
                     True, (255, 150, 50)
                 )
                 screen.blit(dev_info, (10, 30))
+                y_offset = 50
+            elif getattr(state, 'is_researching', False):
+                res_info = font.render(
+                    f"{state.get_text('research_progress')}: {int(state.research_progress)}/{state.research_total_weeks} Ww.",
+                    True, (50, 200, 255)
+                )
+                screen.blit(res_info, (10, 30))
                 y_offset = 50
             else:
                 y_offset = 30

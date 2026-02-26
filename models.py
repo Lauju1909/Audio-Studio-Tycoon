@@ -5,7 +5,7 @@ Enthält: ReviewScore, GameProject, Employee, Engine, EngineFeature
 """
 
 import random
-from game_data import EMPLOYEE_FIRST_NAMES, EMPLOYEE_LAST_NAMES
+from game_data import EMPLOYEE_FIRST_NAMES, EMPLOYEE_LAST_NAMES, EMPLOYEE_TRAITS
 from translations import get_text
 
 
@@ -94,6 +94,39 @@ class GameProject:
         }
 
 
+class ActiveMMO:
+    """Ein aktives Live-Service/MMO Spiel."""
+    
+    def __init__(self, game_project, initial_players=10000):
+        self.game = game_project
+        self.players = initial_players
+        self.subscription_fee = 15  # 15 Euro pro Monat / 4 = ca. 3.75 pro Woche, machen wir einfach 3 Euro pro Woche
+        self.server_cost_per_10k = 5000  # 5k Euro pro 10k Spieler
+        self.weeks_active = 0
+        
+    @property
+    def weekly_revenue(self):
+        return self.players * 3
+        
+    @property
+    def weekly_cost(self):
+        return int((self.players / 10000) * self.server_cost_per_10k)
+        
+    @property
+    def weekly_profit(self):
+        return self.weekly_revenue - self.weekly_cost
+        
+    def to_dict(self):
+        return {
+            "game_dict": self.game.to_dict(),
+            "players": self.players,
+            "subscription_fee": self.subscription_fee,
+            "server_cost_per_10k": self.server_cost_per_10k,
+            "weeks_active": self.weeks_active,
+        }
+
+
+
 class Email:
     """Modell für Fan-Post und Bug-Reports."""
     def __init__(self, sender, subject, body, date_week, game_name=None, is_bug=False):
@@ -150,7 +183,7 @@ class Engine:
 class Employee:
     """Ein Mitarbeiter des Studios."""
 
-    def __init__(self, name=None, role_data=None, skill_level=1, specialization=None):
+    def __init__(self, name=None, role_data=None, skill_level=1, specialization=None, trait=None):
         """
         role_data: Dict aus EMPLOYEE_ROLES (role, primary, secondary)
         skill_level: 1-5, beeinflusst Skills und Gehalt
@@ -166,6 +199,7 @@ class Employee:
         self.secondary_skill = role_data["secondary"] if role_data else "Grafik"
         self.skill_level = skill_level
         self.specialization = specialization  # Dict aus EMPLOYEE_SPECIALIZATIONS oder None
+        self.trait = trait if trait else random.choice(EMPLOYEE_TRAITS)
 
         # Skills basierend auf Rolle und Level generieren
         self.skills = self._generate_skills()
@@ -191,9 +225,12 @@ class Employee:
         return skills
 
     def _calculate_salary(self):
-        """Wöchentliches Gehalt basierend auf Gesamtskills."""
+        """Wöchentliches Gehalt basierend auf Gesamtskills und Eigenschaft."""
         total_skill = sum(self.skills.values())
-        return int(total_skill * 5 + 500)
+        base_salary = total_skill * 5 + 500
+        if self.trait and self.trait["effect"] == "salary":
+            base_salary *= self.trait["value"]
+        return int(base_salary)
 
     @property
     def quality_contribution(self):
@@ -209,6 +246,8 @@ class Employee:
     def summary(self):
         """Zusammenfassung für NVDA."""
         base = get_text('employee_summary', name=self.name, role=get_text(self.role), level=self.skill_level, salary=self.salary, morale=self.morale)
+        if self.trait:
+            base += ". " + get_text('employee_trait', trait=self.trait['name'])
         if self.specialization:
             base += get_text('employee_spec', spec=get_text(self.specialization['name']))
         return base
@@ -219,7 +258,10 @@ class Employee:
         skill_text = ". ".join(
             f"{get_text(s)}: {self.skills[s]}" for s in SLIDER_NAMES
         )
-        return get_text('employee_detail', name=self.name, role=get_text(self.role), level=self.skill_level, salary=self.salary, skills=skill_text, morale=self.morale)
+        base = get_text('employee_detail', name=self.name, role=get_text(self.role), level=self.skill_level, salary=self.salary, skills=skill_text, morale=self.morale)
+        if self.trait:
+            base += ". " + get_text('employee_trait_desc', trait=self.trait['name'], desc=self.trait['description'])
+        return base
 
     def to_dict(self):
         """Für Speichern."""
@@ -230,6 +272,7 @@ class Employee:
             "secondary_skill": self.secondary_skill,
             "skill_level": self.skill_level,
             "specialization": self.specialization,
+            "trait": self.trait,
             "skills": self.skills,
             "salary": self.salary,
             "morale": self.morale,
@@ -260,18 +303,20 @@ class RivalGame:
 class RivalStudio:
     """KI-gesteuertes Konkurrenz-Studio."""
     
-    def __init__(self, name, target_market_share=10, games=None, next_release_week=None):
+    def __init__(self, name, target_market_share=10, games=None, next_release_week=None, owned_shares=0):
         self.name = name
         self.target_market_share = target_market_share
         self.games = games or []
         self.next_release_week = next_release_week or random.randint(10, 30)
+        self.owned_shares = owned_shares
 
     def to_dict(self):
         return {
             "name": self.name,
             "target_market_share": self.target_market_share,
             "games": [g.to_dict() for g in self.games],
-            "next_release_week": self.next_release_week
+            "next_release_week": self.next_release_week,
+            "owned_shares": self.owned_shares
         }
 
 class BankLoan:

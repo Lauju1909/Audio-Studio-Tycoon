@@ -16,6 +16,9 @@ from game_data import (
     RANDOM_EVENTS, OFFICE_LEVELS, ENGINE_FEATURES,
     EMPLOYEE_ROLES, DEV_PHASES, GAME_SIZES,
     TREND_TOPICS, TREND_GENRES, TRAINING_OPTIONS,
+    START_TOPICS, RESEARCHABLE_TOPICS,
+    START_GENRES, START_AUDIENCES, RESEARCHABLE_GENRES, RESEARCHABLE_AUDIENCES,
+    RESEARCHABLE_TECHNOLOGIES,
     get_available_platforms, get_available_features,
 )
 
@@ -50,6 +53,17 @@ class GameState:
         self.last_event_week = 0
         self.active_events = []
 
+        # Forschungs-System
+        self.is_researching = False
+        self.research_progress = 0
+        self.research_total_weeks = 0
+        self.current_research_draft = None
+        
+        self.unlocked_topics = list(START_TOPICS)
+        self.unlocked_genres = list(START_GENRES)
+        self.unlocked_audiences = list(START_AUDIENCES)
+        self.unlocked_technologies = []
+
         # Aktuelles Projekt
         self.current_draft = {
             "name": "",
@@ -65,6 +79,9 @@ class GameState:
         
         # Posteingang
         self.emails = []
+        
+        # Aktive MMOs
+        self.active_mmos = []
 
         # Einstellungen
         self.settings = {
@@ -171,9 +188,9 @@ class GameState:
             "audience": None,
             "engine": None,
             "sliders": {},
-            "size": "Mittel",
             "marketing": "Kein Marketing",
         }
+        self.aaa_event_triggered = False
 
     def get_text(self, key, **kwargs):
         """Holt einen übersetzten Text basierend auf dem aktuellen Sprach-Setting."""
@@ -282,18 +299,46 @@ class GameState:
                 if e["effect"] == "dev_speed_drop":
                     boost *= e["multiplier"]
             
+            # Team Speed Modifier durch Eigenschaften
+            boost *= self.get_team_speed_modifier()
+            
             self.dev_progress += boost
             
             if self.crunch_active:
                 # Moral-Malus
                 for emp in self.employees:
-                    emp.morale = max(0, emp.morale - random.randint(2, 5))
+                    morale_loss = random.randint(2, 5)
+                    if emp.trait and emp.trait["effect"] == "morale_loss":
+                        morale_loss = int(morale_loss * emp.trait["value"])
+                    emp.morale = max(0, emp.morale - morale_loss)
+                    
                 # Bug-Zuwachs
-                self.current_bugs += random.randint(1, 3)
+                base_bugs = random.randint(1, 3)
+                self.current_bugs += int(base_bugs * self.get_team_bug_modifier())
             
             # Zufällige Bugs auch ohne Crunch (seltener)
             if random.random() < 0.1:
-                self.current_bugs += 1
+                self.current_bugs += int(1 * self.get_team_bug_modifier())
+                
+            # Supporter fixen aktiv Bugs jede Woche während der Entwicklung
+            supporter_count = sum(1 for e in self.employees if e.role == "Supporter")
+            if supporter_count > 0 and self.current_bugs > 0:
+                self.current_bugs = max(0, self.current_bugs - supporter_count)
+
+            # AAA Events (Max 1x pro Projekt)
+            if self.current_draft.get("size") == "AAA" and not getattr(self, "aaa_event_triggered", False):
+                if 0.2 < (self.dev_progress / max(1, getattr(self, "dev_total_weeks", 1))) < 0.8:
+                    if random.random() < 0.05:  # 5% Chance pro Woche
+                        from game_data import AAA_DEV_EVENTS
+                        self.pending_dev_event = random.choice(AAA_DEV_EVENTS)
+                        self.aaa_event_triggered = True
+                        self.time_speed = 0 # Pause game
+
+        # Forschungsfortschritt
+        elif self.is_researching:
+            self.research_progress += 1
+            if self.research_progress >= self.research_total_weeks:
+                self.complete_research()
 
         # Konsolenentwicklung
         if getattr(self, "is_developing_console", False):
@@ -383,6 +428,18 @@ class GameState:
                         sender=self.get_text('sender_industry_news'),
                         subject=self.get_text('subject_rival_hit', name=rival.name),
                         body=self.get_text('body_rival_hit', name=rival.name, game=r_game.name, score=score, genre=self.get_text(genre)),
+                        date_week=self.week
+                    ))
+
+                # Dividende ausschütten, falls Anteile besessen werden
+                if getattr(rival, 'owned_shares', 0) > 0:
+                    dividend = int((score * 10000) * (rival.owned_shares / 100))
+                    self.money += dividend
+                    self.accounting["income"] += dividend
+                    self.emails.append(Email(
+                        sender=self.get_text('sender_bank'),
+                        subject=self.get_text('subject_dividend'),
+                        body=self.get_text('body_dividend', name=rival.name, amount=dividend),
                         date_week=self.week
                     ))
                 
@@ -534,6 +591,21 @@ class GameState:
                     if g.weeks_on_market > 20 or new_sales < 100:
                         g.is_active = False
 
+            # MMOs verarbeiten (Einnahmen, Kosten, Spielerschwund)
+            for mmo in self.active_mmos:
+                if mmo.game.is_active:
+                    mmo.weeks_active += 1
+                    # Einnahmen und Kosten
+                    self.money += mmo.weekly_revenue
+                    self.money -= mmo.weekly_cost
+                    mmo.game.revenue += mmo.weekly_revenue
+                    
+                    # Spielerschwund (ca. 2% pro Woche)
+                    mmo.players = int(mmo.players * 0.98)
+                    
+                    if mmo.players < 1000:
+                        mmo.game.is_active = False # Server shut down
+
             # Fan-Mails & Bugs generieren
             self.process_emails()
 
@@ -591,11 +663,25 @@ class GameState:
         self.fans += 500
         return True
 
+    def release_mmo_update(self, mmo_index):
+        """Programmiert ein Content-Update für ein MMO, um Spieler zurückzugewinnen."""
+        mmo = self.active_mmos[mmo_index]
+        cost = 50000
+        if self.money < cost:
+            return False
+        self.money -= cost
+        # Füge Spieler hinzu basierend auf Basis-Spielerzahl (z.B. +10% max)
+        new_players = int(mmo.game.sales * 0.05)
+        mmo.players += new_players
+        self.fans += 1000
+        return True
+
     def get_team_bonus(self):
         """Gesamtbonus des Teams auf Spielqualität."""
         if not self.employees:
             return 0.0
-        return sum(e.quality_contribution for e in self.employees)
+        base_bonus = sum(e.quality_contribution for e in self.employees)
+        return base_bonus * self.get_team_quality_modifier()
 
     def get_team_slider_bonus(self, slider_name):
         """Durchschnittlicher Skill-Bonus des Teams für einen Slider."""
@@ -604,22 +690,75 @@ class GameState:
         bonuses = [e.get_slider_bonus(slider_name) for e in self.employees]
         return sum(bonuses) / len(bonuses)
 
+    def get_team_speed_modifier(self):
+        if not self.employees: return 1.0
+        mods = [e.trait["value"] for e in self.employees if e.trait and e.trait["effect"] == "speed"]
+        return sum(mods) / len(mods) if mods else 1.0
+
+    def get_team_bug_modifier(self):
+        if not self.employees: return 1.0
+        mods = [e.trait["value"] for e in self.employees if e.trait and e.trait["effect"] == "bugs"]
+        return sum(mods) / len(mods) if mods else 1.0
+
+    def get_team_quality_modifier(self):
+        if not self.employees: return 1.0
+        mods = [e.trait["value"] for e in self.employees if e.trait and e.trait["effect"] == "quality"]
+        return sum(mods) / len(mods) if mods else 1.0
+
     # ==========================================================
-    # ENGINES
+    # FORSCHUNG & ENGINES
     # ==========================================================
 
-    def research_feature(self, feature_data):
-        """Schaltet ein Engine-Feature frei."""
-        if self.money < feature_data["cost"]:
+    def start_research(self, res_data, res_type):
+        """Startet ein neues Forschungsprojekt."""
+        if self.money < res_data["cost"] or self.is_researching or self.is_developing:
             return False
-        # Prüfen ob schon freigeschaltet
-        for f in self.unlocked_features:
-            if f.name == feature_data["name"]:
-                return False
-        self.money -= feature_data["cost"]
-        feat = EngineFeature(feature_data["category"], feature_data["name"], feature_data["tech_bonus"])
-        self.unlocked_features.append(feat)
+            
+        self.money -= res_data["cost"]
+        self.is_researching = True
+        self.research_progress = 0
+        self.research_total_weeks = res_data.get("research_weeks", 4)
+        self.current_research_draft = {
+            "data": res_data,
+            "type": res_type
+        }
         return True
+
+    def complete_research(self):
+        """Schließt die aktuelle Forschung ab."""
+        self.is_researching = False
+        if not self.current_research_draft:
+            return
+            
+        res_type = self.current_research_draft["type"]
+        res_data = self.current_research_draft["data"]
+        
+        if res_type == "feature":
+            feat = EngineFeature(res_data["category"], res_data["name"], res_data["tech_bonus"])
+            self.unlocked_features.append(feat)
+        elif res_type == "genre":
+            self.unlocked_genres.append(res_data["name"])
+        elif res_type == "audience":
+            self.unlocked_audiences.append(res_data["name"])
+        elif res_type == "topic":
+            self.unlocked_topics.append(res_data["name"])
+        elif res_type == "technology":
+            self.unlocked_technologies.append(res_data["name"])
+            
+        from models import Email
+        self.emails.insert(0, Email(
+            sender=self.get_text('sender_assistant'),
+            subject=self.get_text('subject_research_done'),
+            body=self.get_text('body_research_done', name=res_data["name"]),
+            date_week=self.week
+        ))
+        
+        # Audio Warnung für abgeschlossene Forschung
+        if hasattr(self, 'audio'):
+            self.audio.play_sound('success')
+            self.audio.speak(self.get_text('body_research_done', name=res_data["name"]), interrupt=False)
+            
+        self.current_research_draft = None
 
     def create_engine(self, name, feature_list):
         """Erstellt eine neue Engine aus freigeschalteten Features."""
@@ -632,6 +771,22 @@ class GameState:
         available = get_available_features(self.week)
         unlocked_names = {f.name for f in self.unlocked_features}
         return [f for f in available if f["name"] not in unlocked_names]
+
+    def get_researchable_topics(self):
+        """Themen die erforschbar, aber noch nicht freigeschaltet sind."""
+        return [t for t in RESEARCHABLE_TOPICS if t["name"] not in self.unlocked_topics and self.week >= t["week"]]
+
+    def get_researchable_genres(self):
+        """Genres die erforschbar, aber noch nicht freigeschaltet sind."""
+        return [g for g in RESEARCHABLE_GENRES if g["name"] not in self.unlocked_genres and self.week >= g["week"]]
+
+    def get_researchable_audiences(self):
+        """Zielgruppen die erforschbar, aber noch nicht freigeschaltet sind."""
+        return [a for a in RESEARCHABLE_AUDIENCES if a["name"] not in self.unlocked_audiences and self.week >= a["week"]]
+
+    def get_researchable_technologies(self):
+        """Endgame-Technologien, die noch nicht freigeschaltet sind."""
+        return [t for t in RESEARCHABLE_TECHNOLOGIES if t["name"] not in self.unlocked_technologies and self.week >= t["week"]]
 
     # ==========================================================
     # BÜRO
@@ -946,7 +1101,15 @@ class GameState:
             # Einmaliger Bonus bei Vertragsabschluss (Advance)
             self.money += publisher["advance"]
         else:
-            project.revenue = total_revenue
+            # Self-Publishing -> Vertriebskosten
+            if "Digitaler Vertrieb & Logistik" in self.unlocked_technologies:
+                distribution_margin = 0.15 # 15% mit Technologie
+            else:
+                distribution_margin = 0.30 # 30% ohne Technologie
+                
+            dist_cost = int(total_revenue * distribution_margin)
+            project.revenue = total_revenue - dist_cost
+            project.distribution_cost = dist_cost
 
         self.money += project.revenue
         if hasattr(self, "accounting"):
@@ -967,6 +1130,14 @@ class GameState:
                 emp.morale = min(100, emp.morale + 5)
             elif project.review and project.review.average < 4:
                 emp.morale = max(0, emp.morale - 10)
+
+        # Wenn es ein MMO ist, erstelle ActiveMMO Objekt
+        if project.size == "MMO":
+            from models import ActiveMMO
+            # Initiale Spielerzahl basierend auf Hype und Review
+            initial_players = int((project.review.average * 10000) * (1 + self.hype * 0.05))
+            mmo = ActiveMMO(game_project=project, initial_players=initial_players)
+            self.active_mmos.append(mmo)
 
         self.game_history.append(project)
         return project
@@ -1061,6 +1232,7 @@ class GameState:
             "active_events": getattr(self, "active_events", []),
             "settings": self.settings,
             "game_history": [g.to_dict() for g in self.game_history],
+            "active_mmos": [m.to_dict() for m in getattr(self, "active_mmos", [])],
             "employees": [e.to_dict() for e in self.employees],
             "engines": [
                 {"name": eng.name, "features": [
@@ -1072,6 +1244,7 @@ class GameState:
                 {"category": f.category, "name": f.name, "tech_bonus": f.tech_bonus}
                 for f in self.unlocked_features
             ],
+            "unlocked_technologies": self.unlocked_technologies,
             "bought_platforms": getattr(self, "bought_platforms", []),
             "active_platforms": getattr(self, "active_platforms", []),
             "rivals": [r.to_dict() for r in getattr(self, "rivals", [])],
@@ -1135,6 +1308,7 @@ class GameState:
             self.unlocked_features.append(
                 EngineFeature(fd["category"], fd["name"], fd["tech_bonus"])
             )
+        self.unlocked_technologies = data.get("unlocked_technologies", [])
 
         self.engines = []
         for ed in data.get("engines", []):
@@ -1160,6 +1334,19 @@ class GameState:
             proj.week_developed = gd.get("week_developed", 0)
             self.game_history.append(proj)
 
+        # Aktive MMOs laden
+        self.active_mmos = []
+        if "active_mmos" in data:
+            from models import ActiveMMO
+            for md in data["active_mmos"]:
+                match_game = next((g for g in self.game_history if g.name == md.get("game_dict", {}).get("name")), None)
+                if match_game:
+                    m = ActiveMMO(match_game, md.get("players", 0))
+                    m.subscription_fee = md.get("subscription_fee", 15)
+                    m.server_cost_per_10k = md.get("server_cost_per_10k", 5000)
+                    m.weeks_active = md.get("weeks_active", 0)
+                    self.active_mmos.append(m)
+
         # Mitarbeiter laden
         self.employees = []
         for ed in data.get("employees", []):
@@ -1174,6 +1361,9 @@ class GameState:
             emp.morale = ed["morale"]
             emp.weeks_employed = ed["weeks_employed"]
             emp.specialization = ed.get("specialization")
+            import random
+            from game_data import EMPLOYEE_TRAITS
+            emp.trait = ed.get("trait") if ed.get("trait") else random.choice(EMPLOYEE_TRAITS)
             self.employees.append(emp)
 
         # E-Mails laden
