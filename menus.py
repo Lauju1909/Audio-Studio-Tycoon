@@ -362,7 +362,7 @@ class MainMenu(Menu):
 
     def new_game(self):
         self.audio.speak(self.game_state.get_text('game_start_new'))
-        return "company_name_input"
+        return "difficulty_menu"
 
     def load_game(self):
         return "load_menu"
@@ -385,8 +385,8 @@ class MainMenu(Menu):
 class CompanyNameMenu(TextInputMenu):
     def __init__(self, audio, game_state):
         super().__init__(
-            title=game_state.get_text('company_creation_title'),
-            prompt=game_state.get_text('company_name_prompt'),
+            title='company_creation_title',
+            prompt='company_name_prompt',
             audio=audio,
             game_state=game_state,
             on_confirm=self._confirm,
@@ -413,8 +413,11 @@ class GameMenu(Menu):
         options = [
             {'text': game_state.get_text('company_overview'), 'action': self.show_status},
             {'text': game_state.get_text('develop_new_game'), 'action': self.new_game},
-            {'text': game_state.get_text('hr_department'), 'action': self.goto_hr},
         ]
+        # Sequel-Option nur zeigen wenn es bereits Spiele gibt
+        if game_state.game_history:
+            options.append({'text': game_state.get_text('sequel_label'), 'action': self.goto_sequel})
+        options.append({'text': game_state.get_text('hr_department'), 'action': self.goto_hr})
         
         # Audio Expo Spezial-Option
         week_in_year = (self.game_state.week - 1) % 52 + 1
@@ -426,6 +429,7 @@ class GameMenu(Menu):
             {'text': game_state.get_text('service_support'), 'action': self.goto_service},
             {'text': game_state.get_text('inbox'), 'action': self.goto_inbox},
             {'text': self.game_state.get_text('finances_and_bank'), 'action': self.goto_bank},
+            {'text': game_state.get_text('chart_option'), 'action': self.goto_charts},
             {'text': game_state.get_text('upgrade_office'), 'action': self.goto_office},
             {'text': game_state.get_text('history'), 'action': self.show_history},
             {'text': game_state.get_text('save_game'), 'action': self.goto_save},
@@ -440,7 +444,10 @@ class GameMenu(Menu):
         # Zufallsereignis prüfen
         event = self.game_state.check_random_event()
         if event:
-            self.audio.speak(self.game_state.get_text('random_event_alert', title=event['title'], text=event['text']))
+            # Events können 'title'/'text' ODER nur 'id' haben
+            title = event.get('title', self.game_state.get_text('event_' + event.get('id', 'unknown')))
+            text = event.get('text', '')
+            self.audio.speak(self.game_state.get_text('random_event_alert', title=title, text=text))
         self.audio.speak(
             f"{self.game_state.get_text('management_center')} - {self.game_state.company_name}. "
             f"{self.game_state.get_text('week')} {self.game_state.week}.",
@@ -459,6 +466,13 @@ class GameMenu(Menu):
 
     def goto_bank(self):
         return "bank_menu"
+
+    def goto_charts(self):
+        return "chart_menu"
+
+    def goto_sequel(self):
+        self.game_state.reset_draft()
+        return "sequel_menu"
 
     def show_status(self):
         self.audio.speak(self.game_state.get_status_text())
@@ -731,7 +745,7 @@ class GenreMenu(Menu):
         compat = get_compatibility(topic, genre)
         compat_text = get_compatibility_text(compat)
         self.audio.speak(f"{topic} + {genre}: {compat_text}.")
-        return "platform_menu"
+        return "sub_genre_menu"
 
     def _cancel(self):
         return "topic_menu"
@@ -950,8 +964,8 @@ class EngineSelectMenu(Menu):
 class GameNameMenu(TextInputMenu):
     def __init__(self, audio, game_state):
         super().__init__(
-            title=game_state.get_text('game_name'),
-            prompt=game_state.get_text('game_name_prompt_short'), # I'll add this to translations
+            title='game_name',
+            prompt='game_name_prompt_short',
             audio=audio,
             game_state=game_state,
             on_confirm=self._confirm,
@@ -1016,7 +1030,7 @@ class DevelopmentSliderMenu(SliderMenu):
 
         # Entwicklungsfortschritt anzeigen
         self.audio.speak(
-            self.game_state.get_text('dev_started')
+            self.game_state.get_text('dev_started_info', name=self.game_state.current_draft['name'], weeks=0) # Weeks will be updated in next menu
         )
         return "dev_progress_menu"
 
@@ -1034,16 +1048,16 @@ class DevProgressMenu(Menu):
         self.last_bug_count = -1
 
     def announce_entry(self):
+        # Zeit zuerst berechnen
+        from game_data import GAME_SIZES, DEV_PHASES
+        size_data = next((s for s in GAME_SIZES if s["name"] == self.game_state.current_draft["size"]), GAME_SIZES[1])
+        self.game_state.dev_total_weeks = max(1, int(sum(p["duration_weeks"] for p in DEV_PHASES) * size_data["time_multi"]))
+        
         self.game_state.is_developing = True
         self.game_state.dev_progress = 0
         self.game_state.current_bugs = 0
         
-        # Zeit berechnen
-        from game_data import GAME_SIZES, DEV_PHASES
-        size_data = next((s for s in GAME_SIZES if s["name"] == self.game_state.current_draft["size"]), GAME_SIZES[1])
-        self.game_state.dev_total_weeks = int(sum(p["duration_weeks"] for p in DEV_PHASES) * size_data["time_multi"])
-        
-        self.audio.speak(self.game_state.get_text('dev_started', name=self.game_state.current_draft['name'], weeks=self.game_state.dev_total_weeks))
+        self.audio.speak(self.game_state.get_text('dev_progress_start_info', name=self.game_state.current_draft['name'], weeks=self.game_state.dev_total_weeks))
         self.options = []
         self.last_announced_percent = -1
 
@@ -1051,7 +1065,8 @@ class DevProgressMenu(Menu):
         if not self.game_state.is_developing:
             return
 
-        percent = int((self.game_state.dev_progress / self.game_state.dev_total_weeks) * 100)
+        total = max(1, self.game_state.dev_total_weeks)
+        percent = int((self.game_state.dev_progress / total) * 100)
         
         if percent % 25 == 0 and percent != self.last_announced_percent and percent <= 100:
             self.audio.speak(self.game_state.get_text('dev_percent', percent=percent, bugs=self.game_state.current_bugs, hype=self.game_state.hype))
@@ -1598,8 +1613,8 @@ class EngineCreateNameMenu(TextInputMenu):
 
     def __init__(self, audio, game_state):
         super().__init__(
-            title=game_state.get_text('create_engine_option'),
-            prompt=game_state.get_text('engine_name_prompt'),
+            title='create_engine_option',
+            prompt='engine_name_prompt',
             audio=audio,
             game_state=game_state,
             on_confirm=self._confirm,
@@ -2114,7 +2129,7 @@ class HardwareDevMenu(Menu):
 
 class ConsoleNameInput(TextInputMenu):
     def __init__(self, audio, game_state):
-        super().__init__(game_state.get_text('hardware_name'), game_state.get_text('hardware_prompt'), audio, game_state, self._confirm, self._cancel)
+        super().__init__('hardware_name', 'hardware_prompt', audio, game_state, self._confirm, self._cancel)
         
     def _confirm(self, name):
         self.game_state.current_console_draft = {"name": name, "tech_level": 1, "cost": 10000000}
@@ -2237,3 +2252,187 @@ class GOTYMenu(Menu):
     def _cancel(self):
         self.game_state.pending_goty_results = None
         return "game_menu"
+
+
+# ==============================================================
+# SCHWIERIGKEITSGRAD-MENÜ
+# ==============================================================
+class DifficultyMenu(Menu):
+    """Schwierigkeitsgrad-Auswahl beim Spielstart."""
+
+    def __init__(self, audio, game_state):
+        from game_data import DIFFICULTY_LEVELS
+        options = []
+        for i, diff in enumerate(DIFFICULTY_LEVELS):
+            diff_key = 'difficulty_' + diff['name'].lower().replace('ä','ae')
+            options.append({
+                'text': f"{game_state.get_text(diff_key)} - {diff['description']}",
+                'action': lambda idx=i: self._select(idx)
+            })
+        super().__init__(game_state.get_text('difficulty_title'), options, audio, game_state)
+
+    def _select(self, idx):
+        from game_data import DIFFICULTY_LEVELS
+        diff = DIFFICULTY_LEVELS[idx]
+        self.game_state.difficulty = idx
+        self.game_state.money = diff["start_money"]
+        self.audio.speak(self.game_state.get_text('difficulty_selected', name=diff["name"], desc=diff["description"]))
+        return "company_name_input"
+
+
+# ==============================================================
+# SUB-GENRE-MENÜ
+# ==============================================================
+class SubGenreMenu(Menu):
+    """Sub-Genre-Auswahl nach Genre-Auswahl."""
+
+    def __init__(self, audio, game_state):
+        super().__init__(game_state.get_text('sub_genre_title'), [], audio, game_state)
+
+    def announce_entry(self):
+        from game_data import SUB_GENRES
+        genre = self.game_state.current_draft.get("genre")
+        self.options = []
+
+        # Option: Kein Sub-Genre
+        self.options.append({
+            'text': self.game_state.get_text('sub_genre_none'),
+            'action': lambda: self._select(None)
+        })
+
+        if genre and genre in SUB_GENRES:
+            for sg in SUB_GENRES[genre]:
+                name = sg["name"]
+                self.options.append({
+                    'text': self.game_state.get_text(name),
+                    'action': lambda n=name: self._select(n)
+                })
+
+        super().announce_entry()
+
+    def _select(self, sub_genre_name):
+        self.game_state.current_draft["sub_genre"] = sub_genre_name
+        if sub_genre_name:
+            self.audio.speak(self.game_state.get_text('sub_genre_selected', name=self.game_state.get_text(sub_genre_name)))
+        return "platform_menu"
+
+
+# ==============================================================
+# SEQUEL-MENÜ
+# ==============================================================
+class SequelMenu(Menu):
+    """Auswahl eines früheren Spiels als Basis für ein Sequel."""
+
+    def __init__(self, audio, game_state):
+        super().__init__(game_state.get_text('sequel_title'), [], audio, game_state)
+
+    def announce_entry(self):
+        self.options = []
+        games = self.game_state.game_history
+
+        if not games:
+            self.audio.speak(self.game_state.get_text('sequel_no_games'))
+            self.options.append({
+                'text': self.game_state.get_text('back'),
+                'action': lambda: "game_menu"
+            })
+        else:
+            for g in games:
+                ip = getattr(g, 'ip_rating', 0)
+                seq_num = getattr(g, 'sequel_number', 0)
+                next_num = seq_num + 1 if seq_num > 0 else 2
+                self.options.append({
+                    'text': self.game_state.get_text('sequel_option', name=g.name, ip=ip, num=next_num),
+                    'action': lambda game=g, num=next_num: self._select_sequel(game, num)
+                })
+            self.options.append({
+                'text': self.game_state.get_text('back'),
+                'action': lambda: "game_menu"
+            })
+
+        super().announce_entry()
+
+    def _select_sequel(self, original_game, sequel_num):
+        # Sequel-Name generieren
+        base_name = original_game.name
+        # Entferne vorherige Nummern
+        for i in range(10, 1, -1):
+            if base_name.endswith(f" {i}"):
+                base_name = base_name[:-len(f" {i}")]
+                break
+        sequel_name = f"{base_name} {sequel_num}"
+
+        # Draft vorbereiten
+        self.game_state.current_draft["name"] = sequel_name
+        self.game_state.current_draft["topic"] = original_game.topic
+        self.game_state.current_draft["genre"] = original_game.genre
+        self.game_state.current_draft["sequel_number"] = sequel_num
+        self.game_state.current_draft["sub_genre"] = getattr(original_game, 'sub_genre', None)
+
+        self.audio.speak(self.game_state.get_text('sequel_started', name=original_game.name, sequel_name=sequel_name))
+        return "platform_menu"  # Springe direkt zur Plattformwahl
+
+
+# ==============================================================
+# VERKAUFSCHARTS-MENÜ
+# ==============================================================
+class ChartMenu(Menu):
+    """Zeigt die aktuellen Verkaufscharts und Marktanteile."""
+
+    def __init__(self, audio, game_state):
+        super().__init__(game_state.get_text('chart_title'), [], audio, game_state)
+
+    def announce_entry(self):
+        self.options = []
+
+        # Alle Spiele sammeln (eigene + Rival-Spiele)
+        all_sales = []
+        for g in self.game_state.game_history:
+            if g.sales > 0:
+                all_sales.append({
+                    'name': g.name,
+                    'studio': self.game_state.company_name,
+                    'sales': g.sales
+                })
+
+        for rival in self.game_state.rivals:
+            for rg in getattr(rival, 'released_games', []):
+                all_sales.append({
+                    'name': rg.get('name', 'Unbekannt'),
+                    'studio': rival.name,
+                    'sales': rg.get('sales', 0)
+                })
+
+        # Sortieren nach Sales (absteigend)
+        all_sales.sort(key=lambda x: x['sales'], reverse=True)
+
+        if not all_sales:
+            self.options.append({
+                'text': self.game_state.get_text('chart_no_data'),
+                'action': lambda: "game_menu"
+            })
+        else:
+            # Top 10
+            for i, entry in enumerate(all_sales[:10]):
+                self.options.append({
+                    'text': self.game_state.get_text('chart_entry',
+                        rank=i+1, name=entry['name'], studio=entry['studio'], sales=entry['sales']),
+                    'action': lambda: "game_menu"
+                })
+
+            # Marktanteil berechnen
+            total_sales = sum(e['sales'] for e in all_sales) or 1
+            player_sales = sum(e['sales'] for e in all_sales if e['studio'] == self.game_state.company_name)
+            share = round(player_sales / total_sales * 100, 1)
+            self.options.append({
+                'text': self.game_state.get_text('chart_player_share', share=share),
+                'action': lambda: "game_menu"
+            })
+
+        self.options.append({
+            'text': self.game_state.get_text('back'),
+            'action': lambda: "game_menu"
+        })
+
+        super().announce_entry()
+

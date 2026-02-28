@@ -122,6 +122,22 @@ class GameState:
         self.console_total_weeks = 50
         self.current_console_draft = None
 
+        # NEU: Phase A - Schwierigkeitsgrad
+        self.difficulty = 1  # Index in DIFFICULTY_LEVELS (0=Einfach, 1=Normal, 2=Schwer, 3=Legendär)
+
+        # NEU: Phase A - Verkaufscharts
+        self.chart_history = []  # [{'week': X, 'entries': [{'name':..., 'studio':..., 'sales':...}]}]
+
+        # NEU: Phase B - Lizenzen
+        self.owned_licenses = []  # [{'name': str, 'purchased_week': int, 'expires_week': int, 'used': bool}]
+
+        # NEU: Phase B - Addons
+        self.active_addons = []  # Addon-Projekte die verkaufen
+
+        # Pending Events (dynamisch gesetzt, hier initialisiert für Stabilität)
+        self.pending_goty_results = None
+        self.pending_dev_event = None
+
     def get_market_platforms(self):
         from game_data import get_available_platforms
         base = get_available_platforms(self.week)
@@ -188,7 +204,10 @@ class GameState:
             "audience": None,
             "engine": None,
             "sliders": {},
+            "size": "Mittel",
             "marketing": "Kein Marketing",
+            "sub_genre": None,
+            "publisher": None,
         }
         self.aaa_event_triggered = False
 
@@ -373,29 +392,9 @@ class GameState:
                 date_week=self.week
             ))
             
-        # NEU: Phase 7 - Hardware-Markt Updates
-        current_platforms = [p['name'] for p in get_available_platforms(self.week)]
-        for p in current_platforms:
-            if p not in self.active_platforms:
-                self.active_platforms.append(p)
-                from models import Email
-                self.emails.insert(0, Email(
-                    sender=self.get_text('sender_hardware_news'),
-                    subject=self.get_text('subject_new_console', name=p),
-                    body=self.get_text('body_new_console', name=p),
-                    date_week=self.week
-                ))
-        for p in list(self.active_platforms):
-            if p not in current_platforms:
-                self.active_platforms.remove(p)
-                from models import Email
-                self.emails.insert(0, Email(
-                    sender=self.get_text('sender_hardware_news'),
-                    subject=self.get_text('subject_console_dead', name=p),
-                    body=self.get_text('body_console_dead', name=p),
-                    date_week=self.week
-                ))
-            
+        # NEU: Phase B - Lizenzen ablaufen lassen
+        self.expire_licenses()
+
         # NEU: Phase 7 - Rivalen und GOTY evaluieren
         self._process_rivals()
         if week_in_year == 52:
@@ -983,22 +982,32 @@ class GameState:
         if synergy >= 0.8 and slider_match >= 0.8:
             base_score += 1.5
 
-        # Sequel Bonus/Malus
-        if len(self.game_history) > 0:
+        # Sequel Bonus/Malus (IP-Rating basiert)
+        sequel_num = getattr(project, 'sequel_number', 0)
+        if sequel_num > 0:
+            # Finde das Originalspiel oder Vorgänger in der Historie
+            ip_bonus = 0
+            for past in reversed(self.game_history):
+                if past.topic == topic and past.genre == genre:
+                    ip = getattr(past, 'ip_rating', 0)
+                    if ip >= 70:
+                        ip_bonus = 0.15  # Starker Hype-Bonus
+                    elif ip >= 40:
+                        ip_bonus = 0.05
+                    elif ip < 20:
+                        ip_bonus = -0.10  # Schlechte IP enttäuscht
+                    break
+            base_score *= (1.0 + ip_bonus)
+            # Sequel-Fatigue: jedes weitere Sequel wird schwieriger
+            if sequel_num >= 4:
+                base_score *= 0.90
+            elif sequel_num >= 3:
+                base_score *= 0.95
+        elif len(self.game_history) > 0:
+            # Gleiche Topic+Genre Wiederholung ohne Sequel-Flag
             last = self.game_history[-1]
             if last.topic == topic and last.genre == genre:
                 base_score *= 0.8
-            
-            # Sequel Bonus: Wenn der Name eine Steigerung andeutet
-            is_sequel = False
-            if project.name.startswith(last.name) and project.name != last.name:
-                is_sequel = True
-            
-            if is_sequel:
-                if last.review and last.review.average >= 7.5:
-                    base_score *= 1.15  # Hype Bonus
-                elif last.review and last.review.average < 5.0:
-                    base_score *= 0.85  # Enttäuschungs-Malus
 
         if self.high_score > 0:
             ratio = (base_score * 10) / self.high_score
@@ -1007,6 +1016,11 @@ class GameState:
 
         prestige = OFFICE_LEVELS[self.office_level]["prestige"]
         base_score *= (1.0 + prestige * 0.03)
+
+        # Schwierigkeitsgrad-Bonus auf Review
+        from game_data import DIFFICULTY_LEVELS
+        diff = DIFFICULTY_LEVELS[self.difficulty]
+        base_score += diff["review_bonus"] * 0.1  # Normalisiert (max ±0.1 auf 0-1 Skala)
 
         base_review = max(1.0, min(10.0, float(base_score * 10)))
 
@@ -1087,7 +1101,11 @@ class GameState:
         audience_multi = AUDIENCE_MULTI.get(project.audience, 1.0)
         rand_m = random.uniform(0.8, 1.2)
 
-        sales = int(base_sales * score_m * fan_bonus * plat_multi * audience_multi * rand_m)
+        # Schwierigkeitsgrad Markt-Multiplikator
+        from game_data import DIFFICULTY_LEVELS
+        diff_market = DIFFICULTY_LEVELS[self.difficulty]["market_multi"]
+
+        sales = int(base_sales * score_m * fan_bonus * plat_multi * audience_multi * rand_m * diff_market)
         return sales
 
     def calculate_dev_cost(self, project):
@@ -1156,10 +1174,13 @@ class GameState:
         self.games_made += 1
         self.total_revenue += project.revenue
 
-        # Zeit vorrücken
+        # Zeit vorrücken (simuliert jede Woche einzeln für Gehälter/Events)
         size_data = next((s for s in GAME_SIZES if s["name"] == project.size), GAME_SIZES[1])
         dev_weeks = int(sum(p["duration_weeks"] for p in DEV_PHASES) * size_data["time_multi"])
-        self.week += dev_weeks
+        
+        for _ in range(dev_weeks):
+            self.week += 1
+            self._on_new_week()
 
         for emp in self.employees:
             emp.weeks_employed += dev_weeks
@@ -1175,6 +1196,13 @@ class GameState:
             initial_players = int((project.review.average * 10000) * (1 + self.hype * 0.05))
             mmo = ActiveMMO(game_project=project, initial_players=initial_players)
             self.active_mmos.append(mmo)
+        # IP-Rating berechnen (0-100 basierend auf Review)
+        if project.review:
+            avg = project.review.average
+            project.ip_rating = int(min(100, max(0, (avg - 3) * 14.3)))  # 3→0, 10→100
+        
+        # Sub-Genre aus Draft übernehmen
+        project.sub_genre = self.current_draft.get("sub_genre", None)
 
         self.game_history.append(project)
         return project
@@ -1456,3 +1484,116 @@ class GameState:
 
         self.reset_draft()
         return True
+
+    # ==========================================================
+    # PHASE B: LIZENZEN
+    # ==========================================================
+    def buy_license(self, license_idx):
+        """Kauft eine Lizenz."""
+        from game_data import LICENSES
+        if license_idx < 0 or license_idx >= len(LICENSES):
+            return False
+        lic = LICENSES[license_idx]
+        if self.money < lic["cost"]:
+            return False
+        self.money -= lic["cost"]
+        self.accounting["expenses"] += lic["cost"]
+        self.owned_licenses.append({
+            "name": lic["name"],
+            "purchased_week": self.week,
+            "expires_week": self.week + lic["duration_weeks"],
+            "used": False,
+            "hype_bonus": lic["hype_bonus"],
+            "review_bonus": lic["review_bonus"],
+            "best_topics": lic["best_topics"],
+        })
+        return True
+
+    def get_active_licenses(self):
+        """Gibt alle nicht-abgelaufenen, nicht-verwendeten Lizenzen zurück."""
+        return [l for l in self.owned_licenses if not l["used"] and l["expires_week"] > self.week]
+
+    def use_license(self, license_name):
+        """Markiert eine Lizenz als verwendet und gibt Bonus zurück."""
+        for lic in self.owned_licenses:
+            if lic["name"] == license_name and not lic["used"] and lic["expires_week"] > self.week:
+                lic["used"] = True
+                topic = self.current_draft.get("topic", "")
+                # Prüfe ob Topic zur Lizenz passt
+                topic_match = topic in lic["best_topics"]
+                hype_bonus = lic["hype_bonus"] * (1.5 if topic_match else 1.0)
+                review_bonus = lic["review_bonus"] * (1.3 if topic_match else 1.0)
+                self.hype += int(hype_bonus)
+                return {"hype_bonus": hype_bonus, "review_bonus": review_bonus, "topic_match": topic_match}
+        return None
+
+    def expire_licenses(self):
+        """Entfernt abgelaufene Lizenzen (wird in advance_week aufgerufen)."""
+        expired = [l for l in self.owned_licenses if l["expires_week"] <= self.week and not l["used"]]
+        for lic in expired:
+            from models import Email
+            self.emails.append(Email(
+                sender=self.get_text('sender_legal'),
+                subject=self.get_text('license_expired_subject', name=lic["name"]),
+                body=self.get_text('license_expired_body', name=lic["name"]),
+                date_week=self.week
+            ))
+        self.owned_licenses = [l for l in self.owned_licenses if l["expires_week"] > self.week or l["used"]]
+
+    # ==========================================================
+    # PHASE B: ADDONS
+    # ==========================================================
+    def create_addon(self, base_game_idx):
+        """Erstellt ein Addon für ein existierendes Spiel."""
+        from game_data import ADDON_DATA
+        if base_game_idx < 0 or base_game_idx >= len(self.game_history):
+            return None
+        base = self.game_history[base_game_idx]
+        cost = int(self.calculate_dev_cost(base) * ADDON_DATA["cost_multiplier"])
+        if self.money < cost:
+            return None
+        self.money -= cost
+        self.accounting["expenses"] += cost
+        
+        # Addon-Verkäufe berechnen
+        review_bonus = ADDON_DATA["review_bonus"] if base.review and base.review.average >= 7.0 else 0
+        base_sales = base.sales if hasattr(base, 'sales') else 0
+        addon_sales = int(base_sales * ADDON_DATA["sales_multiplier"] * (1 + review_bonus))
+        addon_revenue = addon_sales * 20  # 20€ pro Addon
+
+        self.money += addon_revenue
+        self.accounting["income"] += addon_revenue
+        return {
+            "name": f"{base.name} - Addon",
+            "cost": cost,
+            "sales": addon_sales,
+            "revenue": addon_revenue,
+        }
+
+    # ==========================================================
+    # PHASE B: BUNDLES
+    # ==========================================================
+    def create_bundle(self, game_indices):
+        """Erstellt ein Bundle aus mehreren Spielen."""
+        from game_data import BUNDLE_DATA
+        if len(game_indices) < BUNDLE_DATA["min_games"] or len(game_indices) > BUNDLE_DATA["max_games"]:
+            return None
+        games = []
+        for idx in game_indices:
+            if idx < 0 or idx >= len(self.game_history):
+                return None
+            games.append(self.game_history[idx])
+        
+        # Bundle-Verkäufe
+        total_orig_sales = sum(g.sales for g in games if hasattr(g, 'sales'))
+        bundle_sales = int(total_orig_sales * BUNDLE_DATA["sales_multiplier"])
+        bundle_revenue = bundle_sales * BUNDLE_DATA["price_per_game"] * len(games) // 1000
+
+        self.money += bundle_revenue
+        self.accounting["income"] += bundle_revenue
+        return {
+            "name": " + ".join(g.name for g in games),
+            "games_count": len(games),
+            "sales": bundle_sales,
+            "revenue": bundle_revenue,
+        }

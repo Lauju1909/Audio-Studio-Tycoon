@@ -1,13 +1,13 @@
 {
   "company_name": "",
-  "money": 733404,
-  "fans": 4380,
+  "money": 70000,
+  "fans": 5026,
   "week": 13,
-  "high_score": 5.5,
+  "high_score": 6.0,
   "games_made": 2,
-  "total_revenue": 608634,
+  "total_revenue": 724914,
   "office_level": 0,
-  "last_event_week": 0,
+  "last_event_week": 10,
   "last_trend_week": 0,
   "current_trend": {},
   "active_events": [],
@@ -29,19 +29,22 @@
       "engine_name": null,
       "review_scores": [
         5,
-        4,
         5,
-        6
+        7,
+        7
       ],
-      "review_average": 5.0,
-      "sales": 13506,
-      "revenue": 243108,
+      "review_average": 6.0,
+      "sales": 24547,
+      "revenue": 441846,
       "dev_cost": 12500,
       "week_developed": 1,
       "bugs": 0,
       "dlc_count": 0,
       "weeks_on_market": 0,
-      "is_active": true
+      "is_active": true,
+      "ip_rating": 0,
+      "sequel_number": 0,
+      "sub_genre": null
     },
     {
       "name": "",
@@ -54,46 +57,54 @@
       "marketing": "Gaming Web-Ads",
       "engine_name": null,
       "review_scores": [
-        4,
         6,
         6,
-        6
+        5,
+        4
       ],
-      "review_average": 5.5,
-      "sales": 20307,
-      "revenue": 365526,
-      "dev_cost": 18410,
+      "review_average": 5.25,
+      "sales": 15726,
+      "revenue": 283068,
+      "dev_cost": 17900,
       "week_developed": 7,
       "bugs": 0,
       "dlc_count": 1,
       "weeks_on_market": 0,
-      "is_active": true
+      "is_active": true,
+      "ip_rating": 32,
+      "sequel_number": 0,
+      "sub_genre": null
     }
   ],
   "active_mmos": [],
   "employees": [
     {
-      "name": "Ella Koch",
-      "role": "Programmierer",
-      "primary_skill": "KI",
-      "secondary_skill": "Gameplay",
+      "name": "Niklas Wolf",
+      "role": "Grafik-Designer",
+      "primary_skill": "Grafik",
+      "secondary_skill": "Welt",
       "skill_level": 1,
-      "specialization": null,
+      "specialization": {
+        "name": "Marketing-Experte",
+        "bonus_type": "Marketing",
+        "bonus_value": 0.3,
+        "description": "Erhöht die Effektivität von Marketing."
+      },
       "trait": {
-        "name": "Sauberer Coder",
-        "effect": "bugs",
-        "value": 0.5,
-        "description": "Verursacht 50% weniger Bugs."
+        "name": "Bescheiden",
+        "effect": "salary",
+        "value": 0.8,
+        "description": "Begnügt sich mit 20% weniger Gehalt."
       },
       "skills": {
-        "Gameplay": 36,
-        "Grafik": 5,
-        "Sound": 9,
-        "Story": 5,
-        "KI": 52,
-        "Welt": 5
+        "Gameplay": 15,
+        "Grafik": 61,
+        "Sound": 15,
+        "Story": 10,
+        "KI": 5,
+        "Welt": 34
       },
-      "salary": 1060,
+      "salary": 960,
       "morale": 100,
       "weeks_employed": 6
     }
@@ -172,22 +183,31 @@
     {
       "name": "MicroHard",
       "target_market_share": 30,
-      "games": [],
-      "next_release_week": 17,
-      "owned_shares": 0
+      "games": [
+        {
+          "name": "MicroHard Simulation",
+          "topic": "Zombies",
+          "genre": "Simulation",
+          "score": 6.7,
+          "weeks_on_market": 0,
+          "is_active": true
+        }
+      ],
+      "next_release_week": 55,
+      "owned_shares": 10
     },
     {
       "name": "Electric Farts",
       "target_market_share": 25,
       "games": [],
-      "next_release_week": 30,
+      "next_release_week": 22,
       "owned_shares": 0
     },
     {
       "name": "Nintengo",
       "target_market_share": 20,
       "games": [],
-      "next_release_week": 25,
+      "next_release_week": 27,
       "owned_shares": 0
     }
   ],
@@ -199,9 +219,9 @@
     "weeks_remaining": 104
   },
   "accounting": {
-    "income": 608634,
-    "expenses": 30910,
-    "loan_paid": 0
+    "income": 724914,
+    "expenses": 135800,
+    "loan_paid": 16584
   },
   "custom_consoles": [],
   "emails": []

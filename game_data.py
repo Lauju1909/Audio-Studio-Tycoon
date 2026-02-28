@@ -208,51 +208,128 @@ RESEARCHABLE_TECHNOLOGIES = [
 ]
 
 # ============================================================
-# REVIEW-TEXTE
+# SCHWIERIGKEITSGRADE
 # ============================================================
-REVIEW_TEMPLATES = {
-    "intro": [
-        "Das neue Spiel von {company} ist da!",
-        "Wir haben uns '{game}' genau angesehen.",
-        "Endlich ist '{game}' auf dem Markt!"
+DIFFICULTY_LEVELS = [
+    {
+        "name": "Einfach",
+        "start_money": 120000,
+        "rival_strength": 0.7,
+        "review_bonus": 0.5,
+        "market_multi": 1.3,
+        "description": "Mehr Startgeld, schwächere Rivalen, großzügigere Reviews.",
+    },
+    {
+        "name": "Normal",
+        "start_money": 70000,
+        "rival_strength": 1.0,
+        "review_bonus": 0.0,
+        "market_multi": 1.0,
+        "description": "Die Standard-Erfahrung.",
+    },
+    {
+        "name": "Schwer",
+        "start_money": 40000,
+        "rival_strength": 1.3,
+        "review_bonus": -0.5,
+        "market_multi": 0.8,
+        "description": "Weniger Startgeld, stärkere Rivalen, strengere Reviews.",
+    },
+    {
+        "name": "Legendär",
+        "start_money": 20000,
+        "rival_strength": 1.6,
+        "review_bonus": -1.0,
+        "market_multi": 0.6,
+        "description": "Extrem wenig Geld, übermächtige Rivalen, gnadenlose Reviews.",
+    },
+]
+
+# ============================================================
+# SUB-GENRES
+# ============================================================
+SUB_GENRES = {
+    "Action": [
+        {"name": "Shooter", "slider_adjust": {"Gameplay": 2, "Grafik": 1, "Sound": 0, "Story": -1, "KI": 0, "Welt": -1}},
+        {"name": "Beat 'em Up", "slider_adjust": {"Gameplay": 2, "Grafik": 0, "Sound": 1, "Story": -1, "KI": 1, "Welt": -2}},
+        {"name": "Stealth", "slider_adjust": {"Gameplay": 1, "Grafik": 0, "Sound": 1, "Story": 1, "KI": 2, "Welt": -2}},
     ],
-    "positive": [
-        "Die Story und das Gameplay waren erstklassig!",
-        "Die technische Umsetzung ist absolut brillant.",
-        "Ein Meilenstein für das Genre {genre}.",
-        "Selten hat uns ein Spiel so gefesselt."
+    "RPG": [
+        {"name": "JRPG", "slider_adjust": {"Gameplay": 0, "Grafik": 1, "Sound": 1, "Story": 2, "KI": -1, "Welt": -1}},
+        {"name": "Action-RPG", "slider_adjust": {"Gameplay": 2, "Grafik": 1, "Sound": 0, "Story": -1, "KI": 0, "Welt": 0}},
+        {"name": "Dungeon Crawler", "slider_adjust": {"Gameplay": 1, "Grafik": -1, "Sound": 0, "Story": -1, "KI": 1, "Welt": 2}},
     ],
-    "negative": [
-        "Die Grafik ist leider total veraltet.",
-        "Das Gameplay fühlt sich hölzern an.",
-        "Es gibt viel zu viele Bugs zum Release.",
-        "Das Thema {topic} wurde schwach umgesetzt."
+    "Simulation": [
+        {"name": "Lebenssimulation", "slider_adjust": {"Gameplay": 1, "Grafik": 1, "Sound": 0, "Story": 0, "KI": 1, "Welt": 0}},
+        {"name": "Wirtschaftssim", "slider_adjust": {"Gameplay": 2, "Grafik": -1, "Sound": -1, "Story": 0, "KI": 2, "Welt": 0}},
+        {"name": "Fahrsimulation", "slider_adjust": {"Gameplay": 1, "Grafik": 2, "Sound": 1, "Story": -2, "KI": 0, "Welt": 1}},
     ],
-    "conclusion": [
-        "Ein absolutes Muss für jeden Fan!",
-        "Kann man spielen, muss man aber nicht.",
-        "Leider eine Enttäuschung auf ganzer Linie.",
-        "Wir sind gespannt auf das nächste Projekt."
-    ]
+    "Strategie": [
+        {"name": "Echtzeit", "slider_adjust": {"Gameplay": 1, "Grafik": 0, "Sound": 0, "Story": -1, "KI": 2, "Welt": 1}},
+        {"name": "Rundenbasiert", "slider_adjust": {"Gameplay": 0, "Grafik": -1, "Sound": 0, "Story": 1, "KI": 2, "Welt": 1}},
+        {"name": "Tower Defense", "slider_adjust": {"Gameplay": 2, "Grafik": 1, "Sound": 0, "Story": -2, "KI": 1, "Welt": 0}},
+    ],
+    "Abenteuer": [
+        {"name": "Point & Click", "slider_adjust": {"Gameplay": -1, "Grafik": 1, "Sound": 1, "Story": 2, "KI": 0, "Welt": 0}},
+        {"name": "Open World", "slider_adjust": {"Gameplay": 1, "Grafik": 1, "Sound": 0, "Story": 0, "KI": 0, "Welt": 2}},
+        {"name": "Visual Novel", "slider_adjust": {"Gameplay": -2, "Grafik": 2, "Sound": 1, "Story": 3, "KI": -1, "Welt": -1}},
+    ],
+    "Puzzle": [
+        {"name": "Match-3", "slider_adjust": {"Gameplay": 2, "Grafik": 1, "Sound": 1, "Story": -2, "KI": 0, "Welt": -1}},
+        {"name": "Rätsel-Abenteuer", "slider_adjust": {"Gameplay": 1, "Grafik": 0, "Sound": 0, "Story": 2, "KI": 0, "Welt": 0}},
+    ],
+    "Sport": [
+        {"name": "Mannschaftssport", "slider_adjust": {"Gameplay": 1, "Grafik": 1, "Sound": 0, "Story": -1, "KI": 1, "Welt": 0}},
+        {"name": "Extremsport", "slider_adjust": {"Gameplay": 2, "Grafik": 1, "Sound": 1, "Story": -2, "KI": 0, "Welt": 1}},
+    ],
+    "Casual": [
+        {"name": "Party-Spiel", "slider_adjust": {"Gameplay": 2, "Grafik": 0, "Sound": 2, "Story": -2, "KI": -1, "Welt": 0}},
+        {"name": "Idle Game", "slider_adjust": {"Gameplay": 1, "Grafik": -1, "Sound": -1, "Story": -1, "KI": 2, "Welt": 0}},
+        {"name": "Sandbox", "slider_adjust": {"Gameplay": 1, "Grafik": 0, "Sound": 0, "Story": -2, "KI": 0, "Welt": 3}},
+    ],
+    "Horror": [
+        {"name": "Survival Horror", "slider_adjust": {"Gameplay": 1, "Grafik": 1, "Sound": 1, "Story": 0, "KI": 0, "Welt": 0}},
+        {"name": "Psycho-Horror", "slider_adjust": {"Gameplay": -1, "Grafik": 0, "Sound": 2, "Story": 2, "KI": 0, "Welt": 0}},
+    ],
+    "Kampfspiel": [
+        {"name": "2D Fighter", "slider_adjust": {"Gameplay": 2, "Grafik": 0, "Sound": 1, "Story": -1, "KI": 1, "Welt": -2}},
+        {"name": "Arena Brawler", "slider_adjust": {"Gameplay": 1, "Grafik": 1, "Sound": 0, "Story": -1, "KI": 1, "Welt": 1}},
+    ],
+    "Rennspiel": [
+        {"name": "Arcade Racing", "slider_adjust": {"Gameplay": 2, "Grafik": 1, "Sound": 1, "Story": -2, "KI": 0, "Welt": 1}},
+        {"name": "Renn-Simulation", "slider_adjust": {"Gameplay": 0, "Grafik": 2, "Sound": 0, "Story": -2, "KI": 1, "Welt": 2}},
+    ],
 }
 
 # ============================================================
-# FAN-MAILS & BUG-REPORTS
+# LIZENZEN (Phase B)
 # ============================================================
-MAIL_TEMPLATES = {
-    "fan_praise": {
-        "subject": "Ich liebe {game}!",
-        "body": "Hey! Ich spiele gerade '{game}' und es ist fantastisch. Besonders das Thema {topic} gefällt mir!"
-    },
-    "fan_critique": {
-        "subject": "Enttäuscht von {game}",
-        "body": "Eigentlich mag ich eure Spiele, aber '{game}' ist nicht so gut. Das Genre {genre} passt irgendwie nicht."
-    },
-    "bug_report": {
-        "subject": "BUG gefunden in {game}!",
-        "body": "Hilfe! Ich hänge im Level fest. Es scheint ein technisches Problem zu geben. Bitte fixen!"
-    }
+LICENSES = [
+    {"name": "Film-Lizenz", "cost": 150000, "hype_bonus": 30, "review_bonus": 0.5, "best_topics": ["Film", "Sci-Fi", "Fantasy"], "duration_weeks": 104},
+    {"name": "Buch-Lizenz", "cost": 80000, "hype_bonus": 15, "review_bonus": 0.8, "best_topics": ["Fantasy", "Mittelalter", "Detektiv"], "duration_weeks": 104},
+    {"name": "Sport-Lizenz", "cost": 200000, "hype_bonus": 40, "review_bonus": 0.3, "best_topics": ["Sport", "Fußball"], "duration_weeks": 52},
+    {"name": "Musik-Lizenz", "cost": 60000, "hype_bonus": 20, "review_bonus": 0.4, "best_topics": ["Musik", "Party"], "duration_weeks": 78},
+    {"name": "Anime-Lizenz", "cost": 100000, "hype_bonus": 25, "review_bonus": 0.6, "best_topics": ["Anime", "Fantasy", "Martial Arts"], "duration_weeks": 104},
+]
+
+# ============================================================
+# ADDON & BUNDLE DATEN (Phase B)
+# ============================================================
+ADDON_DATA = {
+    "cost_multiplier": 0.3,
+    "dev_weeks_multiplier": 0.4,
+    "sales_multiplier": 0.25,
+    "review_bonus": 0.3,
 }
+
+BUNDLE_DATA = {
+    "min_games": 2,
+    "max_games": 5,
+    "price_per_game": 5000,
+    "sales_multiplier": 0.15,
+}
+
+
 
 # ============================================================
 # ENGINE-FEATURES (zum Freischalten / Erforschen)
@@ -344,71 +421,7 @@ DEV_PHASES = [
     {"name": "Testing",    "duration_weeks": 1, "primary_sliders": ["KI", "Gameplay"]},
 ]
 
-# ============================================================
-# ZUFALLSEREIGNISSE
-# ============================================================
-RANDOM_EVENTS = [
-    {
-        "title": "Spielemesse",
-        "text": "Auf der großen Spielemesse präsentierst du dein Studio! Fans steigen.",
-        "effect": "fans",
-        "value": 500,
-    },
-    {
-        "title": "Wirtschaftsboom",
-        "text": "Die Wirtschaft boomt! Spieler kaufen mehr.",
-        "effect": "money",
-        "value": 15000,
-    },
-    {
-        "title": "Rezession",
-        "text": "Eine Wirtschaftskrise trifft die Branche. Umsätze sinken.",
-        "effect": "money",
-        "value": -10000,
-    },
-    {
-        "title": "Retro-Trend",
-        "text": "Retro-Spiele sind plötzlich wieder total angesagt!",
-        "effect": "fans",
-        "value": 300,
-    },
-    {
-        "title": "Hacker-Angriff",
-        "text": "Hacker haben deine Server angegriffen! Reparaturkosten fallen an.",
-        "effect": "money",
-        "value": -8000,
-    },
-    {
-        "title": "Award-Nominierung",
-        "text": "Dein letztes Spiel wurde für einen Award nominiert!",
-        "effect": "fans",
-        "value": 1000,
-    },
-    {
-        "title": "Steuernachzahlung",
-        "text": "Das Finanzamt fordert eine Nachzahlung.",
-        "effect": "money",
-        "value": -12000,
-    },
-    {
-        "title": "Spende eines Investors",
-        "text": "Ein geheimnisvoller Investor glaubt an dein Studio!",
-        "effect": "money",
-        "value": 25000,
-    },
-    {
-        "title": "Viral-Hit",
-        "text": "Ein Video über dein Studio geht viral!",
-        "effect": "fans",
-        "value": 2000,
-    },
-    {
-        "title": "Server-Ausfall",
-        "text": "Dein Online-Service ist ausgefallen. Fans sind verärgert.",
-        "effect": "fans",
-        "value": -500,
-    },
-]
+
 
 # ============================================================
 # AAA DEV EVENTS
@@ -703,27 +716,75 @@ def get_available_features(week):
     return [f for f in ENGINE_FEATURES if int(f["week"]) <= current_week]
 
 # ============================================================
-# ZUFÄLLIGE MARKTEREIGNISSE (Phase 8)
+# ZUFÄLLIGE MARKTEREIGNISSE
+# Sofortige Events + dauerhafte Events (Phase 8)
 # ============================================================
 RANDOM_EVENTS = [
+    # --- Sofortige Events (money/fans) ---
+    {
+        "id": "expo",
+        "effect": "fans",
+        "value": 500,
+    },
+    {
+        "id": "boom",
+        "effect": "money",
+        "value": 15000,
+    },
+    {
+        "id": "recession",
+        "effect": "money",
+        "value": -10000,
+    },
+    {
+        "id": "retro",
+        "effect": "fans",
+        "value": 300,
+    },
+    {
+        "id": "award",
+        "effect": "fans",
+        "value": 1000,
+    },
+    {
+        "id": "tax",
+        "effect": "money",
+        "value": -12000,
+    },
+    {
+        "id": "investor",
+        "effect": "money",
+        "value": 25000,
+    },
+    {
+        "id": "viral",
+        "effect": "fans",
+        "value": 2000,
+    },
+    {
+        "id": "server_crash",
+        "effect": "fans",
+        "value": -500,
+    },
+    # --- Dauerhafte Events (mit duration) ---
     {
         "id": "hacker_attack",
         "type": "negative",
-        "duration": 4, # Wochen
+        "duration": 4,
         "effect": "sales_drop",
         "multiplier": 0.5
     },
     {
         "id": "viral_post",
         "type": "positive",
-        "duration": 2, # Wochen
+        "duration": 2,
         "effect": "hype_boost",
         "hype_amount": 50
     },
     {
         "id": "industry_burnout",
         "type": "negative",
-        "duration": 3, # Wochen
+        "duration": 3,
         "effect": "dev_speed_drop",
         "multiplier": 0.5
     }

@@ -54,6 +54,11 @@ class GameProject:
         self.weeks_on_market = 0
         self.is_active = True
 
+        # NEU: Sequels & IP-Rating
+        self.ip_rating = 0
+        self.sequel_number = 0  # 0 = Original, 2 = Sequel, 3 = Teil 3 etc.
+        self.sub_genre = None
+
     @property
     def profit(self):
         return self.revenue - self.dev_cost
@@ -91,6 +96,9 @@ class GameProject:
             "dlc_count": self.dlc_count,
             "weeks_on_market": self.weeks_on_market,
             "is_active": self.is_active,
+            "ip_rating": self.ip_rating,
+            "sequel_number": self.sequel_number,
+            "sub_genre": self.sub_genre,
         }
 
 

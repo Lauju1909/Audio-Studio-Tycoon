@@ -13,11 +13,23 @@ import ctypes
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
     try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        # PyInstaller creates a temp folder and stores path in _MEIPASS (one-file)
         base_path = sys._MEIPASS
     except Exception:
-        base_path = os.path.abspath(".")
-    return os.path.join(base_path, relative_path)
+        # Fallback for dev or multi-file build
+        base_path = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.abspath(".")
+    
+    # Check normal path
+    path = os.path.join(base_path, relative_path)
+    if os.path.exists(path):
+        return path
+        
+    # Check _internal path (common in PyInstaller 6 multi-file builds)
+    internal_path = os.path.join(base_path, "_internal", relative_path)
+    if os.path.exists(internal_path):
+        return internal_path
+        
+    return path
 
 class AudioManager:
     def __init__(self):

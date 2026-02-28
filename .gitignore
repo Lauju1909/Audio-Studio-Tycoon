@@ -20,3 +20,11 @@ build/
 dist/
 *.spec
 *.exe
+
+tools/upload_release.py
+tools/release_v1_6_1.py
+tools/release_v1_6_2.py
+tools/upload_v1_6_3.py
+*.zip
+dist/
+build/

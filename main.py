@@ -58,6 +58,11 @@ from menus import (
     ConsoleNameInput,
     ConsoleSpecsMenu,
     GOTYMenu,
+    DifficultyMenu,
+    SubGenreMenu,
+    SequelMenu,
+    ChartMenu,
+    AAADevEventMenu,
 )
 
 
@@ -131,6 +136,10 @@ def main():
         "bank_menu": lambda: BankMenu(audio, state),
         "loan_menu": lambda: LoanMenu(audio, state),
         "stock_market_menu": lambda: StockMarketMenu(audio, state),
+        "difficulty_menu": lambda: DifficultyMenu(audio, state),
+        "sub_genre_menu": lambda: SubGenreMenu(audio, state),
+        "sequel_menu": lambda: SequelMenu(audio, state),
+        "chart_menu": lambda: ChartMenu(audio, state),
         "settings_menu": lambda: SettingsMenu(audio, state, lambda: "main_menu"),
         "settings_menu_ingame": lambda: SettingsMenu(audio, state, lambda: "game_menu"),
         "save_menu": lambda: SaveMenu(audio, state),
