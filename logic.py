@@ -789,6 +789,43 @@ class GameState:
         return [t for t in RESEARCHABLE_TECHNOLOGIES if t["name"] not in self.unlocked_technologies and self.week >= t["week"]]
 
     # ==========================================================
+    # AKTIENMARKT / INVESTMENTS
+    # ==========================================================
+
+    def get_share_price(self, rival):
+        """Berechnet den Kaufpreis für 10% Anteile an einem Rivalen."""
+        return 50000 + int(rival.owned_shares / 10) * 5000
+
+    def buy_shares(self, rival_index):
+        """Kauft 10% Anteile an einem Rivalen-Studio."""
+        if rival_index < 0 or rival_index >= len(self.rivals):
+            return False, "invalid"
+        rival = self.rivals[rival_index]
+        if rival.owned_shares >= 50:
+            return False, "max_shares"
+        price = self.get_share_price(rival)
+        if self.money < price:
+            return False, "no_money"
+        self.money -= price
+        self.accounting["expenses"] += price
+        rival.owned_shares += 10
+        return True, rival.owned_shares
+
+    def sell_shares(self, rival_index):
+        """Verkauft 10% Anteile an einem Rivalen-Studio."""
+        if rival_index < 0 or rival_index >= len(self.rivals):
+            return False, "invalid"
+        rival = self.rivals[rival_index]
+        if rival.owned_shares <= 0:
+            return False, "no_shares"
+        # Verkaufspreis = 80% des aktuellen Kaufpreises
+        sell_price = int(self.get_share_price(rival) * 0.8)
+        self.money += sell_price
+        self.accounting["income"] += sell_price
+        rival.owned_shares -= 10
+        return True, rival.owned_shares
+
+    # ==========================================================
     # BÜRO
     # ==========================================================
 

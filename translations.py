@@ -519,6 +519,22 @@ TRANSLATIONS = {
         'dlc_fail': "Nicht genug Geld für einen DLC.",
         'mmo_update_success': "Content Update veröffentlicht! Neue Spieler sind zurückgekehrt.",
         'mmo_update_fail': "Nicht genug Geld für ein Content Update.",
+
+        # Investment & M&A / Aktienmarkt
+        'subject_dividend': "Dividende erhalten!",
+        'body_dividend': "Du hast eine Dividende von {name} erhalten: {amount:,} Euro.",
+        'stock_market_title': "Aktienmarkt / Investments",
+        'stock_market_option': "Aktienmarkt / Investments",
+        'stock_market_intro': "Aktienmarkt. Kaufe und verkaufe Anteile an Konkurrenz-Studios.",
+        'stock_buy_desc': "{name} – Anteile: {shares}%. Kaufpreis für 10%: {price:,} Euro.",
+        'stock_buy_option': "10% von {name} kaufen ({price:,} Euro)",
+        'stock_sell_option': "10% von {name} verkaufen ({price:,} Euro)",
+        'stock_buy_success': "10% Anteile an {name} gekauft! Neue Beteiligung: {shares}%. Restgeld: {money:,} Euro.",
+        'stock_sell_success': "10% Anteile an {name} verkauft! Neue Beteiligung: {shares}%. Restgeld: {money:,} Euro.",
+        'stock_not_enough_money': "Nicht genug Geld. Du brauchst {price:,} Euro.",
+        'stock_max_shares': "Maximale Beteiligung von 50% an {name} erreicht.",
+        'stock_no_shares': "Du besitzt keine Anteile an {name}.",
+        'stock_requires_tech': "Du musst zuerst die Technologie 'Investment & M&A' erforschen.",
     },
     'en': {
         'main_menu': "Main Menu",
@@ -1047,5 +1063,21 @@ TRANSLATIONS = {
         'dlc_fail': "Not enough money for a DLC.",
         'mmo_update_success': "Content update released! New players have returned.",
         'mmo_update_fail': "Not enough money for a content update.",
+
+        # Investment & M&A / Stock Market
+        'subject_dividend': "Dividend Received!",
+        'body_dividend': "You received a dividend from {name}: {amount:,} Euro.",
+        'stock_market_title': "Stock Market / Investments",
+        'stock_market_option': "Stock Market / Investments",
+        'stock_market_intro': "Stock Market. Buy and sell shares in rival studios.",
+        'stock_buy_desc': "{name} – Shares: {shares}%. Buy price for 10%: {price:,} Euro.",
+        'stock_buy_option': "Buy 10% of {name} ({price:,} Euro)",
+        'stock_sell_option': "Sell 10% of {name} ({price:,} Euro)",
+        'stock_buy_success': "Bought 10% shares of {name}! New stake: {shares}%. Remaining money: {money:,} Euro.",
+        'stock_sell_success': "Sold 10% shares of {name}! New stake: {shares}%. Remaining money: {money:,} Euro.",
+        'stock_not_enough_money': "Not enough money. You need {price:,} Euro.",
+        'stock_max_shares': "Maximum stake of 50% in {name} reached.",
+        'stock_no_shares': "You don't own any shares in {name}.",
+        'stock_requires_tech': "You must first research the 'Investment & M&A' technology.",
     }
 }

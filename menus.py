@@ -551,7 +551,11 @@ class BankMenu(Menu):
         else:
             rem = self.game_state.bank_loan.amount_remaining
             self.options.append({'text': self.game_state.get_text('pay_loan_option', amount=rem), 'action': self.pay_loan})
-            
+
+        # Aktienmarkt nur verfügbar, wenn Technologie erforscht
+        if "Investment & M&A" in getattr(self.game_state, 'unlocked_technologies', []):
+            self.options.append({'text': self.game_state.get_text('stock_market_option'), 'action': self.goto_stock_market})
+
         self.options.append({'text': self.game_state.get_text('back'), 'action': self._cancel})
         self.audio.speak(self.title)
         self.speak_current(interrupt=False)
@@ -581,6 +585,9 @@ class BankMenu(Menu):
         self.audio.speak(self.game_state.get_text('loan_paid_off'))
         self.announce_entry()
         return None
+
+    def goto_stock_market(self):
+        return "stock_market_menu"
 
     def _cancel(self):
         return "game_menu"
@@ -625,6 +632,84 @@ class LoanMenu(Menu):
         self.audio.speak(self.game_state.get_text('loan_taken_success', amount=loan_data['amount']))
         return "bank_menu"
 
+
+class StockMarketMenu(Menu):
+    """Aktienmarkt: Anteile an Rivalen-Studios kaufen und verkaufen."""
+
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(self.game_state.get_text('stock_market_title'), [], audio, game_state)
+
+    def announce_entry(self):
+        self.current_index = 0
+        self._build_options()
+        self.audio.speak(self.game_state.get_text('stock_market_intro'))
+        self.speak_current(interrupt=False)
+
+    def _build_options(self):
+        self.options = []
+        for i, rival in enumerate(self.game_state.rivals):
+            shares = rival.owned_shares
+            buy_price = self.game_state.get_share_price(rival)
+            sell_price = int(buy_price * 0.8)
+
+            # Info-Zeile
+            self.options.append({
+                'text': self.game_state.get_text('stock_buy_desc', name=rival.name, shares=shares, price=buy_price),
+                'action': lambda: None
+            })
+
+            # Kauf-Option (max 50%)
+            if shares < 50:
+                self.options.append({
+                    'text': self.game_state.get_text('stock_buy_option', name=rival.name, price=buy_price),
+                    'action': lambda idx=i: self._buy(idx)
+                })
+
+            # Verkauf-Option
+            if shares > 0:
+                self.options.append({
+                    'text': self.game_state.get_text('stock_sell_option', name=rival.name, price=sell_price),
+                    'action': lambda idx=i: self._sell(idx)
+                })
+
+        self.options.append({'text': self.game_state.get_text('back'), 'action': self._cancel})
+
+    def _buy(self, rival_index):
+        rival = self.game_state.rivals[rival_index]
+        price = self.game_state.get_share_price(rival)
+
+        if rival.owned_shares >= 50:
+            self.audio.speak(self.game_state.get_text('stock_max_shares', name=rival.name))
+            return None
+        if self.game_state.money < price:
+            self.audio.speak(self.game_state.get_text('stock_not_enough_money', price=price))
+            return None
+
+        success, new_shares = self.game_state.buy_shares(rival_index)
+        if success:
+            self.audio.speak(self.game_state.get_text('stock_buy_success', name=rival.name, shares=new_shares, money=self.game_state.money))
+            self._build_options()
+            self.current_index = 0
+        return None
+
+    def _sell(self, rival_index):
+        rival = self.game_state.rivals[rival_index]
+
+        if rival.owned_shares <= 0:
+            self.audio.speak(self.game_state.get_text('stock_no_shares', name=rival.name))
+            return None
+
+        success, new_shares = self.game_state.sell_shares(rival_index)
+        if success:
+            self.audio.speak(self.game_state.get_text('stock_sell_success', name=rival.name, shares=new_shares, money=self.game_state.money))
+            self._build_options()
+            self.current_index = 0
+        return None
+
+    def _cancel(self):
+        return "bank_menu"
 
 class GenreMenu(Menu):
     def __init__(self, audio, game_state):
