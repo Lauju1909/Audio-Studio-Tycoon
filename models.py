@@ -58,6 +58,14 @@ class GameProject:
         self.ip_rating = 0
         self.sequel_number = 0  # 0 = Original, 2 = Sequel, 3 = Teil 3 etc.
         self.sub_genre = None
+        self.license_bonus = 0.0  # NEU: Phase B Lizenzen
+
+        # NEU: Phase C - Produktion & Retail
+        self.physical_copies = 0
+        self.physical_price = 45  # Retailpreis
+        self.lifetime_physical_sales = 0
+
+
 
     @property
     def profit(self):
@@ -99,22 +107,34 @@ class GameProject:
             "ip_rating": self.ip_rating,
             "sequel_number": self.sequel_number,
             "sub_genre": self.sub_genre,
+            "license_bonus": self.license_bonus,
+            "physical_copies": getattr(self, "physical_copies", 0),
+            "physical_price": getattr(self, "physical_price", 45),
+            "lifetime_physical_sales": getattr(self, "lifetime_physical_sales", 0),
         }
 
 
 class ActiveMMO:
     """Ein aktives Live-Service/MMO Spiel."""
     
-    def __init__(self, game_project, initial_players=10000):
+    def __init__(self, game_project, initial_players=10000, payment_model="Abo"):
         self.game = game_project
+        self.payment_model = payment_model  # "Abo" oder "F2P"
         self.players = initial_players
-        self.subscription_fee = 15  # 15 Euro pro Monat / 4 = ca. 3.75 pro Woche, machen wir einfach 3 Euro pro Woche
+        
+        # Free-to-Play hat massiv mehr Spieler, aber weniger Einnahmen pro Spieler
+        if self.payment_model == "F2P":
+            self.players = initial_players * 5
+            self.subscription_fee = 1  # 1 Euro pro Woche (Mikrotransaktionen)
+        else:
+            self.subscription_fee = 3  # 3 Euro pro Woche (Abo)
+
         self.server_cost_per_10k = 5000  # 5k Euro pro 10k Spieler
         self.weeks_active = 0
         
     @property
     def weekly_revenue(self):
-        return self.players * 3
+        return self.players * self.subscription_fee
         
     @property
     def weekly_cost(self):
@@ -131,6 +151,7 @@ class ActiveMMO:
             "subscription_fee": self.subscription_fee,
             "server_cost_per_10k": self.server_cost_per_10k,
             "weeks_active": self.weeks_active,
+            "payment_model": self.payment_model,
         }
 
 
@@ -361,5 +382,57 @@ class CustomConsole:
             "dev_cost": self.dev_cost,
             "release_week": self.release_week,
             "market_share": self.market_share
+        }
+
+# ============================================================
+# PHASE E: Publisher Role
+# ============================================================
+
+class PublishingOffer:
+    """Angebot eines NPC-Studios an den Spieler, Publisher zu sein."""
+    def __init__(self, studio_name, game_name, genre, quality, marketing_cost, player_share):
+        self.studio_name = studio_name
+        self.game_name = game_name
+        self.genre = genre
+        self.quality = quality  # 1 bis 100
+        self.marketing_cost = marketing_cost
+        self.player_share = player_share  # e.g. 0.30 bis 0.70
+
+    def to_dict(self):
+        return {
+            "studio_name": self.studio_name,
+            "game_name": self.game_name,
+            "genre": self.genre,
+            "quality": self.quality,
+            "marketing_cost": self.marketing_cost,
+            "player_share": self.player_share
+        }
+
+class PublishedThirdPartyGame:
+    """Fremdes Spiel, das vom Spieler vertrieben wird."""
+    def __init__(self, offer):
+        self.studio_name = offer.studio_name
+        self.game_name = offer.game_name
+        self.genre = offer.genre
+        self.quality = offer.quality
+        self.player_share = offer.player_share
+        self.weeks_on_market = 0
+        self.is_active = True
+        self.total_sales = 0
+        self.total_revenue = 0
+        self.player_profit = 0
+
+    def to_dict(self):
+        return {
+            "studio_name": self.studio_name,
+            "game_name": self.game_name,
+            "genre": self.genre,
+            "quality": self.quality,
+            "player_share": self.player_share,
+            "weeks_on_market": self.weeks_on_market,
+            "is_active": self.is_active,
+            "total_sales": self.total_sales,
+            "total_revenue": self.total_revenue,
+            "player_profit": self.player_profit
         }
 

@@ -12,13 +12,13 @@ Menü-Typen:
 
 import pygame
 import time
-from models import GameProject, ReviewScore
+from models import GameProject
 from game_data import (
-    TOPICS, GENRES, SLIDER_NAMES, PLATFORMS, AUDIENCES,
-    OFFICE_LEVELS, ENGINE_FEATURES, GAME_SIZES,
+    GENRES, SLIDER_NAMES, AUDIENCES,
+    OFFICE_LEVELS, GAME_SIZES,
     TRAINING_OPTIONS,
     get_compatibility, get_compatibility_text,
-    get_available_platforms, get_available_features,
+    get_available_platforms,
 )
 # logic.py: Spielzustand
 
@@ -424,11 +424,26 @@ class GameMenu(Menu):
         if week_in_year == 26:
             options.append({'text': self.game_state.get_text('expo_title'), 'action': self.goto_expo})
 
+        # NEU: Phase C - Produktion
+        if getattr(self.game_state, 'has_presswerk', False):
+            options.append({'text': self.game_state.get_text('production_menu_title'), 'action': self.goto_production})
+
+        # NEU: Phase D - MMO Verwaltung
+        if getattr(self.game_state, 'active_mmos', []):
+            options.append({'text': self.game_state.get_text('mmo_management_title'), 'action': self.goto_mmo_management})
+
+        # NEU: Phase E - Publisher Angebote
+        if getattr(self.game_state, 'publishing_offers', []):
+             options.append({'text': self.game_state.get_text('publisher_deals_title'), 'action': self.goto_publisher_deals})
+
         options.extend([
             {'text': game_state.get_text('research_engines'), 'action': self.goto_research},
             {'text': game_state.get_text('service_support'), 'action': self.goto_service},
             {'text': game_state.get_text('inbox'), 'action': self.goto_inbox},
-            {'text': self.game_state.get_text('finances_and_bank'), 'action': self.goto_bank},
+            {'text': game_state.get_text('finances_and_bank'), 'action': self.goto_bank},
+            {'text': game_state.get_text('menu_licenses'), 'action': self.goto_licenses},
+            {'text': game_state.get_text('menu_addons'), 'action': self.goto_addons},
+            {'text': game_state.get_text('menu_bundles'), 'action': self.goto_bundles},
             {'text': game_state.get_text('chart_option'), 'action': self.goto_charts},
             {'text': game_state.get_text('upgrade_office'), 'action': self.goto_office},
             {'text': game_state.get_text('history'), 'action': self.show_history},
@@ -470,6 +485,15 @@ class GameMenu(Menu):
     def goto_charts(self):
         return "chart_menu"
 
+    def goto_production(self):
+        return "production_menu"
+
+    def goto_mmo_management(self):
+        return "mmo_management_menu"
+
+    def goto_publisher_deals(self):
+        return "publisher_deals_menu"
+
     def goto_sequel(self):
         self.game_state.reset_draft()
         return "sequel_menu"
@@ -480,7 +504,16 @@ class GameMenu(Menu):
 
     def new_game(self):
         self.game_state.reset_draft()
-        return "topic_menu"
+        return "license_select_menu"
+
+    def goto_licenses(self):
+        return "license_shop_menu"
+
+    def goto_addons(self):
+        return "addon_menu"
+
+    def goto_bundles(self):
+        return "bundle_menu"
 
     def remaster_game(self):
         return "remaster_select"
@@ -615,7 +648,6 @@ class LoanMenu(Menu):
 
     def announce_entry(self):
         self.current_index = 0
-        from models import BankLoan
         
         loans = [
             {"name": self.game_state.get_text('loan_small'), "amount": 50000, "interest": 0.10, "weeks": 52},
@@ -624,14 +656,14 @@ class LoanMenu(Menu):
         ]
         
         self.options = []
-        for l in loans:
-            l_num = int(str(l['amount']))
-            i_num = float(str(l['interest']))
-            w_num = int(str(l['weeks']))
+        for loan_item in loans:
+            l_num = int(str(loan_item['amount']))
+            i_num = float(str(loan_item['interest']))
+            w_num = int(str(loan_item['weeks']))
             repay = int(l_num * (1.0 + i_num))
             self.options.append({
-                'text': self.game_state.get_text('loan_option_desc', name=l['name'], amount=l_num, repay=repay, weeks=w_num),
-                'action': lambda loan=l: self._take_loan(loan)
+                'text': self.game_state.get_text('loan_option_desc', name=loan_item['name'], amount=l_num, repay=repay, weeks=w_num),
+                'action': lambda loan=loan_item: self._take_loan(loan)
             })
             
         self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "bank_menu"})
@@ -854,6 +886,9 @@ class GameSizeMenu(Menu):
         
         self.game_state.current_draft['size'] = size_data['name']
         self.audio.speak(self.game_state.get_text('size_selected', size=size_data['name']))
+        
+        if size_data['name'] == 'MMO':
+            return "mmo_payment_menu"
         return "marketing_menu"
 
     def _cancel(self):
@@ -1093,7 +1128,6 @@ class DevProgressMenu(Menu):
         self.speak_current()
 
     def _finalize(self):
-        from models import GameProject
         self.game_state.is_developing = False
         project = GameProject(
             name=self.game_state.current_draft['name'],
@@ -1106,6 +1140,9 @@ class DevProgressMenu(Menu):
             size=self.game_state.current_draft['size'],
             marketing=self.game_state.current_draft['marketing']
         )
+        if 'license' in self.game_state.current_draft:
+            project.license_bonus = self.game_state.current_draft['license']['review_bonus']
+
         project.bugs = self.game_state.current_bugs
         self.game_state.finalize_game(project)
         return "review_result"
@@ -1141,7 +1178,6 @@ class ReviewResultMenu(Menu):
 
     def announce_entry(self):
         self.current_index = 0
-        from models import GameProject
 
         d = self.game_state.current_draft
         project = GameProject(
@@ -1709,27 +1745,40 @@ class OfficeMenu(Menu):
     def __init__(self, audio, game_state):
         self.audio = audio
         self.game_state = game_state
-        options = [
-            {'text': game_state.get_text('upgrade_office'), 'action': self.upgrade},
-            {'text': game_state.get_text('back'), 'action': self.back},
-        ]
-        super().__init__(game_state.get_text('office_management'), options, audio, game_state)
+        super().__init__(game_state.get_text('office_management'), [], audio, game_state)
 
     def announce_entry(self):
         self.current_index = 0
+        self.options = []
         office = self.game_state.get_office_info()
-        self.audio.speak(self.game_state.get_text('office_status', name=office['name'], max=office['max_employees']))
+        from game_data import OFFICE_LEVELS
+
         if self.game_state.office_level < len(OFFICE_LEVELS) - 1:
             next_office = OFFICE_LEVELS[self.game_state.office_level + 1]
-            self.audio.speak(
-                self.game_state.get_text('office_upgrade_available', name=next_office['name'], cost=next_office['cost'], max=next_office['max_employees']),
-                interrupt=False
-            )
-        else:
+            self.options.append({'text': self.game_state.get_text('upgrade_office_to', name=next_office['name'], cost=next_office['cost']), 'action': self.upgrade})
+
+        if not getattr(self.game_state, 'has_presswerk', False) and self.game_state.office_level >= 2:
+            self.options.append({'text': self.game_state.get_text('build_presswerk_option', cost=500000), 'action': self.build_presswerk})
+
+        if getattr(self.game_state, 'has_presswerk', False):
+            self.options.append({'text': self.game_state.get_text('expand_storage_option', cost=100000, current=self.game_state.storage_capacity), 'action': self.expand_storage})
+
+        if not getattr(self.game_state, 'has_server_room', False) and self.game_state.office_level >= 3:
+            self.options.append({'text': self.game_state.get_text('build_server_room_option', cost=1000000), 'action': self.build_server_room})
+
+        if getattr(self.game_state, 'has_server_room', False):
+            self.options.append({'text': self.game_state.get_text('expand_server_option', cost=250000, current=self.game_state.server_capacity), 'action': self.expand_server_capacity})
+
+        self.options.append({'text': self.game_state.get_text('back'), 'action': self.back})
+
+        self.audio.speak(self.game_state.get_text('office_status', name=office['name'], max=office['max_employees']))
+        if self.game_state.office_level >= len(OFFICE_LEVELS) - 1:
             self.audio.speak(self.game_state.get_text('office_max_reached'), interrupt=False)
+            
         self.speak_current(interrupt=False)
 
     def upgrade(self):
+        from game_data import OFFICE_LEVELS
         if self.game_state.upgrade_office():
             office = self.game_state.get_office_info()
             self.audio.speak(self.game_state.get_text('office_upgrade_success', name=office['name'], max=office['max_employees'], money=self.game_state.money))
@@ -1738,7 +1787,43 @@ class OfficeMenu(Menu):
         else:
             next_cost = OFFICE_LEVELS[self.game_state.office_level + 1]['cost']
             self.audio.speak(self.game_state.get_text('not_enough_money_loan', amount=next_cost))
-        return None
+        return "office_menu"
+
+    def build_presswerk(self):
+        if self.game_state.build_presswerk():
+            self.audio.speak(self.game_state.get_text('presswerk_built_success'))
+            return "office_menu"
+        else:
+            self.audio.speak(self.game_state.get_text('not_enough_money_loan', amount=500000))
+            return None
+
+    def expand_storage(self):
+        if self.game_state.expand_storage():
+            self.audio.speak(self.game_state.get_text('storage_expanded_success', current=self.game_state.storage_capacity))
+            return "office_menu"
+        else:
+            self.audio.speak(self.game_state.get_text('not_enough_money_loan', amount=100000))
+            return None
+
+    def build_server_room(self):
+        if self.game_state.build_server_room():
+            self.audio.speak(self.game_state.get_text('server_room_built_success'))
+            return "office_menu"
+        else:
+            self.audio.speak(self.game_state.get_text('not_enough_money_loan', amount=1000000))
+            return None
+
+    def expand_server_capacity(self):
+        try:
+            if self.game_state.expand_server_capacity():
+                self.audio.speak(self.game_state.get_text('server_expanded_success', current=self.game_state.server_capacity))
+                return "office_menu"
+            else:
+                self.audio.speak(self.game_state.get_text('not_enough_money_loan', amount=250000))
+                return None
+        except ValueError:
+             self.audio.speak(self.game_state.get_text('invalid_amount'))
+             return None
 
     def back(self):
         return "game_menu"
@@ -1940,7 +2025,7 @@ class GameServiceOptionsMenu(Menu):
         self.options.append({'text': self.game_state.get_text('free_patch', bugs=game.bugs), 'action': lambda: self._patch(idx)})
         
         if game.size == "MMO":
-            self.options.append({'text': self.game_state.get_text('mmo_update_option'), 'action': lambda: self._mmo_update(idx)})
+            self.options.append({'text': self.game_state.get_text('mmo_update_option'), 'action': lambda: self._mmo_options(idx)})
         else:
             self.options.append({'text': self.game_state.get_text('release_dlc_option'), 'action': lambda: self._dlc(idx)})
             
@@ -2160,7 +2245,6 @@ class ConsoleSpecsMenu(Menu):
                 'action': lambda feat=f: self._toggle(feat)
             })
         
-        draft = self.game_state.current_console_draft
         total_cost = 10000000 + sum(f['cost'] for f in self.selected)
         total_tech = 1 + sum(f['tech'] for f in self.selected)
         
@@ -2245,7 +2329,6 @@ class GOTYMenu(Menu):
         self.audio.speak(msg)
         self.options.append({'text': self.game_state.get_text('continue_btn'), 'action': self._cancel})
         # Wir warten kurz, damit der Sound wirkt
-        import time
         time.sleep(1.0)
         self.speak_current(interrupt=False)
 
@@ -2435,4 +2518,349 @@ class ChartMenu(Menu):
         })
 
         super().announce_entry()
+
+
+# ==============================================================
+# PHASE B: LIZENZEN, ADDONS, BUNDLES
+# ==============================================================
+
+class LicenseShopMenu(Menu):
+    def __init__(self, audio, game_state):
+        super().__init__(game_state.get_text('menu_licenses'), [], audio, game_state)
+
+    def announce_entry(self):
+        self.options = []
+        from game_data import LICENSES
+        
+        owned_names = [lic['name'] for lic in self.game_state.owned_licenses]
+        available = []
+        for i, lic in enumerate(LICENSES):
+            if lic['name'] not in owned_names:
+                available.append((i, lic))
+                
+        if not available:
+            self.options.append({
+                'text': self.game_state.get_text('no_licenses_available'),
+                'action': lambda: "game_menu"
+            })
+        else:
+            for i, lic in available:
+                self.options.append({
+                    'text': self.game_state.get_text('buy_license_prompt', name=lic['name'], cost=lic['cost']),
+                    'action': lambda idx=i: self._buy(idx)
+                })
+        self.options.append({
+            'text': self.game_state.get_text('back'),
+            'action': lambda: "game_menu"
+        })
+        super().announce_entry()
+
+    def _buy(self, idx):
+        from game_data import LICENSES
+        lic = LICENSES[idx]
+        if self.game_state.buy_license(idx):
+            self.audio.speak(self.game_state.get_text('license_bought', name=lic['name'], money=self.game_state.money))
+        else:
+            self.audio.play_sound('bump')
+        return "game_menu"
+
+class LicenseSelectMenu(Menu):
+    def __init__(self, audio, game_state):
+        super().__init__(game_state.get_text('license_select_title'), [], audio, game_state)
+
+    def announce_entry(self):
+        self.options = []
+        
+        # Option: Keine Lizenz
+        self.options.append({
+            'text': self.game_state.get_text('license_select_none'),
+            'action': self._select_none
+        })
+        
+        # Aktive Lizenzen
+        active_licenses = self.game_state.get_active_licenses()
+        for lic in active_licenses:
+            self.options.append({
+                'text': lic['name'],
+                'action': lambda l_name=lic['name']: self._select_license(l_name)
+            })
+            
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
+        super().announce_entry()
+
+    def _select_none(self):
+        return "topic_menu"
+        
+    def _select_license(self, license_name):
+        res = self.game_state.use_license(license_name)
+        if res:
+            self.game_state.current_draft['license'] = {
+                'name': license_name,
+                'review_bonus': res['review_bonus']
+            }
+            self.audio.speak(self.game_state.get_text('license_selected', name=license_name))
+        return "topic_menu"
+
+
+class AddonMenu(Menu):
+    def __init__(self, audio, game_state):
+        super().__init__(game_state.get_text('addon_title'), [], audio, game_state)
+
+    def announce_entry(self):
+        self.options = []
+        
+        if not self.game_state.game_history:
+            self.options.append({
+                'text': self.game_state.get_text('addon_no_games'),
+                'action': lambda: "game_menu"
+            })
+        else:
+            for i, game in enumerate(self.game_state.game_history):
+                self.options.append({
+                    'text': game.name,
+                    'action': lambda idx=i: self._create_addon(idx)
+                })
+        
+        self.options.append({
+            'text': self.game_state.get_text('back'),
+            'action': lambda: "game_menu"
+        })
+        super().announce_entry()
+
+    def _create_addon(self, base_game_idx):
+        res = self.game_state.create_addon(base_game_idx)
+        if res:
+            self.audio.speak(self.game_state.get_text('addon_created', 
+                name=res['name'], sales=res['sales'], rev=res['revenue'], cost=res['cost'], profit=(res['revenue']-res['cost'])))
+        else:
+            # might be not enough money or invalid index
+            self.audio.play_sound('bump')
+        return "game_menu"
+
+
+class BundleMenu(Menu):
+    def __init__(self, audio, game_state):
+        super().__init__(game_state.get_text('bundle_title'), [], audio, game_state)
+        self.selected_indices = set()
+
+    def announce_entry(self):
+        self.options = []
+        
+        from game_data import BUNDLE_DATA
+        
+        if len(self.game_state.game_history) < BUNDLE_DATA["min_games"]:
+            self.options.append({
+                'text': self.game_state.get_text('bundle_no_games'),
+                'action': lambda: "game_menu"
+            })
+            self.options.append({
+                'text': self.game_state.get_text('back'),
+                'action': lambda: "game_menu"
+            })
+            super().announce_entry()
+            return
+
+        # Option zum Erstellen (nur sichtbar, wenn genug gewählt)
+        if BUNDLE_DATA["min_games"] <= len(self.selected_indices) <= BUNDLE_DATA["max_games"]:
+            self.options.append({
+                'text': self.game_state.get_text('bundle_create_btn'),
+                'action': self._create_bundle
+            })
+            
+        # Spiele toggeln
+        for i, game in enumerate(self.game_state.game_history):
+            status = self.game_state.get_text('selected') if i in self.selected_indices else self.game_state.get_text('unselected')
+            self.options.append({
+                'text': f"{game.name} ({status})",
+                'action': lambda idx=i: self._toggle_game(idx)
+            })
+
+        self.options.append({
+            'text': self.game_state.get_text('back'),
+            'action': lambda: "game_menu"
+        })
+        super().announce_entry()
+
+    def _toggle_game(self, idx):
+        if idx in self.selected_indices:
+            self.selected_indices.remove(idx)
+        else:
+            self.selected_indices.add(idx)
+        
+        self.audio.speak(self.game_state.get_text('bundle_games_selected', count=len(self.selected_indices)))
+        self.announce_entry()
+        self.speak_current(interrupt=False)
+        return None
+
+    def _create_bundle(self):
+        res = self.game_state.create_bundle(list(self.selected_indices))
+        if res:
+            self.audio.speak(self.game_state.get_text('bundle_created', 
+                name=res['name'], sales=res['sales'], rev=res['revenue']))
+            self.selected_indices.clear()
+        else:
+            self.audio.play_sound('bump')
+            
+        return "game_menu"
+
+# ============================================================
+# PHASE D: MMO & GaaS
+# ============================================================
+
+class MMOPaymentMenu(Menu):
+    """Auswahl des Payment-Modells für MMOs."""
+    def __init__(self, audio, game_state):
+        super().__init__(game_state.get_text('mmo_payment_title'), [], audio, game_state)
+        
+    def announce_entry(self):
+        self.current_index = 0
+        self.options = [
+            {'text': self.game_state.get_text('mmo_payment_abo'), 'action': lambda: self._select("Abo")},
+            {'text': self.game_state.get_text('mmo_payment_f2p'), 'action': lambda: self._select("F2P")}
+        ]
+        self.options.append({'text': self.game_state.get_text('back'), 'action': self.back})
+        self.speak_current()
+        
+    def _select(self, model):
+        self.game_state.current_draft['payment_model'] = model
+        self.audio.speak(self.game_state.get_text('mmo_payment_selected', model=model))
+        return "marketing_menu"
+        
+    def back(self):
+        return "game_size_menu"
+
+
+class MMOManagementMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(game_state.get_text('mmo_management_title'), [], audio, game_state)
+
+    def announce_entry(self):
+        self.current_index = 0
+        self.options = []
+        
+        for idx, mmo in enumerate(getattr(self.game_state, 'active_mmos', [])):
+            if mmo.game.is_active:
+                 self.options.append({
+                     'text': f"{mmo.game.name} - Spieler: {mmo.players:,} - Modell: {mmo.payment_model} - Gewinn/W: {mmo.weekly_profit:,} Euro",
+                     'action': lambda i=idx: self.select_mmo(i)
+                 })
+                 
+        self.options.append({'text': self.game_state.get_text('back'), 'action': self.back})
+        
+        self.audio.speak(self.game_state.get_text('mmo_management_status', current=sum(m.players for m in self.game_state.active_mmos if m.game.is_active), max=getattr(self.game_state, 'server_capacity', 0)))
+        self.speak_current(interrupt=False)
+        
+    def select_mmo(self, idx):
+        self.game_state._pending_mmo_idx = idx
+        return "mmo_options_menu"
+
+    def back(self):
+        return "game_menu"
+
+
+class MMOOptionsMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(game_state.get_text('mmo_options_title'), [], audio, game_state)
+
+    def announce_entry(self):
+        self.current_index = 0
+        self.options = [
+            {'text': self.game_state.get_text('mmo_release_content_update', cost=500000), 'action': self.content_update},
+            {'text': self.game_state.get_text('back'), 'action': self.back}
+        ]
+        self.speak_current()
+
+    def content_update(self):
+        idx = getattr(self.game_state, '_pending_mmo_idx', -1)
+        success, reason = self.game_state.apply_mmo_update(idx, cost=500000, player_boost=0.3)
+        if success:
+            self.audio.speak(self.game_state.get_text('mmo_content_update_success'))
+        else:
+            self.audio.speak(self.game_state.get_text('mmo_content_update_fail_' + reason))
+        return "mmo_management_menu"
+
+    def back(self):
+        return "mmo_management_menu"
+
+
+# ============================================================
+# PHASE E: PUBLISHING OFFERS
+# ============================================================
+
+class PublisherDealsMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(game_state.get_text('publisher_deals_title'), [], audio, game_state)
+
+    def announce_entry(self):
+        self.current_index = 0
+        self.options = []
+        offers = getattr(self.game_state, 'publishing_offers', [])
+        
+        if not offers:
+            self.audio.speak(self.game_state.get_text('publisher_deals_empty'))
+            self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
+        else:
+            for idx, offer in enumerate(offers):
+                self.options.append({
+                    'text': f"{offer.game_name} (von {offer.studio_name})",
+                    'action': lambda i=idx: self.select_offer(i)
+                })
+            self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
+        
+        self.speak_current()
+        
+    def select_offer(self, idx):
+        self.game_state._pending_offer_idx = idx
+        return "publisher_deal_details_menu"
+
+class PublisherDealDetailsMenu(Menu):
+    def __init__(self, audio, game_state):
+        super().__init__(game_state.get_text('publisher_deal_details_title'), [], audio, game_state)
+        
+    def announce_entry(self):
+        self.current_index = 0
+        idx = getattr(self.game_state, '_pending_offer_idx', -1)
+        offers = getattr(self.game_state, 'publishing_offers', [])
+        
+        if idx < 0 or idx >= len(offers):
+            self.audio.speak(self.game_state.get_text('invalid_game'))
+            self.options = [{'text': self.game_state.get_text('back'), 'action': lambda: "publisher_deals_menu"}]
+            self.speak_current()
+            return
+
+        offer = offers[idx]
+        self.options = [
+            {'text': self.game_state.get_text('publisher_deal_accept'), 'action': self.accept},
+            {'text': self.game_state.get_text('publisher_deal_reject'), 'action': self.reject},
+            {'text': self.game_state.get_text('back'), 'action': lambda: "publisher_deals_menu"}
+        ]
+        
+        info = self.game_state.get_text('publisher_deal_info', 
+            studio=offer.studio_name, game=offer.game_name, genre=offer.genre, 
+            quality=offer.quality, cost=offer.marketing_cost, share=int(offer.player_share*100)
+        )
+        self.audio.speak(info)
+        self.speak_current(interrupt=False)
+        
+    def accept(self):
+        idx = getattr(self.game_state, '_pending_offer_idx', -1)
+        success, reason = self.game_state.accept_publishing_offer(idx)
+        if success:
+            self.audio.speak(self.game_state.get_text('publisher_deal_accepted'))
+        else:
+            self.audio.speak(self.game_state.get_text('not_enough_money_loan', amount=0))
+        return "publisher_deals_menu"
+        
+    def reject(self):
+        idx = getattr(self.game_state, '_pending_offer_idx', -1)
+        if self.game_state.reject_publishing_offer(idx):
+            self.audio.speak(self.game_state.get_text('publisher_deal_rejected'))
+        return "publisher_deals_menu"
+
 

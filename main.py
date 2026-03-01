@@ -63,6 +63,17 @@ from menus import (
     SequelMenu,
     ChartMenu,
     AAADevEventMenu,
+    LicenseShopMenu,
+    LicenseSelectMenu,
+    AddonMenu,
+    BundleMenu,
+    ProductionMenu,
+    ProductionAmountMenu,
+    MMOPaymentMenu,
+    MMOManagementMenu,
+    MMOOptionsMenu,
+    PublisherDealsMenu,
+    PublisherDealDetailsMenu,
 )
 
 
@@ -140,6 +151,17 @@ def main():
         "sub_genre_menu": lambda: SubGenreMenu(audio, state),
         "sequel_menu": lambda: SequelMenu(audio, state),
         "chart_menu": lambda: ChartMenu(audio, state),
+        "license_shop_menu": lambda: LicenseShopMenu(audio, state),
+        "license_select_menu": lambda: LicenseSelectMenu(audio, state),
+        "addon_menu": lambda: AddonMenu(audio, state),
+        "bundle_menu": lambda: BundleMenu(audio, state),
+        "production_menu": lambda: ProductionMenu(audio, state),
+        "production_amount_menu": lambda: ProductionAmountMenu(audio, state),
+        "mmo_payment_menu": lambda: MMOPaymentMenu(audio, state),
+        "mmo_management_menu": lambda: MMOManagementMenu(audio, state),
+        "mmo_options_menu": lambda: MMOOptionsMenu(audio, state),
+        "publisher_deals_menu": lambda: PublisherDealsMenu(audio, state),
+        "publisher_deal_details_menu": lambda: PublisherDealDetailsMenu(audio, state),
         "settings_menu": lambda: SettingsMenu(audio, state, lambda: "main_menu"),
         "settings_menu_ingame": lambda: SettingsMenu(audio, state, lambda: "game_menu"),
         "save_menu": lambda: SaveMenu(audio, state),
@@ -231,19 +253,22 @@ def main():
                         if current_key not in ["main_menu", "company_name_input", "bankruptcy"]:
                             state.save_game(slot=1)
                             # Bonus: Kurzes Speichergeräusch abspielen
-                            if hasattr(audio, 'play_sound'): audio.play_sound('blip')
+                            if hasattr(audio, 'play_sound'): 
+                                audio.play_sound('blip')
                             audio.speak(state.get_text('quicksave_msg'))
                     elif event.key == pygame.K_l:
                         if current_key not in ["company_name_input", "bankruptcy"]:
                             if state.load_game(slot=1):
                                 # Bonus: Lade-Geräusch
-                                if hasattr(audio, 'play_sound'): audio.play_sound('blip')
+                                if hasattr(audio, 'play_sound'): 
+                                    audio.play_sound('blip')
                                 audio.speak(state.get_text('quickload_msg'))
                                 current_key = "game_menu"
                                 current_menu = menu_factories[current_key]()
                                 current_menu.announce_entry()
                             else:
-                                if hasattr(audio, 'play_sound'): audio.play_sound('error')
+                                if hasattr(audio, 'play_sound'): 
+                                    audio.play_sound('error')
                                 audio.speak(state.get_text('quickload_fail_msg'))
                     elif event.key == pygame.K_c:
                         state.crunch_active = not state.crunch_active

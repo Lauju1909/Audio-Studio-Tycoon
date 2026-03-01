@@ -1,24 +1,121 @@
 {
-  "company_name": "Office Test",
-  "money": 4950000,
-  "fans": 0,
-  "week": 1,
-  "high_score": 0.0,
-  "games_made": 0,
-  "total_revenue": 0,
-  "office_level": 1,
-  "last_event_week": 0,
-  "last_trend_week": 0,
-  "current_trend": {},
+  "company_name": "",
+  "money": 262438,
+  "fans": 4079,
+  "week": 13,
+  "high_score": 5.25,
+  "games_made": 2,
+  "total_revenue": 590490,
+  "office_level": 0,
+  "last_event_week": 10,
+  "last_trend_week": 13,
+  "current_trend": {
+    "topic": "Sport",
+    "genre": "Casual",
+    "text": "Sport-Spiele verkaufen sich wie verrückt! Und: Casual-Games erreichen die breite Masse!",
+    "week_started": 13
+  },
   "active_events": [],
   "settings": {
-    "language": "de",
+    "language": "en",
     "music_enabled": true,
     "tts_engine": "auto"
   },
-  "game_history": [],
+  "game_history": [
+    {
+      "name": "",
+      "topic": "Sci-Fi",
+      "genre": "RPG",
+      "sliders": {},
+      "platform": "Nova-Station 1",
+      "audience": "Jugendliche",
+      "size": "Mittel",
+      "marketing": "Gaming Web-Ads",
+      "engine_name": null,
+      "review_scores": [
+        5,
+        5,
+        6,
+        5
+      ],
+      "review_average": 5.25,
+      "sales": 18816,
+      "revenue": 338688,
+      "dev_cost": 12500,
+      "week_developed": 1,
+      "bugs": 0,
+      "dlc_count": 0,
+      "weeks_on_market": 0,
+      "is_active": true,
+      "ip_rating": 0,
+      "sequel_number": 0,
+      "sub_genre": null,
+      "license_bonus": 0.0
+    },
+    {
+      "name": "",
+      "topic": "Sci-Fi",
+      "genre": "RPG",
+      "sliders": {},
+      "platform": "Nova-Station 1",
+      "audience": "Jugendliche",
+      "size": "Mittel",
+      "marketing": "Gaming Web-Ads",
+      "engine_name": null,
+      "review_scores": [
+        6,
+        5,
+        4,
+        6
+      ],
+      "review_average": 5.25,
+      "sales": 13989,
+      "revenue": 251802,
+      "dev_cost": 18890,
+      "week_developed": 7,
+      "bugs": 0,
+      "dlc_count": 0,
+      "weeks_on_market": 0,
+      "is_active": true,
+      "ip_rating": 32,
+      "sequel_number": 0,
+      "sub_genre": null,
+      "license_bonus": 0.0
+    }
+  ],
   "active_mmos": [],
-  "employees": [],
+  "employees": [
+    {
+      "name": "Erik Braun",
+      "role": "Supporter",
+      "primary_skill": "Story",
+      "secondary_skill": "Welt",
+      "skill_level": 1,
+      "specialization": {
+        "name": "Marketing-Experte",
+        "bonus_type": "Marketing",
+        "bonus_value": 0.3,
+        "description": "Erhöht die Effektivität von Marketing."
+      },
+      "trait": {
+        "name": "Schneller Lerner",
+        "effect": "speed",
+        "value": 1.1,
+        "description": "Arbeitet 10% schneller."
+      },
+      "skills": {
+        "Gameplay": 6,
+        "Grafik": 5,
+        "Sound": 9,
+        "Story": 45,
+        "KI": 15,
+        "Welt": 33
+      },
+      "salary": 1065,
+      "morale": 100,
+      "weeks_employed": 6
+    }
+  ],
   "engines": [
     {
       "name": "Basis-Engine",
@@ -80,7 +177,8 @@
   ],
   "unlocked_technologies": [],
   "bought_platforms": [
-    "PC (MS-DOS)"
+    "PC (MS-DOS)",
+    "Nova-Station 1"
   ],
   "active_platforms": [
     "Zenith-Core 88",
@@ -93,31 +191,46 @@
       "name": "MicroHard",
       "target_market_share": 30,
       "games": [],
-      "next_release_week": 16,
+      "next_release_week": 20,
       "owned_shares": 0
     },
     {
       "name": "Electric Farts",
       "target_market_share": 25,
       "games": [],
-      "next_release_week": 15,
+      "next_release_week": 17,
       "owned_shares": 0
     },
     {
       "name": "Nintengo",
       "target_market_share": 20,
       "games": [],
-      "next_release_week": 39,
+      "next_release_week": 31,
       "owned_shares": 0
     }
   ],
   "last_goty_year": 0,
-  "bank_loan": null,
+  "bank_loan": {
+    "amount_borrowed": 250000,
+    "amount_remaining": 270916,
+    "weekly_payment": 2764,
+    "weeks_remaining": 98
+  },
   "accounting": {
-    "income": 0,
-    "expenses": 0,
-    "loan_paid": 0
+    "income": 590490,
+    "expenses": 87780,
+    "loan_paid": 16584
   },
   "custom_consoles": [],
-  "emails": []
+  "emails": [
+    {
+      "sender": "News Reader",
+      "subject": "Markt-Ereignis",
+      "body": "Retro wave! Nostalgia fans flock to your studio. +300 fans.",
+      "date_week": 10,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    }
+  ]
 }

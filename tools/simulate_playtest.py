@@ -7,10 +7,10 @@ import traceback
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from logic import GameState
-from models import GameProject, Employee, EngineFeature, Engine
+from models import GameProject, Employee, Engine
 from game_data import (
-    TOPICS, GENRES, PLATFORMS, AUDIENCES, ENGINE_FEATURES, 
-    LICENSES, ADDON_DATA, BUNDLE_DATA, EMPLOYEE_ROLES, get_compatibility
+    TOPICS, GENRES, PLATFORMS, ENGINE_FEATURES, 
+    LICENSES, EMPLOYEE_ROLES, get_compatibility
 )
 
 def run_simulation(language='de', target_money=500000):

@@ -6,7 +6,6 @@ Entfernt alle frueheren Vorkommen eines Keys und behaelt nur das letzte.
 
 import re
 import os
-import sys
 
 game_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 filepath = os.path.join(game_dir, "translations.py")

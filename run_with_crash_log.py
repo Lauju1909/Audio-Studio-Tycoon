@@ -18,16 +18,15 @@ try:
         with open("crash_log.txt", "w", encoding="utf-8") as f:
             f.write(crash_info)
         
-        print(f"\nCrash-Log gespeichert in: crash_log.txt")
+        print("\nCrash-Log gespeichert in: crash_log.txt")
         print("Drücke Enter zum Beenden...")
         input()
     
     sys.excepthook = crash_handler
     
     # Importiere und starte main
-    import main
     
-except Exception as e:
+except Exception:
     crash_info = traceback.format_exc()
     print("\n" + "="*60)
     print("!!! CRASH DETECTED !!!")
@@ -37,6 +36,6 @@ except Exception as e:
     with open("crash_log.txt", "w", encoding="utf-8") as f:
         f.write(crash_info)
     
-    print(f"\nCrash-Log gespeichert in: crash_log.txt")
+    print("\nCrash-Log gespeichert in: crash_log.txt")
     print("Drücke Enter zum Beenden...")
     input()

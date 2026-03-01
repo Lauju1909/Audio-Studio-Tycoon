@@ -3,8 +3,6 @@
 Unterstützt Deutsch (de) und Englisch (en).
 """
 
-import locale
-import ctypes
 
 import sys
 
@@ -572,6 +570,72 @@ TRANSLATIONS = {
         'license_expired_body': "Die Lizenz für '{name}' ist abgelaufen und kann nicht mehr für neue Projekte verwendet werden.",
         'sender_legal': "Rechtsabteilung",
         'mmo_content_update': "MMO Content Update",
+
+        # Phase B: Lizenzen, Addons, Bundles
+        'menu_licenses': "Lizenzen-Shop",
+        'menu_addons': "Add-on entwickeln",
+        'menu_bundles': "Spiele-Bundle erstellen",
+        'buy_license_prompt': "Möchtest du die {name} für {cost:,} Euro kaufen?",
+        'license_bought': "Lizenz '{name}' erfolgreich gekauft! Restgeld: {money:,} Euro.",
+        'no_licenses_available': "Es sind aktuell keine neuen Lizenzen verfügbar.",
+        'license_select_title': "Lizenz wählen",
+        'license_select_none': "Keine Lizenz verwenden",
+        'license_selected': "Lizenz '{name}' für dieses Projekt ausgewählt.",
+        'addon_title': "Add-on entwickeln",
+        'addon_no_games': "Keine Spiele für ein Add-on verfügbar.",
+        'addon_created': "Add-on '{name}' entwickelt! Verkäufe: {sales:,}. Einnahmen: {rev:,} Euro. Kosten: {cost:,} Euro. Gewinn: {profit:,} Euro.",
+        'addon_no_money': "Nicht genug Geld für ein Add-on. Du brauchst {cost:,} Euro.",
+        'bundle_title': "Spiele-Bundle erstellen",
+        'bundle_no_games': "Nicht genug Spiele für ein Bundle verfügbar.",
+        'bundle_games_selected': "{count} Spiele gewählt.",
+        'bundle_create_btn': "Bundle veröffentlichen",
+        'bundle_created': "Bundle '{name}' veröffentlicht! Verkäufe: {sales:,}. Einnahmen: {rev:,} Euro.",
+
+        # Phase C: Produktion & Retail
+        'production_menu_title': "Produktion & Lager",
+        'production_status': "Dein Presswerk ist aktiv. Aktuell lagern {used} von {max} Einheiten.",
+        'production_no_games': "Es gibt derzeit keine aktiven Spiele, für die Kopien gepresst werden können.",
+        'production_amount_title': "Produktionsmenge",
+        'production_amount_prompt': "Wie viele Einheiten sollen gepresst werden? (Kosten: 1,50 Euro pro Stück)",
+        'invalid_amount': "Ungültige Eingabe. Bitte eine gültige Zahl eingeben.",
+        'production_success': "Wir haben {amount} Einheiten erfolgreich produziert. Kosten: {cost} Euro.",
+        'production_error_no_presswerk': "Du besitzt kein Presswerk.",
+        'production_error_invalid_game': "Ungültiges Spiel.",
+        'production_error_game_inactive': "Dieses Spiel wird nicht mehr auf dem Markt verkauft.",
+        'production_error_storage_full': "Nicht genug Platz im Lager! Baue das Lager weiter aus.",
+        'production_error_not_enough_money': "Du hast nicht genug Geld, um diese Menge zu produzieren.",
+        
+        'build_presswerk_option': "Eigenes Presswerk bauen (inkl. kleines Lager) - {cost} Euro",
+        'presswerk_built_success': "Gratulation! Das Presswerk wurde gebaut und ist nun einsatzbereit.",
+        'expand_storage_option': "Lagerkapazität um 100.000 Einheiten erweitern (Aktuell: {current}) - {cost} Euro",
+        'storage_expanded_success': "Lager wurde erfolgreich erweitert. Neue Kapazität: {current} Einheiten.",
+
+        # Phase D: MMOs & GaaS
+        'build_server_room_option': "Eigenen Serverraum bauen (+50k Spieler) - {cost:,} Euro",
+        'server_room_built_success': "Serverraum eingerichtet! Deine Firma kann nun Live-Service-Spiele hosten.",
+        'expand_server_option': "Serverkapazität erweitern (+50k Spieler) - {cost:,} Euro",
+        'server_expanded_success': "Serverkapazität auf {current:,} Einheiten erweitert.",
+        'mmo_payment_title': "Zahlungsmodell (MMO)",
+        'mmo_payment_abo': "Abo-Modell (Kleine Spielerbasis, sicheres Einkommen)",
+        'mmo_payment_f2p': "Free-to-Play Modell (Massive Spielerbasis, Mikrotransaktionen)",
+        'mmo_payment_selected': "Modell: {model} gewählt.",
+        'mmo_management_title': "MMO Verwaltung",
+        'mmo_management_status': "Du hast derzeit Live-Service-Spiele laufen. {current} von {max} Server-Plätzen sind belegt.",
+        'mmo_options_title': "MMO Optionen",
+        'mmo_release_content_update': "Content Update veröffentlichen (Gibt Spielerboost) - {cost:,} Euro",
+        'mmo_content_update_success': "Das Content Update war erfolgreich. Die Spieler sind zurückgekommen!",
+        'mmo_content_update_fail_not_enough_money': "Nicht genug Geld für ein Content Update.",
+        'mmo_content_update_fail_not_found': "Das MMO konnte nicht gefunden werden.",
+
+        # Phase E: Publisher
+        'publisher_deals_title': "Publishing Angebote",
+        'publisher_deals_empty': "Derzeit gibt es keine Angebote von Indie-Studios.",
+        'publisher_deal_details_title': "Angebotsdetails",
+        'publisher_deal_info': "Studio: {studio}. Spiel: {game} ({genre}). Qualität: ca. {quality}%. Marketingkosten: {cost:,} Euro. Unser Anteil: {share}%.",
+        'publisher_deal_accept': "Angebot annehmen und Marketing starten",
+        'publisher_deal_reject': "Angebot ablehnen",
+        'publisher_deal_accepted': "Deal abgeschlossen! Das Spiel ist nun auf dem Markt.",
+        'publisher_deal_rejected': "Deal abgelehnt.",
     },
     'en': {
         'main_menu': "Main Menu",
@@ -1105,5 +1169,71 @@ TRANSLATIONS = {
         'Survival Horror': 'Survival Horror', 'Psycho-Horror': 'Psychological Horror',
         '2D Fighter': '2D Fighter', 'Arena Brawler': 'Arena Brawler',
         'Arcade Racing': 'Arcade Racing', 'Renn-Simulation': 'Racing Sim',
+
+        # Phase B: Licenses, Addons, Bundles
+        'menu_licenses': "License Shop",
+        'menu_addons': "Develop Add-on",
+        'menu_bundles': "Create Game Bundle",
+        'buy_license_prompt': "Do you want to buy the {name} for {cost:,} Euro?",
+        'license_bought': "License '{name}' successfully purchased! Remaining money: {money:,} Euro.",
+        'no_licenses_available': "There are currently no new licenses available.",
+        'license_select_title': "Select License",
+        'license_select_none': "Do not use a license",
+        'license_selected': "License '{name}' selected for this project.",
+        'addon_title': "Develop Add-on",
+        'addon_no_games': "No games available for an add-on.",
+        'addon_created': "Add-on '{name}' developed! Sales: {sales:,}. Revenue: {rev:,} Euro. Cost: {cost:,} Euro. Profit: {profit:,} Euro.",
+        'addon_no_money': "Not enough money for an add-on. You need {cost:,} Euro.",
+        'bundle_title': "Create Game Bundle",
+        'bundle_no_games': "Not enough games available for a bundle.",
+        'bundle_games_selected': "{count} games selected.",
+        'bundle_create_btn': "Publish Bundle",
+        'bundle_created': "Bundle '{name}' released! Sales: {sales:,}. Revenue: {rev:,} Euro.",
+
+        # Phase C: Production & Retail
+        'production_menu_title': "Production & Storage",
+        'production_status': "Your Presswerk is active. Currently storing {used} out of {max} units.",
+        'production_no_games': "There are currently no active games for which copies can be pressed.",
+        'production_amount_title': "Production Amount",
+        'production_amount_prompt': "How many units should be pressed? (Cost: 1.50 Euro per unit)",
+        'invalid_amount': "Invalid input. Please enter a valid number.",
+        'production_success': "We have successfully produced {amount} units. Costs: {cost} Euro.",
+        'production_error_no_presswerk': "You do not own a Presswerk.",
+        'production_error_invalid_game': "Invalid game.",
+        'production_error_game_inactive': "This game is no longer sold on the market.",
+        'production_error_storage_full': "Not enough space in storage! Expand your storage capacity.",
+        'production_error_not_enough_money': "You do not have enough money to produce this amount.",
+        
+        'build_presswerk_option': "Build your own Presswerk (incl. small storage) - {cost} Euro",
+        'presswerk_built_success': "Congratulations! The Presswerk is built and ready for use.",
+        'expand_storage_option': "Expand storage capacity by 100,000 units (Current: {current}) - {cost} Euro",
+        'storage_expanded_success': "Storage successfully expanded. New capacity: {current} units.",
+
+        # Phase D: MMOs & GaaS
+        'build_server_room_option': "Build own Server Room (+50k players) - {cost:,} Euro",
+        'server_room_built_success': "Server room installed! Your company can now host live-service games.",
+        'expand_server_option': "Expand Server Capacity (+50k players) - {cost:,} Euro",
+        'server_expanded_success': "Server capacity expanded to {current:,} units.",
+        'mmo_payment_title': "Payment Model (MMO)",
+        'mmo_payment_abo': "Subscription Model (Smaller player base, secure income)",
+        'mmo_payment_f2p': "Free-to-Play Model (Massive player base, microtransactions)",
+        'mmo_payment_selected': "Model: {model} selected.",
+        'mmo_management_title': "MMO Management",
+        'mmo_management_status': "You currently run live-service games. {current} of {max} server slots are currently occupied.",
+        'mmo_options_title': "MMO Options",
+        'mmo_release_content_update': "Release Content Update (Gives player boost) - {cost:,} Euro",
+        'mmo_content_update_success': "The content update was successful. Players have returned!",
+        'mmo_content_update_fail_not_enough_money': "Not enough money for a content update.",
+        'mmo_content_update_fail_not_found': "The MMO could not be found.",
+
+        # Phase E: Publisher
+        'publisher_deals_title': "Publishing Offers",
+        'publisher_deals_empty': "There are currently no offers from indie studios.",
+        'publisher_deal_details_title': "Offer Details",
+        'publisher_deal_info': "Studio: {studio}. Game: {game} ({genre}). Quality: est. {quality}%. Marketing cost: {cost:,} Euro. Our share: {share}%.",
+        'publisher_deal_accept': "Accept offer and start marketing",
+        'publisher_deal_reject': "Reject offer",
+        'publisher_deal_accepted': "Deal closed! The game is now on the market.",
+        'publisher_deal_rejected': "Deal rejected.",
     }
 }

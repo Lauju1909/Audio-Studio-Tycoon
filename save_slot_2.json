@@ -1,15 +1,20 @@
 {
   "company_name": "",
   "money": 70000,
-  "fans": 5026,
+  "fans": 4579,
   "week": 13,
-  "high_score": 6.0,
+  "high_score": 5.25,
   "games_made": 2,
-  "total_revenue": 724914,
+  "total_revenue": 590490,
   "office_level": 0,
   "last_event_week": 10,
-  "last_trend_week": 0,
-  "current_trend": {},
+  "last_trend_week": 13,
+  "current_trend": {
+    "topic": "Sport",
+    "genre": "Casual",
+    "text": "Sport-Spiele verkaufen sich wie verrückt! Und: Casual-Games erreichen die breite Masse!",
+    "week_started": 13
+  },
   "active_events": [],
   "settings": {
     "language": "de",
@@ -30,12 +35,12 @@
       "review_scores": [
         5,
         5,
-        7,
-        7
+        6,
+        5
       ],
-      "review_average": 6.0,
-      "sales": 24547,
-      "revenue": 441846,
+      "review_average": 5.25,
+      "sales": 18816,
+      "revenue": 338688,
       "dev_cost": 12500,
       "week_developed": 1,
       "bugs": 0,
@@ -44,7 +49,8 @@
       "is_active": true,
       "ip_rating": 0,
       "sequel_number": 0,
-      "sub_genre": null
+      "sub_genre": null,
+      "license_bonus": 0.0
     },
     {
       "name": "",
@@ -58,14 +64,14 @@
       "engine_name": null,
       "review_scores": [
         6,
-        6,
         5,
-        4
+        4,
+        6
       ],
       "review_average": 5.25,
-      "sales": 15726,
-      "revenue": 283068,
-      "dev_cost": 17900,
+      "sales": 13989,
+      "revenue": 251802,
+      "dev_cost": 18890,
       "week_developed": 7,
       "bugs": 0,
       "dlc_count": 1,
@@ -73,15 +79,16 @@
       "is_active": true,
       "ip_rating": 32,
       "sequel_number": 0,
-      "sub_genre": null
+      "sub_genre": null,
+      "license_bonus": 0.0
     }
   ],
   "active_mmos": [],
   "employees": [
     {
-      "name": "Niklas Wolf",
-      "role": "Grafik-Designer",
-      "primary_skill": "Grafik",
+      "name": "Erik Braun",
+      "role": "Supporter",
+      "primary_skill": "Story",
       "secondary_skill": "Welt",
       "skill_level": 1,
       "specialization": {
@@ -91,20 +98,20 @@
         "description": "Erhöht die Effektivität von Marketing."
       },
       "trait": {
-        "name": "Bescheiden",
-        "effect": "salary",
-        "value": 0.8,
-        "description": "Begnügt sich mit 20% weniger Gehalt."
+        "name": "Schneller Lerner",
+        "effect": "speed",
+        "value": 1.1,
+        "description": "Arbeitet 10% schneller."
       },
       "skills": {
-        "Gameplay": 15,
-        "Grafik": 61,
-        "Sound": 15,
-        "Story": 10,
-        "KI": 5,
-        "Welt": 34
+        "Gameplay": 6,
+        "Grafik": 5,
+        "Sound": 9,
+        "Story": 55,
+        "KI": 15,
+        "Welt": 38
       },
-      "salary": 960,
+      "salary": 1140,
       "morale": 100,
       "weeks_employed": 6
     }
@@ -183,31 +190,22 @@
     {
       "name": "MicroHard",
       "target_market_share": 30,
-      "games": [
-        {
-          "name": "MicroHard Simulation",
-          "topic": "Zombies",
-          "genre": "Simulation",
-          "score": 6.7,
-          "weeks_on_market": 0,
-          "is_active": true
-        }
-      ],
-      "next_release_week": 55,
+      "games": [],
+      "next_release_week": 20,
       "owned_shares": 10
     },
     {
       "name": "Electric Farts",
       "target_market_share": 25,
       "games": [],
-      "next_release_week": 22,
+      "next_release_week": 17,
       "owned_shares": 0
     },
     {
       "name": "Nintengo",
       "target_market_share": 20,
       "games": [],
-      "next_release_week": 27,
+      "next_release_week": 31,
       "owned_shares": 0
     }
   ],
@@ -219,8 +217,8 @@
     "weeks_remaining": 104
   },
   "accounting": {
-    "income": 724914,
-    "expenses": 135800,
+    "income": 590490,
+    "expenses": 137780,
     "loan_paid": 16584
   },
   "custom_consoles": [],
