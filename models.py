@@ -113,6 +113,53 @@ class GameProject:
             "lifetime_physical_sales": getattr(self, "lifetime_physical_sales", 0),
         }
 
+class AddonProject:
+    """Ein Addon für ein existierendes Spiel."""
+    def __init__(self, base_game_name, name, topic, genre, dev_cost):
+        self.base_game_name = base_game_name
+        self.name = name
+        self.topic = topic
+        self.genre = genre
+        self.dev_cost = dev_cost
+        self.sales = 0
+        self.revenue = 0
+        self.week_developed = 0
+
+    def to_dict(self):
+        return {
+            "base_game_name": self.base_game_name,
+            "name": self.name,
+            "topic": self.topic,
+            "genre": self.genre,
+            "dev_cost": self.dev_cost,
+            "sales": self.sales,
+            "revenue": self.revenue,
+            "week_developed": self.week_developed
+        }
+
+class BundleProject:
+    """Ein Bundle aus mehreren alten Spielen."""
+    def __init__(self, name, games, base_price=25):
+        self.name = name
+        self.games = games # List of GameProject dicts
+        self.base_price = base_price
+        self.sales = 0
+        self.revenue = 0
+        
+        # Durchschnittsbewertung
+        scores = [g['review_average'] for g in self.games if g.get('review_average')]
+        self.average_score = sum(scores) / len(scores) if scores else 5.0
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "games": self.games,
+            "base_price": self.base_price,
+            "sales": self.sales,
+            "revenue": self.revenue,
+            "average_score": self.average_score
+        }
+
 
 class ActiveMMO:
     """Ein aktives Live-Service/MMO Spiel."""
@@ -126,6 +173,9 @@ class ActiveMMO:
         if self.payment_model == "F2P":
             self.players = initial_players * 5
             self.subscription_fee = 1  # 1 Euro pro Woche (Mikrotransaktionen)
+        elif self.payment_model == "Lootboxen":
+            self.players = initial_players * 3
+            self.subscription_fee = 5  # Extremer Profit durch Whales
         else:
             self.subscription_fee = 3  # 3 Euro pro Woche (Abo)
 
@@ -311,11 +361,12 @@ class Employee:
 class RivalGame:
     """Spiel, das von der KI-Konkurrenz veröffentlicht wird."""
     
-    def __init__(self, name, topic, genre, score, weeks_on_market=0):
+    def __init__(self, name, topic, genre, score, week_developed=0, weeks_on_market=0):
         self.name = name
         self.topic = topic
         self.genre = genre
         self.score = score
+        self.week_developed = week_developed
         self.weeks_on_market = weeks_on_market
         self.is_active = True
 
@@ -325,6 +376,7 @@ class RivalGame:
             "topic": self.topic,
             "genre": self.genre,
             "score": self.score,
+            "week_developed": self.week_developed,
             "weeks_on_market": self.weeks_on_market,
             "is_active": self.is_active
         }
@@ -332,12 +384,13 @@ class RivalGame:
 class RivalStudio:
     """KI-gesteuertes Konkurrenz-Studio."""
     
-    def __init__(self, name, target_market_share=10, games=None, next_release_week=None, owned_shares=0):
+    def __init__(self, name, target_market_share=10, games=None, next_release_week=None, owned_shares=0, is_owned_by_player=False):
         self.name = name
         self.target_market_share = target_market_share
         self.games = games or []
         self.next_release_week = next_release_week or random.randint(10, 30)
         self.owned_shares = owned_shares
+        self.is_owned_by_player = is_owned_by_player  # NEU: Phase F (Firmenübernahmen)
 
     def to_dict(self):
         return {
@@ -345,7 +398,8 @@ class RivalStudio:
             "target_market_share": self.target_market_share,
             "games": [g.to_dict() for g in self.games],
             "next_release_week": self.next_release_week,
-            "owned_shares": self.owned_shares
+            "owned_shares": self.owned_shares,
+            "is_owned_by_player": self.is_owned_by_player
         }
 
 class BankLoan:

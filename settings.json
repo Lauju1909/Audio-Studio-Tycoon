@@ -1,0 +1,12 @@
+{
+    "language": "de",
+    "music_enabled": true,
+    "tts_engine": "auto",
+    "auto_update": true,
+    "key_up": 1073741906,
+    "key_down": 1073741905,
+    "key_confirm": 13,
+    "key_back": 8,
+    "key_home": 1073741898,
+    "key_end": 1073741901
+}

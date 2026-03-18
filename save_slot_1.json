@@ -1,25 +1,27 @@
 {
   "company_name": "",
-  "money": 262438,
-  "fans": 4079,
+  "money": 129052,
+  "fans": 870,
   "week": 13,
-  "high_score": 5.25,
+  "high_score": 4.5,
   "games_made": 2,
-  "total_revenue": 590490,
+  "total_revenue": 187182,
   "office_level": 0,
-  "last_event_week": 10,
-  "last_trend_week": 13,
-  "current_trend": {
-    "topic": "Sport",
-    "genre": "Casual",
-    "text": "Sport-Spiele verkaufen sich wie verrückt! Und: Casual-Games erreichen die breite Masse!",
-    "week_started": 13
-  },
+  "last_event_week": 8,
+  "last_trend_week": 0,
+  "current_trend": {},
   "active_events": [],
   "settings": {
     "language": "en",
     "music_enabled": true,
-    "tts_engine": "auto"
+    "tts_engine": "auto",
+    "auto_update": true,
+    "key_up": 1073741906,
+    "key_down": 1073741905,
+    "key_confirm": 13,
+    "key_back": 8,
+    "key_home": 1073741898,
+    "key_end": 1073741901
   },
   "game_history": [
     {
@@ -27,20 +29,20 @@
       "topic": "Sci-Fi",
       "genre": "RPG",
       "sliders": {},
-      "platform": "Nova-Station 1",
+      "platform": "PC",
       "audience": "Jugendliche",
       "size": "Mittel",
       "marketing": "Gaming Web-Ads",
       "engine_name": null,
       "review_scores": [
+        4,
+        4,
         5,
-        5,
-        6,
         5
       ],
-      "review_average": 5.25,
-      "sales": 18816,
-      "revenue": 338688,
+      "review_average": 4.5,
+      "sales": 7227,
+      "revenue": 130086,
       "dev_cost": 12500,
       "week_developed": 1,
       "bugs": 0,
@@ -50,162 +52,126 @@
       "ip_rating": 0,
       "sequel_number": 0,
       "sub_genre": null,
-      "license_bonus": 0.0
+      "license_bonus": 0.0,
+      "physical_copies": 0,
+      "physical_price": 45,
+      "lifetime_physical_sales": 0
     },
     {
       "name": "",
       "topic": "Sci-Fi",
       "genre": "RPG",
       "sliders": {},
-      "platform": "Nova-Station 1",
+      "platform": "PC",
       "audience": "Jugendliche",
       "size": "Mittel",
       "marketing": "Gaming Web-Ads",
       "engine_name": null,
       "review_scores": [
-        6,
-        5,
-        4,
-        6
+        3,
+        2,
+        3,
+        3
       ],
-      "review_average": 5.25,
-      "sales": 13989,
-      "revenue": 251802,
-      "dev_cost": 18890,
+      "review_average": 2.75,
+      "sales": 3172,
+      "revenue": 57096,
+      "dev_cost": 18230,
       "week_developed": 7,
       "bugs": 0,
       "dlc_count": 0,
       "weeks_on_market": 0,
       "is_active": true,
-      "ip_rating": 32,
+      "ip_rating": 0,
       "sequel_number": 0,
       "sub_genre": null,
-      "license_bonus": 0.0
+      "license_bonus": 0.0,
+      "physical_copies": 0,
+      "physical_price": 45,
+      "lifetime_physical_sales": 0
     }
   ],
   "active_mmos": [],
   "employees": [
     {
-      "name": "Erik Braun",
+      "name": "Nina Schmidt",
       "role": "Supporter",
       "primary_skill": "Story",
       "secondary_skill": "Welt",
       "skill_level": 1,
-      "specialization": {
-        "name": "Marketing-Experte",
-        "bonus_type": "Marketing",
-        "bonus_value": 0.3,
-        "description": "Erhöht die Effektivität von Marketing."
-      },
+      "specialization": null,
       "trait": {
-        "name": "Schneller Lerner",
-        "effect": "speed",
-        "value": 1.1,
-        "description": "Arbeitet 10% schneller."
+        "name": "Griesgram",
+        "effect": "morale_loss",
+        "value": 1.5,
+        "description": "Verliert 50% schneller Moral."
       },
       "skills": {
-        "Gameplay": 6,
+        "Gameplay": 8,
         "Grafik": 5,
-        "Sound": 9,
-        "Story": 45,
-        "KI": 15,
-        "Welt": 33
+        "Sound": 5,
+        "Story": 41,
+        "KI": 5,
+        "Welt": 27
       },
-      "salary": 1065,
-      "morale": 100,
+      "salary": 955,
+      "morale": 90,
       "weeks_employed": 6
     }
   ],
   "engines": [
     {
       "name": "Basis-Engine",
-      "features": [
-        {
-          "category": "Grafik",
-          "name": "2D Grafik V1",
-          "tech_bonus": 1
-        },
-        {
-          "category": "Sound",
-          "name": "Mono Sound",
-          "tech_bonus": 1
-        },
-        {
-          "category": "KI",
-          "name": "Einfache KI",
-          "tech_bonus": 1
-        },
-        {
-          "category": "Gameplay",
-          "name": "Basis Steuerung",
-          "tech_bonus": 1
-        },
-        {
-          "category": "Level",
-          "name": "Lineares Design",
-          "tech_bonus": 1
-        }
-      ]
+      "features": []
     }
   ],
-  "unlocked_features": [
-    {
-      "category": "Grafik",
-      "name": "2D Grafik V1",
-      "tech_bonus": 1
-    },
-    {
-      "category": "Sound",
-      "name": "Mono Sound",
-      "tech_bonus": 1
-    },
-    {
-      "category": "KI",
-      "name": "Einfache KI",
-      "tech_bonus": 1
-    },
-    {
-      "category": "Gameplay",
-      "name": "Basis Steuerung",
-      "tech_bonus": 1
-    },
-    {
-      "category": "Level",
-      "name": "Lineares Design",
-      "tech_bonus": 1
-    }
+  "unlocked_features": [],
+  "unlocked_topics": [
+    "Fantasy",
+    "Sci-Fi",
+    "Mittelalter",
+    "Sport",
+    "Rennen",
+    "Abakus",
+    "Logistik",
+    "Schach",
+    "Mathematik"
+  ],
+  "unlocked_genres": [
+    "Action",
+    "Puzzle",
+    "Casual"
+  ],
+  "unlocked_audiences": [
+    "Jeder"
   ],
   "unlocked_technologies": [],
   "bought_platforms": [
-    "PC (MS-DOS)",
-    "Nova-Station 1"
+    "PC (MS-DOS)"
   ],
   "active_platforms": [
-    "Zenith-Core 88",
-    "Nova-Station 1",
-    "Kuro-Hand",
-    "Pocket-Play"
+    "Hand-Abakus"
   ],
   "rivals": [
     {
       "name": "MicroHard",
       "target_market_share": 30,
       "games": [],
-      "next_release_week": 20,
+      "next_release_week": 22,
       "owned_shares": 0
     },
     {
       "name": "Electric Farts",
       "target_market_share": 25,
       "games": [],
-      "next_release_week": 17,
+      "next_release_week": 35,
       "owned_shares": 0
     },
     {
       "name": "Nintengo",
       "target_market_share": 20,
       "games": [],
-      "next_release_week": 31,
+      "next_release_week": 53,
       "owned_shares": 0
     }
   ],
@@ -217,8 +183,8 @@
     "weeks_remaining": 98
   },
   "accounting": {
-    "income": 590490,
-    "expenses": 87780,
+    "income": 187182,
+    "expenses": 86460,
     "loan_paid": 16584
   },
   "custom_consoles": [],
@@ -226,11 +192,18 @@
     {
       "sender": "News Reader",
       "subject": "Markt-Ereignis",
-      "body": "Retro wave! Nostalgia fans flock to your studio. +300 fans.",
-      "date_week": 10,
+      "body": "event_crowdfunding",
+      "date_week": 8,
       "game_name": null,
       "is_bug": false,
       "is_read": false
     }
-  ]
+  ],
+  "has_presswerk": false,
+  "storage_capacity": 0,
+  "used_storage": 0,
+  "has_server_room": false,
+  "server_capacity": 0,
+  "publishing_offers": [],
+  "published_third_party_games": []
 }

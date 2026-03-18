@@ -1,0 +1,336 @@
+{
+  "company_name": "lauju",
+  "money": 347740,
+  "fans": 1921,
+  "week": 49,
+  "high_score": 10.0,
+  "games_made": 2,
+  "total_revenue": 186240,
+  "office_level": 0,
+  "last_event_week": 49,
+  "last_trend_week": 42,
+  "current_trend": {
+    "topic": "Fantasy",
+    "genre": "Casual",
+    "text": "Fantasy erlebt ein Revival! Und: Casual-Games erreichen die breite Masse!",
+    "week_started": 42
+  },
+  "active_events": [],
+  "settings": {
+    "language": "de",
+    "music_enabled": true,
+    "tts_engine": "auto",
+    "auto_update": true
+  },
+  "game_history": [
+    {
+      "name": "trans portfirba 1",
+      "topic": "Logistik",
+      "genre": "Strategie",
+      "sliders": {
+        "Gameplay": 5,
+        "Grafik": 5,
+        "Sound": 2,
+        "Story": 6,
+        "KI": 5,
+        "Welt": 7
+      },
+      "platform": "Hand-Abakus",
+      "audience": "Jugendliche",
+      "size": "Klein",
+      "marketing": "Social Media Hype",
+      "engine_name": "Basis-Engine",
+      "review_scores": [
+        10,
+        10,
+        10,
+        10
+      ],
+      "review_average": 10.0,
+      "sales": 9123,
+      "revenue": 109476,
+      "dev_cost": 5500,
+      "week_developed": 29,
+      "bugs": 0,
+      "dlc_count": 0,
+      "weeks_on_market": 0,
+      "is_active": true,
+      "ip_rating": 100,
+      "sequel_number": 0,
+      "sub_genre": "Rundenbasiert",
+      "license_bonus": 0.0,
+      "physical_copies": 0,
+      "physical_price": 45,
+      "lifetime_physical_sales": 0
+    },
+    {
+      "name": "trans portfirba 1",
+      "topic": "Logistik",
+      "genre": "Strategie",
+      "sliders": {
+        "Gameplay": 5,
+        "Grafik": 5,
+        "Sound": 2,
+        "Story": 6,
+        "KI": 5,
+        "Welt": 7
+      },
+      "platform": "Hand-Abakus",
+      "audience": "Jugendliche",
+      "size": "Klein",
+      "marketing": "Social Media Hype",
+      "engine_name": "Basis-Engine",
+      "review_scores": [
+        9,
+        10,
+        10,
+        10
+      ],
+      "review_average": 9.75,
+      "sales": 6397,
+      "revenue": 76764,
+      "dev_cost": 5500,
+      "week_developed": 32,
+      "bugs": 0,
+      "dlc_count": 0,
+      "weeks_on_market": 0,
+      "is_active": true,
+      "ip_rating": 96,
+      "sequel_number": 0,
+      "sub_genre": "Rundenbasiert",
+      "license_bonus": 0.0,
+      "physical_copies": 0,
+      "physical_price": 45,
+      "lifetime_physical_sales": 0
+    }
+  ],
+  "active_mmos": [],
+  "employees": [],
+  "engines": [
+    {
+      "name": "Basis-Engine",
+      "features": [
+        {
+          "category": "Grafik",
+          "name": "Papier-Logik",
+          "tech_bonus": 1
+        },
+        {
+          "category": "Sound",
+          "name": "Stille",
+          "tech_bonus": 0
+        },
+        {
+          "category": "Gameplay",
+          "name": "Spielregeln V1",
+          "tech_bonus": 3
+        }
+      ]
+    }
+  ],
+  "unlocked_features": [
+    {
+      "category": "Grafik",
+      "name": "Papier-Logik",
+      "tech_bonus": 1
+    },
+    {
+      "category": "Sound",
+      "name": "Stille",
+      "tech_bonus": 0
+    },
+    {
+      "category": "Gameplay",
+      "name": "Spielregeln V1",
+      "tech_bonus": 3
+    }
+  ],
+  "unlocked_topics": [
+    "Fantasy",
+    "Sci-Fi",
+    "Mittelalter",
+    "Sport",
+    "Rennen",
+    "Abakus",
+    "Logistik",
+    "Schach",
+    "Mathematik",
+    "Astronomie",
+    "Landwirtschaft"
+  ],
+  "unlocked_genres": [
+    "Action",
+    "Puzzle",
+    "Casual"
+  ],
+  "unlocked_audiences": [
+    "Jeder"
+  ],
+  "unlocked_technologies": [],
+  "bought_platforms": [
+    "PC (MS-DOS)"
+  ],
+  "active_platforms": [
+    "Hand-Abakus"
+  ],
+  "rivals": [
+    {
+      "name": "MicroHard",
+      "target_market_share": 30,
+      "games": [
+        {
+          "name": "MicroHard Strategie",
+          "topic": "Cyberpunk",
+          "genre": "Strategie",
+          "score": 6.1,
+          "week_developed": 19,
+          "weeks_on_market": 0,
+          "is_active": true
+        },
+        {
+          "name": "MicroHard Casual",
+          "topic": "Weltraum",
+          "genre": "Casual",
+          "score": 6.5,
+          "week_developed": 40,
+          "weeks_on_market": 0,
+          "is_active": true
+        }
+      ],
+      "next_release_week": 85,
+      "owned_shares": 0
+    },
+    {
+      "name": "Electric Farts",
+      "target_market_share": 25,
+      "games": [
+        {
+          "name": "Electric Farts Action",
+          "topic": "Superheld",
+          "genre": "Action",
+          "score": 6.8,
+          "week_developed": 15,
+          "weeks_on_market": 0,
+          "is_active": true
+        }
+      ],
+      "next_release_week": 62,
+      "owned_shares": 0
+    },
+    {
+      "name": "Nintengo",
+      "target_market_share": 20,
+      "games": [
+        {
+          "name": "Nintengo Simulation",
+          "topic": "Superheld",
+          "genre": "Simulation",
+          "score": 7.3,
+          "week_developed": 34,
+          "weeks_on_market": 0,
+          "is_active": true
+        }
+      ],
+      "next_release_week": 60,
+      "owned_shares": 0
+    }
+  ],
+  "last_goty_year": 1930,
+  "bank_loan": null,
+  "accounting": {
+    "income": 0,
+    "expenses": 0,
+    "loan_paid": 0
+  },
+  "custom_consoles": [],
+  "emails": [
+    {
+      "sender": "Historiker",
+      "subject": "1931: Neue Themen verfügbar!",
+      "body": "Das Jahr 1931 bringt neue Themen, die der Zeitgeist inspiriert:\n\n• Astronomie (passt zu: Strategie, Hype: mittel)\n• Landwirtschaft (passt zu: Simulation, Hype: mittel)\n\nNutze sie für dein nächstes Spiel!",
+      "date_week": 49,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "News Reader",
+      "subject": "Markt-Ereignis",
+      "body": "Branchentreff! Eine große Gaming-Expo bringt +500 neue Fans für dein Studio.",
+      "date_week": 49,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "News Reader",
+      "subject": "Markt-Ereignis",
+      "body": "Branchentreff! Eine große Gaming-Expo bringt +500 neue Fans für dein Studio.",
+      "date_week": 33,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "News Reader",
+      "subject": "Markt-Ereignis",
+      "body": "Steuerprüfung! Das Finanzamt fordert eine Nachzahlung von 12.000 Euro.",
+      "date_week": 25,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "News Reader",
+      "subject": "Markt-Ereignis",
+      "body": "Wirtschaftsboom! Die Spielebranche boomt — du erhältst 15.000 Euro Förderung.",
+      "date_week": 10,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Historiker",
+      "subject": "Willkommen in der Pionierzeit!",
+      "body": "Das Jahr ist 1930. Du bist ein Visionär mit einer großen Idee: Man kann Maschinen beibringen, Spiele zu spielen und zu entwickeln! Mit bescheidenen Mitteln in einer Garage beginnst du dein Studio. Verfügbare Themen: Abakus, Mathematik, Schach und Logistik. Kämpfe dich durch die Geschichte – von der Weltwirtschaftskrise bis zur KI-Revolution 2023!",
+      "date_week": 1,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Branchen-News",
+      "subject": "+++ BRANCHEN-NEWS +++",
+      "body": "Wirtschaftskrise bremst Konsumausgaben. (Verkäufe -15%)",
+      "date_week": 14,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Studio-Assistent",
+      "subject": "Audio Expo steht an!",
+      "body": "In dieser Woche findet die Audio Expo statt. Gehe ins Management-Menü, um teilzunehmen!",
+      "date_week": 24,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Branchen-News",
+      "subject": "+++ BRANCHEN-NEWS +++",
+      "body": "Ein großer Konkurrent hat Insolvenz angemeldet! (Fans +10%)",
+      "date_week": 37,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    }
+  ],
+  "has_presswerk": false,
+  "storage_capacity": 0,
+  "used_storage": 0,
+  "has_server_room": false,
+  "server_capacity": 0,
+  "publishing_offers": [],
+  "published_third_party_games": []
+}

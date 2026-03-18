@@ -6,6 +6,12 @@ Plattformen, Engine-Features, Mitarbeiter-Daten und Zufallsereignisse.
 """
 
 # ============================================================
+# GLOBALE ZEITKONSTANTEN
+# ============================================================
+START_YEAR = 1930       # Das Spiel beginnt im Jahr 1930
+WEEKS_PER_YEAR = 48     # 48 Wochen pro Spieljahr (historische Zeitachse)
+
+# ============================================================
 # THEMEN (Topics) - 20 verschiedene
 # ============================================================
 START_TOPICS = [
@@ -17,29 +23,157 @@ START_TOPICS = [
 ]
 
 RESEARCHABLE_TOPICS = [
-    {"name": "Spionage", "cost": 5000, "week": 2, "research_weeks": 2},
-    {"name": "Piraten", "cost": 8000, "week": 3, "research_weeks": 2},
-    {"name": "Zombies", "cost": 12000, "week": 5, "research_weeks": 3},
-    {"name": "Krankenhaus", "cost": 15000, "week": 8, "research_weeks": 3},
-    {"name": "Schule", "cost": 10000, "week": 10, "research_weeks": 2},
-    {"name": "Stadt", "cost": 18000, "week": 15, "research_weeks": 3},
-    {"name": "Weltraum", "cost": 25000, "week": 20, "research_weeks": 4},
-    {"name": "Krieg", "cost": 30000, "week": 25, "research_weeks": 4},
-    {"name": "Musik", "cost": 12000, "week": 12, "research_weeks": 3},
-    {"name": "Kochen", "cost": 8000, "week": 6, "research_weeks": 2},
-    {"name": "Tiere", "cost": 15000, "week": 15, "research_weeks": 3},
-    {"name": "Horror", "cost": 25000, "week": 22, "research_weeks": 4},
-    {"name": "Superheld", "cost": 40000, "week": 30, "research_weeks": 5},
-    {"name": "Cyberpunk", "cost": 50000, "week": 40, "research_weeks": 6},
-    {"name": "Detektiv", "cost": 20000, "week": 18, "research_weeks": 3},
-    {"name": "Dinosaurier", "cost": 35000, "week": 28, "research_weeks": 4},
-    {"name": "Vampire", "cost": 22000, "week": 20, "research_weeks": 3},
-    {"name": "Feuerwehr", "cost": 15000, "week": 14, "research_weeks": 3},
-    {"name": "Polizei", "cost": 18000, "week": 16, "research_weeks": 3},
-    {"name": "Wilder Westen", "cost": 28000, "week": 24, "research_weeks": 4},
+    {"name": "Abakus", "cost": 5000, "week": 1, "research_weeks": 2},
+    {"name": "Logistik", "cost": 5000, "week": 1, "research_weeks": 2},
+    {"name": "Schach", "cost": 5000, "week": 1, "research_weeks": 2},
+    {"name": "Mathematik", "cost": 5000, "week": 1, "research_weeks": 2},
+    {"name": "Astronomie", "cost": 5500, "week": 48, "research_weeks": 2},
+    {"name": "Landwirtschaft", "cost": 5500, "week": 48, "research_weeks": 2},
+    {"name": "Kochen", "cost": 6000, "week": 96, "research_weeks": 2},
+    {"name": "Politik", "cost": 6000, "week": 96, "research_weeks": 2},
+    {"name": "Detektiv", "cost": 6500, "week": 144, "research_weeks": 2},
+    {"name": "Kartenspiele", "cost": 6500, "week": 144, "research_weeks": 2},
+    {"name": "Architektur", "cost": 7000, "week": 192, "research_weeks": 2},
+    {"name": "Postwesen", "cost": 7000, "week": 192, "research_weeks": 2},
+    {"name": "Zirkus", "cost": 7500, "week": 240, "research_weeks": 2},
+    {"name": "Bergbau", "cost": 7500, "week": 240, "research_weeks": 2},
+    {"name": "Eisenbahn", "cost": 8000, "week": 288, "research_weeks": 2},
+    {"name": "Seefahrt", "cost": 8000, "week": 288, "research_weeks": 2},
+    {"name": "Feuerwehr", "cost": 8500, "week": 336, "research_weeks": 2},
+    {"name": "Kryptografie", "cost": 8500, "week": 336, "research_weeks": 2},
+    {"name": "Mars-Invasion", "cost": 9000, "week": 384, "research_weeks": 2},
+    {"name": "Zauberei", "cost": 9000, "week": 384, "research_weeks": 2},
+    {"name": "Militär", "cost": 9500, "week": 432, "research_weeks": 2},
+    {"name": "Chemie", "cost": 9500, "week": 432, "research_weeks": 2},
+    {"name": "U-Boot", "cost": 10000, "week": 480, "research_weeks": 2},
+    {"name": "Luftschlacht", "cost": 10500, "week": 528, "research_weeks": 2},
+    {"name": "Spionage", "cost": 11000, "week": 576, "research_weeks": 2},
+    {"name": "Panzer", "cost": 11500, "week": 624, "research_weeks": 2},
+    {"name": "Fallschirmjäger", "cost": 12000, "week": 672, "research_weeks": 2},
+    {"name": "Wiederaufbau", "cost": 12500, "week": 720, "research_weeks": 2},
+    {"name": "Journalismus", "cost": 13000, "week": 768, "research_weeks": 2},
+    {"name": "UFOs", "cost": 13500, "week": 816, "research_weeks": 2},
+    {"name": "Roboter", "cost": 14000, "week": 864, "research_weeks": 2},
+    {"name": "Dschungel", "cost": 14500, "week": 912, "research_weeks": 2},
+    {"name": "Archäologie", "cost": 15000, "week": 960, "research_weeks": 2},
+    {"name": "Weltraum", "cost": 15500, "week": 1008, "research_weeks": 2},
+    {"name": "Wilder Westen", "cost": 16000, "week": 1056, "research_weeks": 2},
+    {"name": "Bergsteigen", "cost": 16500, "week": 1104, "research_weeks": 2},
+    {"name": "Fussball", "cost": 17000, "week": 1152, "research_weeks": 2},
+    {"name": "Vergnügungspark", "cost": 17500, "week": 1200, "research_weeks": 2},
+    {"name": "Monster", "cost": 18000, "week": 1248, "research_weeks": 2},
+    {"name": "Satelliten", "cost": 18500, "week": 1296, "research_weeks": 2},
+    {"name": "Tennis", "cost": 19000, "week": 1344, "research_weeks": 2},
+    {"name": "Rennwagen", "cost": 19500, "week": 1392, "research_weeks": 2},
+    {"name": "Tiefsee", "cost": 20000, "week": 1440, "research_weeks": 2},
+    {"name": "Mafia", "cost": 20500, "week": 1488, "research_weeks": 2},
+    {"name": "Fantasy", "cost": 21000, "week": 1536, "research_weeks": 2},
+    {"name": "Agenten", "cost": 21500, "week": 1584, "research_weeks": 2},
+    {"name": "Popstars", "cost": 22000, "week": 1632, "research_weeks": 2},
+    {"name": "Dinosaurier", "cost": 22500, "week": 1680, "research_weeks": 2},
+    {"name": "Ninjas", "cost": 23000, "week": 1728, "research_weeks": 2},
+    {"name": "Hippies", "cost": 23500, "week": 1776, "research_weeks": 2},
+    {"name": "Weltrevolution", "cost": 24000, "week": 1824, "research_weeks": 2},
+    {"name": "Mondbasis", "cost": 24500, "week": 1872, "research_weeks": 2},
+    {"name": "Kung-Fu", "cost": 25000, "week": 1920, "research_weeks": 2},
+    {"name": "Piraten", "cost": 25500, "week": 1968, "research_weeks": 2},
+    {"name": "Basketball", "cost": 26000, "week": 2016, "research_weeks": 2},
+    {"name": "Motorrad", "cost": 26500, "week": 2064, "research_weeks": 2},
+    {"name": "Verliese", "cost": 27000, "week": 2112, "research_weeks": 2},
+    {"name": "Polizei", "cost": 27500, "week": 2160, "research_weeks": 2},
+    {"name": "Alien-Jagd", "cost": 28000, "week": 2208, "research_weeks": 2},
+    {"name": "Laserschwert", "cost": 28500, "week": 2256, "research_weeks": 2},
+    {"name": "Invaders", "cost": 29000, "week": 2304, "research_weeks": 2},
+    {"name": "Horrorhaus", "cost": 29500, "week": 2352, "research_weeks": 2},
+    {"name": "Gelbe Fresspunkte", "cost": 30000, "week": 2400, "research_weeks": 2},
+    {"name": "Büro-Alltag", "cost": 30500, "week": 2448, "research_weeks": 2},
+    {"name": "Cyberpunk", "cost": 31000, "week": 2496, "research_weeks": 2},
+    {"name": "Vampire", "cost": 31500, "week": 2544, "research_weeks": 2},
+    {"name": "Breakdance", "cost": 32000, "week": 2592, "research_weeks": 2},
+    {"name": "Klempner", "cost": 32500, "week": 2640, "research_weeks": 2},
+    {"name": "Postapokalypse", "cost": 33000, "week": 2688, "research_weeks": 2},
+    {"name": "Mechs", "cost": 33500, "week": 2736, "research_weeks": 2},
+    {"name": "Skateboarding", "cost": 34000, "week": 2784, "research_weeks": 2},
+    {"name": "Taschenmonster", "cost": 34500, "week": 2832, "research_weeks": 2},
+    {"name": "Krankenhaus", "cost": 35000, "week": 2880, "research_weeks": 2},
+    {"name": "Freizeitpark", "cost": 35500, "week": 2928, "research_weeks": 2},
+    {"name": "Mars-Shooter", "cost": 36000, "week": 2976, "research_weeks": 2},
+    {"name": "Urzeit/Survival", "cost": 36500, "week": 3024, "research_weeks": 2},
+    {"name": "Anime", "cost": 37000, "week": 3072, "research_weeks": 2},
+    {"name": "Hacking", "cost": 37500, "week": 3120, "research_weeks": 2},
+    {"name": "Stealth-Agent", "cost": 38000, "week": 3168, "research_weeks": 2},
+    {"name": "Elfen & Orks", "cost": 38500, "week": 3216, "research_weeks": 2},
+    {"name": "Survival-Insel", "cost": 39000, "week": 3264, "research_weeks": 2},
+    {"name": "Skandal-TV", "cost": 39500, "week": 3312, "research_weeks": 2},
+    {"name": "Lebens-Sim", "cost": 40000, "week": 3360, "research_weeks": 2},
+    {"name": "Zombie-Hype", "cost": 40500, "week": 3408, "research_weeks": 2},
+    {"name": "Parkplatz-Manager", "cost": 41000, "week": 3456, "research_weeks": 2},
+    {"name": "E-Sport", "cost": 41500, "week": 3504, "research_weeks": 2},
+    {"name": "Zauberschule", "cost": 42000, "week": 3552, "research_weeks": 2},
+    {"name": "Sandbox/Voxel", "cost": 42500, "week": 3600, "research_weeks": 2},
+    {"name": "Wikinger", "cost": 43000, "week": 3648, "research_weeks": 2},
+    {"name": "Smartphones", "cost": 43500, "week": 3696, "research_weeks": 2},
+    {"name": "Freerunning", "cost": 44000, "week": 3744, "research_weeks": 2},
+    {"name": "Block-Bauen", "cost": 44500, "week": 3792, "research_weeks": 2},
+    {"name": "Social Networking", "cost": 45000, "week": 3840, "research_weeks": 2},
+    {"name": "Indie-Entwickler", "cost": 45500, "week": 3888, "research_weeks": 2},
+    {"name": "Battle-Royale", "cost": 46000, "week": 3936, "research_weeks": 2},
+    {"name": "VR-Simulation", "cost": 46500, "week": 3984, "research_weeks": 2},
+    {"name": "Farming-Hype", "cost": 47000, "week": 4032, "research_weeks": 2},
+    {"name": "Cyber-Krieg", "cost": 47500, "week": 4080, "research_weeks": 2},
+    {"name": "AR-Jagd", "cost": 48000, "week": 4128, "research_weeks": 2},
+    {"name": "Krypto-Mining", "cost": 48500, "week": 4176, "research_weeks": 2},
+    {"name": "Mars-Kolonisierung", "cost": 49000, "week": 4224, "research_weeks": 2},
+    {"name": "Streaming-Star", "cost": 49500, "week": 4272, "research_weeks": 2},
+    {"name": "KI-Dystopie", "cost": 50000, "week": 4320, "research_weeks": 2},
+    {"name": "NFT-Sammeln", "cost": 50500, "week": 4368, "research_weeks": 2},
+    {"name": "Metaverse", "cost": 51000, "week": 4416, "research_weeks": 2},
+    {"name": "KI-Utopie", "cost": 51500, "week": 4464, "research_weeks": 2},
+    {"name": "Endzeit-Bote", "cost": 52000, "week": 4512, "research_weeks": 2},
+    {"name": "Gen-Labor", "cost": 52500, "week": 4560, "research_weeks": 2},
+    {"name": "Neural-Link", "cost": 53000, "week": 4608, "research_weeks": 2},
 ]
 
+
+
 TOPICS = START_TOPICS + [t["name"] for t in RESEARCHABLE_TOPICS]
+
+# ============================================================
+# PHASE B: LIZENZEN (Für Marketing / Hype-Boosts)
+# ============================================================
+LICENSES = [
+    # Kleine Lizenzen (Günstig, kleiner Boost)
+    {"name": "Lokaler Buch-Bestseller", "base_cost": 50000, "hype_bonus": 15, "fan_bonus": 500},
+    {"name": "Indie-Comic-Reihe", "base_cost": 80000, "hype_bonus": 20, "fan_bonus": 800},
+    {"name": "Kultobjekt der 80er", "base_cost": 150000, "hype_bonus": 30, "fan_bonus": 1500},
+    
+    # Mittlere Lizenzen (Filme, TV)
+    {"name": "TV-Krimi-Serie", "base_cost": 350000, "hype_bonus": 45, "fan_bonus": 3000},
+    {"name": "Anime-Hit", "base_cost": 500000, "hype_bonus": 60, "fan_bonus": 5000},
+    {"name": "Brettspiel-Klassiker", "base_cost": 650000, "hype_bonus": 75, "fan_bonus": 7500},
+
+    # Große Lizenzen (Weltweite Blockbuster)
+    {"name": "Fantasy-Buch-Epos", "base_cost": 1200000, "hype_bonus": 100, "fan_bonus": 15000},
+    {"name": "Weltraum-Film-Franchise", "base_cost": 2500000, "hype_bonus": 140, "fan_bonus": 35000},
+    {"name": "Offizielle Sport-Liga (Fußball)", "base_cost": 5000000, "hype_bonus": 200, "fan_bonus": 80000},
+    {"name": "Superhelden-Universum", "base_cost": 8000000, "hype_bonus": 250, "fan_bonus": 150000},
+]
+
+# ============================================================
+# PHASE B: ADDON & BUNDLE DATEN
+# ============================================================
+ADDON_DATA = {
+    "cost_multi": 0.4,       # Addons kosten nur 40% eines neuen Spiels
+    "time_multi": 0.3,       # Addons dauern nur 30% so lange in der Entwicklung
+    "sales_boost": 1.5,      # Boosting von Base Game Sales um 50%
+}
+
+BUNDLE_DATA = {
+    "min_games": 2,          # Min. Anzahl Spiele in einem Bundle
+    "max_games": 4,          # Max. Anzahl Spiele
+    "base_price": 25,        # Bundle-Preis
+    "revenue_mod": 0.05,     # Wie viel extra Revenue ein Bundle macht
+}
 
 # ============================================================
 # GENRES - 8 verschiedene
@@ -127,56 +261,164 @@ GENRE_IDEAL_SLIDERS = {
 # 3 = Super, 2 = Gut, 1 = Okay, 0 = Schlecht
 # ============================================================
 TOPIC_GENRE_COMPAT = {
-    #                    Act  RPG  Sim  Str  Abe  Puz  Spo  Cas  Hor  Kam  Ren
-    "Fantasy":          [  2,   3,   1,   2,   3,   1,   0,   1,   1,   2,   0  ],
-    "Sci-Fi":           [  3,   2,   2,   3,   2,   1,   0,   1,   2,   2,   2  ],
-    "Mittelalter":      [  2,   3,   2,   3,   2,   0,   0,   0,   1,   2,   0  ],
-    "Spionage":         [  3,   1,   1,   2,   3,   2,   0,   1,   1,   2,   1  ],
-    "Piraten":          [  3,   2,   1,   2,   3,   1,   0,   1,   1,   2,   1  ],
-    "Zombies":          [  3,   1,   0,   2,   2,   1,   0,   1,   3,   2,   0  ],
-    "Sport":            [  1,   0,   2,   1,   0,   0,   3,   2,   0,   1,   1  ],
-    "Rennen":           [  2,   0,   2,   0,   0,   0,   3,   2,   0,   0,   3  ],
-    "Krankenhaus":      [  0,   0,   3,   1,   1,   2,   0,   2,   2,   0,   0  ],
-    "Schule":           [  0,   1,   3,   1,   1,   2,   0,   2,   1,   1,   0  ],
-    "Stadt":            [  0,   1,   3,   2,   1,   1,   0,   1,   0,   2,   2  ],
-    "Weltraum":         [  3,   2,   2,   3,   2,   0,   0,   1,   2,   1,   2  ],
-    "Krieg":            [  3,   1,   1,   3,   1,   0,   0,   0,   1,   2,   1  ],
-    "Musik":            [  0,   0,   2,   0,   0,   3,   0,   3,   0,   0,   0  ],
-    "Kochen":           [  0,   0,   3,   0,   0,   2,   0,   3,   0,   0,   0  ],
-    "Tiere":            [  1,   1,   3,   1,   2,   2,   0,   3,   0,   1,   1  ],
-    "Horror":           [  2,   1,   0,   1,   3,   1,   0,   0,   3,   1,   0  ],
-    "Superheld":        [  3,   2,   0,   1,   3,   0,   0,   1,   0,   3,   1  ],
-    "Cyberpunk":        [  3,   3,   1,   2,   2,   0,   0,   0,   1,   2,   2  ],
-    "Detektiv":         [  1,   1,   1,   1,   3,   3,   0,   1,   2,   0,   0  ],
-    "Dinosaurier":      [  3,   2,   2,   1,   3,   1,   0,   1,   2,   2,   1  ],
-    "Vampire":          [  2,   3,   1,   1,   2,   1,   0,   1,   3,   2,   0  ],
-    "Feuerwehr":        [  2,   1,   3,   2,   1,   1,   0,   2,   0,   0,   2  ],
-    "Polizei":          [  3,   1,   2,   2,   2,   2,   0,   1,   1,   1,   2  ],
-    "Wilder Westen":    [  3,   2,   1,   2,   3,   0,   0,   1,   1,   1,   2  ],
+    "Abakus":[ 0,  0,  2,  1,  1,  1,  0,  0,  3,  0,  0],
+    "Logistik":[ 0,  1,  1,  0,  1,  3,  1,  3,  2,  0,  1],
+    "Schach":[ 3,  2,  2,  1,  1,  2,  0,  0,  3,  0,  2],
+    "Mathematik":[ 2,  2,  0,  3,  0,  3,  0,  2,  2,  1,  0],
+    "Astronomie":[ 0,  1,  2,  0,  1,  0,  3,  2,  3,  2,  1],
+    "Landwirtschaft":[ 2,  2,  1,  2,  0,  1,  1,  1,  3,  3,  2],
+    "Kochen":[ 1,  2,  0,  1,  0,  2,  3,  2,  0,  1,  2],
+    "Politik":[ 1,  3,  3,  3,  1,  2,  1,  1,  2,  3,  3],
+    "Detektiv":[ 2,  1,  1,  3,  0,  0,  0,  1,  1,  3,  0],
+    "Kartenspiele":[ 3,  3,  3,  2,  0,  0,  2,  2,  0,  2,  3],
+    "Architektur":[ 1,  3,  0,  2,  1,  0,  2,  1,  1,  2,  1],
+    "Postwesen":[ 0,  2,  3,  0,  0,  2,  2,  1,  0,  1,  0],
+    "Zirkus":[ 0,  3,  0,  1,  1,  3,  1,  2,  3,  1,  1],
+    "Bergbau":[ 2,  3,  2,  3,  3,  0,  1,  1,  0,  2,  0],
+    "Eisenbahn":[ 1,  1,  0,  0,  0,  1,  0,  0,  2,  0,  1],
+    "Seefahrt":[ 2,  3,  1,  1,  3,  1,  3,  3,  1,  0,  0],
+    "Feuerwehr":[ 3,  2,  3,  3,  3,  0,  0,  0,  3,  2,  0],
+    "Kryptografie":[ 1,  1,  1,  3,  1,  3,  1,  2,  3,  1,  0],
+    "Mars-Invasion":[ 3,  0,  0,  0,  0,  1,  1,  3,  3,  3,  1],
+    "Zauberei":[ 3,  0,  1,  3,  0,  3,  2,  3,  2,  3,  3],
+    "Militär":[ 1,  1,  2,  1,  0,  0,  2,  0,  0,  3,  1],
+    "Chemie":[ 0,  0,  1,  0,  0,  1,  3,  0,  1,  0,  0],
+    "U-Boot":[ 3,  2,  2,  1,  2,  1,  2,  3,  1,  2,  3],
+    "Luftschlacht":[ 2,  0,  0,  3,  0,  0,  1,  2,  1,  2,  0],
+    "Spionage":[ 1,  2,  2,  1,  3,  2,  0,  2,  0,  1,  2],
+    "Panzer":[ 0,  0,  1,  2,  2,  1,  2,  1,  2,  3,  2],
+    "Fallschirmjäger":[ 0,  0,  3,  2,  0,  0,  2,  1,  2,  1,  3],
+    "Wiederaufbau":[ 3,  0,  0,  0,  1,  0,  2,  1,  3,  1,  0],
+    "Journalismus":[ 2,  2,  0,  2,  1,  1,  0,  2,  3,  1,  1],
+    "UFOs":[ 1,  1,  3,  0,  1,  2,  3,  1,  2,  1,  0],
+    "Roboter":[ 3,  0,  3,  1,  1,  3,  2,  2,  1,  1,  0],
+    "Dschungel":[ 1,  3,  2,  2,  0,  2,  2,  3,  2,  0,  0],
+    "Archäologie":[ 2,  1,  2,  0,  0,  3,  2,  2,  3,  0,  3],
+    "Weltraum":[ 1,  2,  0,  3,  0,  1,  2,  3,  0,  2,  2],
+    "Wilder Westen":[ 0,  2,  2,  3,  2,  3,  2,  1,  1,  3,  3],
+    "Bergsteigen":[ 1,  2,  3,  0,  2,  2,  1,  3,  2,  3,  3],
+    "Fussball":[ 3,  1,  3,  1,  0,  2,  2,  0,  1,  2,  1],
+    "Vergnügungspark":[ 1,  1,  0,  0,  1,  3,  0,  3,  3,  1,  3],
+    "Monster":[ 3,  3,  1,  1,  0,  0,  3,  1,  1,  3,  0],
+    "Satelliten":[ 1,  0,  3,  1,  3,  2,  3,  3,  3,  1,  3],
+    "Tennis":[ 3,  2,  1,  2,  3,  1,  2,  3,  0,  2,  1],
+    "Rennwagen":[ 2,  2,  2,  0,  1,  1,  1,  3,  1,  1,  0],
+    "Tiefsee":[ 3,  3,  2,  3,  3,  0,  1,  3,  3,  0,  3],
+    "Mafia":[ 3,  0,  2,  2,  3,  3,  1,  3,  1,  2,  3],
+    "Fantasy":[ 3,  0,  3,  2,  3,  1,  3,  1,  0,  3,  0],
+    "Agenten":[ 0,  3,  1,  3,  1,  0,  2,  3,  2,  1,  3],
+    "Popstars":[ 2,  2,  3,  2,  3,  2,  0,  3,  0,  0,  2],
+    "Dinosaurier":[ 1,  0,  0,  0,  1,  1,  0,  1,  1,  1,  3],
+    "Ninjas":[ 0,  1,  3,  2,  2,  1,  0,  1,  2,  0,  0],
+    "Hippies":[ 2,  3,  3,  1,  0,  1,  0,  2,  0,  0,  2],
+    "Weltrevolution":[ 3,  2,  0,  2,  0,  3,  3,  0,  3,  2,  3],
+    "Mondbasis":[ 1,  3,  1,  2,  3,  3,  3,  2,  2,  1,  0],
+    "Kung-Fu":[ 2,  3,  1,  3,  3,  2,  0,  3,  2,  1,  3],
+    "Piraten":[ 1,  2,  2,  2,  2,  2,  0,  1,  0,  1,  3],
+    "Basketball":[ 3,  1,  3,  3,  3,  0,  0,  2,  1,  3,  1],
+    "Motorrad":[ 2,  2,  3,  2,  3,  2,  2,  3,  2,  2,  2],
+    "Verliese":[ 1,  0,  1,  2,  0,  1,  1,  1,  3,  2,  2],
+    "Polizei":[ 0,  1,  2,  1,  2,  1,  2,  0,  1,  2,  0],
+    "Alien-Jagd":[ 0,  2,  1,  3,  0,  0,  2,  3,  3,  3,  2],
+    "Laserschwert":[ 1,  0,  2,  3,  0,  0,  3,  3,  0,  0,  1],
+    "Invaders":[ 1,  2,  0,  1,  0,  3,  1,  3,  3,  3,  2],
+    "Horrorhaus":[ 3,  2,  0,  0,  1,  1,  2,  0,  1,  1,  1],
+    "Gelbe Fresspunkte":[ 0,  1,  0,  3,  3,  3,  2,  0,  1,  2,  2],
+    "Büro-Alltag":[ 3,  0,  1,  2,  1,  3,  0,  1,  1,  2,  1],
+    "Cyberpunk":[ 0,  0,  1,  2,  2,  3,  0,  3,  2,  3,  2],
+    "Vampire":[ 3,  3,  0,  0,  3,  2,  2,  0,  0,  1,  0],
+    "Breakdance":[ 2,  0,  1,  3,  3,  2,  1,  3,  3,  0,  3],
+    "Klempner":[ 2,  3,  2,  2,  0,  1,  2,  3,  3,  2,  3],
+    "Postapokalypse":[ 0,  3,  0,  2,  2,  2,  0,  3,  0,  3,  3],
+    "Mechs":[ 0,  1,  2,  3,  3,  0,  1,  2,  1,  2,  3],
+    "Skateboarding":[ 3,  0,  0,  1,  1,  2,  0,  3,  0,  1,  0],
+    "Taschenmonster":[ 3,  0,  1,  3,  2,  2,  3,  3,  3,  1,  3],
+    "Krankenhaus":[ 1,  3,  1,  1,  0,  2,  3,  2,  2,  0,  2],
+    "Freizeitpark":[ 2,  3,  1,  3,  3,  2,  2,  3,  3,  2,  1],
+    "Mars-Shooter":[ 1,  3,  1,  3,  0,  2,  3,  3,  3,  1,  3],
+    "Urzeit/Survival":[ 0,  1,  2,  0,  3,  0,  3,  0,  1,  3,  1],
+    "Anime":[ 0,  3,  2,  2,  3,  0,  2,  3,  2,  3,  0],
+    "Hacking":[ 0,  1,  2,  1,  0,  3,  0,  0,  3,  1,  2],
+    "Stealth-Agent":[ 0,  0,  2,  0,  2,  2,  2,  3,  1,  1,  3],
+    "Elfen & Orks":[ 1,  1,  1,  0,  3,  1,  3,  1,  1,  3,  2],
+    "Survival-Insel":[ 3,  2,  0,  3,  2,  1,  0,  3,  2,  2,  3],
+    "Skandal-TV":[ 2,  3,  2,  1,  3,  3,  0,  1,  3,  2,  2],
+    "Lebens-Sim":[ 2,  0,  3,  2,  0,  0,  3,  2,  1,  2,  1],
+    "Zombie-Hype":[ 1,  2,  1,  0,  0,  2,  3,  0,  2,  1,  0],
+    "Parkplatz-Manager":[ 2,  2,  3,  1,  1,  1,  2,  2,  1,  2,  3],
+    "E-Sport":[ 2,  2,  0,  3,  0,  1,  1,  3,  2,  0,  3],
+    "Zauberschule":[ 0,  2,  0,  3,  2,  2,  3,  2,  0,  1,  3],
+    "Sandbox/Voxel":[ 0,  2,  1,  0,  3,  2,  3,  0,  1,  0,  0],
+    "Wikinger":[ 2,  3,  0,  0,  1,  1,  3,  3,  2,  3,  1],
+    "Smartphones":[ 3,  0,  3,  3,  2,  0,  2,  1,  3,  3,  1],
+    "Freerunning":[ 2,  0,  2,  2,  0,  3,  2,  1,  0,  3,  0],
+    "Block-Bauen":[ 1,  0,  0,  2,  1,  1,  1,  0,  1,  1,  1],
+    "Social Networking":[ 2,  1,  0,  2,  1,  1,  2,  1,  0,  0,  1],
+    "Indie-Entwickler":[ 0,  2,  1,  2,  0,  1,  2,  0,  1,  3,  0],
+    "Battle-Royale":[ 0,  3,  3,  2,  0,  3,  1,  0,  2,  3,  0],
+    "VR-Simulation":[ 0,  3,  3,  3,  0,  3,  3,  0,  0,  2,  1],
+    "Farming-Hype":[ 0,  1,  2,  2,  3,  2,  3,  3,  0,  0,  1],
+    "Cyber-Krieg":[ 3,  3,  1,  3,  2,  3,  3,  3,  0,  2,  3],
+    "AR-Jagd":[ 2,  2,  2,  1,  3,  0,  0,  0,  0,  3,  0],
+    "Krypto-Mining":[ 2,  1,  0,  2,  0,  3,  2,  3,  0,  2,  2],
+    "Mars-Kolonisierung":[ 2,  0,  1,  1,  3,  1,  0,  2,  2,  0,  2],
+    "Streaming-Star":[ 1,  3,  0,  2,  0,  1,  2,  2,  2,  2,  0],
+    "KI-Dystopie":[ 1,  1,  3,  0,  1,  0,  0,  1,  3,  3,  3],
+    "NFT-Sammeln":[ 2,  1,  2,  2,  2,  0,  0,  1,  1,  0,  0],
+    "Metaverse":[ 2,  3,  3,  3,  3,  3,  2,  1,  0,  2,  3],
+    "KI-Utopie":[ 0,  2,  3,  2,  0,  1,  3,  0,  0,  1,  2],
+    "Endzeit-Bote":[ 1,  1,  2,  2,  2,  0,  0,  3,  3,  1,  1],
+    "Gen-Labor":[ 3,  1,  2,  0,  3,  0,  3,  0,  3,  0,  2],
+    "Neural-Link":[ 3,  3,  3,  2,  0,  3,  0,  2,  1,  3,  2],
 }
+
+
 
 # ============================================================
 # PLATTFORMEN
 # name, Lizenzgebühr, Markt-Multiplikator, verfügbar ab Woche, Ende Woche (None = nie), Typ
 # ============================================================
 PLATFORMS = [
-    {"name": "Zenith-Core 88",  "license_fee": 0,      "market_multi": 1.0,  "available_week": 1,  "end_week": 200,   "type": "PC"},
-    {"name": "Micro-Gate",      "license_fee": 0,      "market_multi": 1.2,  "available_week": 30, "end_week": None, "type": "PC"},
-    {"name": "Penguin-OS",      "license_fee": 0,      "market_multi": 0.5,  "available_week": 50, "end_week": None, "type": "PC"},
-    
-    {"name": "Nova-Station 1",  "license_fee": 20000,  "market_multi": 1.5,  "available_week": 1,  "end_week": 500,  "type": "Konsole"},
-    {"name": "Nova-Station 2",  "license_fee": 40000,  "market_multi": 2.2,  "available_week": 80, "end_week": 1250,  "type": "Konsole"},
-    
-    {"name": "Kuro-Hand",       "license_fee": 15000,  "market_multi": 1.3,  "available_week": 1,  "end_week": 300,   "type": "Handheld"},
-    {"name": "Kuro-Classic",    "license_fee": 30000,  "market_multi": 1.8,  "available_week": 70, "end_week": 1000,  "type": "Konsole"},
-    
-    {"name": "Orion-Box",       "license_fee": 25000,  "market_multi": 1.4,  "available_week": 20, "end_week": 750,  "type": "Konsole"},
-    {"name": "Orion-Box 360",   "license_fee": 45000,  "market_multi": 2.0,  "available_week": 140,"end_week": 1750,  "type": "Konsole"},
-    
-    {"name": "Pocket-Play",     "license_fee": 10000,  "market_multi": 0.8,  "available_week": 1,  "end_week": 400,   "type": "Handheld"},
-    {"name": "Smartphone",      "license_fee": 5000,   "market_multi": 2.5,  "available_week": 360,"end_week": None, "type": "Mobile"},
-    {"name": "Tablet OS",       "license_fee": 7000,   "market_multi": 1.8,  "available_week": 400,"end_week": None, "type": "Mobile"},
+    {"name": "Hand-Abakus", "license_fee": 10000, "market_multi": 1.0, "available_week": 1, "end_week": 481, "type": "Konsole"},
+    {"name": "Zuse Z1", "license_fee": 10000, "market_multi": 1.0, "available_week": 240, "end_week": 720, "type": "Konsole"},
+    {"name": "Zuse Z3", "license_fee": 16000, "market_multi": 1.6, "available_week": 528, "end_week": 1008, "type": "Konsole"},
+    {"name": "ENIAC", "license_fee": 0, "market_multi": 2.4, "available_week": 768, "end_week": 1248, "type": "Heimcomputer"},
+    {"name": "UNIVAC I", "license_fee": 0, "market_multi": 3.1, "available_week": 1008, "end_week": 1488, "type": "Heimcomputer"},
+    {"name": "Nimrod", "license_fee": 31000, "market_multi": 3.1, "available_week": 1008, "end_week": 1488, "type": "Konsole"},
+    {"name": "EDSAC (OXO)", "license_fee": 0, "market_multi": 3.3, "available_week": 1056, "end_week": 1536, "type": "Heimcomputer"},
+    {"name": "PDP-1 (Spacewar)", "license_fee": 45000, "market_multi": 4.5, "available_week": 1440, "end_week": 1920, "type": "Konsole"},
+    {"name": "IBM 360", "license_fee": 0, "market_multi": 5.2, "available_week": 1680, "end_week": 2160, "type": "Heimcomputer"},
+    {"name": "Magnavox Odyssey", "license_fee": 63000, "market_multi": 6.3, "available_week": 2016, "end_week": 2496, "type": "Konsole"},
+    {"name": "Fairchild Ch. F", "license_fee": 69000, "market_multi": 6.9, "available_week": 2208, "end_week": 2688, "type": "Konsole"},
+    {"name": "Atari 2600", "license_fee": 70000, "market_multi": 7.0, "available_week": 2256, "end_week": 2736, "type": "Konsole"},
+    {"name": "Bally Astrocade", "license_fee": 72000, "market_multi": 7.2, "available_week": 2304, "end_week": 2784, "type": "Konsole"},
+    {"name": "C64", "license_fee": 0, "market_multi": 7.5, "available_week": 2400, "end_week": 2880, "type": "Heimcomputer"},
+    {"name": "Vectrex", "license_fee": 78000, "market_multi": 7.8, "available_week": 2496, "end_week": 2976, "type": "Konsole"},
+    {"name": "Famicom (NES)", "license_fee": 79000, "market_multi": 7.9, "available_week": 2544, "end_week": 3024, "type": "Konsole"},
+    {"name": "Famicom Disk Sys", "license_fee": 84000, "market_multi": 8.4, "available_week": 2688, "end_week": 3168, "type": "Konsole"},
+    {"name": "Sega Genesis", "license_fee": 87000, "market_multi": 8.7, "available_week": 2784, "end_week": 3264, "type": "Konsole"},
+    {"name": "Neo Geo AES", "license_fee": 90000, "market_multi": 9.0, "available_week": 2880, "end_week": 3360, "type": "Konsole"},
+    {"name": "SNES", "license_fee": 90000, "market_multi": 9.0, "available_week": 2880, "end_week": 3360, "type": "Konsole"},
+    {"name": "Philips CD-i", "license_fee": 92000, "market_multi": 9.2, "available_week": 2928, "end_week": 3408, "type": "Konsole"},
+    {"name": "Atari Jaguar", "license_fee": 94000, "market_multi": 9.4, "available_week": 3024, "end_week": 3504, "type": "Konsole"},
+    {"name": "PlayStation 1", "license_fee": 96000, "market_multi": 9.6, "available_week": 3072, "end_week": 3552, "type": "Konsole"},
+    {"name": "Nintendo 64", "license_fee": 99000, "market_multi": 9.9, "available_week": 3168, "end_week": 3648, "type": "Konsole"},
+    {"name": "Dreamcast", "license_fee": 100000, "market_multi": 10.0, "available_week": 3264, "end_week": 3744, "type": "Konsole"},
+    {"name": "PlayStation 2", "license_fee": 100000, "market_multi": 10.0, "available_week": 3360, "end_week": 3840, "type": "Konsole"},
+    {"name": "GameCube", "license_fee": 100000, "market_multi": 10.0, "available_week": 3408, "end_week": 3888, "type": "Konsole"},
+    {"name": "Xbox 360", "license_fee": 100000, "market_multi": 10.0, "available_week": 3600, "end_week": 4080, "type": "Konsole"},
+    {"name": "PlayStation 3", "license_fee": 100000, "market_multi": 10.0, "available_week": 3648, "end_week": 4128, "type": "Konsole"},
+    {"name": "Gizmondo", "license_fee": 100000, "market_multi": 10.0, "available_week": 3744, "end_week": 4224, "type": "Handheld"},
+    {"name": "PlayStation 4", "license_fee": 100000, "market_multi": 10.0, "available_week": 3984, "end_week": 4464, "type": "Konsole"},
+    {"name": "Switch", "license_fee": 100000, "market_multi": 10.0, "available_week": 4176, "end_week": 4656, "type": "Handheld"},
+    {"name": "Playdate", "license_fee": 100000, "market_multi": 10.0, "available_week": 4224, "end_week": 4704, "type": "Handheld"},
+    {"name": "PlayStation 5", "license_fee": 100000, "market_multi": 10.0, "available_week": 4320, "end_week": 4800, "type": "Konsole"},
+    {"name": "Analogue Pocket", "license_fee": 100000, "market_multi": 10.0, "available_week": 4368, "end_week": 4848, "type": "Handheld"},
+    {"name": "Evercade EXP", "license_fee": 100000, "market_multi": 10.0, "available_week": 4416, "end_week": 4896, "type": "Handheld"},
+    {"name": "Cloud-Console", "license_fee": 100000, "market_multi": 10.0, "available_week": 4560, "end_week": 5040, "type": "Streaming"},
+    {"name": "Neural-Box 1", "license_fee": 100000, "market_multi": 10.0, "available_week": 4608, "end_week": 5088, "type": "Konsole"},
 ]
+
 
 AUDIENCE_MULTI = {
     "Jeder":           1.5,
@@ -213,7 +455,7 @@ RESEARCHABLE_TECHNOLOGIES = [
 DIFFICULTY_LEVELS = [
     {
         "name": "Einfach",
-        "start_money": 120000,
+        "start_money": 150000,
         "rival_strength": 0.7,
         "review_bonus": 0.5,
         "market_multi": 1.3,
@@ -221,7 +463,7 @@ DIFFICULTY_LEVELS = [
     },
     {
         "name": "Normal",
-        "start_money": 70000,
+        "start_money": 100000,
         "rival_strength": 1.0,
         "review_bonus": 0.0,
         "market_multi": 1.0,
@@ -229,7 +471,7 @@ DIFFICULTY_LEVELS = [
     },
     {
         "name": "Schwer",
-        "start_money": 40000,
+        "start_money": 50000,
         "rival_strength": 1.3,
         "review_bonus": -0.5,
         "market_multi": 0.8,
@@ -301,62 +543,61 @@ SUB_GENRES = {
     ],
 }
 
-# ============================================================
-# LIZENZEN (Phase B)
-# ============================================================
-LICENSES = [
-    {"name": "Film-Lizenz", "cost": 150000, "hype_bonus": 30, "review_bonus": 0.5, "best_topics": ["Film", "Sci-Fi", "Fantasy"], "duration_weeks": 104},
-    {"name": "Buch-Lizenz", "cost": 80000, "hype_bonus": 15, "review_bonus": 0.8, "best_topics": ["Fantasy", "Mittelalter", "Detektiv"], "duration_weeks": 104},
-    {"name": "Sport-Lizenz", "cost": 200000, "hype_bonus": 40, "review_bonus": 0.3, "best_topics": ["Sport", "Fußball"], "duration_weeks": 52},
-    {"name": "Musik-Lizenz", "cost": 60000, "hype_bonus": 20, "review_bonus": 0.4, "best_topics": ["Musik", "Party"], "duration_weeks": 78},
-    {"name": "Anime-Lizenz", "cost": 100000, "hype_bonus": 25, "review_bonus": 0.6, "best_topics": ["Anime", "Fantasy", "Martial Arts"], "duration_weeks": 104},
-]
-
-# ============================================================
-# ADDON & BUNDLE DATEN (Phase B)
-# ============================================================
-ADDON_DATA = {
-    "cost_multiplier": 0.3,
-    "dev_weeks_multiplier": 0.4,
-    "sales_multiplier": 0.25,
-    "review_bonus": 0.3,
-}
-
-BUNDLE_DATA = {
-    "min_games": 2,
-    "max_games": 5,
-    "price_per_game": 5000,
-    "sales_multiplier": 0.15,
-}
-
 
 
 # ============================================================
-# ENGINE-FEATURES (zum Freischalten / Erforschen)
-# category, name, tech_bonus, cost, week, research_weeks
+# ENGINE-FEATURES (Historische Forschungs-Datenbank 1930-2026)
+# unlock_year: Jahr ab dem erforschbar
+# category, name, tech_bonus, cost, research_weeks
+# Die Spielwoche wird dynamisch via get_available_features() berechnet.
 # ============================================================
 ENGINE_FEATURES = [
-    # Grafik
-    {"category": "Grafik",    "name": "2D Grafik V1",        "tech_bonus": 1,  "cost": 0,      "week": 1,  "research_weeks": 1},
-    {"category": "Grafik",    "name": "2D Grafik V2",        "tech_bonus": 3,  "cost": 25000,  "week": 10, "research_weeks": 6},
-    {"category": "Grafik",    "name": "3D Grafik V1",        "tech_bonus": 5,  "cost": 80000,  "week": 30, "research_weeks": 12},
-    {"category": "Grafik",    "name": "3D Grafik V2",        "tech_bonus": 8,  "cost": 150000, "week": 60, "research_weeks": 20},
-    # Sound
-    {"category": "Sound",     "name": "Mono Sound",          "tech_bonus": 1,  "cost": 0,      "week": 1,  "research_weeks": 1},
-    {"category": "Sound",     "name": "Stereo Sound",        "tech_bonus": 3,  "cost": 15000,  "week": 10, "research_weeks": 4},
-    {"category": "Sound",     "name": "Surround Sound",      "tech_bonus": 5,  "cost": 50000,  "week": 40, "research_weeks": 8},
-    # KI
-    {"category": "KI",        "name": "Einfache KI",         "tech_bonus": 1,  "cost": 0,      "week": 1,  "research_weeks": 1},
-    {"category": "KI",        "name": "Fortgeschrittene KI", "tech_bonus": 3,  "cost": 30000,  "week": 20, "research_weeks": 7},
-    {"category": "KI",        "name": "Lernende KI",         "tech_bonus": 6,  "cost": 90000,  "week": 50, "research_weeks": 15},
-    # Gameplay
-    {"category": "Gameplay",  "name": "Basis Steuerung",     "tech_bonus": 1,  "cost": 0,      "week": 1,  "research_weeks": 1},
-    {"category": "Gameplay",  "name": "Physik-Engine",       "tech_bonus": 3,  "cost": 40000,  "week": 15, "research_weeks": 10},
-    {"category": "Gameplay",  "name": "Online-Multiplayer",  "tech_bonus": 6,  "cost": 120000, "week": 45, "research_weeks": 18},
-    # Level-Design
-    {"category": "Level",     "name": "Lineares Design",     "tech_bonus": 1,  "cost": 0,      "week": 1,  "research_weeks": 1},
-    {"category": "Level",     "name": "Open World",          "tech_bonus": 5,  "cost": 80000,  "week": 35, "research_weeks": 15},
+    {"category": "Engine", "name": "Papier-Logik", "cost": 1000, "tech_bonus": 10, "week": 1},
+    {"category": "Technik", "name": "Relais-Steuerung", "cost": 5000, "tech_bonus": 5, "week": 96},
+    {"category": "Technik", "name": "Lochkarten-Input", "cost": 13000, "tech_bonus": 10, "week": 288},
+    {"category": "Technik", "name": "Vakuum-Röhren", "cost": 23000, "tech_bonus": 15, "week": 528},
+    {"category": "Grafik", "name": "Oszilloskop-Grafik", "cost": 33000, "tech_bonus": 5, "week": 768},
+    {"category": "Technik", "name": "Transistor V1", "cost": 37000, "tech_bonus": 20, "week": 864},
+    {"category": "Technik", "name": "Magnetkernspeicher", "cost": 45000, "tech_bonus": 10, "week": 1056},
+    {"category": "Sound", "name": "Mono-Beep V1", "cost": 53000, "tech_bonus": 5, "week": 1248},
+    {"category": "Grafik", "name": "Vektor-Linien", "cost": 57000, "tech_bonus": 15, "week": 1344},
+    {"category": "Grafik", "name": "CRT-Standard", "cost": 65000, "tech_bonus": 10, "week": 1536},
+    {"category": "Grafik", "name": "ASCII-Grafik", "cost": 75000, "tech_bonus": 5, "week": 1776},
+    {"category": "Technik", "name": "Mikroprozessor", "cost": 83000, "tech_bonus": 30, "week": 1968},
+    {"category": "Grafik", "name": "Tilemaps V1", "cost": 89000, "tech_bonus": 20, "week": 2112},
+    {"category": "Grafik", "name": "Parallax-Scrolling", "cost": 93000, "tech_bonus": 15, "week": 2208},
+    {"category": "Grafik", "name": "Sprite-Rotation", "cost": 97000, "tech_bonus": 10, "week": 2304},
+    {"category": "Sound", "name": "FM-Synthese", "cost": 101000, "tech_bonus": 20, "week": 2400},
+    {"category": "Grafik", "name": "Vierfarb-Sprites", "cost": 105000, "tech_bonus": 10, "week": 2496},
+    {"category": "Physik", "name": "Physik V1", "cost": 109000, "tech_bonus": 10, "week": 2592},
+    {"category": "Gameplay", "name": "Savegame-Batterie", "cost": 111000, "tech_bonus": 30, "week": 2640},
+    {"category": "Sound", "name": "Wavetable-Sound", "cost": 115000, "tech_bonus": 25, "week": 2736},
+    {"category": "Grafik", "name": "Mode 7 Pseudo-3D", "cost": 119000, "tech_bonus": 30, "week": 2832},
+    {"category": "Grafik", "name": "Raycasting", "cost": 123000, "tech_bonus": 40, "week": 2928},
+    {"category": "Technik", "name": "Z-Buffer", "cost": 127000, "tech_bonus": 20, "week": 3024},
+    {"category": "Grafik", "name": "Texture Mapping", "cost": 129000, "tech_bonus": 30, "week": 3072},
+    {"category": "Sound", "name": "CD-Audio", "cost": 131000, "tech_bonus": 50, "week": 3120},
+    {"category": "Grafik", "name": "Echtzeit-Licht", "cost": 133000, "tech_bonus": 20, "week": 3168},
+    {"category": "KI", "name": "KI V1 (A*)", "cost": 135000, "tech_bonus": 20, "week": 3216},
+    {"category": "Gameplay", "name": "Multiplayer V2", "cost": 137000, "tech_bonus": 40, "week": 3264},
+    {"category": "Grafik", "name": "Vertex-Shader", "cost": 141000, "tech_bonus": 50, "week": 3360},
+    {"category": "Physik", "name": "Ragdoll-Physik", "cost": 145000, "tech_bonus": 40, "week": 3456},
+    {"category": "Grafik", "name": "Pixel-Shader", "cost": 149000, "tech_bonus": 60, "week": 3552},
+    {"category": "Technik", "name": "Blu-Ray Support", "cost": 153000, "tech_bonus": 100, "week": 3648},
+    {"category": "Physik", "name": "Physische Engine V3", "cost": 157000, "tech_bonus": 60, "week": 3744},
+    {"category": "Gameplay", "name": "Cloud-Saves", "cost": 161000, "tech_bonus": 20, "week": 3840},
+    {"category": "Grafik", "name": "Motion Capture", "cost": 165000, "tech_bonus": 80, "week": 3936},
+    {"category": "KI", "name": "Prozedurale Welt", "cost": 169000, "tech_bonus": 100, "week": 4032},
+    {"category": "Grafik", "name": "HDR-Support", "cost": 173000, "tech_bonus": 40, "week": 4128},
+    {"category": "Grafik", "name": "Echtzeit-Raytracing", "cost": 177000, "tech_bonus": 200, "week": 4224},
+    {"category": "KI", "name": "KI-Storytelling", "cost": 181000, "tech_bonus": 150, "week": 4320},
+    {"category": "Gameplay", "name": "Full-Body VR", "cost": 185000, "tech_bonus": 120, "week": 4416},
+    {"category": "Grafik", "name": "Generative Assets", "cost": 187000, "tech_bonus": 200, "week": 4464},
+    {"category": "Technik", "name": "Quanten-Ladezeit", "cost": 191000, "tech_bonus": 100, "week": 4560},
+    {"category": "Technik", "name": "Neural-Sync", "cost": 193000, "tech_bonus": 10, "week": 4608},
 ]
+
+
 
 # ============================================================
 # MITARBEITER-NAMEN (zufällig)
@@ -571,6 +812,13 @@ TRAINING_OPTIONS = [
         "cost": 40000,
         "description": "Ein Experten-Seminar. +20 Skill-Punkte auf den Hauptbereich.",
     },
+    {
+        "name": "Spezialisierungskurs",
+        "skill_boost": 0,
+        "cost": 100000,
+        "description": "Der Meister-Kurs. Verleiht dem Mitarbeiter eine sehr starke, dauerhafte Experten-Eigenschaft.",
+        "is_specialization": True
+    },
 ]
 
 # ============================================================
@@ -628,6 +876,117 @@ MARKETING_OPTIONS_PH5 = [
     {"name": "TV & Cinema Spots", "cost": 15000, "hype": 70, "description": "Massive Präsenz, sehr teuer."},
     {"name": "Global PR Tour", "cost": 50000, "hype": 150, "description": "Die ultimative Werbekampagne."},
 ]
+
+# ============================================================
+# HISTORISCHE JAHRESEVENTS (wird per Jahreswechsel ausgelöst)
+# effect: money | fans | market_boom | market_crash | hype
+# ============================================================
+HISTORICAL_YEAR_EVENTS = {
+    1930: {"text": "Weltwirtschaftskrise. -20% Profit. Fokus auf Billig-Logik.", "effect": "money", "value": -10000},
+    1931: {"text": "Erster 'Logic-Contest'. Forschungspunkte-Bonus (+25 RP).", "effect": "hype", "value": 20},
+    1932: {"text": "Olympia Los Angeles. Thema 'Sport' wird Trend.", "effect": "fans", "value": 5000},
+    1933: {"text": "Ende der Prohibition. Bars brauchen Unterhaltung (+20% Sales).", "effect": "money", "value": 10000},
+    1934: {"text": "Erfindung des Radars. Technik-Hype für Detektiv-Themen.", "effect": "hype", "value": 20},
+    1935: {"text": "Monopoly Veröffentlichung. Thema 'Brettspiel' ist Gigantisch.", "effect": "fans", "value": 5000},
+    1936: {"text": "Jesse Owens Erfolg. Thema 'Leichtathletik' erhält Boost.", "effect": "hype", "value": 20},
+    1937: {"text": "Luftschiff-Unglück. Thema 'Luftfahrt' verliert Hype (-50%).", "effect": "hype", "value": 20},
+    1938: {"text": "Mars-Hörspiel Panik. Thema 'Aliens' wird zum Dauerbrenner.", "effect": "hype", "value": 20},
+    1939: {"text": "Ausbruch 2. Weltkrieg. Steuern +10%, Recruiting verlangsamt.", "effect": "hype", "value": 20},
+    1940: {"text": "Enigma-Entschlüsselung. Forschung 'Logik' wird 30% effektiver.", "effect": "hype", "value": 20},
+    1941: {"text": "Pearl Harbor. Thema 'Pazifik-Krieg' wird Trend.", "effect": "fans", "value": 5000},
+    1942: {"text": "Zuse Z3 Demonstration. Thema 'Mathematik' erhält +200% Hype.", "effect": "hype", "value": 20},
+    1943: {"text": "Casablanca Film-Hype. Thema 'Agenten/Liebe' wird Trend.", "effect": "fans", "value": 5000},
+    1944: {"text": "D-Day. Thema 'Militär' erreicht Allzeithoch.", "effect": "hype", "value": 20},
+    1945: {"text": "Kriegsende. Friedens-Feiern (+100% Sales).", "effect": "money", "value": 10000},
+    1946: {"text": "Erster Linienflug. Thema 'Pioniere' wird Trend.", "effect": "fans", "value": 5000},
+    1947: {"text": "Roswell-UFO. Thema 'UFO' bringt 5 Jahre Hype.", "effect": "hype", "value": 20},
+    1948: {"text": "Marshall-Plan. Firmen-Zuschuss (Einmalig 1.000$).", "effect": "money", "value": -10000},
+    1949: {"text": "Erfindung der LP-Platte. Sound-Forschung wird freigeschaltet.", "effect": "hype", "value": 20},
+    1950: {"text": "Koreakrieg. Thema 'Militär' bleibt stark.", "effect": "hype", "value": 20},
+    1951: {"text": "Erste Computer 'UNIVAC'. Großrechner-Wahn (+50% Prestige).", "effect": "hype", "value": 20},
+    1952: {"text": "Erstes Video-Game (OXO). Geburtsstunde digitaler Unterhaltung.", "effect": "hype", "value": 20},
+    1953: {"text": "DNA-Entdeckung. Thema 'Wissenschaft' wird Trend.", "effect": "fans", "value": 5000},
+    1954: {"text": "Wunder von Bern. Thema 'Fussball' ist Pflicht für Erfolg.", "effect": "hype", "value": 20},
+    1955: {"text": "Disneyland. Thema 'Themenpark' boomt.", "effect": "hype", "value": 20},
+    1956: {"text": "Elvis Presley Durchbruch. Thema 'Musik/Rock' ist Trend.", "effect": "fans", "value": 5000},
+    1957: {"text": "Sputnik 1. Weltraum-Trend (500% Hype).", "effect": "fans", "value": 5000},
+    1958: {"text": "Tennis for Two. Sport-Genre wird moderner.", "effect": "hype", "value": 20},
+    1959: {"text": "Barbie-Puppe. Thema 'Mode/Puppen' wird Trend.", "effect": "fans", "value": 5000},
+    1960: {"text": "Pille-Einführung. Thema 'Freiheit' wird Trend.", "effect": "fans", "value": 5000},
+    1961: {"text": "Berliner Mauerbau. Exportkosten nach Osten steigen um 50%.", "effect": "hype", "value": 20},
+    1962: {"text": "Spacewar! Release. Action-Genre wird erfunden.", "effect": "hype", "value": 20},
+    1963: {"text": "Kennedy Attentat. Weltweite Trauer: Sales -30%.", "effect": "money", "value": -10000},
+    1964: {"text": "Beatles in USA. Thema 'Band' erhält massiven Bonus.", "effect": "hype", "value": 20},
+    1965: {"text": "Vietnam-Eskalation. Thema 'Chaos/Protest' wird Trend.", "effect": "fans", "value": 5000},
+    1966: {"text": "Star Trek. Sci-Fi RPGs werden möglich.", "effect": "hype", "value": 20},
+    1967: {"text": "Summer of Love. Thema 'Hippie' wird Trend.", "effect": "fans", "value": 5000},
+    1968: {"text": "Mai-Unruhen. Personal verlangt mehr Lohn (+15%).", "effect": "hype", "value": 20},
+    1969: {"text": "Apollo 11. Maximaler Hype für Technik-Menschheit.", "effect": "hype", "value": 20},
+    1970: {"text": "Earth Day Start. Thema 'Natur' wird Trend.", "effect": "fans", "value": 5000},
+    1971: {"text": "Oregon Trail. Thema 'Pioniere/Lernen' wird Trend.", "effect": "fans", "value": 5000},
+    1972: {"text": "Pong Release. Die Industrie explodiert (+200% Markt).", "effect": "fans", "value": 5000},
+    1973: {"text": "Ölkrise. Stromkosten im Studio +50%.", "effect": "hype", "value": 20},
+    1974: {"text": "D&D Veröffentlichung. RPG-Genre wird massentauglich.", "effect": "hype", "value": 20},
+    1975: {"text": "Bill Gates gründet MS. Rivalen-KI wird intelligenter.", "effect": "hype", "value": 20},
+    1976: {"text": "Apple I Release. Heimcomputer-Markt öffnet sich.", "effect": "fans", "value": -5000},
+    1977: {"text": "Star Wars. Thema 'Weltraum-Krieg' ist Gigantisch.", "effect": "fans", "value": 5000},
+    1978: {"text": "Space Invaders. Action-Genre dominiert den Markt.", "effect": "fans", "value": -5000},
+    1979: {"text": "Sony Walkman. Sound-Marketing wird verfügbar.", "effect": "hype", "value": 20},
+    1980: {"text": "Pac-Man Fieber. Geschicklichkeits-Genre ist Trend.", "effect": "fans", "value": 5000},
+    1981: {"text": "IBM PC Veröffentlichung. Standardisierung der Büro-Technik.", "effect": "hype", "value": 20},
+    1982: {"text": "Marktüberschwemmung. **Crash:** Nur Top-Spiele verkaufen sich.", "effect": "hype", "value": 20},
+    1983: {"text": "Dragon's Lair (LD). Grafik-Anforderungen steigen massiv.", "effect": "hype", "value": 20},
+    1984: {"text": "Tetris Erfindung. Puzzle-Genre erhält +300% Hype.", "effect": "hype", "value": 20},
+    1985: {"text": "Super Mario Bros. Platformer wird zum Weltstandard.", "effect": "hype", "value": 20},
+    1986: {"text": "Zelda Release. Umfang-Anforderungen steigen (Speichern).", "effect": "hype", "value": 20},
+    1987: {"text": "Final Fantasy. RPG-Storytelling wird wichtiger.", "effect": "hype", "value": 20},
+    1988: {"text": "Mega Drive Launch. 16-Bit Grafik wird Erwartungs-Standard.", "effect": "hype", "value": 20},
+    1989: {"text": "Gameboy Release. Der Handheld-Markt explodiert.", "effect": "fans", "value": -5000},
+    1990: {"text": "Mauerfall (BRD). Neuer Markt 'Ostdeutschland' (+15% Sales).", "effect": "money", "value": 10000},
+    1991: {"text": "Street Fighter II. Fighting-Genre wird Trend.", "effect": "fans", "value": 5000},
+    1992: {"text": "Wolfenstein 3D. Ego-Shooter Genre wird erfunden.", "effect": "hype", "value": 20},
+    1993: {"text": "Doom Release. Gewalt-Debatte: Zensur-Risiko steigt.", "effect": "hype", "value": 20},
+    1994: {"text": "PlayStation Launch. CD-ROM wird zum Pflicht-Medium.", "effect": "hype", "value": 20},
+    1995: {"text": "Windows 95. PC-Markt wird Einsteigerfreundlich.", "effect": "fans", "value": -5000},
+    1996: {"text": "Pokémon Boom. Thema 'Monster' ist unschlagbar.", "effect": "hype", "value": 20},
+    1997: {"text": "Ultima Online. MMO-Zeitalter beginnt (Serverkosten!).", "effect": "hype", "value": 20},
+    1998: {"text": "Metal Gear Solid. Stealth-Action wird Trend.", "effect": "fans", "value": 5000},
+    1999: {"text": "Matrix Film. Thema 'Simulation/Neo' ist Trend.", "effect": "fans", "value": 5000},
+    2000: {"text": "PS2 Launch. DVD-Standard setzt sich durch.", "effect": "hype", "value": 20},
+    2001: {"text": "9/11 Terror. Markt ist sensibel für Gewalt (-20%).", "effect": "fans", "value": -5000},
+    2002: {"text": "Xbox Live Start. Online-Multiplayer wird Standard.", "effect": "hype", "value": 20},
+    2003: {"text": "Steam Launch. Digitaler Verkauf öffnet seine Tore.", "effect": "hype", "value": 20},
+    2004: {"text": "World of Warcraft. Abomodelle bringen Millionen Dollar.", "effect": "hype", "value": 20},
+    2005: {"text": "YouTube Gründung. Das Ende der Print-Magazine naht.", "effect": "hype", "value": 20},
+    2006: {"text": "Wii Console. Fuchtel-Steuerung wird Megatrend.", "effect": "hype", "value": 20},
+    2007: {"text": "iPhone Release. Casual-Gaming vernichtet Core-Markt.", "effect": "fans", "value": -5000},
+    2008: {"text": "Finanzkrise. Bank-Zinsen +20%.", "effect": "money", "value": 10000},
+    2009: {"text": "Minecraft Alpha. Sandbox/Voxel wird zum Genre-König.", "effect": "hype", "value": 20},
+    2010: {"text": "iPad Release. Touch-Gaming wird massiv.", "effect": "hype", "value": 20},
+    2011: {"text": "Twitch Launch. Streamer entscheiden über Erfolg/Misserfolg.", "effect": "hype", "value": 20},
+    2012: {"text": "Crowdfunding-Boom. Du kannst Projekte vorfinanzieren lassen.", "effect": "hype", "value": 20},
+    2013: {"text": "GTA V Release. Open-World Standards sind extrem hoch.", "effect": "hype", "value": 20},
+    2014: {"text": "VR-Fieber (Oculus). Thema 'VR' bringt Prestige.", "effect": "hype", "value": 20},
+    2015: {"text": "Witcher 3 Release. Story-Telling muss Weltklasse sein.", "effect": "hype", "value": 20},
+    2016: {"text": "Switch Ankündigung. Hybrid-Gaming wird Thema.", "effect": "hype", "value": 20},
+    2017: {"text": "Battle Royale Boom. Jeder will 100-Spieler-Modus.", "effect": "hype", "value": 20},
+    2018: {"text": "Raytracing-GPU. Grafik-Wertungen über 90 fordern RT.", "effect": "hype", "value": 20},
+    2019: {"text": "Game Pass Start. Neue Monetarisierung: Pauschale.", "effect": "hype", "value": 20},
+    2020: {"text": "Pandemie / Lockdown. Alle Sales +150%. Home-Office möglich.", "effect": "money", "value": 10000},
+    2021: {"text": "Krypto-Crash. In-Game Krypto-Gewinne wertlos.", "effect": "hype", "value": 20},
+    2022: {"text": "Elden Ring Boom. Schwierige Spiele werden zum Trend.", "effect": "fans", "value": 5000},
+    2023: {"text": "KI-Explosion. Programmierung 50% schneller (KI-Tool).", "effect": "hype", "value": 20},
+    2024: {"text": "Erste Mars-Mission. Thema 'Mars' ist Trend bis Ende Spiel.", "effect": "fans", "value": 5000},
+    2025: {"text": "Cyber-Brain Launch. Neue Plattform 'Neural' verfügbar.", "effect": "hype", "value": 20},
+    2026: {"text": "Neural-Sync Standard. Das Spiel endet hier - oder geht ewig weiter.", "effect": "hype", "value": 20},
+}
+
+
+
+def get_year_event(calendar_year):
+    """Gibt das historische Jahresevent für ein gegebenes Spieljahr zurück, oder None."""
+    return HISTORICAL_YEAR_EVENTS.get(calendar_year, None)
+
 
 # ============================================================
 # TEMPLATES (E-Mails & Reviews)
@@ -711,9 +1070,31 @@ def get_available_platforms(week):
 
 
 def get_available_features(week):
-    """Gibt Engine-Features zurück, die in der aktuellen Woche erforschbar sind."""
+    """Gibt Engine-Features zurück, die in der aktuellen Woche erforschbar sind.
+    Unterstützt sowohl 'week' (alt) als auch 'unlock_year' (neu, historisch).
+    """
     current_week = int(week)
-    return [f for f in ENGINE_FEATURES if int(f["week"]) <= current_week]
+    result = []
+    for f in ENGINE_FEATURES:
+        if "week" in f:
+            # Altes Format: direkte Woche
+            if int(f["week"]) <= current_week:
+                result.append(f)
+        elif "unlock_year" in f:
+            # Neues Format: unlock_year → Spielwoche berechnen
+            unlock_week = (f["unlock_year"] - START_YEAR) * WEEKS_PER_YEAR + 1
+            if unlock_week <= current_week:
+                result.append(f)
+    return result
+
+
+def get_feature_unlock_week(feature):
+    """Gibt die Spielwoche zurück, ab der ein Feature erforschbar ist."""
+    if "week" in feature:
+        return int(feature["week"])
+    elif "unlock_year" in feature:
+        return (feature["unlock_year"] - START_YEAR) * WEEKS_PER_YEAR + 1
+    return 1
 
 # ============================================================
 # ZUFÄLLIGE MARKTEREIGNISSE
@@ -766,6 +1147,77 @@ RANDOM_EVENTS = [
         "effect": "fans",
         "value": -500,
     },
+    # Neue Events (v2.4)
+    {
+        "id": "indie_award",
+        "effect": "fans",
+        "value": 1500,
+    },
+    {
+        "id": "talent_drought",
+        "effect": "money",
+        "value": -8000,
+    },
+    {
+        "id": "fan_tournament",
+        "effect": "fans",
+        "value": 3000,
+    },
+    {
+        "id": "celebrity_plays",
+        "effect": "fans",
+        "value": 5000,
+    },
+    {
+        "id": "tax_refund",
+        "effect": "money",
+        "value": 18000,
+    },
+    {
+        "id": "crowdfunding",
+        "effect": "money",
+        "value": 30000,
+    },
+    {
+        "id": "gamescom",
+        "effect": "hype",
+        "value": 40,
+    },
+    {
+        "id": "summer_slump",
+        "effect": "fans",
+        "value": -800,
+    },
+    {
+        "id": "christmas_rush",
+        "effect": "money",
+        "value": 20000,
+    },
+    {
+        "id": "anniversary",
+        "effect": "fans",
+        "value": 2500,
+    },
+    {
+        "id": "plagiat_lawsuit",
+        "effect": "money",
+        "value": -25000,
+    },
+    {
+        "id": "industry_conference",
+        "effect": "hype",
+        "value": 25,
+    },
+    {
+        "id": "super_review",
+        "effect": "fans",
+        "value": 4000,
+    },
+    {
+        "id": "hardware_failure",
+        "effect": "money",
+        "value": -15000,
+    },
     # --- Dauerhafte Events (mit duration) ---
     {
         "id": "hacker_attack",
@@ -787,5 +1239,229 @@ RANDOM_EVENTS = [
         "duration": 3,
         "effect": "dev_speed_drop",
         "multiplier": 0.5
-    }
+    },
+    {
+        "id": "talent_boom",
+        "type": "positive",
+        "duration": 4,
+        "effect": "dev_speed_boost",
+        "multiplier": 1.5
+    },
+    {
+        "id": "market_hype",
+        "type": "positive",
+        "duration": 3,
+        "effect": "sales_boost",
+        "multiplier": 1.4
+    },
 ]
+
+
+# ============================================================
+# HISTORISCHE THEMEN (Freigeschaltet per Spieljahr 1930-2026)
+# unlock_year = erstes Jahr, in dem das Thema nutzbar ist
+# hype_level: 1=Gering, 2=Mittel, 3=Hoch, 4=Extrem, 5=Gigantisch
+# synergy: Genre, das am besten passt
+# ============================================================
+HISTORICAL_TOPICS = [
+    # === Die Pionier-Dekade 1930–1939 ===
+    {"name": "Abakus",          "unlock_year": 1930, "synergy": "Puzzle",    "hype_level": 1},
+    {"name": "Logistik",        "unlock_year": 1930, "synergy": "Strategie", "hype_level": 3},
+    {"name": "Schach",          "unlock_year": 1930, "synergy": "Puzzle",    "hype_level": 2},
+    {"name": "Mathematik",      "unlock_year": 1930, "synergy": "Puzzle",    "hype_level": 3},
+    {"name": "Astronomie",      "unlock_year": 1931, "synergy": "Strategie", "hype_level": 2},
+    {"name": "Landwirtschaft",  "unlock_year": 1931, "synergy": "Simulation","hype_level": 2},
+    {"name": "Kochen",          "unlock_year": 1932, "synergy": "Simulation","hype_level": 1},
+    {"name": "Politik",         "unlock_year": 1932, "synergy": "Strategie", "hype_level": 2},
+    {"name": "Detektiv",        "unlock_year": 1933, "synergy": "Abenteuer", "hype_level": 3},
+    {"name": "Kartenspiele",    "unlock_year": 1933, "synergy": "Puzzle",    "hype_level": 3},
+    {"name": "Architektur",     "unlock_year": 1934, "synergy": "Simulation","hype_level": 2},
+    {"name": "Postwesen",       "unlock_year": 1934, "synergy": "Simulation","hype_level": 1},
+    {"name": "Zirkus",          "unlock_year": 1935, "synergy": "Casual",    "hype_level": 2},
+    {"name": "Bergbau",         "unlock_year": 1935, "synergy": "Simulation","hype_level": 2},
+    {"name": "Eisenbahn",       "unlock_year": 1936, "synergy": "Simulation","hype_level": 3},
+    {"name": "Seefahrt",        "unlock_year": 1936, "synergy": "Abenteuer", "hype_level": 2},
+    {"name": "Kryptografie",    "unlock_year": 1937, "synergy": "Puzzle",    "hype_level": 4},
+    {"name": "Feuerwehr",       "unlock_year": 1937, "synergy": "Simulation","hype_level": 2},
+    {"name": "Mars-Invasion",   "unlock_year": 1938, "synergy": "Action",    "hype_level": 4},
+    {"name": "Zauberei",        "unlock_year": 1938, "synergy": "Abenteuer", "hype_level": 2},
+    {"name": "Militär",         "unlock_year": 1939, "synergy": "Strategie", "hype_level": 4},
+    {"name": "Chemie",          "unlock_year": 1939, "synergy": "Puzzle",    "hype_level": 2},
+
+    # === Die Aufbau-Jahre 1940–1959 ===
+    {"name": "U-Boot",          "unlock_year": 1940, "synergy": "Simulation","hype_level": 3},
+    {"name": "Luftschlacht",    "unlock_year": 1941, "synergy": "Action",    "hype_level": 4},
+    {"name": "Spionage",        "unlock_year": 1942, "synergy": "Abenteuer", "hype_level": 3},
+    {"name": "Panzer",          "unlock_year": 1943, "synergy": "Simulation","hype_level": 3},
+    {"name": "Fallschirmjäger", "unlock_year": 1944, "synergy": "Action",    "hype_level": 2},
+    {"name": "Wiederaufbau",    "unlock_year": 1945, "synergy": "Simulation","hype_level": 3},
+    {"name": "Journalismus",    "unlock_year": 1946, "synergy": "Strategie", "hype_level": 2},
+    {"name": "UFOs",            "unlock_year": 1947, "synergy": "Abenteuer", "hype_level": 4},
+    {"name": "Roboter",         "unlock_year": 1948, "synergy": "Action",    "hype_level": 3},
+    {"name": "Dschungel",       "unlock_year": 1949, "synergy": "Abenteuer", "hype_level": 2},
+    {"name": "Archäologie",     "unlock_year": 1950, "synergy": "Abenteuer", "hype_level": 3},
+    {"name": "Weltraum",        "unlock_year": 1951, "synergy": "Simulation","hype_level": 4},
+    {"name": "Wilder Westen",   "unlock_year": 1952, "synergy": "Action",    "hype_level": 3},
+    {"name": "Bergsteigen",     "unlock_year": 1953, "synergy": "Sport",     "hype_level": 2},
+    {"name": "Fußball",         "unlock_year": 1954, "synergy": "Sport",     "hype_level": 5},
+    {"name": "Vergnügungspark", "unlock_year": 1955, "synergy": "Simulation","hype_level": 3},
+    {"name": "Monster",         "unlock_year": 1956, "synergy": "Horror",    "hype_level": 2},
+    {"name": "Satelliten",      "unlock_year": 1957, "synergy": "Simulation","hype_level": 3},
+    {"name": "Tennis",          "unlock_year": 1958, "synergy": "Sport",     "hype_level": 4},
+    {"name": "Rennwagen",       "unlock_year": 1959, "synergy": "Rennspiel", "hype_level": 3},
+
+    # === Pop-Kultur Ära 1960–1979 ===
+    {"name": "Tiefsee",         "unlock_year": 1960, "synergy": "Abenteuer", "hype_level": 2},
+    {"name": "Mafia",           "unlock_year": 1961, "synergy": "Action",    "hype_level": 3},
+    {"name": "Fantasy",         "unlock_year": 1962, "synergy": "RPG",       "hype_level": 3},
+    {"name": "Agenten",         "unlock_year": 1963, "synergy": "Abenteuer", "hype_level": 4},
+    {"name": "Popstars",        "unlock_year": 1964, "synergy": "Casual",    "hype_level": 3},
+    {"name": "Dinosaurier",     "unlock_year": 1965, "synergy": "Action",    "hype_level": 4},
+    {"name": "Ninjas",          "unlock_year": 1966, "synergy": "Action",    "hype_level": 3},
+    {"name": "Hippies",         "unlock_year": 1967, "synergy": "Simulation","hype_level": 2},
+    {"name": "Weltrevolution",  "unlock_year": 1968, "synergy": "Strategie", "hype_level": 3},
+    {"name": "Mondbasis",       "unlock_year": 1969, "synergy": "Simulation","hype_level": 5},
+    {"name": "Kung-Fu",         "unlock_year": 1970, "synergy": "Kampfspiel","hype_level": 3},
+    {"name": "Piraten",         "unlock_year": 1971, "synergy": "Abenteuer", "hype_level": 4},
+    {"name": "Basketball",      "unlock_year": 1972, "synergy": "Sport",     "hype_level": 2},
+    {"name": "Motorrad",        "unlock_year": 1973, "synergy": "Rennspiel", "hype_level": 3},
+    {"name": "Verliese",        "unlock_year": 1974, "synergy": "RPG",       "hype_level": 4},
+    {"name": "Polizei",         "unlock_year": 1975, "synergy": "Action",    "hype_level": 2},
+    {"name": "Alien-Jagd",      "unlock_year": 1976, "synergy": "Action",    "hype_level": 3},
+    {"name": "Laserschwert",    "unlock_year": 1977, "synergy": "Action",    "hype_level": 4},
+    {"name": "Invaders",        "unlock_year": 1978, "synergy": "Action",    "hype_level": 4},
+    {"name": "Horrorhaus",      "unlock_year": 1979, "synergy": "Horror",    "hype_level": 3},
+
+    # === Digitale Explosion 1980–1999 ===
+    {"name": "Gelbe Fresspunkte","unlock_year": 1980, "synergy": "Puzzle",   "hype_level": 5},
+    {"name": "Büro-Alltag",     "unlock_year": 1981, "synergy": "Simulation","hype_level": 1},
+    {"name": "Cyberpunk",       "unlock_year": 1982, "synergy": "RPG",       "hype_level": 4},
+    {"name": "Vampire",         "unlock_year": 1983, "synergy": "Horror",    "hype_level": 3},
+    {"name": "Breakdance",      "unlock_year": 1984, "synergy": "Casual",    "hype_level": 2},
+    {"name": "Klempner",        "unlock_year": 1985, "synergy": "Action",    "hype_level": 5},
+    {"name": "Postapokalypse",  "unlock_year": 1986, "synergy": "RPG",       "hype_level": 3},
+    {"name": "Mechs",           "unlock_year": 1987, "synergy": "Action",    "hype_level": 4},
+    {"name": "Skateboarding",   "unlock_year": 1988, "synergy": "Sport",     "hype_level": 3},
+    {"name": "Taschenmonster",  "unlock_year": 1989, "synergy": "RPG",       "hype_level": 5},
+    {"name": "Krankenhaus",     "unlock_year": 1990, "synergy": "Simulation","hype_level": 3},
+    {"name": "Freizeitpark",    "unlock_year": 1991, "synergy": "Simulation","hype_level": 4},
+    {"name": "Mars-Shooter",    "unlock_year": 1992, "synergy": "Action",    "hype_level": 5},
+    {"name": "Urzeit/Survival", "unlock_year": 1993, "synergy": "Simulation","hype_level": 3},
+    {"name": "Anime",           "unlock_year": 1994, "synergy": "RPG",       "hype_level": 3},
+    {"name": "Hacking",         "unlock_year": 1995, "synergy": "Puzzle",    "hype_level": 4},
+    {"name": "Stealth-Agent",   "unlock_year": 1996, "synergy": "Action",    "hype_level": 4},
+    {"name": "Elfen & Orks",    "unlock_year": 1997, "synergy": "RPG",       "hype_level": 3},
+    {"name": "Survival-Insel",  "unlock_year": 1998, "synergy": "Abenteuer", "hype_level": 3},
+    {"name": "Skandal-TV",      "unlock_year": 1999, "synergy": "Simulation","hype_level": 2},
+
+    # === Neues Jahrtausend 2000–2015 ===
+    {"name": "Lebens-Sim",      "unlock_year": 2000, "synergy": "Simulation","hype_level": 5},
+    {"name": "Zombie-Hype",     "unlock_year": 2001, "synergy": "Horror",    "hype_level": 4},
+    {"name": "Parkplatz-Manager","unlock_year": 2002, "synergy": "Simulation","hype_level": 1},
+    {"name": "E-Sport",         "unlock_year": 2003, "synergy": "Action",    "hype_level": 3},
+    {"name": "Zauberschule",    "unlock_year": 2004, "synergy": "RPG",       "hype_level": 4},
+    {"name": "Sandbox/Voxel",   "unlock_year": 2005, "synergy": "Abenteuer", "hype_level": 5},
+    {"name": "Wikinger",        "unlock_year": 2006, "synergy": "Action",    "hype_level": 4},
+    {"name": "Smartphones",     "unlock_year": 2007, "synergy": "Puzzle",    "hype_level": 3},
+    {"name": "Freerunning",     "unlock_year": 2008, "synergy": "Action",    "hype_level": 2},
+    {"name": "Block-Bauen",     "unlock_year": 2009, "synergy": "Abenteuer", "hype_level": 5},
+    {"name": "Social Network",  "unlock_year": 2010, "synergy": "Simulation","hype_level": 3},
+    {"name": "Indie-Entwickler","unlock_year": 2011, "synergy": "Abenteuer", "hype_level": 2},
+    {"name": "Battle-Royale",   "unlock_year": 2012, "synergy": "Action",    "hype_level": 5},
+    {"name": "VR-Simulation",   "unlock_year": 2013, "synergy": "Simulation","hype_level": 3},
+    {"name": "Farming-Hype",    "unlock_year": 2014, "synergy": "Simulation","hype_level": 4},
+    {"name": "Cyber-Krieg",     "unlock_year": 2015, "synergy": "Strategie", "hype_level": 3},
+
+    # === Die Zukunft 2016–2026 ===
+    {"name": "AR-Jagd",         "unlock_year": 2016, "synergy": "Action",    "hype_level": 3},
+    {"name": "Krypto-Mining",   "unlock_year": 2017, "synergy": "Strategie", "hype_level": 2},
+    {"name": "Mars-Kolonisierung","unlock_year": 2018,"synergy": "Simulation","hype_level": 4},
+    {"name": "Streaming-Star",  "unlock_year": 2019, "synergy": "Simulation","hype_level": 3},
+    {"name": "KI-Dystopie",     "unlock_year": 2020, "synergy": "Abenteuer", "hype_level": 3},
+    {"name": "NFT-Sammeln",     "unlock_year": 2021, "synergy": "Strategie", "hype_level": 1},
+    {"name": "Metaverse",       "unlock_year": 2022, "synergy": "Simulation","hype_level": 2},
+    {"name": "KI-Utopie",       "unlock_year": 2023, "synergy": "Strategie", "hype_level": 4},
+    {"name": "Endzeit-Bote",    "unlock_year": 2024, "synergy": "Action",    "hype_level": 3},
+    {"name": "Gen-Labor",       "unlock_year": 2025, "synergy": "Simulation","hype_level": 4},
+    {"name": "Neural-Link",     "unlock_year": 2026, "synergy": "RPG",       "hype_level": 5},
+]
+
+
+def get_historical_topics_for_year(calendar_year):
+    """Gibt alle historischen Themen zurück, die bis zum gegebenen Jahr verfügbar sind."""
+    return [t for t in HISTORICAL_TOPICS if t["unlock_year"] <= calendar_year]
+
+
+def get_newly_unlocked_topics(calendar_year):
+    """Gibt alle Themen zurück, die GENAU in diesem Jahr neu verfügbar werden."""
+    return [t for t in HISTORICAL_TOPICS if t["unlock_year"] == calendar_year]
+
+# ============================================================
+# ACHIEVEMENTS (Meilensteine)
+# ============================================================
+ACHIEVEMENTS = [
+    {"id": "millionaire", "type": "money", "threshold": 1000000, "bonus_type": "fans", "bonus_value": 5000},
+    {"id": "mega_millionaire", "type": "money", "threshold": 10000000, "bonus_type": "fans", "bonus_value": 50000},
+    {"id": "first_aaa", "type": "game_size", "threshold": "AAA", "bonus_type": "hype", "bonus_value": 50},
+    {"id": "star_dev", "type": "fans", "threshold": 1000000, "bonus_type": "money", "bonus_value": 500000},
+    {"id": "masterpiece", "type": "score", "threshold": 10.0, "bonus_type": "hype", "bonus_value": 100},
+    {"id": "goty_winner", "type": "goty", "threshold": 1, "bonus_type": "fans", "bonus_value": 10000},
+]
+
+# ============================================================
+# PHASE F: MERCHANDISE
+# ============================================================
+MERCH_TYPES = [
+    {
+        "name": "T-Shirts",
+        "production_cost": 5,      # Kosten pro Stück
+        "sell_price": 20,          # Verkaufspreis
+        "hype_multi": 1.0,         # Wie schnell sie sich verkaufen (Basierend auf Game-Hype/Fans)
+        "description": "Günstige Produktion, stetiger Absatz.",
+    },
+    {
+        "name": "Plüschtiere",
+        "production_cost": 10,
+        "sell_price": 35,
+        "hype_multi": 1.5,
+        "description": "Mittlere Kosten. Fans lieben Plüschtiere ihrer Lieblingshelden.",
+    },
+    {
+        "name": "Sammlerfiguren",
+        "production_cost": 50,
+        "sell_price": 150,
+        "hype_multi": 0.5,         # Verkaufen sich langsamer, aber hohe Marge
+        "description": "Teure Premium-Produktion für Hardcore-Fans.",
+    },
+]
+
+# ============================================================
+# PHASE F: E-SPORTS TURNIERE
+# ============================================================
+ESPORTS_TOURNAMENTS = [
+    {
+        "name": "Lokales Turnier",
+        "cost": 50000,             # Veranstaltungs-Kosten
+        "hype_bonus": 50,          # Hype für das Spiel (Push für Verkäufe/MMO-Zahlen)
+        "fan_bonus": 5000,         # Neue Fans
+        "min_game_sales": 10000,   # Spiel muss mind. X Mal verkauft sein (oder Spieler haben)
+        "description": "Ein kleines lokales Turnier. Bringt ordentlich Hype.",
+    },
+    {
+        "name": "Regionale Meisterschaft",
+        "cost": 250000,
+        "hype_bonus": 150,
+        "fan_bonus": 25000,
+        "min_game_sales": 100000,
+        "description": "Großes Turnier mit ansprechendem Preispool.",
+    },
+    {
+        "name": "World Championship",
+        "cost": 1500000,
+        "hype_bonus": 500,
+        "fan_bonus": 150000,
+        "min_game_sales": 1000000,
+        "description": "Das gigantische E-Sports Jahreshighlight. Maximaler Hype!",
+    },
+]
+

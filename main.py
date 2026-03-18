@@ -32,7 +32,9 @@ from menus import (
     ResearchMenu,
     FeatureResearchMenu,
     GenreResearchMenu,
+    TopicResearchMenu,
     AudienceResearchMenu,
+    TechnologyResearchMenu,
     EngineCreateNameMenu,
     EngineFeatureSelectMenu,
     OfficeMenu,
@@ -63,6 +65,7 @@ from menus import (
     SequelMenu,
     ChartMenu,
     AAADevEventMenu,
+    KeybindingMenu,
     LicenseShopMenu,
     LicenseSelectMenu,
     AddonMenu,
@@ -74,30 +77,21 @@ from menus import (
     MMOOptionsMenu,
     PublisherDealsMenu,
     PublisherDealDetailsMenu,
+    UpdateConfirmMenu,
+    MerchMenu,
+    MerchAmountMenu,
+    ESportsMenu,
+    AcquisitionMenu,
 )
 
 
-def main():
-    # ---- Initialisierung ----
-    pygame.init()
-    screen = pygame.display.set_mode((500, 300))
-    pygame.display.set_caption("Audio Studio Tycoon - Audio Edition")
-    audio = AudioManager()
-    os.system("cls" if os.name == "nt" else "clear")
 
-    state = GameState()
-    state.audio = audio  # Audio-Instanz für globale Text-Ausgaben in Models
-    
-    # NEU: Globale Einstellungen sofort beim Start laden
-    state.load_global_settings()
-    set_language(state.settings.get('language', 'de'))
-    audio.set_music_enabled(state.settings.get('music_enabled', True))
-    audio.update_tts_engine(state.settings.get('tts_engine', 'auto'))
-
+def get_menu_factories(audio, state):
     # Umbau: Dynamische Menü-Generierung über Lambda-Funktionen
-    menu_factories = {
+    return {
         # Haupt-Flow
         "main_menu": lambda: MainMenu(audio, state),
+        "update_confirm_menu": lambda: UpdateConfirmMenu(audio, state),
         "company_name_input": lambda: CompanyNameMenu(audio, state),
         "game_menu": lambda: GameMenu(audio, state),
 
@@ -111,6 +105,8 @@ def main():
         "engine_select_menu": lambda: EngineSelectMenu(audio, state),
         "remaster_select": lambda: RemasterSelectMenu(audio, state),
         "publisher_menu": lambda: PublisherMenu(audio, state),
+        "settings_menu": lambda: SettingsMenu(audio, state, lambda: "main_menu"),
+        "keybinding_menu": lambda: KeybindingMenu(audio, state),
         "expo_menu": lambda: ExpoMenu(audio, state),
         "game_name_input": lambda: GameNameMenu(audio, state),
         "slider_menu": lambda: DevelopmentSliderMenu(audio, state),
@@ -128,7 +124,9 @@ def main():
         "research_menu": lambda: ResearchMenu(audio, state),
         "feature_research_menu": lambda: FeatureResearchMenu(audio, state),
         "genre_research_menu": lambda: GenreResearchMenu(audio, state),
+        "topic_research_menu": lambda: TopicResearchMenu(audio, state),
         "audience_research_menu": lambda: AudienceResearchMenu(audio, state),
+        "technology_research_menu": lambda: TechnologyResearchMenu(audio, state),
         "engine_create_name": lambda: EngineCreateNameMenu(audio, state),
         "engine_feature_select": lambda: EngineFeatureSelectMenu(audio, state),
         "hardware_dev_menu": lambda: HardwareDevMenu(audio, state),
@@ -162,7 +160,10 @@ def main():
         "mmo_options_menu": lambda: MMOOptionsMenu(audio, state),
         "publisher_deals_menu": lambda: PublisherDealsMenu(audio, state),
         "publisher_deal_details_menu": lambda: PublisherDealDetailsMenu(audio, state),
-        "settings_menu": lambda: SettingsMenu(audio, state, lambda: "main_menu"),
+        "merch_menu": lambda: MerchMenu(audio, state),
+        "merch_amount_menu": lambda: MerchAmountMenu(audio, state),
+        "esports_menu": lambda: ESportsMenu(audio, state),
+        "acquisition_menu": lambda: AcquisitionMenu(audio, state),
         "settings_menu_ingame": lambda: SettingsMenu(audio, state, lambda: "game_menu"),
         "save_menu": lambda: SaveMenu(audio, state),
         "load_menu": lambda: LoadMenu(audio, state),
@@ -171,14 +172,83 @@ def main():
         "aaa_dev_event_menu": lambda: AAADevEventMenu(audio, state),
     }
 
+def main():
+    # ---- Initialisierung ----
+    # Ensure window is forcefully focused when created
+    os.environ['SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS'] = '0'
+    
+    pygame.init()
+    pygame.key.set_repeat(300, 50)  # Flüssiges Scrollen: 300ms Delay, dann alle 50ms ein Event
+    screen = pygame.display.set_mode((500, 300))
+    pygame.display.set_caption("Audio Studio Tycoon - Audio Edition")
+
+    audio = AudioManager()
+    os.system("cls" if os.name == "nt" else "clear")
+
+    state = GameState()
+    state.audio = audio  # Audio-Instanz für globale Text-Ausgaben in Models
+    
+    # NEU: Globale Einstellungen sofort beim Start laden
+    state.load_global_settings()
+    set_language(state.settings.get('language', 'de'))
+    audio.set_music_enabled(state.settings.get('music_enabled', True))
+    audio.update_tts_engine(state.settings.get('tts_engine', 'auto'))
+
     current_key = "main_menu"
+
+    # AUTO-UPDATE BEIM START
+    if state.settings.get('auto_update', True):
+        try:
+            from updater import check_for_updates
+            import json
+            current_version = "1.0.0"
+            if os.path.exists("version.json"):
+                with open("version.json", "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    current_version = data.get("version", "1.0.0")
+            
+            # Start prüfen (mit Timeout 2 sekunden)
+            result = check_for_updates(current_version)
+            if result and result.get("update_available"):
+                state.pending_update = result
+                current_key = "update_confirm_menu"
+        except Exception:
+            pass
+
+    menu_factories = get_menu_factories(audio, state)
+
     current_menu = menu_factories[current_key]()
+
 
     # ---- Willkommensnachricht ----
     audio.speak(get_text("main_welcome"))
     time.sleep(0.3)
     audio.play_music("music_back")
     current_menu.announce_entry()
+
+    import ctypes
+    if os.name == 'nt':
+        try:
+            hwnd = pygame.display.get_wm_info()["window"]
+            user32 = ctypes.windll.user32
+            user32.ShowWindow(hwnd, 5)
+            current_thread = ctypes.windll.kernel32.GetCurrentThreadId()
+            foreground_window = user32.GetForegroundWindow()
+            if foreground_window != hwnd and foreground_window != 0:
+                foreground_thread = user32.GetWindowThreadProcessId(foreground_window, None)
+                if foreground_thread != current_thread:
+                    user32.AttachThreadInput(foreground_thread, current_thread, True)
+                    user32.SetForegroundWindow(hwnd)
+                    user32.SetFocus(hwnd)
+                    user32.AttachThreadInput(foreground_thread, current_thread, False)
+                else:
+                    user32.SetForegroundWindow(hwnd)
+                    user32.SetFocus(hwnd)
+            else:
+                user32.SetForegroundWindow(hwnd)
+                user32.SetFocus(hwnd)
+        except Exception:
+            pass
 
     # ---- Hauptschleife ----
     running = True
@@ -240,6 +310,9 @@ def main():
                         else:
                             state.time_speed = 1.0
                             audio.speak(state.get_text('start_msg'))
+                    elif event.key == pygame.K_0:
+                        state.time_speed = 0.5
+                        audio.speak(state.get_text('time_speed_speech', speed="Zeitlupe (0.5x)"))
                     elif event.key == pygame.K_1:
                         state.time_speed = 1.0
                         audio.speak(state.get_text('time_speed_speech', speed=state.get_text('speed_1')))
@@ -247,6 +320,9 @@ def main():
                         state.time_speed = 2.0
                         audio.speak(state.get_text('time_speed_speech', speed=state.get_text('speed_2')))
                     elif event.key == pygame.K_3:
+                        state.time_speed = 3.0
+                        audio.speak(state.get_text('time_speed_speech', speed="3x Schnell"))
+                    elif event.key == pygame.K_4:
                         state.time_speed = 4.0
                         audio.speak(state.get_text('time_speed_speech', speed=state.get_text('speed_3')))
                     elif event.key == pygame.K_s:

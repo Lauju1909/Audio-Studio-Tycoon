@@ -53,25 +53,62 @@ class Menu:
             self.speak_current(interrupt=False)
 
     def handle_input(self, event):
+        gs = self.game_state
         if not self.options:
-            if event.key in [pygame.K_UP, pygame.K_DOWN, pygame.K_RETURN, pygame.K_LEFT, pygame.K_RIGHT]:
+            if event.key in [gs.key_up, gs.key_down, gs.key_confirm, gs.key_back, gs.key_home, gs.key_end, pygame.K_LEFT, pygame.K_RIGHT]:
                 self.audio.play_sound("error")
             return None
-        if event.key == pygame.K_UP:
+            
+        if event.key == gs.key_up:
             if self.current_index > 0:
                 self.current_index -= 1
                 self.audio.play_sound("click")
                 self.speak_current()
             else:
                 self.audio.play_sound("error")
-        elif event.key == pygame.K_DOWN:
+        elif event.key == gs.key_down:
             if self.current_index < len(self.options) - 1:
                 self.current_index += 1
                 self.audio.play_sound("click")
                 self.speak_current()
             else:
                 self.audio.play_sound("error")
-        elif event.key == pygame.K_RETURN:
+        elif event.key == gs.key_home:
+            if self.current_index > 0:
+                self.current_index = 0
+                self.audio.play_sound("click")
+                self.speak_current()
+            else:
+                self.audio.play_sound("error")
+        elif event.key == gs.key_end:
+            if self.current_index < len(self.options) - 1:
+                self.current_index = len(self.options) - 1
+                self.audio.play_sound("click")
+                self.speak_current()
+            else:
+                self.audio.play_sound("error")
+        elif event.key == gs.key_back or event.key == pygame.K_LEFT:
+            # Suche nach Back-Action in options (z.B. Zurück, Back)
+            back_action = None
+            for opt in self.options:
+                text_lower = opt['text'].lower()
+                if text_lower in ["zurück", "back"]:
+                    back_action = opt.get('action')
+                    break
+            
+            # Falls Back nicht anhand des Textes gefunden wurde, nehmen wir das letzte Element (meistens Back) als Fallback, FALLS es eine .back oder ähnliche Methode als action hat
+            if not back_action and len(self.options) > 0:
+                 last_opt = self.options[-1]
+                 if "zurück" in last_opt['text'].lower() or "back" in last_opt['text'].lower():
+                     back_action = last_opt.get('action')
+                     
+            if back_action:
+                self.audio.play_sound("click")
+                return back_action()
+            else:
+                self.audio.play_sound("error")
+                
+        elif event.key == gs.key_confirm:
             self.audio.play_sound("confirm")
             action = self.options[self.current_index].get('action')
             if action:
@@ -97,18 +134,27 @@ class TextInputMenu:
         self.text = ""
         self.is_text_input = True
 
+    def sanitize_input(self, text):
+        """Entfernt oder ersetzt gefährliche Zeichen für Dateisystem und JSON."""
+        forbidden = ["\"", "'", "\\", ";", "&", "<", ">", "|"]
+        for char in forbidden:
+            text = text.replace(char, "")
+        return text.strip()
+
     def announce_entry(self):
         self.text = ""
         self.game_state.pause_for_menu = True
         self.audio.speak(self.game_state.get_text('input_prompt', title=self.game_state.get_text(self.title), prompt=self.game_state.get_text(self.prompt)))
 
     def handle_input(self, event):
-        if event.key == pygame.K_RETURN:
-            if self.text.strip():
+        gs = self.game_state
+        if event.key == gs.key_confirm:
+            sanitized = self.sanitize_input(self.text)
+            if sanitized:
                 self.audio.play_sound("confirm")
-                self.audio.speak(self.game_state.get_text('input_confirmed', text=self.text))
+                self.audio.speak(self.game_state.get_text('input_confirmed', text=sanitized))
                 self.game_state.pause_for_menu = False
-                return self.on_confirm(self.text.strip())
+                return self.on_confirm(sanitized)
             else:
                 self.audio.speak(self.game_state.get_text('input_empty_warn'))
         elif event.key == pygame.K_BACKSPACE:
@@ -119,7 +165,7 @@ class TextInputMenu:
                 self.audio.speak(self.game_state.get_text('input_deleted', removed=removed, remaining=remaining))
             else:
                 self.audio.speak(self.game_state.get_text('input_already_empty'))
-        elif event.key == pygame.K_ESCAPE:
+        elif event.key == gs.key_back or event.key == pygame.K_ESCAPE:
             self.game_state.pause_for_menu = False
             return self.on_cancel()
         elif event.unicode and event.unicode.isprintable() and len(event.unicode) == 1:
@@ -156,13 +202,52 @@ class SettingsMenu:
             tts_name = "SAPI (MS David)"
         else:
             tts_name = "Auto"
+            
+        auto_update_st = self.game_state.get_text('on') if s.get('auto_update', True) else self.game_state.get_text('off')
 
         self.options = [
             {'text': f"{self.game_state.get_text('music')}: {music_status}", 'action': self._toggle_music},
             {'text': f"{self.game_state.get_text('language')}: {lang_name}", 'action': self._toggle_language},
             {'text': f"{self.game_state.get_text('tts_mode')}: {tts_name}", 'action': self._toggle_tts},
+            {'text': self.game_state.get_text('auto_update_toggle', status=auto_update_st), 'action': self._toggle_auto_update},
+            {'text': self.game_state.get_text('keybindings'), 'action': self._goto_keybindings},
+            {'text': self.game_state.get_text('check_update'), 'action': self._check_update},
             {'text': self.game_state.get_text('back'), 'action': self.on_back}
         ]
+
+    def _goto_keybindings(self):
+        return "keybinding_menu"
+
+    def _toggle_auto_update(self):
+        self.game_state.settings['auto_update'] = not self.game_state.settings.get('auto_update', True)
+        self.game_state.save_global_settings()
+        self._update_options()
+        self.speak_current(interrupt=False)
+        
+    def _check_update(self):
+        from updater import check_for_updates
+        import json
+        import os
+        
+        self.audio.speak(self.game_state.get_text('checking_update'))
+        
+        current_version = "1.0.0"
+        if os.path.exists("version.json"):
+            try:
+                with open("version.json", "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    current_version = data.get("version", "1.0.0")
+            except Exception:
+                pass
+                
+        result = check_for_updates(current_version)
+        if result and result.get("update_available"):
+            # UpdateConfirmMenu über Factory aufrufen, daher speichern wir das result im GameState zwischen
+            self.game_state.pending_update = result
+            return "update_confirm_menu"
+        else:
+            self.audio.speak(self.game_state.get_text('no_update'))
+            return None
 
     def _toggle_tts(self):
         modes = ["auto", "nvda", "sapi"]
@@ -215,29 +300,100 @@ class SettingsMenu:
         self.speak_current(interrupt=False)
 
     def handle_input(self, event):
-        if event.key == pygame.K_UP:
+        gs = self.game_state
+        if event.key == gs.key_up:
             if self.current_index > 0:
                 self.current_index -= 1
                 self.audio.play_sound("click")
                 self.speak_current()
             else:
                 self.audio.play_sound("error")
-        elif event.key == pygame.K_DOWN:
+        elif event.key == gs.key_down:
             if self.current_index < len(self.options) - 1:
                 self.current_index += 1
                 self.audio.play_sound("click")
                 self.speak_current()
             else:
                 self.audio.play_sound("error")
-        elif event.key == pygame.K_RETURN:
+        elif event.key == gs.key_home:
+            if self.current_index > 0:
+                self.current_index = 0
+                self.audio.play_sound("click")
+                self.speak_current()
+            else:
+                self.audio.play_sound("error")
+        elif event.key == gs.key_end:
+            if self.current_index < len(self.options) - 1:
+                self.current_index = len(self.options) - 1
+                self.audio.play_sound("click")
+                self.speak_current()
+            else:
+                self.audio.play_sound("error")
+        elif event.key == gs.key_confirm:
             self.audio.play_sound("confirm")
             return self.options[self.current_index]['action']()
-        elif event.key == pygame.K_ESCAPE:
+        elif event.key == gs.key_back or event.key == pygame.K_ESCAPE:
             return self.on_back()
         return None
 
     def update(self):
         pass
+
+
+# ============================================================
+# TASTENBELEGUNGS-MENÜ
+# ============================================================
+
+class KeybindingMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.game_state = game_state
+        self.audio = audio
+        self.waiting_for_key = None
+        super().__init__(self.game_state.get_text('keybindings_menu'), [], audio, game_state)
+
+    def _update_options(self):
+        gs = self.game_state
+        def _get_key_name(k):
+            return pygame.key.name(k) if k else "Unknown"
+            
+        self.options = [
+            {'text': f"{self.game_state.get_text('key_up')} ({_get_key_name(gs.key_up)})", 'action': lambda: self._start_bind('key_up')},
+            {'text': f"{self.game_state.get_text('key_down')} ({_get_key_name(gs.key_down)})", 'action': lambda: self._start_bind('key_down')},
+            {'text': f"{self.game_state.get_text('key_confirm')} ({_get_key_name(gs.key_confirm)})", 'action': lambda: self._start_bind('key_confirm')},
+            {'text': f"{self.game_state.get_text('key_back')} ({_get_key_name(gs.key_back)})", 'action': lambda: self._start_bind('key_back')},
+            {'text': f"{self.game_state.get_text('key_home')} ({_get_key_name(gs.key_home)})", 'action': lambda: self._start_bind('key_home')},
+            {'text': f"{self.game_state.get_text('key_end')} ({_get_key_name(gs.key_end)})", 'action': lambda: self._start_bind('key_end')},
+            {'text': self.game_state.get_text('back'), 'action': self._back}
+        ]
+        
+    def _back(self):
+        return "settings_menu"
+
+    def _start_bind(self, key_name):
+        self.waiting_for_key = key_name
+        self.audio.speak(self.game_state.get_text('press_new_key', action=self.game_state.get_text(key_name)))
+        return None
+
+    def handle_input(self, event):
+        if self.waiting_for_key:
+            # Rebind Key
+            setattr(self.game_state, self.waiting_for_key, event.key)
+            self.game_state.save_global_settings()
+            
+            key_mapped = pygame.key.name(event.key)
+            self.audio.play_sound("confirm")
+            self.audio.speak(self.game_state.get_text('key_bound', action=self.game_state.get_text(self.waiting_for_key), key=key_mapped))
+            
+            self.waiting_for_key = None
+            self._update_options()
+            return None
+            
+        # Wenn wir nicht warten, nutze Standard-Menü-Input
+        return super().handle_input(event)
+
+    def announce_entry(self):
+        self._update_options()
+        super().announce_entry()
 
 
 # ============================================================
@@ -283,15 +439,28 @@ class SliderMenu:
         self.audio.speak(msg, interrupt=True)
 
     def handle_input(self, event):
-        if event.key == pygame.K_UP:
+        gs = self.game_state
+        if event.key == gs.key_up:
             if self.current_index > 0:
                 self.current_index -= 1
                 self._speak_current()
             else:
                 self.audio.play_sound("error")
-        elif event.key == pygame.K_DOWN:
+        elif event.key == gs.key_down:
             if self.current_index < len(self.slider_names) - 1:
                 self.current_index += 1
+                self._speak_current()
+            else:
+                self.audio.play_sound("error")
+        elif event.key == gs.key_home:
+            if self.current_index > 0:
+                self.current_index = 0
+                self._speak_current()
+            else:
+                self.audio.play_sound("error")
+        elif event.key == gs.key_end:
+            if self.current_index < len(self.slider_names) - 1:
+                self.current_index = len(self.slider_names) - 1
                 self._speak_current()
             else:
                 self.audio.play_sound("error")
@@ -307,6 +476,7 @@ class SliderMenu:
             else:
                 self.audio.play_sound("error")
                 self.audio.speak(self.game_state.get_text('slider_max'))
+        # Da NVDA-User mit Left den Slider bedienen, belassen wir Left fest
         elif event.key == pygame.K_LEFT:
             name = self.slider_names[self.current_index]
             if self.values[name] > 0:
@@ -316,7 +486,7 @@ class SliderMenu:
             else:
                 self.audio.play_sound("error")
                 self.audio.speak(self.game_state.get_text('slider_min'))
-        elif event.key == pygame.K_RETURN:
+        elif event.key == gs.key_confirm:
             if self.remaining > 0:
                 if hasattr(self, '_enter_warned') and self._enter_warned:
                     self.audio.play_sound("confirm")
@@ -329,11 +499,11 @@ class SliderMenu:
                 self.audio.play_sound("confirm")
                 self.game_state.pause_for_menu = False
                 return self.on_confirm(dict(self.values))
-        elif event.key == pygame.K_ESCAPE:
+        elif event.key == gs.key_back or event.key == pygame.K_ESCAPE:
             self.game_state.pause_for_menu = False
             return self.on_cancel()
 
-        if event.key != pygame.K_RETURN:
+        if event.key != gs.key_confirm:
             self._enter_warned = False
         return None
 
@@ -419,18 +589,24 @@ class GameMenu(Menu):
             options.append({'text': game_state.get_text('sequel_label'), 'action': self.goto_sequel})
         options.append({'text': game_state.get_text('hr_department'), 'action': self.goto_hr})
         
-        # Audio Expo Spezial-Option
-        week_in_year = (self.game_state.week - 1) % 52 + 1
+        # Audio Expo Spezial-Option - erscheint jedes Jahr in Woche 24 des Jahres
+        week_in_year = (self.game_state.week - 1) % 48 + 1
         if week_in_year == 26:
             options.append({'text': self.game_state.get_text('expo_title'), 'action': self.goto_expo})
 
         # NEU: Phase C - Produktion
         if getattr(self.game_state, 'has_presswerk', False):
             options.append({'text': self.game_state.get_text('production_menu_title'), 'action': self.goto_production})
+            # NEU: Phase F - Merchandising
+            options.append({'text': self.game_state.get_text('merch_menu_title'), 'action': self.goto_merch})
 
-        # NEU: Phase D - MMO Verwaltung
+        # NEU: Phase D - MMO Verwaltung & Phase F E-Sports
         if getattr(self.game_state, 'active_mmos', []):
             options.append({'text': self.game_state.get_text('mmo_management_title'), 'action': self.goto_mmo_management})
+        
+        # E-Sports Turniere ab Büro-Level 1
+        if self.game_state.office_level >= 1:
+            options.append({'text': self.game_state.get_text('esports_menu_title'), 'action': self.goto_esports})
 
         # NEU: Phase E - Publisher Angebote
         if getattr(self.game_state, 'publishing_offers', []):
@@ -465,7 +641,7 @@ class GameMenu(Menu):
             self.audio.speak(self.game_state.get_text('random_event_alert', title=title, text=text))
         self.audio.speak(
             f"{self.game_state.get_text('management_center')} - {self.game_state.company_name}. "
-            f"{self.game_state.get_text('week')} {self.game_state.week}.",
+            f"{self.game_state.get_calendar_text()}.",
             interrupt=False
         )
         self.speak_current(interrupt=False)
@@ -487,6 +663,12 @@ class GameMenu(Menu):
 
     def goto_production(self):
         return "production_menu"
+
+    def goto_merch(self):
+        return "merch_menu"
+
+    def goto_esports(self):
+        return "esports_menu"
 
     def goto_mmo_management(self):
         return "mmo_management_menu"
@@ -535,7 +717,7 @@ class GameMenu(Menu):
             self.audio.speak(self.game_state.get_text('menu_empty_history'))
             return None
         self.audio.speak(self.game_state.get_text('menu_history_count', count=len(self.game_state.game_history)))
-        for i, game in enumerate(self.game_state.game_history[-5:], 1):
+        for i, game in enumerate(self.game_state.game_history[-3:], 1):
             self.audio.speak(f"{i}. {game.summary()}", interrupt=False)
         return None
 
@@ -561,10 +743,25 @@ class TopicMenu(Menu):
         super().__init__(game_state.get_text('select_topic'), [], audio, game_state)
 
     def announce_entry(self):
+        from game_data import HISTORICAL_TOPICS
         self.current_index = 0
         self.options = []
+        current_year = self.game_state.get_calendar_year()
+        
+        # Bereits freigeschaltete Themen
         for topic in self.game_state.unlocked_topics:
             self.options.append({'text': topic, 'action': lambda t=topic: self._select(t)})
+        
+        # Kommende gesperrte Themen - als Info anzeigen
+        shown_locked = 0
+        for ht in HISTORICAL_TOPICS:
+            if ht["unlock_year"] > current_year and ht["name"] not in self.game_state.unlocked_topics:
+                label = f"{ht['name']} (gesperrt bis {ht['unlock_year']})"
+                self.options.append({'text': label, 'action': self._locked})
+                shown_locked += 1
+                if shown_locked >= 5:  # Nur nächste 5 gesperrte Themen zeigen
+                    break
+        
         self.options.append({'text': self.game_state.get_text('back'), 'action': self._cancel})
         self.audio.speak(self.title)
         self.speak_current(interrupt=False)
@@ -574,8 +771,14 @@ class TopicMenu(Menu):
         self.audio.speak(self.game_state.get_text('dev_topic_selected', topic=topic))
         return "genre_menu"
 
+    def _locked(self):
+        self.audio.play_sound("error")
+        self.audio.speak("Dieses Thema ist noch nicht verfügbar. Spiele weiter, um es freizuschalten.")
+        return None
+
     def _cancel(self):
         return "game_menu"
+
 
 
 # ============================================================
@@ -602,6 +805,9 @@ class BankMenu(Menu):
         # Aktienmarkt nur verfügbar, wenn Technologie erforscht
         if "Investment & M&A" in getattr(self.game_state, 'unlocked_technologies', []):
             self.options.append({'text': self.game_state.get_text('stock_market_option'), 'action': self.goto_stock_market})
+            self.options.append({'text': self.game_state.get_text('acquisition_menu_title'), 'action': self.goto_acquisition})
+        else:
+            self.options.append({'text': self.game_state.get_text('stock_market_locked_option'), 'action': lambda: (self.audio.speak(self.game_state.get_text('stock_market_locked_msg')), None)[1]})
 
         self.options.append({'text': self.game_state.get_text('back'), 'action': self._cancel})
         self.audio.speak(self.title)
@@ -614,8 +820,13 @@ class BankMenu(Menu):
         loan_paid = acc['loan_paid']
         profit = income - expenses - loan_paid
         
-        # Falls Year Text anders formatiert werden soll (hier verwenden wir f-strings per translate key)
         msg = self.game_state.get_text('bank_account_statement', year=(self.game_state.week - 1) // 52 + 1, income=income, expenses=expenses, loan_paid=loan_paid, profit=profit)
+        # Kontostand am Ende ausgeben
+        lang = self.game_state.settings.get('language', 'de')
+        if lang == 'de':
+            msg += f" | Kontostand: {self.game_state.money:,.0f} €"
+        else:
+            msg += f" | Balance: {self.game_state.money:,.0f} €"
         self.audio.speak(msg)
         return None
 
@@ -636,9 +847,11 @@ class BankMenu(Menu):
     def goto_stock_market(self):
         return "stock_market_menu"
 
+    def goto_acquisition(self):
+        return "acquisition_menu"
+
     def _cancel(self):
         return "game_menu"
-
 
 class LoanMenu(Menu):
     def __init__(self, audio, game_state):
@@ -701,9 +914,10 @@ class StockMarketMenu(Menu):
             sell_price = int(buy_price * 0.8)
 
             # Info-Zeile
+            info_msg = self.game_state.get_text('stock_buy_desc', name=rival.name, shares=shares, price=buy_price)
             self.options.append({
-                'text': self.game_state.get_text('stock_buy_desc', name=rival.name, shares=shares, price=buy_price),
-                'action': lambda: None
+                'text': info_msg,
+                'action': lambda m=info_msg: (self.audio.speak(m), None)[1]
             })
 
             # Kauf-Option (max 50%)
@@ -948,6 +1162,7 @@ class MarketingMenu(Menu):
                 'text': f"{mark['name']} ({mark['cost']:,} Euro, +{mark['hype']} Hype)",
                 'action': lambda m=mark: self._select(m)
             })
+        self.options.append({'text': self.game_state.get_text('menu_licenses'), 'action': self._goto_license_shop})
         self.options.append({'text': self.game_state.get_text('back'), 'action': self._cancel})
         self.audio.speak(self.game_state.get_text('marketing'))
         self.speak_current(interrupt=False)
@@ -962,6 +1177,9 @@ class MarketingMenu(Menu):
         self.game_state.current_draft['marketing'] = mark_data['name']
         self.audio.speak(self.game_state.get_text('marketing_booked', hype=mark_data['hype'], current_hype=self.game_state.hype))
         return "publisher_menu"
+
+    def _goto_license_shop(self):
+        return "license_shop_menu"
 
     def _cancel(self):
         return "game_size_menu"
@@ -1468,13 +1686,25 @@ class FeatureResearchMenu(Menu):
         self.current_index = 0
         researchable = self.game_state.get_researchable_features()
         self.options = []
+        from game_data import get_feature_unlock_week, START_YEAR, WEEKS_PER_YEAR
         for f in researchable:
-            self.options.append({
-                'text': f"{f['name']} ({f['category']}). {f.get('research_weeks', 4)} Wochen. Kosten: {f['cost']:,} Euro.",
-                'action': lambda fd=f: self._research(fd),
-            })
+            req_week = get_feature_unlock_week(f)
+            if self.game_state.week < req_week:
+                # Berechne das Jahr für die Anzeige
+                req_year = START_YEAR + (req_week - 1) // WEEKS_PER_YEAR
+                locked_text = f"(gesperrt bis {req_year})"
+                self.options.append({
+                    'text': f"{f['name']} ({f['category']}) - {locked_text}",
+                    'action': lambda y=req_year: (self.audio.speak(f"Diese Technik ist erst ab {y} verfügbar."), None)[1]
+                })
+            else:
+                desc = f". {f['description']}" if 'description' in f else ""
+                self.options.append({
+                    'text': f"{f['name']} ({f['category']}){desc}. {f.get('research_weeks', 4)} Wochen. Kosten: {f['cost']:,} Euro.",
+                    'action': lambda fd=f: self._research(fd),
+                })
         if not self.options:
-            self.options.append({'text': self.game_state.get_text('no_features_available'), 'action': lambda: None})
+            self.options.append({'text': self.game_state.get_text('no_features_available'), 'action': lambda: (self.audio.speak(self.game_state.get_text('no_features_available')), None)[1]})
         self.options.append({'text': self.game_state.get_text('back'), 'action': self._cancel})
 
         self.audio.speak(self.game_state.get_text('research_features_available', count=len(researchable)))
@@ -1507,12 +1737,20 @@ class GenreResearchMenu(Menu):
         researchable = self.game_state.get_researchable_genres()
         self.options = []
         for g in researchable:
-            self.options.append({
-                'text': f"{g['name']}. {g.get('research_weeks', 4)} Wochen. Kosten: {g['cost']:,} Euro.",
-                'action': lambda gd=g: self._research(gd),
-            })
+            req_week = g.get("week", 1)
+            if self.game_state.week < req_week:
+                locked_text = self.game_state.get_text('research_locked_week', week=req_week)
+                self.options.append({
+                    'text': f"{g['name']} - {locked_text}",
+                    'action': lambda w=req_week: (self.audio.speak(self.game_state.get_text('research_locked_message', week=w)), None)[1]
+                })
+            else:
+                self.options.append({
+                    'text': f"{g['name']}. {g.get('research_weeks', 4)} Wochen. Kosten: {g['cost']:,} Euro.",
+                    'action': lambda gd=g: self._research(gd),
+                })
         if not self.options:
-            self.options.append({'text': self.game_state.get_text('no_features_available'), 'action': lambda: None})
+            self.options.append({'text': self.game_state.get_text('no_features_available'), 'action': lambda: (self.audio.speak(self.game_state.get_text('no_features_available')), None)[1]})
         self.options.append({'text': self.game_state.get_text('back'), 'action': self._cancel})
 
         self.audio.speak(self.game_state.get_text('research_features_available', count=len(researchable)))
@@ -1545,12 +1783,20 @@ class TopicResearchMenu(Menu):
         researchable = self.game_state.get_researchable_topics()
         self.options = []
         for t in researchable:
-            self.options.append({
-                'text': f"{t['name']}. {t.get('research_weeks', 4)} Wochen. Kosten: {t['cost']:,} Euro.",
-                'action': lambda td=t: self._research(td),
-            })
+            req_week = t.get("week", 1)
+            if self.game_state.week < req_week:
+                locked_text = self.game_state.get_text('research_locked_week', week=req_week)
+                self.options.append({
+                    'text': f"{t['name']} - {locked_text}",
+                    'action': lambda w=req_week: (self.audio.speak(self.game_state.get_text('research_locked_message', week=w)), None)[1]
+                })
+            else:
+                self.options.append({
+                    'text': f"{t['name']}. {t.get('research_weeks', 4)} Wochen. Kosten: {t['cost']:,} Euro.",
+                    'action': lambda td=t: self._research(td),
+                })
         if not self.options:
-            self.options.append({'text': self.game_state.get_text('no_features_available'), 'action': lambda: None})
+            self.options.append({'text': self.game_state.get_text('no_features_available'), 'action': lambda: (self.audio.speak(self.game_state.get_text('no_features_available')), None)[1]})
         self.options.append({'text': self.game_state.get_text('back'), 'action': self._cancel})
 
         self.audio.speak(self.game_state.get_text('research_features_available', count=len(researchable)))
@@ -1582,12 +1828,20 @@ class AudienceResearchMenu(Menu):
         researchable = self.game_state.get_researchable_audiences()
         self.options = []
         for a in researchable:
-            self.options.append({
-                'text': f"{a['name']}. {a.get('research_weeks', 4)} Wochen. Kosten: {a['cost']:,} Euro.",
-                'action': lambda ad=a: self._research(ad),
-            })
+            req_week = a.get("week", 1)
+            if self.game_state.week < req_week:
+                locked_text = self.game_state.get_text('research_locked_week', week=req_week)
+                self.options.append({
+                    'text': f"{a['name']} - {locked_text}",
+                    'action': lambda w=req_week: (self.audio.speak(self.game_state.get_text('research_locked_message', week=w)), None)[1]
+                })
+            else:
+                self.options.append({
+                    'text': f"{a['name']}. {a.get('research_weeks', 4)} Wochen. Kosten: {a['cost']:,} Euro.",
+                    'action': lambda ad=a: self._research(ad),
+                })
         if not self.options:
-            self.options.append({'text': self.game_state.get_text('no_features_available'), 'action': lambda: None})
+            self.options.append({'text': self.game_state.get_text('no_features_available'), 'action': lambda: (self.audio.speak(self.game_state.get_text('no_features_available')), None)[1]})
         self.options.append({'text': self.game_state.get_text('back'), 'action': self._cancel})
 
         self.audio.speak(self.game_state.get_text('research_features_available', count=len(researchable)))
@@ -1619,12 +1873,20 @@ class TechnologyResearchMenu(Menu):
         researchable = self.game_state.get_researchable_technologies()
         self.options = []
         for t in researchable:
-            self.options.append({
-                'text': f"{t['name']} - {t['description']}. {t.get('research_weeks', 4)} Wochen. Kosten: {t['cost']:,} Euro.",
-                'action': lambda td=t: self._research(td),
-            })
+            req_week = t.get("week", 1)
+            if self.game_state.week < req_week:
+                locked_text = self.game_state.get_text('research_locked_week', week=req_week)
+                self.options.append({
+                    'text': f"{t['name']} - {locked_text}",
+                    'action': lambda w=req_week: (self.audio.speak(self.game_state.get_text('research_locked_message', week=w)), None)[1]
+                })
+            else:
+                self.options.append({
+                    'text': f"{t['name']} - {t['description']}. {t.get('research_weeks', 4)} Wochen. Kosten: {t['cost']:,} Euro.",
+                    'action': lambda td=t: self._research(td),
+                })
         if not self.options:
-            self.options.append({'text': self.game_state.get_text('no_features_available'), 'action': lambda: None})
+            self.options.append({'text': self.game_state.get_text('no_features_available'), 'action': lambda: (self.audio.speak(self.game_state.get_text('no_features_available')), None)[1]})
         self.options.append({'text': self.game_state.get_text('back'), 'action': self._cancel})
 
         self.audio.speak(self.game_state.get_text('research_features_available', count=len(researchable)))
@@ -1778,32 +2040,26 @@ class OfficeMenu(Menu):
         self.speak_current(interrupt=False)
 
     def upgrade(self):
-        from game_data import OFFICE_LEVELS
         if self.game_state.upgrade_office():
             office = self.game_state.get_office_info()
-            self.audio.speak(self.game_state.get_text('office_upgrade_success', name=office['name'], max=office['max_employees'], money=self.game_state.money))
-        elif self.game_state.office_level >= len(OFFICE_LEVELS) - 1:
-            self.audio.speak(self.game_state.get_text('office_max_reached'))
-        else:
-            next_cost = OFFICE_LEVELS[self.game_state.office_level + 1]['cost']
-            self.audio.speak(self.game_state.get_text('not_enough_money_loan', amount=next_cost))
+            self.audio.speak(self.game_state.get_text('office_upgrade_success', name=office['name']))
         return "office_menu"
 
     def build_presswerk(self):
-        if self.game_state.build_presswerk():
-            self.audio.speak(self.game_state.get_text('presswerk_built_success'))
-            return "office_menu"
+        success, reason = self.game_state.build_presswerk()
+        if success:
+            self.audio.speak(self.game_state.get_text('presswerk_success'))
         else:
-            self.audio.speak(self.game_state.get_text('not_enough_money_loan', amount=500000))
-            return None
+            self.audio.speak(self.game_state.get_text('presswerk_fail_' + reason))
+        return "office_menu"
 
     def expand_storage(self):
-        if self.game_state.expand_storage():
-            self.audio.speak(self.game_state.get_text('storage_expanded_success', current=self.game_state.storage_capacity))
-            return "office_menu"
+        success, reason = self.game_state.expand_storage()
+        if success:
+            self.audio.speak(self.game_state.get_text('storage_expand_success'))
         else:
             self.audio.speak(self.game_state.get_text('not_enough_money_loan', amount=100000))
-            return None
+        return "office_menu"
 
     def build_server_room(self):
         if self.game_state.build_server_room():
@@ -2016,9 +2272,16 @@ class GameServiceOptionsMenu(Menu):
     def announce_entry(self):
         self.current_index = 0
         idx = getattr(self.game_state, '_pending_service_game_index', 0)
-        game = self.game_state.game_history[idx]
         
         self.options = []
+        
+        # Test-Monkey Fallback (Wenn Menü ohne History aufgerufen wird)
+        if idx < 0 or idx >= len(self.game_state.game_history):
+            self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "service_menu"})
+            super().announce_entry()
+            return
+            
+        game = self.game_state.game_history[idx]
         
         # Patches and DLCs for non-MMOs or MMOs?
         # Let's say MMOs also get patches, but DLC is replaced by Content Update
@@ -2520,86 +2783,87 @@ class ChartMenu(Menu):
         super().announce_entry()
 
 
-# ==============================================================
+# ============================================================
 # PHASE B: LIZENZEN, ADDONS, BUNDLES
-# ==============================================================
+# ============================================================
 
 class LicenseShopMenu(Menu):
     def __init__(self, audio, game_state):
-        super().__init__(game_state.get_text('menu_licenses'), [], audio, game_state)
-
+        super().__init__(game_state.get_text('license_shop_title'), [], audio, game_state)
+        
     def announce_entry(self):
         self.options = []
-        from game_data import LICENSES
+        available_licenses = self.game_state.get_available_licenses()
         
-        owned_names = [lic['name'] for lic in self.game_state.owned_licenses]
-        available = []
-        for i, lic in enumerate(LICENSES):
-            if lic['name'] not in owned_names:
-                available.append((i, lic))
-                
-        if not available:
-            self.options.append({
-                'text': self.game_state.get_text('no_licenses_available'),
-                'action': lambda: "game_menu"
-            })
+        if not available_licenses:
+            self.audio.speak(self.game_state.get_text('license_shop_empty'))
+            self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "office_menu"})
         else:
-            for i, lic in available:
+            self.audio.speak(self.game_state.get_text('license_shop_intro', count=len(available_licenses)))
+            for idx, lic in enumerate(available_licenses):
                 self.options.append({
-                    'text': self.game_state.get_text('buy_license_prompt', name=lic['name'], cost=lic['cost']),
-                    'action': lambda idx=i: self._buy(idx)
+                    'text': f"{lic['name']} - Kosten: {lic['base_cost']:,} Euro. Hype: +{lic['hype_bonus']}, Fans: +{lic['fan_bonus']}",
+                    'action': lambda target_lic=lic: self.buy_license(target_lic)
                 })
-        self.options.append({
-            'text': self.game_state.get_text('back'),
-            'action': lambda: "game_menu"
-        })
+            self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "office_menu"})
+            
         super().announce_entry()
-
-    def _buy(self, idx):
-        from game_data import LICENSES
-        lic = LICENSES[idx]
-        if self.game_state.buy_license(idx):
-            self.audio.speak(self.game_state.get_text('license_bought', name=lic['name'], money=self.game_state.money))
+        
+    def buy_license(self, license_data):
+        if self.game_state.buy_license(license_data):
+            self.audio.play_sound("cash")
+            self.audio.speak(self.game_state.get_text('license_bought', name=license_data['name']))
+            return "license_shop_menu" # Menü neu laden
         else:
-            self.audio.play_sound('bump')
-        return "game_menu"
+            self.audio.play_sound("error")
+            self.audio.speak(self.game_state.get_text('license_no_money'))
+            return "license_shop_menu"
+
 
 class LicenseSelectMenu(Menu):
+    """Wird wehrend der Spiel-Entwicklung aufgerufen, um eine ungenutzte Lizenz zuzuordnen."""
     def __init__(self, audio, game_state):
         super().__init__(game_state.get_text('license_select_title'), [], audio, game_state)
-
+        
     def announce_entry(self):
         self.options = []
+        unused_licenses = self.game_state.get_unused_licenses()
         
-        # Option: Keine Lizenz
         self.options.append({
-            'text': self.game_state.get_text('license_select_none'),
-            'action': self._select_none
+            'text': self.game_state.get_text('license_none'),
+            'action': lambda: self.select_license(None)
         })
         
-        # Aktive Lizenzen
-        active_licenses = self.game_state.get_active_licenses()
-        for lic in active_licenses:
-            self.options.append({
-                'text': lic['name'],
-                'action': lambda l_name=lic['name']: self._select_license(l_name)
-            })
+        if unused_licenses:
+            self.audio.speak(self.game_state.get_text('license_select_intro', count=len(unused_licenses)))
+            for idx, lic in enumerate(unused_licenses):
+                wochen_uebrig = lic['expires_week'] - self.game_state.week
+                self.options.append({
+                    'text': f"{lic['name']} (Hype +{lic['hype_bonus']}, Verfällt in {wochen_uebrig} Wochen)",
+                    'action': lambda target_lic=lic: self.select_license(target_lic)
+                })
+        else:
+            self.audio.speak(self.game_state.get_text('license_select_none'))
             
-        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
         super().announce_entry()
-
-    def _select_none(self):
-        return "topic_menu"
         
-    def _select_license(self, license_name):
-        res = self.game_state.use_license(license_name)
-        if res:
-            self.game_state.current_draft['license'] = {
-                'name': license_name,
-                'review_bonus': res['review_bonus']
-            }
-            self.audio.speak(self.game_state.get_text('license_selected', name=license_name))
-        return "topic_menu"
+    def select_license(self, lic):
+        draft = self.game_state.current_draft
+        if lic:
+            # Lizenz auf Projekt und als benutzt markieren
+            draft['license_bonus'] = lic['hype_bonus']
+            
+            # Find the actual dictionary in the list to update it
+            for owned in self.game_state.owned_licenses:
+                if owned['name'] == lic['name'] and not owned['used']:
+                    owned['used'] = True
+                    break
+                    
+            self.audio.speak(self.game_state.get_text('license_selected', name=lic['name']))
+        else:
+            self.audio.speak(self.game_state.get_text('license_none_selected'))
+            
+        return "topic_menu" # Nächster Schritt in der Entwicklung
 
 
 class AddonMenu(Menu):
@@ -2718,6 +2982,11 @@ class MMOPaymentMenu(Menu):
             {'text': self.game_state.get_text('mmo_payment_abo'), 'action': lambda: self._select("Abo")},
             {'text': self.game_state.get_text('mmo_payment_f2p'), 'action': lambda: self._select("F2P")}
         ]
+        
+        # Erst ab 2010 spielbar
+        if self.game_state.get_calendar_year() >= 2010:
+            self.options.append({'text': self.game_state.get_text('mmo_payment_lootbox'), 'action': lambda: self._select("Lootboxen")})
+            
         self.options.append({'text': self.game_state.get_text('back'), 'action': self.back})
         self.speak_current()
         
@@ -2877,35 +3146,53 @@ class ProductionMenu(Menu):
         self.current_index = 0
         self.options = []
         
-        active_games = [g for g in self.game_state.game_history if g.state == "on_market" and (g.publisher == self.game_state.company_name or not g.publisher)]
+        # Nur aktive eigene Spiele (oder Publisher-Deals)
+        active_games = [g for g in self.game_state.game_history if g.is_active]
         
         if not active_games:
             self.audio.speak(self.game_state.get_text('production_no_games'))
             self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
         else:
             for idx, game in enumerate(active_games):
-                stock = getattr(game, 'stock', 0)
+                copies = getattr(game, 'physical_copies', 0)
                 self.options.append({
-                    'text': f"{game.name} - Im Lager: {stock}/{self.game_state.storage_capacity}",
+                    'text': f"{game.name} - Lager: {copies:,} | Preis: {getattr(game, 'physical_price', 0)} EUR",
                     'action': lambda i=idx: self.select_game(i)
                 })
             self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
             
-        used_storage = sum(getattr(g, 'stock', 0) for g in self.game_state.game_history)
-        self.audio.speak(self.game_state.get_text('production_status', used=used_storage, max=self.game_state.storage_capacity))
-        self.speak_current(interrupt=False)
+        self.audio.speak(self.game_state.get_text('production_status', used=self.game_state.used_storage, max=self.game_state.storage_capacity))
+        super().announce_entry()
         
     def select_game(self, idx):
-        active_games = [g for g in self.game_state.game_history if g.state == "on_market" and (g.publisher == self.game_state.company_name or not g.publisher)]
+        active_games = [g for g in self.game_state.game_history if g.is_active]
         if 0 <= idx < len(active_games):
-            self.game_state._pending_production_game_idx = self.game_state.game_history.index(active_games[idx])
+            # Finde den echten Index in game_history
+            real_idx = self.game_state.game_history.index(active_games[idx])
+            self.game_state._pending_production_game_idx = real_idx
             return "production_amount_menu"
         return "production_menu"
 
 class ProductionAmountMenu(TextInputMenu):
     def __init__(self, audio, game_state):
-        super().__init__('production_amount_title', 'production_amount_prompt', audio, game_state, self._confirm, self._cancel, is_numeric=True)
+        # TextInputMenu erwartet: title_key, prompt_key, audio, game_state, on_confirm, on_cancel
+        super().__init__(
+            'production_amount_title', 
+            'production_amount_prompt', 
+            audio, 
+            game_state, 
+            self._confirm, 
+            self._cancel
+        )
+        self.is_numeric = True
         
+    def announce_entry(self):
+        idx = getattr(self.game_state, '_pending_production_game_idx', -1)
+        if idx != -1:
+            game = self.game_state.game_history[idx]
+            self.audio.speak(self.game_state.get_text('production_prompt', name=game.name, storage=self.game_state.storage_capacity - self.game_state.used_storage))
+        super().announce_entry()
+
     def _confirm(self, amount_str):
         try:
             amount = int(amount_str)
@@ -2919,6 +3206,274 @@ class ProductionAmountMenu(TextInputMenu):
         success, info = self.game_state.produce_physical_copies(idx, amount)
         self.audio.speak(info)
         return "production_menu"
-        
+
     def _cancel(self):
         return "production_menu"
+
+# ============================================================
+# UPDATER
+# ============================================================
+
+class UpdateConfirmMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__("Updater", [], audio, game_state)
+
+    def announce_entry(self):
+        self.current_index = 0
+        update_info = getattr(self.game_state, 'pending_update', {})
+        version = update_info.get('version', 'Unbekannt')
+        
+        # Audio vorlesen
+        msg = self.game_state.get_text('update_available', version=version)
+        if update_info.get('changelog'):
+            msg += f" Changelog: {update_info['changelog']}"
+            
+        self.audio.speak(msg)
+        
+        self.options = [
+            {'text': self.game_state.get_text('yes_update'), 'action': self._do_update},
+            {'text': self.game_state.get_text('no_update_cancel'), 'action': self._cancel}
+        ]
+        self.speak_current(interrupt=False)
+
+    def _do_update(self):
+        update_info = getattr(self.game_state, 'pending_update', {})
+        url = update_info.get('download_url')
+        if not url:
+            self.audio.speak(self.game_state.get_text('update_error'))
+            return "settings_menu"
+            
+        def run_update():
+            from updater import download_and_apply_update
+            # Letzte Ansage vor dem Neustart
+            self.audio.speak(self.game_state.get_text('update_start_now'))
+            # Kurze Pause für die Sprachausgabe
+            time.sleep(2)
+            download_and_apply_update(url)
+
+        self.audio.speak(self.game_state.get_text('downloading_update_info'))
+        
+        import threading
+        threading.Thread(target=run_update, daemon=True).start()
+        
+        return "main_menu" # Kehre zum Hauptmenü zurück, während der Download läuft
+        
+    def _cancel(self):
+        self.game_state.pending_update = None
+        # Wenn im Hauptmenü aufgerufen:
+        if not getattr(self.game_state, 'company_name', ""):
+            return "main_menu"
+        return "settings_menu_ingame"
+
+# ============================================================
+# PHASE F: MERCHANDISING
+# ============================================================
+class MerchMenu(Menu):
+    def __init__(self, audio, game_state):
+        super().__init__(game_state.get_text('merch_menu_title'), [], audio, game_state)
+
+    def announce_entry(self):
+        self.current_index = 0
+        self.options = []
+        
+        from game_data import MERCH_TYPES
+        for idx, merch in enumerate(MERCH_TYPES):
+            self.options.append({
+                'text': self.game_state.get_text('merch_produce_option', name=merch['name'], cost=merch['production_cost']),
+                'action': lambda i=idx: self.select_merch(i)
+            })
+            
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
+        self.audio.speak(self.title)
+        self.speak_current(interrupt=False)
+        
+    def select_merch(self, idx):
+        self.game_state._pending_merch_idx = idx
+        return "merch_amount_menu"
+
+class MerchAmountMenu(TextInputMenu):
+    def __init__(self, audio, game_state):
+        super().__init__(
+            'merch_menu_title', 
+            'merch_produce_prompt', 
+            audio, 
+            game_state, 
+            self._confirm, 
+            self._cancel
+        )
+        self.is_numeric = True
+        
+    def announce_entry(self):
+        idx = getattr(self.game_state, '_pending_merch_idx', -1)
+        if idx != -1:
+            from game_data import MERCH_TYPES
+            merch = MERCH_TYPES[idx]
+            stock = 0
+            for m in self.game_state.active_merch:
+                if m["name"] == merch["name"]:
+                    stock = m["stock"]
+                    break
+            
+            self.audio.speak(self.game_state.get_text(
+                'merch_produce_prompt', 
+                name=merch['name'], 
+                stock=f"{stock:,}",
+                cost=merch['production_cost'],
+                storage=f"{self.game_state.storage_capacity - self.game_state.used_storage:,}"
+            ))
+        super().announce_entry()
+
+    def _confirm(self, amount_str):
+        try:
+            amount = int(amount_str)
+            if amount <= 0:
+                raise ValueError
+        except ValueError:
+            self.audio.speak(self.game_state.get_text('invalid_amount'))
+            return "merch_menu"
+            
+        idx = getattr(self.game_state, '_pending_merch_idx', -1)
+        if idx != -1:
+            from game_data import MERCH_TYPES
+            merch = MERCH_TYPES[idx]
+            total_cost = amount * merch['production_cost']
+            
+            if self.game_state.money < total_cost:
+                self.audio.speak(self.game_state.get_text('merch_fail_money'))
+                return "merch_menu"
+                
+            if getattr(self.game_state, "used_storage", 0) + amount > getattr(self.game_state, "storage_capacity", 0):
+                self.audio.speak(self.game_state.get_text('merch_fail_storage', storage=f"{self.game_state.storage_capacity - self.game_state.used_storage:,}"))
+                return "merch_menu"
+                 
+            self.game_state.money -= total_cost
+            self.game_state.used_storage += amount
+            if hasattr(self.game_state, "accounting"):
+                self.game_state.accounting["expenses"] += total_cost
+                
+            found = False
+            for m in self.game_state.active_merch:
+                if m["name"] == merch["name"]:
+                    m["stock"] += amount
+                    found = True
+                    break
+            
+            if not found:
+                new_merch = dict(merch)
+                new_merch["stock"] = amount
+                new_merch["sales"] = 0
+                new_merch["revenue"] = 0
+                self.game_state.active_merch.append(new_merch)
+                
+            self.audio.speak(self.game_state.get_text('merch_success', amount=amount, name=merch['name']))
+            
+        return "merch_menu"
+
+    def _cancel(self):
+        return "merch_menu"
+
+# ============================================================
+# PHASE F: E-SPORTS
+# ============================================================
+class ESportsMenu(Menu):
+    def __init__(self, audio, game_state):
+        super().__init__(game_state.get_text('esports_menu_title'), [], audio, game_state)
+
+    def announce_entry(self):
+        self.current_index = 0
+        self.options = []
+        
+        from game_data import ESPORTS_TOURNAMENTS
+        for idx, t in enumerate(ESPORTS_TOURNAMENTS):
+            self.options.append({
+                'text': self.game_state.get_text('esports_host_option', name=t['name'], cost=t['cost']),
+                'action': lambda i=idx: self.host_tournament(i)
+            })
+            
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
+        self.audio.speak(self.title)
+        self.speak_current(interrupt=False)
+        
+    def host_tournament(self, idx):
+        from game_data import ESPORTS_TOURNAMENTS
+        t = ESPORTS_TOURNAMENTS[idx]
+        
+        if self.game_state.money < t['cost']:
+            self.audio.speak(self.game_state.get_text('esports_fail_money', cost=t['cost']))
+            return "esports_menu"
+            
+        best_sales = 0
+        for g in self.game_state.game_history:
+            if getattr(g, 'sales', 0) > best_sales:
+                best_sales = g.sales
+        for m in getattr(self.game_state, 'active_mmos', []):
+            if m.game.sales > best_sales:
+                best_sales = m.game.sales
+                
+        if best_sales < t['min_game_sales']:
+             self.audio.speak(self.game_state.get_text('esports_fail_sales', sales=t['min_game_sales']))
+             return "esports_menu"
+             
+        self.game_state.money -= t['cost']
+        if hasattr(self.game_state, "accounting"):
+            self.game_state.accounting["expenses"] += t['cost']
+            
+        self.game_state.hype = min(250, self.game_state.hype + t['hype_bonus'])
+        self.game_state.fans += t['fan_bonus']
+        
+        self.audio.speak(self.game_state.get_text('esports_success', name=t['name'], hype=t['hype_bonus'], fans=t['fan_bonus']))
+        return "esports_menu"
+
+# ============================================================
+# PHASE F: FIRMENÜBERNAHMEN
+# ============================================================
+class AcquisitionMenu(Menu):
+    def __init__(self, audio, game_state):
+        super().__init__(game_state.get_text('acquisition_menu_title'), [], audio, game_state)
+
+    def announce_entry(self):
+        self.current_index = 0
+        self.options = []
+        
+        for idx, rival in enumerate(self.game_state.rivals):
+            if getattr(rival, 'is_owned_by_player', False):
+                continue
+                
+            # Kosten: Je höher der Marktanteil und Wert, desto teurer (Hier simpel berechnet)
+            buyout_cost = (100 - getattr(rival, 'owned_shares', 0)) * 50000 
+            
+            self.options.append({
+                'text': self.game_state.get_text('acquisition_option', name=rival.name, cost=buyout_cost, shares=getattr(rival, 'owned_shares', 0)),
+                'action': lambda i=idx, cost=buyout_cost: self.acquire_studio(i, cost)
+            })
+            
+        if not self.options:
+            self.options.append({'text': "Keine Studios mehr für eine Übernahme verfügbar.", 'action': lambda: "bank_menu"})
+            
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "bank_menu"})
+        self.audio.speak(self.title)
+        self.speak_current(interrupt=False)
+        
+    def acquire_studio(self, idx, cost):
+        rival = self.game_state.rivals[idx]
+        shares = getattr(rival, 'owned_shares', 0)
+        
+        if shares < 50:
+            self.audio.speak(self.game_state.get_text('acquisition_need_shares'))
+            return "acquisition_menu"
+            
+        if self.game_state.money < cost:
+            self.audio.speak(self.game_state.get_text('acquisition_fail_money', cost=cost))
+            return "acquisition_menu"
+            
+        self.game_state.money -= cost
+        if hasattr(self.game_state, "accounting"):
+            self.game_state.accounting["expenses"] += cost
+            
+        rival.is_owned_by_player = True
+        rival.owned_shares = 100
+        self.audio.speak(self.game_state.get_text('acquisition_success', name=rival.name))
+        return "bank_menu"
+

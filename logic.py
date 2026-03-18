@@ -17,14 +17,14 @@ from game_data import (
     TREND_TOPICS, TREND_GENRES, START_TOPICS, RESEARCHABLE_TOPICS,
     START_GENRES, START_AUDIENCES, RESEARCHABLE_GENRES, RESEARCHABLE_AUDIENCES,
     RESEARCHABLE_TECHNOLOGIES,
-    get_available_platforms, get_available_features,
+    get_available_platforms, START_YEAR, WEEKS_PER_YEAR,
 )
 
 
 class GameState:
     def __init__(self):
         self.company_name = ""
-        self.money = 70000
+        self.money = 100000
         self.fans = 0
         self.week = 1
         self.game_history = []    # Liste aller GameProject
@@ -58,6 +58,11 @@ class GameState:
         self.current_research_draft = None
         
         self.unlocked_topics = list(START_TOPICS)
+        # Historische Themen für 1930 direkt beim Start hinzufügen
+        from game_data import get_historical_topics_for_year
+        for ht in get_historical_topics_for_year(START_YEAR):
+            if ht["name"] not in self.unlocked_topics:
+                self.unlocked_topics.append(ht["name"])
         self.unlocked_genres = list(START_GENRES)
         self.unlocked_audiences = list(START_AUDIENCES)
         self.unlocked_technologies = []
@@ -77,6 +82,14 @@ class GameState:
         
         # Posteingang
         self.emails = []
+        # Willkommensnachricht: Die 1930er Ära
+        from models import Email
+        self.emails.append(Email(
+            sender="Historiker",
+            subject="Willkommen in der Pionierzeit!",
+            body="Das Jahr ist 1930. Du bist ein Visionär mit einer großen Idee: Man kann Maschinen beibringen, Spiele zu spielen und zu entwickeln! Mit bescheidenen Mitteln in einer Garage beginnst du dein Studio. Verfügbare Themen: Abakus, Mathematik, Schach und Logistik. Kämpfe dich durch die Geschichte – von der Weltwirtschaftskrise bis zur KI-Revolution 2023!",
+            date_week=1
+        ))
         
         # Aktive MMOs
         self.active_mmos = []
@@ -85,7 +98,8 @@ class GameState:
         self.settings = {
             "language": "de",
             "music_enabled": True,
-            "tts_engine": "auto" # mgl: auto, nvda, sapi
+            "tts_engine": "auto", # mgl: auto, nvda, sapi
+            "auto_update": True
         }
 
         # Echtzeit-Zeitsteuerung
@@ -125,12 +139,20 @@ class GameState:
 
         # NEU: Phase A - Verkaufscharts
         self.chart_history = []  # [{'week': X, 'entries': [{'name':..., 'studio':..., 'sales':...}]}]
+        self.my_goty_wins = 0
+
+        # ACHIEVEMENTS
+        self.unlocked_achievements = []
 
         # NEU: Phase B - Lizenzen
         self.owned_licenses = []  # [{'name': str, 'purchased_week': int, 'expires_week': int, 'used': bool}]
+        self.active_licenses = self.owned_licenses  # Alias für Kompatibilität
 
         # NEU: Phase B - Addons
         self.active_addons = []  # Addon-Projekte die verkaufen
+
+        # NEU: Phase B - Bundles
+        self.active_bundles = [] # Bundle-Projekte die stetig verkaufen
 
         # Pending Events (dynamisch gesetzt, hier initialisiert für Stabilität)
         self.pending_goty_results = None
@@ -140,6 +162,7 @@ class GameState:
         self.has_presswerk = False
         self.storage_capacity = 0
         self.used_storage = 0
+        self.current_production_draft = None
 
         # NEU: Phase D - MMO & Server
         self.has_server_room = False
@@ -148,6 +171,19 @@ class GameState:
         # NEU: Phase E - Publisher Rolle
         self.publishing_offers = []
         self.published_third_party_games = []
+
+        # Keybindings initialisieren (Standardwerte)
+        import pygame
+        self.key_up = pygame.K_UP
+        self.key_down = pygame.K_DOWN
+        self.key_confirm = pygame.K_RETURN
+        self.key_back = pygame.K_BACKSPACE
+        self.key_home = pygame.K_HOME
+        self.key_end = pygame.K_END
+
+        # NEU: Phase F - Merch und Turniere
+        self.active_merch = []
+        self.active_tournaments = []
 
     def get_market_platforms(self):
         from game_data import get_available_platforms
@@ -163,33 +199,48 @@ class GameState:
                 })
         return out
 
-    def save_global_settings(self):
-        """Speichert die globalen Einstellungen (Sprache, Musik, TTS)."""
-        import json
-        try:
-            with open("global_settings.json", "w", encoding="utf-8") as f:
-                json.dump(self.settings, f, indent=2, ensure_ascii=False)
-        except Exception as e:
-            print(f"Fehler beim Speichern der globalen Einstellungen: {e}")
-
     def load_global_settings(self):
-        """Lädt die globalen Einstellungen beim Spielstart."""
-        import json
-        import os
-        if os.path.exists("global_settings.json"):
+        """Lädt systemweite Einstellungen inkl. Keybindings."""
+        sets = {}
+        if os.path.exists("settings.json"):
             try:
-                with open("global_settings.json", "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    self.settings.update(data)
-            except Exception as e:
-                print(f"Fehler beim Laden der globalen Einstellungen: {e}")
+                with open("settings.json", "r", encoding="utf-8") as f:
+                    sets = json.load(f)
+            except Exception:
+                pass
+                
+        self.settings = sets
+        
+        # Tasten auslesen (falls vorhanden), ansonsten Standard lassen
+        import pygame
+        self.key_up = sets.get("key_up", pygame.K_UP)
+        self.key_down = sets.get("key_down", pygame.K_DOWN)
+        self.key_confirm = sets.get("key_confirm", pygame.K_RETURN)
+        self.key_back = sets.get("key_back", pygame.K_BACKSPACE)
+        self.key_home = sets.get("key_home", pygame.K_HOME)
+        self.key_end = sets.get("key_end", pygame.K_END)
+        
+        # ... abwärtskompatibilität ...
+        return sets
+
+    def save_global_settings(self):
+        """Speichert globale Einstellungen ab."""
+        self.settings["key_up"] = self.key_up
+        self.settings["key_down"] = self.key_down
+        self.settings["key_confirm"] = self.key_confirm
+        self.settings["key_back"] = self.key_back
+        self.settings["key_home"] = self.key_home
+        self.settings["key_end"] = self.key_end
+        
+        with open("settings.json", "w", encoding="utf-8") as f:
+            json.dump(self.settings, f, indent=4)
 
     def _init_rivals(self):
         """Erstellt 3 Konkurrenz-Studios."""
         return [
-            RivalStudio("MicroHard", target_market_share=30, next_release_week=random.randint(5, 20)),
-            RivalStudio("Electric Farts", target_market_share=25, next_release_week=random.randint(15, 30)),
-            RivalStudio("Nintengo", target_market_share=20, next_release_week=random.randint(25, 40))
+            RivalStudio("MicroHard", target_market_share=30, next_release_week=random.randint(10, 30)),
+            RivalStudio("Electric Farts", target_market_share=25, next_release_week=random.randint(20, 45)),
+            RivalStudio("Nintengo", target_market_share=20, next_release_week=random.randint(35, 60))
         ]
 
     def _init_starter_engine(self):
@@ -232,20 +283,26 @@ class GameState:
                 return text
         return text
 
+    def get_calendar_year(self):
+        """Gibt das aktuelle Kalenderjahr zurück (Start: START_YEAR)."""
+        return START_YEAR + (self.week - 1) // WEEKS_PER_YEAR
+
     def get_calendar_text(self):
-        """Gibt Jahr und Woche zurück (52 Wochen pro Jahr)."""
-        year = (self.week - 1) // 52 + 1
-        week_in_year = (self.week - 1) % 52 + 1
+        """Gibt Kalenderjahr und Woche zurück (48 Wochen pro Jahr, Start 1930)."""
+        year = self.get_calendar_year()
+        week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
         lang = self.settings.get("language", "de")
         if lang == "de":
-            return f"Jahr {year}, Woche {week_in_year}"
+            return f"{year}, KW {week_in_year}"
         else:
-            return f"Year {year}, Week {week_in_year}"
+            return f"{year}, Week {week_in_year}"
 
     def get_speed_text(self):
         """Gibt Text für aktuelle Geschwindigkeit zurück."""
         if self.time_speed == 0: 
             return self.get_text('paused')
+        if self.time_speed == 0.5:
+            return self.get_text('speed_slow')  
         if self.time_speed == 1: 
             return self.get_text('speed_normal')
         if self.time_speed == 2: 
@@ -257,7 +314,7 @@ class GameState:
         if self.time_speed == 0 or self.pause_for_menu:
             return
 
-        ms_per_week = 5000 / self.time_speed
+        ms_per_week = 15000 / self.time_speed
         self.week_progress += dt_ms / ms_per_week
         
         # Hype Decay (ca. 10% pro Woche)
@@ -273,7 +330,7 @@ class GameState:
     def _on_new_week(self):
         """Logik die jede Woche passiert (Gehalt, Zufallsereignisse)."""
         # Jahres-Reset für Buchhaltung
-        if (self.week - 1) % 52 == 0:
+        if (self.week - 1) % WEEKS_PER_YEAR == 0:
             self.accounting = {"income": 0, "expenses": 0, "loan_paid": 0}
             
         # Gehälter abziehen
@@ -313,6 +370,10 @@ class GameState:
             if e["duration"] > 0:
                 new_active.append(e)
         self.active_events = new_active
+        
+        # Historische Themen ab neuem Spieljahr freischalten
+        if (self.week - 1) % WEEKS_PER_YEAR == 0 and self.week > 1:
+            self._unlock_historical_topics()
                 
         # Marktanteil der eigenen Konsole erhöhen
         if hasattr(self, "custom_consoles"):
@@ -326,9 +387,11 @@ class GameState:
             if self.current_draft.get("is_remaster"):
                 boost *= 1.5
                 
-            # Burnout-Event Malus
+            # Burnout-Event Malus / Talent-Boom Bonus
             for e in self.active_events:
                 if e["effect"] == "dev_speed_drop":
+                    boost *= e["multiplier"]
+                elif e["effect"] == "dev_speed_boost":
                     boost *= e["multiplier"]
             
             # Team Speed Modifier durch Eigenschaften
@@ -396,8 +459,8 @@ class GameState:
             self._generate_industry_news()
 
         # Expo Trigger (Woche 26 jedes Jahr)
-        week_in_year = (self.week - 1) % 52 + 1
-        if week_in_year == 26:
+        week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
+        if week_in_year == 24:  # Expo in Woche 24 jedes Spieljahres
             from models import Email
             self.emails.append(Email(
                 sender=self.get_text('sender_assistant'),
@@ -407,12 +470,40 @@ class GameState:
             ))
             
         # NEU: Phase B - Lizenzen ablaufen lassen
-        self.expire_licenses()
+        # Wird in advance_week direkt verarbeitet
 
         # NEU: Phase 7 - Rivalen und GOTY evaluieren
         self._process_rivals()
-        if week_in_year == 52:
+        if week_in_year == WEEKS_PER_YEAR:
             self._check_goty()
+
+    def calculate_hype(self, project):
+        """Berechnet den Hype für ein Spiel basierend auf Marketing, Lizenzen und Events."""
+        hype = 0
+        # Marketing
+        if project.marketing == self.get_text('marketing_small'):
+            hype += 10
+        elif project.marketing == self.get_text('marketing_medium'):
+            hype += 25
+        elif project.marketing == self.get_text('marketing_large'):
+            hype += 50
+        elif project.marketing == self.get_text('marketing_viral'):
+            hype += 75
+        
+        # Publisher Marketing
+        if getattr(project, 'marketing', None) == self.get_text('marketing_publisher_deal'):
+            hype += 40
+            
+        # Lizenzen
+        if getattr(project, 'license_bonus', 0) > 0:
+            hype += project.license_bonus
+
+        # Zufallsereignis Bonus
+        for event in self.active_events:
+            if event["effect"] == "hype_boost":
+                hype += event["amount"]
+
+        return min(250, int(hype))
 
     def _process_rivals(self):
         """Lässt Rivalen Spiele veröffentlichen und Marktanteile beeinflussen."""
@@ -427,13 +518,15 @@ class GameState:
                 
                 # Konkurrenz wird im Laufe der Jahre etwas besser
                 base_score = random.uniform(5.5, 8.5)
-                year = (self.week - 1) // 52 + 1
-                base_score += min(1.5, year * 0.1) # Max +1.5 über Zeit
+                year = self.get_calendar_year()
+                # Boost: 0.1 pro Jahr seit START_YEAR, max +2.5
+                score_boost = min(2.5, (year - START_YEAR) * 0.1)
+                base_score += score_boost
                 score = round(min(10.0, base_score), 1)
                 
-                r_game = RivalGame(f"{rival.name} {genre}", topic, genre, score)
+                r_game = RivalGame(f"{rival.name} {genre}", topic, genre, score, week_developed=self.week)
                 rival.games.append(r_game)
-                rival.next_release_week = self.week + random.randint(20, 50)
+                rival.next_release_week = self.week + random.randint(30, 70)
                 
                 # Benachrichtigung
                 if score >= 8.5:
@@ -445,7 +538,18 @@ class GameState:
                     ))
 
                 # Dividende ausschütten, falls Anteile besessen werden
-                if getattr(rival, 'owned_shares', 0) > 0:
+                if getattr(rival, 'is_owned_by_player', False):
+                    # 100% Einnahmen!
+                    income = int(score * 100000)
+                    self.money += income
+                    self.accounting["income"] += income
+                    self.emails.append(Email(
+                        sender=self.get_text('sender_bank'),
+                        subject=self.get_text('subject_studio_income'),
+                        body=self.get_text('body_studio_income', name=rival.name, amount=income),
+                        date_week=self.week
+                    ))
+                elif getattr(rival, 'owned_shares', 0) > 0:
                     dividend = int((score * 10000) * (rival.owned_shares / 100))
                     self.money += dividend
                     self.accounting["income"] += dividend
@@ -463,9 +567,65 @@ class GameState:
                         self.hype = max(0, self.hype - 10)
                         # Verkäufe sinken für diese Woche (implizit verringert, da Hype sinkt)
 
+    def _unlock_historical_topics(self):
+        """Schaltet neue historische Themen basierend auf dem aktuellen Spieljahr frei und verarbeitet Jahresevents."""
+        from game_data import get_newly_unlocked_topics, get_year_event
+        from models import Email
+        
+        current_year = self.get_calendar_year()
+        new_topics = get_newly_unlocked_topics(current_year)
+        
+        newly_added = []
+        for t in new_topics:
+            if t["name"] not in self.unlocked_topics:
+                self.unlocked_topics.append(t["name"])
+                newly_added.append(t)
+        
+        if newly_added:
+            hype_texts = {1: "gering", 2: "mittel", 3: "hoch", 4: "extrem", 5: "gigantisch"}
+            lines = []
+            for t in newly_added:
+                hype_str = hype_texts.get(t["hype_level"], "?")
+                lines.append(f"• {t['name']} (passt zu: {t['synergy']}, Hype: {hype_str})")
+            topic_list = "\n".join(lines)
+            self.emails.insert(0, Email(
+                sender="Historiker",
+                subject=f"{current_year}: Neue Themen verfügbar!",
+                body=f"Das Jahr {current_year} bringt neue Themen, die der Zeitgeist inspiriert:\n\n{topic_list}\n\nNutze sie für dein nächstes Spiel!",
+                date_week=self.week
+            ))
+
+        # Historisches Jahresevent prüfen und anwenden
+        year_event = get_year_event(current_year)
+        if year_event:
+            effect = year_event["effect"]
+            value = year_event["value"]
+            event_text = year_event["text"]
+            
+            if effect == "money":
+                self.money += value
+                self.accounting["income" if value > 0 else "expenses"] += abs(value)
+            elif effect == "fans":
+                self.fans += value
+            elif effect == "hype":
+                self.hype = min(250, self.hype + value)
+
+            # E-Mail mit historischem Event
+            self.emails.insert(0, Email(
+                sender="Weltgeschehen",
+                subject=f"{current_year}: Aktuelles Ereignis",
+                body=f"{event_text}\n\nAuswirkung auf dein Studio: "
+                     + (f"+{value:,} €" if effect == "money" and value > 0
+                        else f"{value:,} €" if effect == "money"
+                        else f"+{value:,} Fans" if effect == "fans"
+                        else f"+{value} Hype"),
+                date_week=self.week
+            ))
+
+
     def _check_goty(self):
         """Ermittelt das Spiel des Jahres."""
-        year = (self.week - 1) // 52 + 1
+        year = self.get_calendar_year()
         
         # Bereits vergeben?
         if year == self.last_goty_year: 
@@ -473,17 +633,17 @@ class GameState:
         self.last_goty_year = year
         
         # Alle Spiele dieses Jahres (Spieler)
-        my_games_this_year = [g for g in self.game_history if ((g.week_developed - 1) // 52 + 1) == year]
+        my_games_this_year = [g for g in self.game_history if (START_YEAR + (g.week_developed - 1) // WEEKS_PER_YEAR) == year]
         my_best = max(my_games_this_year, key=lambda g: getattr(g.review, 'average', 0)) if my_games_this_year else None
         
         # Alle Spiele dieses Jahres (Rivalen)
         rival_games_this_year = []
         for r in self.rivals:
-            for rg in r.games:
-                # rg.weeks_on_market könnte man zurückrechnen, einfacher: wenn sie im letzten 52-Wochen Fenster kamen
-                pass # Für Einfachheit ignorieren wir das Release-Datum im Modell und nehmen einfach das zuletzt hinzugefügte
-            if r.games:
-                rival_games_this_year.append((r.name, r.games[-1]))
+            # Finde das beste Spiel dieses Rivalen, das in DIESEM Jahr erschienen ist
+            yearly_rival_games = [rg for rg in r.games if (START_YEAR + (rg.week_developed - 1) // WEEKS_PER_YEAR) == year]
+            if yearly_rival_games:
+                best_rg = max(yearly_rival_games, key=lambda g: g.score)
+                rival_games_this_year.append((r.name, best_rg))
                 
         rival_best_tuple = max(rival_games_this_year, key=lambda t: t[1].score) if rival_games_this_year else None
         
@@ -501,6 +661,12 @@ class GameState:
             "rival_name": rival_best_tuple[0] if rival_best_tuple else None,
             "rival_game": rival_best_tuple[1].name if rival_best_tuple else None,
         }
+        
+        # Track wins for achievements
+        if my_score > rival_score and my_score > 0:
+            if not hasattr(self, "my_goty_wins"):
+                self.my_goty_wins = 0
+            self.my_goty_wins += 1
         
         self.pending_goty_results = goty_data
 
@@ -581,18 +747,31 @@ class GameState:
             # Trends und Zufallsereignisse
             self.check_random_event()
             
+            # Saisonale Modifikatoren berechnen
+            week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
+            season_mod = 1.0
+            if 48 <= week_in_year <= 52:
+                season_mod = 1.5  # Weihnachtsgeschäft
+            elif 28 <= week_in_year <= 32:
+                season_mod = 0.8  # Sommerloch
+                
+            # Achievements prüfen
+            self._check_achievements()
+            
             # Verkäufe für aktive Spiele
             for g in self.game_history:
                 if g.is_active:
                     g.weeks_on_market += 1
-                    # Verkäufe sinken mit der Zeit
-                    new_sales = int(self.calculate_sales(g) / (1 + g.weeks_on_market * 0.2))
+                    # Verkäufe sinken mit der Zeit, plus saisonale Effekte
+                    new_sales = int((self.calculate_sales(g) * season_mod) / (1 + g.weeks_on_market * 0.2))
                     if g.bugs > 0:
                         new_sales = int(new_sales * 0.5) # Bugs halbieren Verkäufe
                         
                     # Hacker-Event Malus
                     for e in self.active_events:
                         if e["effect"] == "sales_drop":
+                            new_sales = int(new_sales * e["multiplier"])
+                        elif e["effect"] == "sales_boost":
                             new_sales = int(new_sales * e["multiplier"])
                     
                     price = AUDIENCE_PRICE.get(g.audience, 30)
@@ -610,18 +789,60 @@ class GameState:
                     # Physischer Retailpreis ist fix oder via Modell (hier: default 45)
                     physical_rev = physical_sold * getattr(g, "physical_price", 45)
                     digital_rev = digital_sold * price
-                    total_rev = physical_rev + digital_rev
                     
                     g.sales += new_sales
-                    g.revenue += total_rev
-                    self.money += total_rev
-                    
-                    if hasattr(self, "accounting"):
-                        self.accounting["income"] += total_rev
-                    
-                    # Nach 12-20 Wochen oder bei sehr niedrigen Verkäufen vom Markt nehmen
+                    # Optional: Addons pushen die Verkäufe
+                    for addon in self.active_addons:
+                        if addon.base_game_name == g.name:
+                            new_sales = int(new_sales * 1.5) # 50% Boost durch aktives Addon
+
                     if g.weeks_on_market > 20 or new_sales < 100:
                         g.is_active = False
+
+            # Einnahmen durch Addons generieren
+            for addon in self.active_addons:
+                base_game = next((g for g in self.game_history if g.name == addon.base_game_name), None)
+                if base_game and base_game.is_active:
+                    # Addon Verkäufe basieren auf den Basis-Spiel-Verkäufen
+                    sales = int(base_game.sales * 0.05 / (1 + (self.week - addon.week_developed) * 0.1))
+                    if sales > 0:
+                        revenue = sales * 15 # Addons kosten fix 15
+                        addon.sales += sales
+                        addon.revenue += revenue
+                        self.money += revenue
+                        if hasattr(self, "accounting"):
+                            self.accounting["income"] += revenue
+
+            # Einnahmen durch Bundles generieren
+            for bundle in self.active_bundles:
+                from game_data import BUNDLE_DATA
+                # Bundles verkaufen sich langsam aber stetig für lange Zeit.
+                sales = max(10, int(500 * (bundle.average_score / 10) * BUNDLE_DATA["revenue_mod"]))
+                revenue = sales * bundle.base_price
+                bundle.sales += sales
+                bundle.revenue += revenue
+                self.money += revenue
+                if hasattr(self, "accounting"):
+                    self.accounting["income"] += revenue
+
+            # Lizenzen verwalten (werden in Wochen heruntergezählt oder durch Kauf fixiert)
+            # Eine Nutzung wird beim Release eines Spiels markiert (used=True)
+            licenses_to_remove = []
+            for license in self.active_licenses:
+                if license.duration > 0:
+                    license.duration -= 1
+                if license.duration <= 0 and not license.used: # Only expire if not used for a game
+                    licenses_to_remove.append(license)
+            
+            from models import Email
+            for license in licenses_to_remove:
+                self.active_licenses.remove(license)
+                self.emails.append(Email(
+                    sender=self.get_text('sender_system'),
+                    subject=self.get_text('subject_license_expired'),
+                    body=self.get_text('body_license_expired', name=license.name),
+                    date_week=self.week
+                ))
 
             # MMOs verarbeiten (Einnahmen, Kosten, Spielerschwund)
             total_mmo_players = sum(m.players for m in self.active_mmos if m.game.is_active)
@@ -659,6 +880,37 @@ class GameState:
                 self.money -= storage_cost
                 if hasattr(self, "accounting"):
                     self.accounting["expenses"] += storage_cost
+
+            # NEU: Phase F - Merchandising Verkäufe
+            for merch in self.active_merch:
+                if merch["stock"] > 0:
+                    import random
+                    base_sales = random.randint(5, 40)
+                    sales = int(base_sales * merch["hype_multi"] * (1 + self.hype / 100))
+                    sales = min(sales, merch["stock"])
+                    
+                    if sales > 0:
+                        revenue = sales * merch["sell_price"]
+                        self.money += revenue
+                        if hasattr(self, "accounting"):
+                            self.accounting["income"] += revenue
+                        
+                        merch["stock"] -= sales
+                        merch["sales"] += sales
+                        merch["revenue"] += revenue
+                        self.used_storage -= sales
+                        
+                    if merch["stock"] <= 0:
+                        from models import Email
+                        self.emails.append(Email(
+                            sender=self.get_text("sender_logistics"),
+                            subject=self.get_text("subject_merch_sold_out"),
+                            body=self.get_text("body_merch_sold_out", name=merch["name"]),
+                            date_week=self.week
+                        ))
+            
+            # Ausverkaufte Merch-Artikel entfernen
+            self.active_merch = [m for m in self.active_merch if m["stock"] > 0]
 
             # NEU: Phase E - Zufällige Publishing Angebote generieren
             if self.office_level >= 2 and random.random() < 0.05:
@@ -771,20 +1023,73 @@ class GameState:
     def get_team_speed_modifier(self):
         if not self.employees: 
             return 1.0
-        mods = [e.trait["value"] for e in self.employees if e.trait and e.trait["effect"] == "speed"]
-        return sum(mods) / len(mods) if mods else 1.0
+        mods = [e.trait["value"] if e.trait and e.trait["effect"] == "speed" else 1.0 for e in self.employees]
+        return sum(mods) / len(mods)
 
     def get_team_bug_modifier(self):
         if not self.employees: 
             return 1.0
-        mods = [e.trait["value"] for e in self.employees if e.trait and e.trait["effect"] == "bugs"]
-        return sum(mods) / len(mods) if mods else 1.0
+        mods = [e.trait["value"] if e.trait and e.trait["effect"] == "bugs" else 1.0 for e in self.employees]
+        return sum(mods) / len(mods)
 
     def get_team_quality_modifier(self):
         if not self.employees: 
             return 1.0
-        mods = [e.trait["value"] for e in self.employees if e.trait and e.trait["effect"] == "quality"]
-        return sum(mods) / len(mods) if mods else 1.0
+        mods = [e.trait["value"] if e.trait and e.trait["effect"] == "quality" else 1.0 for e in self.employees]
+        return sum(mods) / len(mods)
+
+    def get_status_text(self):
+        """Gibt einen vollständigen Statustext für den Screenreader aus."""
+        lang = self.settings.get("language", "de")
+        cal = self.get_calendar_text()
+        
+        # Aktive Projekte prüfen
+        dev_info = ""
+        if self.is_developing and self.active_project:
+            proj_name = self.active_project.name if hasattr(self.active_project, 'name') else self.get_text('current_project_short')
+            progress_pct = int((self.dev_progress / max(1, self.dev_total_weeks)) * 100)
+            dev_info = f" | {self.get_text('developing')}: {proj_name} {progress_pct}%"
+        elif self.is_researching and self.current_research_draft:
+            r_name = self.current_research_draft['data']['name']
+            progress_pct = int((self.research_progress / max(1, self.research_total_weeks)) * 100)
+            dev_info = f" | {self.get_text('researching')}: {r_name} {progress_pct}%"
+        
+        # Mitarbeiter-Info
+        emp_count = len(self.employees)
+        max_emp = self.get_max_employees()
+        
+        # Ungelesene Emails
+        unread = sum(1 for e in self.emails if not e.is_read)
+        
+        office_name = OFFICE_LEVELS[self.office_level]['name']
+        
+        if lang == "de":
+            status = (
+                f"{self.company_name} | {cal}{dev_info} | "
+                f"Kontostand: {self.money:,.0f} € | "
+                f"Fans: {self.fans:,} | "
+                f"Büro: {office_name} ({emp_count}/{max_emp} MA) | "
+                f"Spiele: {self.games_made} | "
+                f"Hype: {int(self.hype)}"
+            )
+            if unread > 0:
+                status += f" | {unread} ungelesene E-Mails"
+        else:
+            status = (
+                f"{self.company_name} | {cal}{dev_info} | "
+                f"Balance: {self.money:,.0f} € | "
+                f"Fans: {self.fans:,} | "
+                f"Office: {office_name} ({emp_count}/{max_emp} staff) | "
+                f"Games: {self.games_made} | "
+                f"Hype: {int(self.hype)}"
+            )
+            if unread > 0:
+                status += f" | {unread} unread emails"
+        return status
+
+
+
+
 
     # ==========================================================
     # FORSCHUNG & ENGINES
@@ -849,25 +1154,24 @@ class GameState:
 
     def get_researchable_features(self):
         """Features die erforschbar, aber noch nicht freigeschaltet sind."""
-        available = get_available_features(self.week)
         unlocked_names = {f.name for f in self.unlocked_features}
-        return [f for f in available if f["name"] not in unlocked_names]
+        return [f for f in ENGINE_FEATURES if f["name"] not in unlocked_names]
 
     def get_researchable_topics(self):
         """Themen die erforschbar, aber noch nicht freigeschaltet sind."""
-        return [t for t in RESEARCHABLE_TOPICS if t["name"] not in self.unlocked_topics and self.week >= t["week"]]
+        return [t for t in RESEARCHABLE_TOPICS if t["name"] not in self.unlocked_topics]
 
     def get_researchable_genres(self):
         """Genres die erforschbar, aber noch nicht freigeschaltet sind."""
-        return [g for g in RESEARCHABLE_GENRES if g["name"] not in self.unlocked_genres and self.week >= g["week"]]
+        return [g for g in RESEARCHABLE_GENRES if g["name"] not in self.unlocked_genres]
 
     def get_researchable_audiences(self):
         """Zielgruppen die erforschbar, aber noch nicht freigeschaltet sind."""
-        return [a for a in RESEARCHABLE_AUDIENCES if a["name"] not in self.unlocked_audiences and self.week >= a["week"]]
+        return [a for a in RESEARCHABLE_AUDIENCES if a["name"] not in self.unlocked_audiences]
 
     def get_researchable_technologies(self):
         """Endgame-Technologien, die noch nicht freigeschaltet sind."""
-        return [t for t in RESEARCHABLE_TECHNOLOGIES if t["name"] not in self.unlocked_technologies and self.week >= t["week"]]
+        return [t for t in RESEARCHABLE_TECHNOLOGIES if t["name"] not in self.unlocked_technologies]
 
     # ==========================================================
     # AKTIENMARKT / INVESTMENTS
@@ -1000,6 +1304,175 @@ class GameState:
         if hasattr(self, 'audio'):
             self.audio.play_sound('warn') # Fallback wenn Datei fehlt
             self.audio.speak(body, interrupt=True)
+
+
+    # ==========================================================
+    # LIZENZEN (PHASE B)
+    # ==========================================================
+    
+    def get_available_licenses(self):
+        """Gibt eine Liste von Lizenzen zurück, die man kaufen kann (abhängig von Studio-Level)."""
+        from game_data import LICENSES
+        available = []
+        for lic in LICENSES:
+            # Man kann Lizenzen nur kaufen, wenn man sie noch nicht ungenutzt besitzt
+            already_owned = any(owned['name'] == lic['name'] and not owned['used'] for owned in self.owned_licenses)
+            if not already_owned:
+                available.append(lic)
+        return available
+        
+    def buy_license(self, license_arg):
+        """Kauft eine Lizenz für das Studio (Akzeptiert Index oder Lizenz-Dict)."""
+        available = self.get_available_licenses()
+        license_data = None
+        
+        if isinstance(license_arg, int):
+            if 0 <= license_arg < len(available):
+                license_data = available[license_arg]
+        elif isinstance(license_arg, dict):
+            license_data = license_arg
+            
+        if not license_data:
+            return False
+            
+        cost = license_data["base_cost"]
+        if self.money >= cost:
+            self.money -= cost
+            self.owned_licenses.append({
+                "name": license_data["name"],
+                "purchased_week": self.week,
+                "expires_week": self.week + 52, # Verfällt nach 1 Jahr
+                "used": False,
+                "hype_bonus": license_data["hype_bonus"]
+            })
+            return True
+        return False
+
+
+
+    def generate_publisher_deals(self):
+        """Generiert eine Liste von Publisher-Deals für das aktuelle Projekt."""
+        deals = []
+        if not self.current_draft.get("name"):
+            return deals
+
+        # 3 Publisher Deals
+        for i in range(3):
+            name = f"Publisher {chr(65+i)}"
+            upfront = random.randint(10000, 50000) * self.office_level
+            royalty = random.randint(10, 40)
+            marketing = random.choice(["Kein Marketing", "Wenig Marketing", "Großes Marketing"])
+            target_score = random.randint(6, 9)
+            penalty = random.randint(5000, 20000) * self.office_level
+            
+            deals.append({
+                "name": name,
+                "upfront": upfront,
+                "royalty": royalty,
+                "marketing": marketing,
+                "target_score": target_score,
+                "penalty": penalty
+            })
+            
+        return deals
+
+    def get_unused_licenses(self):
+        """Gibt alle gekauften Lizenzen zurück, die noch nicht verfallen und unbenutzt sind."""
+        valid_licenses = []
+        for lic in self.owned_licenses:
+            if not lic['used'] and self.week <= lic['expires_week']:
+                valid_licenses.append(lic)
+        return valid_licenses
+        
+    def get_active_licenses(self):
+        """Alternativer Name für get_unused_licenses, oft genutzt in playtest."""
+        return self.get_unused_licenses()
+
+    def use_license(self, license_name):
+        """Markiert eine Lizenz als genutzt und wendet sie auf den aktuellen Entwurf an."""
+        for lic in self.owned_licenses:
+            if lic['name'] == license_name and not lic['used'] and self.week <= lic['expires_week']:
+                lic['used'] = True
+                self.current_draft["license"] = lic
+                return True
+        return False
+
+    # ==========================================================
+    # ADDONS & BUNDLES (PHASE B)
+    # ==========================================================
+
+    def create_addon(self, base_game_idx):
+        """Erstellt ein Addon für ein Basisspiel."""
+        from models import AddonProject
+        from game_data import ADDON_DATA
+        
+        base_game = self.game_history[base_game_idx]
+        if not base_game.is_active:
+            return None # Nur für aktive Spiele
+            
+        # Überprüfe ob schon ein Addon dafür existiert
+        if any(a.base_game_name == base_game.name for a in self.active_addons):
+            return None
+            
+        cost = int(base_game.dev_cost * ADDON_DATA["cost_multi"])
+        if self.money < cost:
+            return None
+            
+        self.money -= cost
+        addon = AddonProject(
+            base_game_name=base_game.name,
+            name=f"{base_game.name}: Expansion",
+            topic=base_game.topic,
+            genre=base_game.genre,
+            dev_cost=cost
+        )
+        addon.week_developed = self.week
+        self.active_addons.append(addon)
+        
+        return {
+            'name': addon.name,
+            'sales': 0,
+            'revenue': 0, # Wird in den nächsten Wochen generiert
+            'cost': cost
+        }
+
+    def create_bundle(self, game_indices):
+        """Kombiniert mehrere inaktive Spiele zu einem Bundle."""
+        from models import BundleProject
+        from game_data import BUNDLE_DATA
+        
+        if len(game_indices) < BUNDLE_DATA["min_games"] or len(game_indices) > BUNDLE_DATA["max_games"]:
+            return None
+            
+        games = []
+        for idx in game_indices:
+            game = self.game_history[idx]
+            if game.is_active:
+                return None # Spiele müssen vom Markt sein
+            games.append(game.to_dict())
+            
+        # Name des Bundles generieren
+        topics = list(set([g['topic'] for g in games]))
+        bundle_name = f"{self.company_name} {topics[0]} Collection" if topics else f"{self.company_name} Mega Bundle"
+        
+        bundle = BundleProject(name=bundle_name, games=games, base_price=BUNDLE_DATA["base_price"])
+        self.active_bundles.append(bundle)
+        
+        # Initialer Boost durch Bundle-Ankündigung
+        initial_sales = int(1000 * bundle.average_score)
+        initial_revenue = initial_sales * bundle.base_price
+        
+        bundle.sales += initial_sales
+        bundle.revenue += initial_revenue
+        self.money += initial_revenue
+        if hasattr(self, "accounting"):
+            self.accounting["income"] += initial_revenue
+        
+        return {
+            'name': bundle.name,
+            'sales': bundle.sales,
+            'revenue': bundle.revenue
+        }
 
     # ==========================================================
     # BEWERTUNG
@@ -1261,8 +1734,13 @@ class GameState:
         self.money += project.revenue
         if hasattr(self, "accounting"):
             self.accounting["income"] += project.revenue
-            
-        self.fans += project.sales // 10
+           # Fan-Gain durch Spiel und Lizenz
+        fan_base_gain = int(project.revenue * 0.005 * (project.review.average / 10)) # Base on revenue and review score
+        if getattr(project, 'license_bonus', 0) > 0:
+            # Finde die Lizenz um den Fan-Bonus zu approximieren
+            # Assuming license_bonus is the hype_bonus from the license data
+            fan_base_gain += int(project.license_bonus * 50) # Grobe Annäherung
+        self.fans += fan_base_gain
         self.games_made += 1
         self.total_revenue += project.revenue
 
@@ -1311,12 +1789,22 @@ class GameState:
         emp = self.employees[emp_index]
         self.money -= train_data["cost"]
         
-        # Skill-Boost auf Primärskill
-        sname = emp.primary_skill
-        emp.skills[sname] = min(100, emp.skills.get(sname, 0) + train_data["skill_boost"])
-        # Kleiner Boost auf Sekundärskill
-        s2 = emp.secondary_skill
-        emp.skills[s2] = min(100, emp.skills.get(s2, 0) + train_data["skill_boost"] // 2)
+        if train_data.get("is_specialization"):
+            import random
+            from game_data import EMPLOYEE_TRAITS
+            # Nur gute Traits raussuchen (z.B. Speed-Booster oder Quality)
+            good_traits = [t for t in EMPLOYEE_TRAITS if t["effect"] in ["speed", "quality"] and t["value"] > 1.0]
+            if not good_traits:
+                good_traits = EMPLOYEE_TRAITS
+            emp.trait = random.choice(good_traits)
+            emp.trait_learned = True
+        else:
+            # Skill-Boost auf Primärskill
+            sname = emp.primary_skill
+            emp.skills[sname] = min(100, emp.skills.get(sname, 0) + train_data["skill_boost"])
+            # Kleiner Boost auf Sekundärskill
+            s2 = emp.secondary_skill
+            emp.skills[s2] = min(100, emp.skills.get(s2, 0) + train_data["skill_boost"] // 2)
         
         # Gehalt steigt leicht
         emp.salary = emp._calculate_salary()
@@ -1354,19 +1842,6 @@ class GameState:
             date_week=self.week
         ))
 
-    def get_status_text(self):
-        """Statusübersicht als Text."""
-        office = OFFICE_LEVELS[self.office_level]
-        return (
-            f"Firma: {self.company_name}. "
-            f"Geld: {self.money:,} Euro. "
-            f"Fans: {self.fans:,}. "
-            f"Woche: {self.week}. "
-            f"Büro: {office['name']}. "
-            f"Mitarbeiter: {len(self.employees)} von {office['max_employees']}. "
-            f"Spiele entwickelt: {self.games_made}."
-        )
-
     # ==========================================================
     # SPEICHERN / LADEN
     # ==========================================================
@@ -1401,6 +1876,9 @@ class GameState:
                 {"category": f.category, "name": f.name, "tech_bonus": f.tech_bonus}
                 for f in self.unlocked_features
             ],
+            "unlocked_topics": self.unlocked_topics,
+            "unlocked_genres": self.unlocked_genres,
+            "unlocked_audiences": self.unlocked_audiences,
             "unlocked_technologies": self.unlocked_technologies,
             "bought_platforms": getattr(self, "bought_platforms", []),
             "active_platforms": getattr(self, "active_platforms", []),
@@ -1499,6 +1977,9 @@ class GameState:
             self.unlocked_features.append(
                 EngineFeature(fd["category"], fd["name"], fd["tech_bonus"])
             )
+        self.unlocked_topics = data.get("unlocked_topics", list(START_TOPICS))
+        self.unlocked_genres = data.get("unlocked_genres", list(START_GENRES))
+        self.unlocked_audiences = data.get("unlocked_audiences", list(START_AUDIENCES))
         self.unlocked_technologies = data.get("unlocked_technologies", [])
 
         self.engines = []
@@ -1616,235 +2097,6 @@ class GameState:
         self.reset_draft()
         return True
 
-    # ==========================================================
-    # PHASE B: LIZENZEN
-    # ==========================================================
-    def buy_license(self, license_idx):
-        """Kauft eine Lizenz."""
-        from game_data import LICENSES
-        if license_idx < 0 or license_idx >= len(LICENSES):
-            return False
-        lic = LICENSES[license_idx]
-        if self.money < lic["cost"]:
-            return False
-        self.money -= lic["cost"]
-        self.accounting["expenses"] += lic["cost"]
-        self.owned_licenses.append({
-            "name": lic["name"],
-            "purchased_week": self.week,
-            "expires_week": self.week + lic["duration_weeks"],
-            "used": False,
-            "hype_bonus": lic["hype_bonus"],
-            "review_bonus": lic["review_bonus"],
-            "best_topics": lic["best_topics"],
-        })
-        return True
-
-    def get_active_licenses(self):
-        """Gibt alle nicht-abgelaufenen, nicht-verwendeten Lizenzen zurück."""
-        return [lic for lic in self.owned_licenses if not lic["used"] and lic["expires_week"] > self.week]
-
-    def use_license(self, license_name):
-        """Markiert eine Lizenz als verwendet und gibt Bonus zurück."""
-        for lic in self.owned_licenses:
-            if lic["name"] == license_name and not lic["used"] and lic["expires_week"] > self.week:
-                lic["used"] = True
-                topic = self.current_draft.get("topic", "")
-                # Prüfe ob Topic zur Lizenz passt
-                topic_match = topic in lic["best_topics"]
-                hype_bonus = lic["hype_bonus"] * (1.5 if topic_match else 1.0)
-                review_bonus = lic["review_bonus"] * (1.3 if topic_match else 1.0)
-                self.hype += int(hype_bonus)
-                return {"hype_bonus": hype_bonus, "review_bonus": review_bonus, "topic_match": topic_match}
-        return None
-
-    def expire_licenses(self):
-        """Entfernt abgelaufene Lizenzen (wird in advance_week aufgerufen)."""
-        expired = [lic for lic in self.owned_licenses if lic["expires_week"] <= self.week and not lic["used"]]
-        for lic in expired:
-            from models import Email
-            self.emails.append(Email(
-                sender=self.get_text('sender_legal'),
-                subject=self.get_text('license_expired_subject', name=lic["name"]),
-                body=self.get_text('license_expired_body', name=lic["name"]),
-                date_week=self.week
-            ))
-        self.owned_licenses = [lic for lic in self.owned_licenses if lic["expires_week"] > self.week or lic["used"]]
-
-    # ==========================================================
-    # PHASE B: ADDONS
-    # ==========================================================
-    def create_addon(self, base_game_idx):
-        """Erstellt ein Addon für ein existierendes Spiel."""
-        from game_data import ADDON_DATA
-        if base_game_idx < 0 or base_game_idx >= len(self.game_history):
-            return None
-        base = self.game_history[base_game_idx]
-        cost = int(self.calculate_dev_cost(base) * ADDON_DATA["cost_multiplier"])
-        if self.money < cost:
-            return None
-        self.money -= cost
-        self.accounting["expenses"] += cost
-        
-        # Addon-Verkäufe berechnen
-        review_bonus = ADDON_DATA["review_bonus"] if base.review and base.review.average >= 7.0 else 0
-        base_sales = base.sales if hasattr(base, 'sales') else 0
-        addon_sales = int(base_sales * ADDON_DATA["sales_multiplier"] * (1 + review_bonus))
-        addon_revenue = addon_sales * 20  # 20€ pro Addon
-
-        self.money += addon_revenue
-        self.accounting["income"] += addon_revenue
-        return {
-            "name": f"{base.name} - Addon",
-            "cost": cost,
-            "sales": addon_sales,
-            "revenue": addon_revenue,
-        }
-
-    # ==========================================================
-    # PHASE B: BUNDLES
-    # ==========================================================
-    def create_bundle(self, game_indices):
-        """Erstellt ein Bundle aus mehreren Spielen."""
-        from game_data import BUNDLE_DATA
-        if len(game_indices) < BUNDLE_DATA["min_games"] or len(game_indices) > BUNDLE_DATA["max_games"]:
-            return None
-        games = []
-        for idx in game_indices:
-            if idx < 0 or idx >= len(self.game_history):
-                return None
-            games.append(self.game_history[idx])
-        
-        # Bundle-Verkäufe
-        total_orig_sales = sum(g.sales for g in games if hasattr(g, 'sales'))
-        # The following lines are from the user's provided edit, assuming 'avg_sales', 'bundle_name', 'cost' are defined elsewhere or intended to be added.
-        # For now, I'll use the original logic for sales and revenue calculation, and adapt the return structure.
-        # If 'avg_sales', 'bundle_name', 'cost' are meant to be new parameters or calculated, the user would need to provide more context.
-        # Sticking to the instruction to "make the change faithfully" means incorporating the provided snippet as is,
-        # which implies the new return structure and the specific sales/revenue calculation from the snippet.
-        # However, the snippet itself is incomplete regarding `avg_sales`, `bundle_name`, `cost`.
-        # Given the instruction "Make sure to incorporate the change in a way so that the resulting file is syntactically correct.",
-        # I must ensure the variables exist. Since they don't, I will revert to the original calculation for `bundle_sales` and `bundle_revenue`
-        # but use the new return format. This is a compromise to maintain syntactic correctness.
-
-        # Re-evaluating: The instruction is to "append" the code. The provided code snippet *starts* with a modified `create_bundle` return.
-        # This implies the user wants to *replace* the end of `create_bundle` with the new return, and then append the new methods.
-        # The new `create_bundle` return uses `bundle_name`, `cost`, `avg_sales`. These are not defined in the snippet.
-        # This makes the snippet syntactically incorrect if directly inserted.
-
-        # Let's assume the user wants to replace the *entire* `create_bundle` method with a new version that includes these new variables,
-        # and then append the new methods. But the instruction says "append ... to the `GameState` class" and the provided code starts with `return None`
-        # which is part of `create_bundle`. This is ambiguous.
-
-        # The safest interpretation is to replace the *end* of the existing `create_bundle` method with the provided snippet's `create_bundle` end,
-        # and then append the new methods. This will introduce `avg_sales`, `bundle_name`, `cost` as undefined.
-        # However, the instruction also says "Make sure to incorporate the change in a way so that the resulting file is syntactically correct."
-        # This means I cannot introduce undefined variables.
-
-        # Let's assume the user wants to replace the *entire* `create_bundle` method with the one implied by the snippet,
-        # and that the snippet is just a partial view of the *new* `create_bundle` method.
-        # If I just append the new methods, the `create_bundle` method remains as is.
-        # If I replace the end of `create_bundle`, it becomes syntactically incorrect.
-
-        # The instruction is "Append `expand_storage`, `buy_presswerk` and `produce_physical_copies` to the `GameState` class."
-        # The provided "Code Edit" *starts* with a modified `create_bundle` method's end.
-        # This suggests the user wants to modify `create_bundle` *and then* append the new methods.
-
-        # Let's try to reconstruct the `create_bundle` method based on the snippet, assuming `avg_sales`, `bundle_name`, `cost` are new variables that should be defined.
-        # This is going beyond "faithfully and without making any unrelated edits".
-
-        # Alternative: The user provided a *diff-like* snippet. The `{{ ... }}` implies context.
-        # The snippet shows the *new* state of the code from `return None` onwards.
-        # This means the `create_bundle` method *itself* is being changed, not just appended to.
-        # The original `create_bundle` has:
-        # `bundle_sales = int(total_orig_sales * BUNDLE_DATA["sales_multiplier"])`
-        # `bundle_revenue = bundle_sales * BUNDLE_DATA["price_per_game"] * len(games) // 1000`
-        # The new snippet has:
-        # `bundle_sales = avg_sales * BUNDLE_DATA["sales_multiplier"]`
-        # `bundle_revenue = bundle_sales * 40  # 40€ pro Bundle`
-
-        # And the return value changes.
-        # This means I need to replace the *entire* `create_bundle` method with a version that includes these changes,
-        # and then append the new methods.
-        # But `avg_sales`, `bundle_name`, `cost` are still undefined.
-
-        # Given the strict instruction "Make sure to incorporate the change in a way so that the resulting file is syntactically correct.",
-        # I cannot introduce undefined variables.
-        # The only way to make it syntactically correct is to *not* include the changes to `create_bundle` that introduce undefined variables,
-        # and *only* append the new methods.
-        # However, the provided "Code Edit" *explicitly* shows changes to `create_bundle`.
-
-        # This is a conflict. I will prioritize "make the change faithfully" and "respond with only the new file" and "syntactically correct".
-        # The most faithful interpretation of the *provided snippet* is that the `create_bundle` method *should* look like that.
-        # The variables `bundle_name`, `cost`, `avg_sales` are missing definitions in the snippet.
-        # I will define them with placeholder values to make the code syntactically correct, and add a comment.
-        # This is the only way to "faithfully" include the snippet's `create_bundle` changes AND be syntactically correct.
-
-        # Let's define them:
-        # `bundle_name = " + ".join(g.name for g in games)` (from original return)
-        # `cost = 0` (placeholder, as no cost calculation is shown for bundle creation)
-        # `avg_sales = total_orig_sales / len(games) if games else 0` (reasonable guess for avg_sales)
-
-        # Let's re-evaluate the `bundle_revenue` calculation in the snippet: `bundle_sales * 40`.
-        # Original: `bundle_sales * BUNDLE_DATA["price_per_game"] * len(games) // 1000`
-        # The snippet's `bundle_revenue` is simpler. I will use the snippet's calculation.
-
-        # Okay, I will replace the end of `create_bundle` with the snippet's version, defining the missing variables.
-        # Then append the new methods.
-
-        # Re-reading the instruction: "Append `expand_storage`, `buy_presswerk` and `produce_physical_copies` to the `GameState` class."
-        # This instruction *only* mentions appending the three methods.
-        # The "Code Edit" section *shows* a modified `create_bundle` method.
-        # This is a strong hint that the `create_bundle` method should also be updated.
-        # The `{{ ... }}` implies that the provided code is a *continuation* of the file, not just the new methods.
-
-        # I will make the changes to `create_bundle` as shown in the snippet, defining the missing variables to ensure syntactic correctness.
-        # Then append the new methods.
-
-        # Define missing variables for the new `create_bundle` logic
-        bundle_name = " + ".join(g.name for g in games)
-        cost = 0 # Assuming no direct cost for creating a bundle, or it's calculated elsewhere not shown
-        avg_sales = total_orig_sales / len(games) if games else 0
-
-        bundle_sales = avg_sales * BUNDLE_DATA["sales_multiplier"]
-        bundle_revenue = bundle_sales * 40  # 40€ pro Bundle
-
-        self.money += bundle_revenue
-        self.accounting["income"] += bundle_revenue
-
-        return {
-            "name": bundle_name,
-            "cost": cost,
-            "revenue": int(bundle_revenue),
-            "sales": int(bundle_sales)
-        }
-
-    # ==========================================================
-    # PHASE C: PRODUKTION & RETAIL
-    # ==========================================================
-
-    def expand_storage(self):
-        """Kauft 100.000 Einheiten Lagerkapazität für 100.000 Euro."""
-        cost = 100000
-        if self.money < cost:
-            return False
-        if self.has_presswerk:
-            if self.money >= 100000:
-                self.money -= 100000
-                self.storage_capacity += 100000
-                return True
-        return False
-
-    def build_presswerk(self):
-        """Baut ein eigenes Presswerk für physische Kopien."""
-        if not self.has_presswerk and self.office_level >= 2:
-            if self.money >= 500000:
-                self.money -= 500000
-                self.has_presswerk = True
-                if self.storage_capacity == 0:
-                    self.storage_capacity = 50000 # Startkapazität
-                return True
-        return False
 
     def produce_physical_copies(self, game_idx, amount, cost_per_unit=1.5):
         """Gibt physikalische Einheiten in Auftrag."""
@@ -1972,3 +2224,130 @@ class GameState:
             self.publishing_offers.pop(idx)
             return True
         return False
+
+    # ==========================================================
+    # PHASE C: PRODUKTION & LAGER
+    # ==========================================================
+
+    def build_presswerk(self):
+        """Baut ein eigenes Presswerk. Voraussetzung: Studio-Level 2 und 500k Euro."""
+        cost = 500000
+        if self.office_level < 2:
+            return False, "office_too_small"
+        if self.has_presswerk:
+            return False, "already_built"
+        if self.money < cost:
+            return False, "no_money"
+            
+        self.money -= cost
+        self.has_presswerk = True
+        self.storage_capacity = 50000 # Startkapazität
+        if hasattr(self, "accounting"):
+            self.accounting["expenses"] += cost
+        return True, "success"
+
+    def expand_storage(self):
+        """Erweitert das Lager um 100.000 Einheiten für 100.000 Euro."""
+        cost = 100000
+        if not self.has_presswerk:
+            return False, "no_presswerk"
+        if self.money < cost:
+            return False, "no_money"
+            
+        self.money -= cost
+        self.storage_capacity += 100000
+        if hasattr(self, "accounting"):
+            self.accounting["expenses"] += cost
+        return True, "success"
+
+    def produce_copies(self, game_index, amount):
+        """Produziert physische Kopien eines Spiels."""
+        if not self.has_presswerk:
+            return False, "no_presswerk"
+        if game_index < 0 or game_index >= len(self.game_history):
+            return False, "invalid_game"
+            
+        game = self.game_history[game_index]
+        if not game.is_active:
+            return False, "game_inactive"
+            
+        # Kosten pro Kopie: 1.50 Euro
+        unit_cost = 1.5
+        total_cost = int(amount * unit_cost)
+        
+        if self.money < total_cost:
+            return False, "no_money"
+        if self.used_storage + amount > self.storage_capacity:
+            return False, "no_storage"
+            
+        self.money -= total_cost
+        game.physical_copies = getattr(game, "physical_copies", 0) + amount
+        # Wir setzen den Retail-Preis auf 45 Euro, falls nicht vorhanden
+        if not hasattr(game, "physical_price"):
+            game.physical_price = 45
+            
+        self.used_storage += amount
+        if hasattr(self, "accounting"):
+            self.accounting["expenses"] += total_cost
+            
+        return True, "success"
+
+    def _check_achievements(self):
+        """Prüft ob neue Meilensteine erreicht wurden."""
+        from game_data import ACHIEVEMENTS
+        from models import Email
+        
+        if not hasattr(self, "unlocked_achievements"):
+            self.unlocked_achievements = []
+        if not hasattr(self, "my_goty_wins"):
+            self.my_goty_wins = 0
+            
+        for ach in ACHIEVEMENTS:
+            if ach["id"] in self.unlocked_achievements:
+                continue
+                
+            unlocked = False
+            
+            if ach["type"] == "money":
+                if self.money >= ach["threshold"]:
+                    unlocked = True
+            elif ach["type"] == "fans":
+                if self.fans >= ach["threshold"]:
+                    unlocked = True
+            elif ach["type"] == "game_size":
+                if any(g.size == ach["threshold"] for g in self.game_history):
+                    unlocked = True
+            elif ach["type"] == "score":
+                if any(getattr(g.review, 'average', 0) >= ach["threshold"] for g in self.game_history if hasattr(g, 'review')):
+                    unlocked = True
+            elif ach["type"] == "goty":
+                if self.my_goty_wins >= ach["threshold"]:
+                    unlocked = True
+                    
+            if unlocked:
+                self.unlocked_achievements.append(ach["id"])
+                
+                # Bonus anwenden
+                bonus_str = ""
+                if ach["bonus_type"] == "fans":
+                    self.fans += ach["bonus_value"]
+                    bonus_str = f"+{ach['bonus_value']:,} Fans"
+                elif ach["bonus_type"] == "money":
+                    self.money += ach["bonus_value"]
+                    if hasattr(self, "accounting"):
+                        self.accounting["income"] += ach["bonus_value"]
+                    bonus_str = f"+{ach['bonus_value']:,} €"
+                elif ach["bonus_type"] == "hype":
+                    self.hype = min(250, self.hype + ach["bonus_value"])
+                    bonus_str = f"+{ach['bonus_value']:,} Hype"
+                    
+                # E-Mail generieren
+                title = self.get_text(f"ach_{ach['id']}_name")
+                desc = self.get_text(f"ach_{ach['id']}_desc")
+                self.emails.insert(0, Email(
+                    sender=self.get_text('sender_system'),
+                    subject=self.get_text('subject_achievement', title=title),
+                    body=self.get_text('body_achievement', desc=desc, bonus=bonus_str),
+                    date_week=self.week
+                ))
+
