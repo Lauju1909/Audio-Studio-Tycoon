@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Studio Tycoon - Mod Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Supabase CDN Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="background-animation"></div>
+    <div class="container glassmorphism">
+        <header>
+            <h1>Mod Portal</h1>
+            <p>Audio Studio Tycoon</p>
+            <div id="userState" class="user-state">Nicht angemeldet</div>
+        </header>
+
+        <!-- Auth Section -->
+        <section id="authSection" class="active">
+            <h2>Login / Registrierung</h2>
+            <form id="authForm">
+                <input type="email" id="email" placeholder="E-Mail" required>
+                <input type="password" id="password" placeholder="Passwort" required>
+                <div class="btn-group">
+                    <button type="submit" id="loginBtn">Login</button>
+                    <button type="button" id="registerBtn" class="secondary">Registrieren</button>
+                </div>
+            </form>
+            <p id="authMessage" class="message"></p>
+        </section>
+
+        <!-- Mod Upload Section -->
+        <section id="uploadSection">
+            <h2>Neuen Mod hochladen</h2>
+            <form id="uploadForm">
+                <input type="text" id="modName" placeholder="Mod Name" required>
+                <input type="text" id="modAuthor" placeholder="Autor" required>
+                <input type="text" id="modVersion" placeholder="Version (z.B. 1.0.0)" required>
+                <textarea id="modDesc" placeholder="Beschreibung"></textarea>
+                <input type="url" id="modUrl" placeholder="Download URL (ZIP)" required>
+                <button type="submit" id="uploadBtn">Mod Veröffentlichen</button>
+            </form>
+            <p id="uploadMessage" class="message"></p>
+            
+            <button id="logoutBtn" class="danger">Logout</button>
+        </section>
+        <!-- Footer -->
+        <footer style="margin-top: 2rem; text-align: center; font-size: 0.9rem; padding: 1rem;">
+            <a href="impressum.html" style="color: #ccc; margin-right: 15px; text-decoration: none;">Impressum</a>
+            <a href="datenschutz.html" style="color: #ccc; text-decoration: none;">Datenschutz</a>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
