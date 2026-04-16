@@ -13,89 +13,35 @@ from audio import AudioManager
 from logic import GameState
 from translations import get_text, set_language
 from menus import (
-    MainMenu,
-    CompanyNameMenu,
-    GameMenu,
-    SettingsMenu,
-    TopicMenu,
-    GenreMenu,
-    PlatformMenu,
-    AudienceMenu,
-    EngineSelectMenu,
-    GameNameMenu,
-    DevelopmentSliderMenu,
-    DevProgressMenu,
-    ReviewResultMenu,
-    HRMenu,
-    HireMenu,
-    FireMenu,
-    ResearchMenu,
-    FeatureResearchMenu,
-    GenreResearchMenu,
-    TopicResearchMenu,
-    AudienceResearchMenu,
-    TechnologyResearchMenu,
-    EngineCreateNameMenu,
-    EngineFeatureSelectMenu,
-    OfficeMenu,
-    GameSizeMenu,
-    MarketingMenu,
-    TrainingEmployeeSelectMenu,
-    TrainingOptionMenu,
-    BankruptcyMenu,
-    EmailInboxMenu,
-    EmailDetailMenu,
-    ServiceMenu,
-    GameServiceOptionsMenu,
-    SaveMenu,
-    LoadMenu,
-    HelpMenu,
-    RemasterSelectMenu,
-    PublisherMenu,
-    ExpoMenu,
-    BankMenu,
-    LoanMenu,
-    StockMarketMenu,
-    HardwareDevMenu,
-    ConsoleNameInput,
-    ConsoleSpecsMenu,
-    GOTYMenu,
-    DifficultyMenu,
-    SubGenreMenu,
-    SequelMenu,
-    ChartMenu,
-    AAADevEventMenu,
-    KeybindingMenu,
-    LicenseShopMenu,
-    LicenseSelectMenu,
-    AddonMenu,
-    BundleMenu,
-    ProductionMenu,
-    ProductionAmountMenu,
-    MMOPaymentMenu,
-    MMOManagementMenu,
-    MMOOptionsMenu,
-    PublisherDealsMenu,
-    PublisherDealDetailsMenu,
-    UpdateConfirmMenu,
-    MerchMenu,
-    MerchAmountMenu,
-    ESportsMenu,
-    AcquisitionMenu,
+    MainMenu, UpdateConfirmMenu, CompanyNameMenu, GameMenu, TopicMenu,
+    GenreMenu, PlatformMenu, AudienceMenu, GameSizeMenu, MarketingMenu,
+    EngineSelectMenu, RemasterSelectMenu, PublisherMenu, SettingsMenu,
+    VolumeSettingsMenu, KeybindingMenu, ExpoMenu, GameNameMenu,
+    DevelopmentSliderMenu, DevProgressMenu, ReviewResultMenu,
+    HRMenu, HireMenu, FireMenu, TrainingEmployeeSelectMenu,
+    TrainingOptionMenu, ResearchMenu, FeatureResearchMenu,
+    GenreResearchMenu, TopicResearchMenu, AudienceResearchMenu,
+    TechnologyResearchMenu, EngineCreateNameMenu, EngineFeatureSelectMenu,
+    HardwareDevMenu, ConsoleNameInput, ConsoleSpecsMenu, OfficeMenu,
+    BankruptcyMenu, EmailInboxMenu, EmailDetailMenu, ServiceMenu,
+    GameServiceOptionsMenu, BankMenu, LoanMenu, StockMarketMenu,
+    DifficultyMenu, SubGenreMenu, SequelMenu, ChartMenu,
+    LicenseShopMenu, LicenseSelectMenu, AddonMenu, AddonNameMenu,
+    BundleMenu, BundleNameMenu, ProductionMenu, ProductionAmountMenu,
+    MMOPaymentMenu, MMOManagementMenu, MMOOptionsMenu,
+    PublisherDealsMenu, PublisherDealDetailsMenu, MerchMenu, MerchAmountMenu,
+    ESportsMenu, AcquisitionMenu, StockRivalDetailMenu,
+    SaveMenu, LoadMenu, HelpMenu, GOTYMenu, AAADevEventMenu, CreditsMenu,
+    BuildMenu, TeambuildingMenu, ModPortalMenu, ModBrowserListMenu
 )
 
-
-
 def get_menu_factories(audio, state):
-    # Umbau: Dynamische Menü-Generierung über Lambda-Funktionen
+    """Gibt Factory-Funktionen für alle Menüs zurück."""
     return {
-        # Haupt-Flow
         "main_menu": lambda: MainMenu(audio, state),
         "update_confirm_menu": lambda: UpdateConfirmMenu(audio, state),
         "company_name_input": lambda: CompanyNameMenu(audio, state),
         "game_menu": lambda: GameMenu(audio, state),
-
-        # Spielentwicklung
         "topic_menu": lambda: TopicMenu(audio, state),
         "genre_menu": lambda: GenreMenu(audio, state),
         "platform_menu": lambda: PlatformMenu(audio, state),
@@ -106,21 +52,18 @@ def get_menu_factories(audio, state):
         "remaster_select": lambda: RemasterSelectMenu(audio, state),
         "publisher_menu": lambda: PublisherMenu(audio, state),
         "settings_menu": lambda: SettingsMenu(audio, state, lambda: "main_menu"),
+        "volume_settings_menu": lambda: VolumeSettingsMenu(audio, state),
         "keybinding_menu": lambda: KeybindingMenu(audio, state),
         "expo_menu": lambda: ExpoMenu(audio, state),
         "game_name_input": lambda: GameNameMenu(audio, state),
         "slider_menu": lambda: DevelopmentSliderMenu(audio, state),
         "dev_progress_menu": lambda: DevProgressMenu(audio, state),
         "review_result": lambda: ReviewResultMenu(audio, state),
-
-        # Personal
         "hr_menu": lambda: HRMenu(audio, state),
         "hire_menu": lambda: HireMenu(audio, state),
         "fire_menu": lambda: FireMenu(audio, state),
         "training_employee_select": lambda: TrainingEmployeeSelectMenu(audio, state),
         "training_option_select": lambda: TrainingOptionMenu(audio, state),
-
-        # Forschung & Engines
         "research_menu": lambda: ResearchMenu(audio, state),
         "feature_research_menu": lambda: FeatureResearchMenu(audio, state),
         "genre_research_menu": lambda: GenreResearchMenu(audio, state),
@@ -132,11 +75,7 @@ def get_menu_factories(audio, state):
         "hardware_dev_menu": lambda: HardwareDevMenu(audio, state),
         "console_name_input": lambda: ConsoleNameInput(audio, state),
         "console_specs_menu": lambda: ConsoleSpecsMenu(audio, state),
-
-        # Büro
         "office_menu": lambda: OfficeMenu(audio, state),
-
-        # Spezial
         "bankruptcy": lambda: BankruptcyMenu(audio, state),
         "email_inbox": lambda: EmailInboxMenu(audio, state),
         "email_detail": lambda: EmailDetailMenu(audio, state),
@@ -164,278 +103,169 @@ def get_menu_factories(audio, state):
         "merch_amount_menu": lambda: MerchAmountMenu(audio, state),
         "esports_menu": lambda: ESportsMenu(audio, state),
         "acquisition_menu": lambda: AcquisitionMenu(audio, state),
+        "stock_rival_detail": lambda: StockRivalDetailMenu(audio, state),
+        "addon_name_input": lambda: AddonNameMenu(audio, state),
+        "bundle_name_input": lambda: BundleNameMenu(audio, state),
         "settings_menu_ingame": lambda: SettingsMenu(audio, state, lambda: "game_menu"),
         "save_menu": lambda: SaveMenu(audio, state),
         "load_menu": lambda: LoadMenu(audio, state),
         "help_menu": lambda: HelpMenu(audio, state),
         "goty_menu": lambda: GOTYMenu(audio, state),
         "aaa_dev_event_menu": lambda: AAADevEventMenu(audio, state),
+        "credits_menu": lambda: CreditsMenu(audio, state),
+        "build_menu": lambda: BuildMenu(audio, state),
+        "teambuilding_menu": lambda: TeambuildingMenu(audio, state),
+        "mod_portal": lambda: ModPortalMenu(audio, state),
+        "mod_browser_list": lambda: ModBrowserListMenu(audio, state),
     }
 
 def main():
-    # ---- Initialisierung ----
-    # Ensure window is forcefully focused when created
+    """Hauptspielschleife."""
     os.environ['SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS'] = '0'
-    
     pygame.init()
-    pygame.key.set_repeat(300, 50)  # Flüssiges Scrollen: 300ms Delay, dann alle 50ms ein Event
-    screen = pygame.display.set_mode((500, 300))
-    pygame.display.set_caption("Audio Studio Tycoon - Audio Edition")
+    pygame.key.set_repeat(300, 50)
+    screen = pygame.display.set_mode((800, 600))
+    pygame.display.set_caption("Audio Studio Tycoon - v3.0.0 Visionary")
 
     audio = AudioManager()
-    os.system("cls" if os.name == "nt" else "clear")
-
     state = GameState()
-    state.audio = audio  # Audio-Instanz für globale Text-Ausgaben in Models
-    
-    # NEU: Globale Einstellungen sofort beim Start laden
+    state.audio = audio
     state.load_global_settings()
     set_language(state.settings.get('language', 'de'))
-    audio.set_music_enabled(state.settings.get('music_enabled', True))
-    audio.update_tts_engine(state.settings.get('tts_engine', 'auto'))
+    audio.apply_volumes(state.settings)
 
     current_key = "main_menu"
 
-    # AUTO-UPDATE BEIM START
+    # AUTO-UPDATE BEIM START (nur Stable-Kanal, sofern nicht explizit Beta gewählt)
     if state.settings.get('auto_update', True):
         try:
             from updater import check_for_updates
             import json
-            current_version = "1.0.0"
-            if os.path.exists("version.json"):
-                with open("version.json", "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    current_version = data.get("version", "1.0.0")
-            
-            # Start prüfen (mit Timeout 2 sekunden)
-            result = check_for_updates(current_version)
+            curr_v_path = "version.json"
+            current_v = "1.0.0"
+            if os.path.exists(curr_v_path):
+                with open(curr_v_path, "r", encoding="utf-8") as f_v:
+                    current_v = json.load(f_v).get("version", "1.0.0")
+            # Auto-Update lädt IMMER nur Stable – Beta muss manuell aktiviert werden
+            channel = state.settings.get('update_channel', 'stable')
+            result = check_for_updates(current_v, channel=channel)
             if result and result.get("update_available"):
                 state.pending_update = result
                 current_key = "update_confirm_menu"
-        except Exception:
+        except Exception: # pylint: disable=broad-exception-caught
             pass
 
-    menu_factories = get_menu_factories(audio, state)
 
+    menu_factories = get_menu_factories(audio, state)
     current_menu = menu_factories[current_key]()
 
-
-    # ---- Willkommensnachricht ----
     audio.speak(get_text("main_welcome"))
-    time.sleep(0.3)
     audio.play_music("music_back")
     current_menu.announce_entry()
 
-    import ctypes
-    if os.name == 'nt':
-        try:
-            hwnd = pygame.display.get_wm_info()["window"]
-            user32 = ctypes.windll.user32
-            user32.ShowWindow(hwnd, 5)
-            current_thread = ctypes.windll.kernel32.GetCurrentThreadId()
-            foreground_window = user32.GetForegroundWindow()
-            if foreground_window != hwnd and foreground_window != 0:
-                foreground_thread = user32.GetWindowThreadProcessId(foreground_window, None)
-                if foreground_thread != current_thread:
-                    user32.AttachThreadInput(foreground_thread, current_thread, True)
-                    user32.SetForegroundWindow(hwnd)
-                    user32.SetFocus(hwnd)
-                    user32.AttachThreadInput(foreground_thread, current_thread, False)
-                else:
-                    user32.SetForegroundWindow(hwnd)
-                    user32.SetFocus(hwnd)
-            else:
-                user32.SetForegroundWindow(hwnd)
-                user32.SetFocus(hwnd)
-        except Exception:
-            pass
-
-    # ---- Hauptschleife ----
     running = True
     clock = pygame.time.Clock()
     last_tick_time = pygame.time.get_ticks()
 
     while running:
-        current_time_ms = pygame.time.get_ticks()
-        dt = current_time_ms - last_tick_time
-        last_tick_time = current_time_ms
-
-        # Zeit-Logik im State aktualisieren
+        dt = pygame.time.get_ticks() - last_tick_time
+        last_tick_time = pygame.time.get_ticks()
         state.update_tick(dt)
 
-        # Update-Logik (Fortschrittsbalken etc.)
         if hasattr(current_menu, 'update'):
             current_menu.update()
-
-        # Pleite-Check
-        if state.is_bankrupt() and current_key != "bankruptcy":
-            current_key = "bankruptcy"
-            current_menu = menu_factories[current_key]()
-            current_menu.announce_entry()
-            
-        # GOTY-Check
-        goty = getattr(state, "pending_goty_results", None)
-        if goty and current_key not in ["goty_menu", "bankruptcy", "aaa_dev_event_menu"]:
-            current_key = "goty_menu"
-            current_menu = menu_factories[current_key]()
-            current_menu.announce_entry()
-
-        # AAA Dev Event Check
-        dev_event = getattr(state, "pending_dev_event", None)
-        if dev_event and current_key == "dev_progress_menu":
-            current_key = "aaa_dev_event_menu"
-            current_menu = menu_factories[current_key]()
-            current_menu.announce_entry()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-
             elif event.type == pygame.KEYDOWN:
+                # Globale Geschwindigkeitssteuerung
+                if event.key == pygame.K_1:
+                    state.time_speed = 1.0
+                    audio.speak(get_text("speed_normal"))
+                elif event.key == pygame.K_2:
+                    state.time_speed = 2.0
+                    audio.speak(get_text("speed_fast"))
+                elif event.key == pygame.K_3:
+                    state.time_speed = 4.0
+                    audio.speak(get_text("speed_ultra"))
+                elif event.key == pygame.K_SPACE or event.key == pygame.K_0:
+                    if state.time_speed > 0:
+                        state.last_speed = state.time_speed
+                        state.time_speed = 0
+                        audio.speak(get_text("paused"))
+                    else:
+                        state.time_speed = getattr(state, "last_speed", 1.0)
+                        audio.speak(state.get_speed_text())
+                
                 result = current_menu.handle_input(event)
-
                 if result == "quit":
                     running = False
                 elif result and result in menu_factories:
                     current_key = result
                     current_menu = menu_factories[current_key]()
                     current_menu.announce_entry()
+
+                # Automatischer Wechsel zum Ergebnis wenn Entwicklung im Hintergrund fertig ist
+                if state.is_developing and getattr(state, "dev_ready_to_finish", False) and current_key != "dev_progress_menu":
+                    if not state.pause_for_menu:
+                        current_key = "dev_progress_menu"
+                        current_menu = menu_factories[current_key]()
+                        current_menu.announce_entry()
+
+        # --- VISUAL RENDERING (WOW-FAKTOR) ---
+        screen.fill((15, 23, 42)) # Slate 900
+        
+        # Hintergrund-Gradient Simulation
+        for i in range(600):
+            color = (15 + i//40, 23 + i//50, 42 + i//30)
+            pygame.draw.line(screen, color, (0, i), (800, i))
+
+        # Menü-Box (Glassmorphism)
+        menu_rect = pygame.Rect(100, 100, 600, 400)
+        pygame.draw.rect(screen, (30, 41, 59, 180), menu_rect, border_radius=20) # Slate 800
+        pygame.draw.rect(screen, (51, 65, 85), menu_rect, 2, border_radius=20) # Border
+
+        # Title
+        font = pygame.font.SysFont("Arial", 32, bold=True)
+        title_surf = font.render(current_menu.title, True, (0, 242, 254))
+        screen.blit(title_surf, (150, 130))
+
+        # Options
+        font_opt = pygame.font.SysFont("Arial", 24)
+        if hasattr(current_menu, 'options'):
+            for i, opt in enumerate(current_menu.options):
+                color = (255, 255, 255) if i == current_menu.current_index else (148, 163, 184)
+                if i == current_menu.current_index:
+                    # Cursor Highlight
+                    pygame.draw.rect(screen, (0, 242, 254, 50), (140, 180 + i*40, 520, 35), border_radius=5)
                 
-                # Zeitsteuerung und Hotkeys (nur wenn kein Text-Input aktiv ist)
-                elif not getattr(current_menu, 'is_text_input', False):
-                    if event.key == pygame.K_SPACE:
-                        if state.time_speed > 0:
-                            state.time_speed = 0
-                            audio.speak(state.get_text('paused_msg'))
-                        else:
-                            state.time_speed = 1.0
-                            audio.speak(state.get_text('start_msg'))
-                    elif event.key == pygame.K_0:
-                        state.time_speed = 0.5
-                        audio.speak(state.get_text('time_speed_speech', speed="Zeitlupe (0.5x)"))
-                    elif event.key == pygame.K_1:
-                        state.time_speed = 1.0
-                        audio.speak(state.get_text('time_speed_speech', speed=state.get_text('speed_1')))
-                    elif event.key == pygame.K_2:
-                        state.time_speed = 2.0
-                        audio.speak(state.get_text('time_speed_speech', speed=state.get_text('speed_2')))
-                    elif event.key == pygame.K_3:
-                        state.time_speed = 3.0
-                        audio.speak(state.get_text('time_speed_speech', speed="3x Schnell"))
-                    elif event.key == pygame.K_4:
-                        state.time_speed = 4.0
-                        audio.speak(state.get_text('time_speed_speech', speed=state.get_text('speed_3')))
-                    elif event.key == pygame.K_s:
-                        if current_key not in ["main_menu", "company_name_input", "bankruptcy"]:
-                            state.save_game(slot=1)
-                            # Bonus: Kurzes Speichergeräusch abspielen
-                            if hasattr(audio, 'play_sound'): 
-                                audio.play_sound('blip')
-                            audio.speak(state.get_text('quicksave_msg'))
-                    elif event.key == pygame.K_l:
-                        if current_key not in ["company_name_input", "bankruptcy"]:
-                            if state.load_game(slot=1):
-                                # Bonus: Lade-Geräusch
-                                if hasattr(audio, 'play_sound'): 
-                                    audio.play_sound('blip')
-                                audio.speak(state.get_text('quickload_msg'))
-                                current_key = "game_menu"
-                                current_menu = menu_factories[current_key]()
-                                current_menu.announce_entry()
-                            else:
-                                if hasattr(audio, 'play_sound'): 
-                                    audio.play_sound('error')
-                                audio.speak(state.get_text('quickload_fail_msg'))
-                    elif event.key == pygame.K_c:
-                        state.crunch_active = not state.crunch_active
-                        audio.speak(state.get_text('crunch_active' if state.crunch_active else 'crunch_off'))
-                        if state.crunch_active:
-                            audio.speak(state.get_text('crunch_info'), interrupt=False)
-                    elif event.key == pygame.K_j:
-                        audio.speak(state.get_calendar_text())
-                    elif event.key == pygame.K_m:
-                        if not state.is_developing:
-                            audio.speak(state.get_text('marketing_simulated'))
-                            # M-Taste ruft simuliertes Marketing auf
-                            current_key = "marketing_menu"
-                            current_menu = menu_factories[current_key]()
-                            current_menu.announce_entry()
-                        else:
-                            audio.speak(state.get_text('marketing_blocked'))
+                opt_surf = font_opt.render(opt['text'], True, color)
+                screen.blit(opt_surf, (150, 185 + i*40))
 
-        # Fenster aktualisieren
-        screen.fill((10, 10, 20))
+        # Multi-Tasking Ticker (oben rechts)
+        if state.is_developing:
+            prog = int((state.dev_progress / max(1, state.dev_total_weeks)) * 100)
+            prog = min(100, prog)
+            ticker_font = pygame.font.SysFont("Arial", 18, bold=True)
+            ticker_text = f"DEV: {state.current_draft.get('name', '???')} - {prog}%"
+            # Pulsierender Effekt
+            alpha = int(155 + 100 * abs(pygame.time.get_ticks() % 1000 - 500) / 500)
+            pygame.draw.rect(screen, (0, 242, 254, alpha // 4), (550, 20, 230, 40), border_radius=10)
+            t_surf = ticker_font.render(ticker_text, True, (0, 242, 254))
+            screen.blit(t_surf, (570, 30))
 
-        try:
-            font = pygame.font.SysFont("Arial", 13)
-
-            # Header
-            header = font.render(
-                f"[{state.company_name or get_text('main_title')}] "
-                f"{state.get_text('money', money=state.money)} | "
-                f"{state.get_text('fans')}: {state.fans:,} | "
-                f"{state.get_calendar_text()} ({state.get_speed_text()})",
-                True, (80, 200, 80)
-            )
-            screen.blit(header, (10, 10))
-
-            # Dev-Status (falls aktiv)
-            if state.is_developing:
-                crunch_txt = f" | {state.get_text('crunch_active')}" if state.crunch_active else ""
-                dev_info = font.render(
-                    f"{state.get_text('progress')}: {int(state.dev_progress)}/{state.dev_total_weeks} Ww. | "
-                    f"Bugs: {state.current_bugs}{crunch_txt}",
-                    True, (255, 150, 50)
-                )
-                screen.blit(dev_info, (10, 30))
-                y_offset = 50
-            elif getattr(state, 'is_researching', False):
-                res_info = font.render(
-                    f"{state.get_text('research_progress')}: {int(state.research_progress)}/{state.research_total_weeks} Ww.",
-                    True, (50, 200, 255)
-                )
-                screen.blit(res_info, (10, 30))
-                y_offset = 50
-            else:
-                y_offset = 30
-
-            # Team-Info
-            from game_data import OFFICE_LEVELS
-            office = OFFICE_LEVELS[state.office_level]
-            team_text = font.render(
-                f"{state.get_text('office')}: {office['name']} | "
-                f"Mitarbeiter: {len(state.employees)}/{office['max_employees']} | "
-                f"Engines: {len(state.engines)}",
-                True, (100, 150, 200)
-            )
-            screen.blit(team_text, (10, y_offset))
-
-            # Menü-Info
-            menu_info = font.render(f"{state.get_text('current_menu')}: {current_key}", True, (150, 150, 150))
-            screen.blit(menu_info, (10, 50))
-
-            # Trend-Info
-            if state.current_trend:
-                txt = f"{state.get_text('trend')}: {state.current_trend['topic']} / {state.current_trend['genre']}"
-                trend_v = font.render(txt, True, (255, 100, 100))
-                screen.blit(trend_v, (10, 70))
-
-            # Screenreader-Hinweis
-            hint = font.render(
-                get_text('main_screenreader_hint'),
-                True, (60, 60, 60)
-            )
-            screen.blit(hint, (10, 275))
-        except Exception:
-            pass
+        # Footer Info
+        footer_font = pygame.font.SysFont("Arial", 16)
+        money_txt = f"{get_text('money_label')}: {state.money:,} EUR | KW {state.week}"
+        f_surf = footer_font.render(money_txt, True, (255, 255, 255))
+        screen.blit(f_surf, (110, 510))
 
         pygame.display.flip()
         clock.tick(30)
 
-    # ---- Aufräumen ----
     audio.cleanup()
     pygame.quit()
-
 
 if __name__ == "__main__":
     main()

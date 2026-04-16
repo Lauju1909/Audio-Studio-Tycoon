@@ -3,10 +3,22 @@ import shutil
 import subprocess
 import zipfile
 
-VERSION = "2.7.0"
-EXE_NAME = f"Audio_Studio_Tycoon_v{VERSION}.exe"
-ZIP_NAME = f"Audio_Studio_Tycoon_v{VERSION}.zip"
+import json
+
 APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+v_path = os.path.join(APP_DIR, "version.json")
+try:
+    with open(v_path, "r", encoding="utf-8") as f:
+        v_data = json.load(f)
+        VERSION = v_data.get("version", "3.0.1")
+        channel = v_data.get("channel", "stable")
+except Exception:
+    VERSION = "3.0.1"
+    channel = "stable"
+
+suffix = "-beta" if channel == "beta" else ""
+EXE_NAME = f"Audio_Studio_Tycoon_v{VERSION}.exe"
+ZIP_NAME = f"Audio_Studio_Tycoon_v{VERSION}{suffix}.zip"
 
 def build():
     os.chdir(APP_DIR)
@@ -14,7 +26,7 @@ def build():
     # Run PyInstaller with PyInstaller one-dir mode
     print(f"Running PyInstaller ONE-DIR for {VERSION}...")
     subprocess.run([
-        "pyinstaller", "main.py", "--noconfirm", "--onedir",
+        "python", "-m", "PyInstaller", "main.py", "--noconfirm", "--onedir",
         "--name", f"Audio_Studio_Tycoon_v{VERSION}",
         "--hidden-import", "urllib.request",
         "--hidden-import", "urllib.error"

@@ -3,7 +3,7 @@ echo ========================================
 echo AUDIO STUDIO TYCOON - BUILD STARTER
 echo ========================================
 echo.
-echo Dieses Skript erstellt die neue Version 2.7.0.
+echo Dieses Skript erstellt die neue Version 2.7.3.
 echo Bitte stelle sicher, dass Python und PyInstaller installiert sind.
 echo.
 python tools/build_release.py
@@ -14,5 +14,5 @@ if errorlevel 1 (
     exit /b 1
 )
 echo.
-echo ERFOLG: Die Datei Audio_Studio_Tycoon_v2.7.0.zip wurde erstellt!
+echo ERFOLG: Die Datei Audio_Studio_Tycoon_v2.7.3.zip wurde erstellt!
 pause

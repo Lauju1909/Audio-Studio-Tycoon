@@ -1,0 +1,13 @@
+{
+  "id": "test_mod_01",
+  "name": "Dinosaurier Mod",
+  "author": "Laurin",
+  "version": "1.0",
+  "description": "Fügt Dinosaurier als Spielthema hinzu.",
+  "add_topics": [
+    {"name": "Dinosaurier", "cost": 1000, "rp": 10}
+  ],
+  "add_genres": [
+    {"name": "Dino-Survival"}
+  ]
+}

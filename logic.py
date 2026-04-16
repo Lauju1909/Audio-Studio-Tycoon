@@ -118,6 +118,7 @@ class GameState:
         # NEU: Phase 7 - Konkurrenz & GOTY
         self.rivals = self._init_rivals()
         self.last_goty_year = 0
+        self.goty_history = {}
         
         # NEU: Phase 7 - DevKits & Hardware Markt
         self.bought_platforms = ["PC (MS-DOS)"]
@@ -184,6 +185,21 @@ class GameState:
         # NEU: Phase F - Merch und Turniere
         self.active_merch = []
         self.active_tournaments = []
+
+        # NEU: Phase G - Büro-Bau (Grid)
+        self.office_grid = [[None for _ in range(10)] for _ in range(10)] # 10x10 Raster
+        self.office_items = [] # [{'type': 'wall', 'x': 0, 'y': 0}, ...]
+        
+        # NEU: Phase G - Multitasking
+        self.background_dev_active = True # Erlaubt das Verlassen des Dev-Check Screens
+
+        # NEU: Lokales Mod-System
+        try:
+            from mod_manager import ModManager
+            self.mod_manager = ModManager()
+            self.mod_manager.apply_active_mods()
+        except Exception as e:
+            print(f"Fehler beim Laden des ModManagers: {e}")
 
     def get_market_platforms(self):
         from game_data import get_available_platforms
@@ -271,6 +287,44 @@ class GameState:
             "publisher": None,
         }
         self.aaa_event_triggered = False
+
+    def start_development(self):
+        """Startet die Entwicklung des konfigurierten Spiels."""
+        name = self.current_draft.get("name", "Untitled") or "Untitled"
+        topic = self.current_draft.get("topic", "Abakus")
+        genre = self.current_draft.get("genre", "Action")
+        platform = self.current_draft.get("platform", {"name": "PC"})
+        audience = self.current_draft.get("audience", "Jeder")
+        engine = self.current_draft.get("engine", None)
+        size = self.current_draft.get("size", "Mittel")
+        marketing = self.current_draft.get("marketing", "Kein Marketing")
+        sliders = self.current_draft.get("sliders", {})
+        
+        plat_name = platform['name'] if isinstance(platform, dict) else platform
+        
+        from models import GameProject
+        self.active_project = GameProject(
+            name=name, topic=topic, genre=genre, sliders=sliders,
+            platform=plat_name, audience=audience, engine=engine,
+            size=size, marketing=marketing
+        )
+        
+        self.active_project.sequel_number = self.current_draft.get("sequel_number", 0)
+        self.active_project.sub_genre = self.current_draft.get("sub_genre", None)
+        self.active_project.license_bonus = 0.0
+        
+        self.is_developing = True
+        self.dev_progress = 0
+        
+        base_weeks = 10
+        if size == "Klein": base_weeks = 5
+        elif size == "Mittel": base_weeks = 15
+        elif size == "Groß": base_weeks = 30
+        elif size == "AAA": base_weeks = 60
+        self.dev_total_weeks = base_weeks
+        
+        self.current_bugs = getattr(self, "current_bugs", 0)
+        self.dev_ready_to_finish = False
 
     def get_text(self, key, **kwargs):
         """Holt einen übersetzten Text basierend auf dem aktuellen Sprach-Setting."""
@@ -366,14 +420,28 @@ class GameState:
         # Abgelaufene Events entfernen
         new_active = []
         for e in self.active_events:
-            e["duration"] -= 1
-            if e["duration"] > 0:
-                new_active.append(e)
+            if "duration" in e:
+                e["duration"] -= 1
+                if e["duration"] > 0:
+                    new_active.append(e)
+            else:
+                new_active.append(e) # Wenn keine Dauer, bleibt es aktiv (oder sollte gelöscht werden? Sicherer: Wir setzen default duration auf 0 beim Event erstellen)
         self.active_events = new_active
         
-        # Historische Themen ab neuem Spieljahr freischalten
+        # Neu: Historische Themen und Events ab neuem Spieljahr
         if (self.week - 1) % WEEKS_PER_YEAR == 0 and self.week > 1:
             self._unlock_historical_topics()
+            from game_data import get_year_event
+            year = self.get_calendar_year()
+            y_event = get_year_event(year)
+            if y_event:
+                self.apply_event({
+                    "id": f"hist_{year}",
+                    "effect": y_event.get("effect"),
+                    "value": y_event.get("value", 0),
+                    "text": y_event["text"],
+                    "title": f"Historisches Ereignis {year}"
+                })
                 
         # Marktanteil der eigenen Konsole erhöhen
         if hasattr(self, "custom_consoles"):
@@ -400,9 +468,11 @@ class GameState:
             self.dev_progress += boost
             
             if self.crunch_active:
+                has_break = self.has_office_bonus("morale_room")
+                break_mod = 0.5 if has_break else 1.0
                 # Moral-Malus
                 for emp in self.employees:
-                    morale_loss = random.randint(2, 5)
+                    morale_loss = int(random.randint(2, 5) * break_mod)
                     if emp.trait and emp.trait["effect"] == "morale_loss":
                         morale_loss = int(morale_loss * emp.trait["value"])
                     emp.morale = max(0, emp.morale - morale_loss)
@@ -693,8 +763,12 @@ class GameState:
     # ==========================================================
 
     def get_max_employees(self):
-        """Maximale Mitarbeiter basierend auf Büro-Level."""
-        return OFFICE_LEVELS[self.office_level]["max_employees"]
+        """Maximale Mitarbeiter basierend auf Bauräumen."""
+        max_emp = 1 # Start in Garage
+        for item in getattr(self, "office_items", []):
+            if "employees" in item:
+                max_emp += item["employees"]
+        return max_emp
 
     def can_hire(self):
         return len(self.employees) < self.get_max_employees()
@@ -1027,10 +1101,12 @@ class GameState:
         return sum(mods) / len(mods)
 
     def get_team_bug_modifier(self):
+        has_qa = self.has_office_bonus("qa")
+        qa_mod = 0.8 if has_qa else 1.0
         if not self.employees: 
-            return 1.0
+            return 1.0 * qa_mod
         mods = [e.trait["value"] if e.trait and e.trait["effect"] == "bugs" else 1.0 for e in self.employees]
-        return sum(mods) / len(mods)
+        return (sum(mods) / len(mods)) * qa_mod
 
     def get_team_quality_modifier(self):
         if not self.employees: 
@@ -1061,7 +1137,7 @@ class GameState:
         # Ungelesene Emails
         unread = sum(1 for e in self.emails if not e.is_read)
         
-        office_name = OFFICE_LEVELS[self.office_level]['name']
+        office_name = "Eigenes Studio" if getattr(self, "office_items", []) else "Garage"
         
         if lang == "de":
             status = (
@@ -1155,23 +1231,23 @@ class GameState:
     def get_researchable_features(self):
         """Features die erforschbar, aber noch nicht freigeschaltet sind."""
         unlocked_names = {f.name for f in self.unlocked_features}
-        return [f for f in ENGINE_FEATURES if f["name"] not in unlocked_names]
+        return [f for f in ENGINE_FEATURES if f["name"] not in unlocked_names and self.week >= f.get("week", 1)]
 
     def get_researchable_topics(self):
         """Themen die erforschbar, aber noch nicht freigeschaltet sind."""
-        return [t for t in RESEARCHABLE_TOPICS if t["name"] not in self.unlocked_topics]
+        return [t for t in RESEARCHABLE_TOPICS if t["name"] not in self.unlocked_topics and self.week >= t.get("week", 1)]
 
     def get_researchable_genres(self):
         """Genres die erforschbar, aber noch nicht freigeschaltet sind."""
-        return [g for g in RESEARCHABLE_GENRES if g["name"] not in self.unlocked_genres]
+        return [g for g in RESEARCHABLE_GENRES if g["name"] not in self.unlocked_genres and self.week >= g.get("week", 1)]
 
     def get_researchable_audiences(self):
         """Zielgruppen die erforschbar, aber noch nicht freigeschaltet sind."""
-        return [a for a in RESEARCHABLE_AUDIENCES if a["name"] not in self.unlocked_audiences]
+        return [a for a in RESEARCHABLE_AUDIENCES if a["name"] not in self.unlocked_audiences and self.week >= a.get("week", 1)]
 
     def get_researchable_technologies(self):
         """Endgame-Technologien, die noch nicht freigeschaltet sind."""
-        return [t for t in RESEARCHABLE_TECHNOLOGIES if t["name"] not in self.unlocked_technologies]
+        return [t for t in RESEARCHABLE_TECHNOLOGIES if t["name"] not in self.unlocked_technologies and self.week >= t.get("week", 1)]
 
     # ==========================================================
     # AKTIENMARKT / INVESTMENTS
@@ -1215,25 +1291,14 @@ class GameState:
     # ==========================================================
 
     def can_upgrade_office(self):
-        """Kann das Büro aufgerüstet werden?"""
-        if self.office_level >= len(OFFICE_LEVELS) - 1:
-            return False
-        next_level = OFFICE_LEVELS[self.office_level + 1]
-        return self.money >= next_level["cost"]
+        return False
 
     def upgrade_office(self):
-        """Rüstet das Büro auf."""
-        if not self.can_upgrade_office():
-            return False
-        next_level = OFFICE_LEVELS[self.office_level + 1]
-        self.money -= next_level["cost"]
-        self.office_level += 1
-        return True
+        return False
 
     def get_office_info(self):
         """Info über aktuelles Büro."""
-        office = OFFICE_LEVELS[self.office_level]
-        return office
+        return {"name": "Eigenes Studio", "cost": 0, "max_employees": self.get_max_employees()}
 
     # ==========================================================
     # TRENDS
@@ -1569,7 +1634,7 @@ class GameState:
             if ratio < 0.8:
                 base_score *= 0.9
 
-        prestige = OFFICE_LEVELS[self.office_level]["prestige"]
+        prestige = sum(item.get("cost", 0) for item in getattr(self, "office_items", [])) // 2000
         base_score *= (1.0 + prestige * 0.03)
 
         # Schwierigkeitsgrad-Bonus auf Review
@@ -1900,7 +1965,8 @@ class GameState:
             "has_server_room": getattr(self, "has_server_room", False),
             "server_capacity": getattr(self, "server_capacity", 0),
             "publishing_offers": [o.to_dict() for o in getattr(self, "publishing_offers", [])],
-            "published_third_party_games": [g.to_dict() for g in getattr(self, "published_third_party_games", [])]
+            "published_third_party_games": [g.to_dict() for g in getattr(self, "published_third_party_games", [])],
+            "office_items": getattr(self, "office_items", [])
         }
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
@@ -2085,7 +2151,6 @@ class GameState:
         else:
             self.bank_loan = None
             
-        # Custom Consoles laden
         self.custom_consoles = []
         if "custom_consoles" in data:
             from models import CustomConsole
@@ -2093,6 +2158,22 @@ class GameState:
                 cc = CustomConsole(c_data["name"], c_data["tech_level"], c_data["dev_cost"], c_data["release_week"])
                 cc.market_share = c_data.get("market_share", 0.05)
                 self.custom_consoles.append(cc)
+
+        # Büro laden & Migrieren
+        self.office_items = data.get("office_items", [])
+        self.office_grid = [[None for _ in range(10)] for _ in range(10)]
+        for item in self.office_items:
+            # Migration: Falls item nur ein String war (altes Format)
+            if isinstance(item, str):
+                # Wir können hier nur raten oder ignorieren, da Position fehlt.
+                # Besser: Wir ignorieren veraltete Strings in office_items.
+                continue
+            
+            # Migration: Falls item ein Dict ist, aber office_grid noch Strings hielt
+            # In unserem neuen System hält office_grid Referenzen auf das Dict.
+            y, x = item.get("y", 0), item.get("x", 0)
+            if 0 <= y < 10 and 0 <= x < 10:
+                self.office_grid[y][x] = item
 
         self.reset_draft()
         return True
@@ -2292,6 +2373,103 @@ class GameState:
             
         return True, "success"
 
+    def perform_teambuilding(self, action_type="Pizza"):
+        """Führt eine Team-Building Maßnahme durch."""
+        costs = {"Pizza": 500, "Ausflug": 5000, "Party": 2000}
+        morale_boost = {"Pizza": 5, "Ausflug": 25, "Party": 15}
+        
+        cost = costs.get(action_type, 1000)
+        if self.money >= cost:
+            self.money -= cost
+            boost = morale_boost.get(action_type, 10)
+            for emp in self.employees:
+                emp.morale = min(100, emp.morale + boost)
+            return True
+        return False
+
+    def has_office_bonus(self, bonus_name):
+        """Prüft ob ein bestimmter Bonus (z.B. 'research', 'mmo') durch Einrichtung aktiv ist."""
+        for item in self.office_items:
+            # Suche in game_data.BUILD_OBJECTS nach dem Bonus
+            from game_data import BUILD_OBJECTS
+            obj_def = BUILD_OBJECTS.get(item["type"], {})
+            if obj_def.get("bonus") == bonus_name:
+                return True
+        return False
+
+    def place_office_item(self, item_type, x, y):
+        """Platziert ein Objekt im Büro-Grid (Ebenen-basiert)."""
+        from game_data import BUILD_OBJECTS
+        obj_def = BUILD_OBJECTS.get(item_type)
+        if not obj_def:
+            return False, "invalid_item"
+            
+        cost = obj_def.get("cost", 0)
+        if self.money < cost:
+            return False, "no_money"
+
+        # Check adjacence requirement (e.g. door needs wall)
+        if obj_def.get("requires_adjacent_wall"):
+            adjacent_wall = False
+            for dx, dy in [(-1,0), (1,0), (0,-1), (0,1)]:
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < 10 and 0 <= ny < 10:
+                    neighbor = self.office_grid[ny][nx]
+                    if neighbor and neighbor["type"] == "wall":
+                        adjacent_wall = True
+                        break
+            if not adjacent_wall:
+                return False, "needs_wall"
+        
+        # Grid collision check
+        if self.office_grid[y][x] is not None:
+            return False, "collision"
+            
+        # Pay
+        self.money -= cost
+        if hasattr(self, "accounting"):
+            self.accounting["expenses"] += cost
+            
+        # Place
+        item = {
+            "type": item_type,
+            "x": x,
+            "y": y,
+            "width": 1,
+            "height": 1,
+            "employees": obj_def.get("employees", 0)
+        }
+        self.office_items.append(item)
+        self.office_grid[y][x] = item
+                
+        return True, "success"
+
+    def remove_office_item(self, x, y):
+        """Entfernt ein Objekt und erstattet 50% der Kosten."""
+        item = getattr(self, "office_grid", [[None]*10]*10)[y][x]
+        if not item: return False
+        
+        # Mitarbeiter Limit check if it's a desk
+        if item.get("employees", 0) > 0:
+            current = len(self.employees)
+            future_max = self.get_max_employees() - item.get("employees", 0)
+            if current > future_max:
+                return False 
+            
+        # Remove
+        self.office_items.remove(item)
+        self.office_grid[y][x] = None
+        
+        # Refund 50%
+        from game_data import BUILD_OBJECTS
+        obj_def = BUILD_OBJECTS.get(item["type"], {})
+        self.money += obj_def.get("cost", 0) * 0.5
+        
+        return True
+
+    def get_office_item(self, x, y):
+        return self.office_grid[y][x]
+
     def _check_achievements(self):
         """Prüft ob neue Meilensteine erreicht wurden."""
         from game_data import ACHIEVEMENTS
@@ -2350,4 +2528,25 @@ class GameState:
                     body=self.get_text('body_achievement', desc=desc, bonus=bonus_str),
                     date_week=self.week
                 ))
+
+    def get_current_charts(self, top_n=10):
+        """Gibt die aktuellen Verkaufscharts zurueck (Spieler + Rivalen)."""
+        entries = []
+        for g in self.game_history:
+            entries.append({
+                'name': g.name,
+                'studio': self.company_name,
+                'sales': getattr(g, 'sales', 0),
+                'is_active': getattr(g, 'is_active', False)
+            })
+        for rival in self.rivals:
+            for rg in rival.games:
+                entries.append({
+                    'name': rg.name,
+                    'studio': rival.name,
+                    'sales': int(rg.score * 10000),
+                    'is_active': (self.week - rg.week_developed) < 20
+                })
+        entries.sort(key=lambda e: e['sales'], reverse=True)
+        return entries[:top_n]
 

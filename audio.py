@@ -72,6 +72,22 @@ class AudioManager:
         self.current_loop = None
         self.tts_engine = "auto"
         
+        self.music_volume = 50
+        self.sfx_volume = 100
+        self.speech_volume = 100
+
+    def apply_volumes(self, settings):
+        """Übernimmt die Volumen-Einstellungen aus dem GameState."""
+        self.music_volume = settings.get("music_volume", 50)
+        self.sfx_volume = settings.get("sfx_volume", 100)
+        self.speech_volume = settings.get("speech_volume", 100)
+        
+        if pygame.mixer.music.get_busy():
+            pygame.mixer.music.set_volume(self.music_volume / 100.0 * 0.05)
+            
+        if self.current_loop:
+            self.current_loop.set_volume(self.sfx_volume / 100.0 * 0.1)
+        
     def update_tts_engine(self, engine_mode):
         """Wechselt den TTS-Modus: auto, nvda, sapi"""
         self.tts_engine = engine_mode
@@ -123,7 +139,7 @@ class AudioManager:
                 sound_path = resource_path(f"assets/{sound_name}.{fmt}")
                 if os.path.exists(sound_path):
                     sound = pygame.mixer.Sound(sound_path)
-                    sound.set_volume(0.15)
+                    sound.set_volume(self.sfx_volume / 100.0 * 0.15)
                     sound.play()
                     return
             except Exception:
@@ -137,7 +153,7 @@ class AudioManager:
                 sound_path = resource_path(f"assets/{sound_name}.{fmt}")
                 if os.path.exists(sound_path):
                     self.current_loop = pygame.mixer.Sound(sound_path)
-                    self.current_loop.set_volume(0.1)
+                    self.current_loop.set_volume(self.sfx_volume / 100.0 * 0.1)
                     self.current_loop.play(loops=-1)
                     return
             except Exception:
@@ -154,7 +170,7 @@ class AudioManager:
                 music_path = resource_path(f"assets/{music_name}.{fmt}")
                 if os.path.exists(music_path):
                     pygame.mixer.music.load(music_path)
-                    pygame.mixer.music.set_volume(0.05)
+                    pygame.mixer.music.set_volume(self.music_volume / 100.0 * 0.05)
                     pygame.mixer.music.play(loops=-1)
                     return
             except Exception:

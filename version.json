@@ -1,4 +1,5 @@
 {
-    "version": "2.7.0",
-    "changelog": "Phase F: Merchandising, E-Sports Turniere & Firmenübernahmen"
+    "version": "3.0.1",
+    "channel": "beta",
+    "changelog": "v3.0.1 (Beta): Updater Release-Kanäle (Stable/Beta) hinzugefügt. Übersetzungsfehler im Büro und fehlende Translations behoben."
 }

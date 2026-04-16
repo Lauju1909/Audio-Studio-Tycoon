@@ -1,88 +1,49 @@
 {
-  "company_name": "",
-  "money": 100000,
-  "fans": 1370,
-  "week": 13,
-  "high_score": 4.5,
-  "games_made": 2,
-  "total_revenue": 187182,
-  "office_level": 0,
-  "last_event_week": 8,
+  "company_name": "MockStudio",
+  "money": 50000000,
+  "fans": 100000,
+  "week": 1,
+  "high_score": 0.0,
+  "games_made": 0,
+  "total_revenue": 0,
+  "office_level": 2,
+  "last_event_week": 0,
   "last_trend_week": 0,
   "current_trend": {},
   "active_events": [],
   "settings": {
-    "language": "de",
+    "language": "en",
     "music_enabled": true,
     "tts_engine": "auto",
-    "auto_update": true,
-    "key_up": 1073741906,
-    "key_down": 1073741905,
-    "key_confirm": 13,
-    "key_back": 8,
-    "key_home": 1073741898,
-    "key_end": 1073741901
+    "auto_update": true
   },
   "game_history": [
     {
-      "name": "",
-      "topic": "Sci-Fi",
-      "genre": "RPG",
+      "name": "Mock Wars",
+      "topic": "Cyberpunk",
+      "genre": "Action",
       "sliders": {},
       "platform": "PC",
       "audience": "Jugendliche",
       "size": "Mittel",
-      "marketing": "Gaming Web-Ads",
+      "marketing": "Kein Marketing",
       "engine_name": null,
       "review_scores": [
-        4,
-        4,
-        5,
-        5
+        8,
+        8,
+        9,
+        8
       ],
-      "review_average": 4.5,
-      "sales": 7227,
-      "revenue": 130086,
-      "dev_cost": 12500,
-      "week_developed": 1,
+      "review_average": 8.25,
+      "sales": 100000,
+      "revenue": 0,
+      "dev_cost": 0,
+      "week_developed": 0,
       "bugs": 0,
       "dlc_count": 0,
       "weeks_on_market": 0,
       "is_active": true,
-      "ip_rating": 0,
-      "sequel_number": 0,
-      "sub_genre": null,
-      "license_bonus": 0.0,
-      "physical_copies": 0,
-      "physical_price": 45,
-      "lifetime_physical_sales": 0
-    },
-    {
-      "name": "",
-      "topic": "Sci-Fi",
-      "genre": "RPG",
-      "sliders": {},
-      "platform": "PC",
-      "audience": "Jugendliche",
-      "size": "Mittel",
-      "marketing": "Gaming Web-Ads",
-      "engine_name": null,
-      "review_scores": [
-        3,
-        2,
-        3,
-        3
-      ],
-      "review_average": 2.75,
-      "sales": 3172,
-      "revenue": 57096,
-      "dev_cost": 18230,
-      "week_developed": 7,
-      "bugs": 0,
-      "dlc_count": 1,
-      "weeks_on_market": 0,
-      "is_active": true,
-      "ip_rating": 0,
+      "ip_rating": 50,
       "sequel_number": 0,
       "sub_genre": null,
       "license_bonus": 0.0,
@@ -91,37 +52,82 @@
       "lifetime_physical_sales": 0
     }
   ],
-  "active_mmos": [],
+  "active_mmos": [
+    {
+      "game_dict": {
+        "name": "Mock Wars",
+        "topic": "Cyberpunk",
+        "genre": "Action",
+        "sliders": {},
+        "platform": "PC",
+        "audience": "Jugendliche",
+        "size": "Mittel",
+        "marketing": "Kein Marketing",
+        "engine_name": null,
+        "review_scores": [
+          8,
+          8,
+          9,
+          8
+        ],
+        "review_average": 8.25,
+        "sales": 100000,
+        "revenue": 0,
+        "dev_cost": 0,
+        "week_developed": 0,
+        "bugs": 0,
+        "dlc_count": 0,
+        "weeks_on_market": 0,
+        "is_active": true,
+        "ip_rating": 50,
+        "sequel_number": 0,
+        "sub_genre": null,
+        "license_bonus": 0.0,
+        "physical_copies": 0,
+        "physical_price": 45,
+        "lifetime_physical_sales": 0
+      },
+      "players": 10000,
+      "subscription_fee": 3,
+      "server_cost_per_10k": 5000,
+      "weeks_active": 0,
+      "payment_model": "Abo"
+    }
+  ],
   "employees": [
     {
-      "name": "Nina Schmidt",
-      "role": "Supporter",
-      "primary_skill": "Story",
-      "secondary_skill": "Welt",
-      "skill_level": 1,
+      "name": "Profi Max",
+      "role": "Profi",
+      "primary_skill": "Gameplay",
+      "secondary_skill": "Grafik",
+      "skill_level": 5,
       "specialization": null,
       "trait": {
-        "name": "Griesgram",
-        "effect": "morale_loss",
-        "value": 1.5,
-        "description": "Verliert 50% schneller Moral."
+        "name": "Faulpelz",
+        "effect": "speed",
+        "value": 0.8,
+        "description": "Arbeitet 20% langsamer."
       },
       "skills": {
-        "Gameplay": 8,
-        "Grafik": 5,
-        "Sound": 5,
-        "Story": 51,
-        "KI": 5,
-        "Welt": 32
+        "Gameplay": 89,
+        "Grafik": 70,
+        "Sound": 45,
+        "Story": 56,
+        "KI": 56,
+        "Welt": 58
       },
-      "salary": 1030,
-      "morale": 90,
-      "weeks_employed": 6
+      "salary": 2370,
+      "morale": 100,
+      "weeks_employed": 0
     }
   ],
   "engines": [
     {
       "name": "Basis-Engine",
+      "features": []
+    },
+    {
+      "name": "VoxelCore",
       "features": []
     }
   ],
@@ -132,6 +138,7 @@
     "Mittelalter",
     "Sport",
     "Rennen",
+    "Dinosaurier",
     "Abakus",
     "Logistik",
     "Schach",
@@ -140,7 +147,8 @@
   "unlocked_genres": [
     "Action",
     "Puzzle",
-    "Casual"
+    "Casual",
+    "Dino-Survival"
   ],
   "unlocked_audiences": [
     "Jeder"
@@ -157,43 +165,89 @@
       "name": "MicroHard",
       "target_market_share": 30,
       "games": [],
-      "next_release_week": 22,
-      "owned_shares": 10
+      "next_release_week": 16,
+      "owned_shares": 10,
+      "is_owned_by_player": true
     },
     {
       "name": "Electric Farts",
       "target_market_share": 25,
       "games": [],
-      "next_release_week": 35,
-      "owned_shares": 0
+      "next_release_week": 38,
+      "owned_shares": 0,
+      "is_owned_by_player": false
     },
     {
       "name": "Nintengo",
       "target_market_share": 20,
       "games": [],
-      "next_release_week": 53,
-      "owned_shares": 0
+      "next_release_week": 38,
+      "owned_shares": 0,
+      "is_owned_by_player": false
     }
   ],
   "last_goty_year": 0,
   "bank_loan": {
-    "amount_borrowed": 250000,
-    "amount_remaining": 287500,
-    "weekly_payment": 2764,
-    "weeks_remaining": 104
+    "amount_borrowed": 50000,
+    "amount_remaining": 60000,
+    "weekly_payment": 1153,
+    "weeks_remaining": 52
   },
   "accounting": {
-    "income": 187182,
-    "expenses": 136460,
-    "loan_paid": 16584
+    "income": 0,
+    "expenses": 0,
+    "loan_paid": 0
   },
-  "custom_consoles": [],
-  "emails": [],
+  "custom_consoles": [
+    {
+      "name": "MockStation",
+      "tech_level": 10,
+      "dev_cost": 500000,
+      "release_week": 10,
+      "market_share": 0.05
+    }
+  ],
+  "emails": [
+    {
+      "sender": "Historiker",
+      "subject": "Willkommen in der Pionierzeit!",
+      "body": "Das Jahr ist 1930. Du bist ein Visionär mit einer großen Idee: Man kann Maschinen beibringen, Spiele zu spielen und zu entwickeln! Mit bescheidenen Mitteln in einer Garage beginnst du dein Studio. Verfügbare Themen: Abakus, Mathematik, Schach und Logistik. Kämpfe dich durch die Geschichte – von der Weltwirtschaftskrise bis zur KI-Revolution 2023!",
+      "date_week": 1,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Tester",
+      "subject": "Bug!",
+      "body": "Es funktioniert nichts.",
+      "date_week": 1,
+      "game_name": null,
+      "is_bug": true,
+      "is_read": false
+    }
+  ],
   "has_presswerk": false,
   "storage_capacity": 0,
   "used_storage": 0,
   "has_server_room": false,
   "server_capacity": 0,
-  "publishing_offers": [],
-  "published_third_party_games": []
+  "publishing_offers": [
+    {
+      "studio_name": "EA",
+      "game_name": "Sim",
+      "genre": "Simulation",
+      "quality": 80,
+      "marketing_cost": 5000,
+      "player_share": 0.4
+    }
+  ],
+  "published_third_party_games": [],
+  "office_items": [
+    {
+      "type": "plant",
+      "x": 0,
+      "y": 0
+    }
+  ]
 }

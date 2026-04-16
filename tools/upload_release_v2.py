@@ -10,12 +10,12 @@ if not TOKEN:
 
 OWNER = "Lauju1909"
 REPO = "Audio-Studio-Tycoon"
-TAG = "v2.2.1"
-NAME = "Audio Studio Tycoon v2.2.1 (Patch)"
-BODY = "Release 2.2.1 - Historisches Bugfix Release\n\nFixes:\n- UnboundLocalError bei Jahreswechsel behoben.\n- Rivalen-Score skaliert jetzt korrekt ab 1930.\n- GOTY-Auswahl filtert jetzt präzise nach historischem Jahr.\n\nFeatures (aus v2.2.0):\n- Vollständige historische Plattformen (1930-2026).\n- 50+ historische Engine-Features mit Beschreibungen.\n- 35+ historische Jahresevents mit Marktauswirkungen."
+TAG = "v3.0.0"
+NAME = "Audio Studio Tycoon v3.0.0 (Visionary Update)"
+BODY = "v3.0.0 - Das VISIONARY Update:\n- Modulares Bau-System (Wände, Türen, Einrichtung).\n- Universal Mod-Support (Engine-Features, Traits, Plattformen in mod.json).\n- Ingame-Mod-Portal zur Verwaltung von Mods.\n- Vollständige Screenreader-Barrierefreiheit für alle neuen Systeme."
 
-FILE_PATH = r"c:\Users\lauri\.gemini\antigravity\scratch\game_dev_tycoon_2\Audio_Studio_Tycoon_v2.2.1.zip"
-FILE_NAME = "Audio_Studio_Tycoon_v2.2.1.zip"
+FILE_PATH = r"G:\Andere Computer\Mein Computer\.gemini\antigravity\scratch\game_dev_tycoon_2\Audio_Studio_Tycoon_v3.0.0.zip"
+FILE_NAME = "Audio_Studio_Tycoon_v3.0.0.zip"
 
 def upload_asset():
     headers = {
