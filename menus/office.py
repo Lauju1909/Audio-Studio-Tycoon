@@ -184,14 +184,23 @@ class EmailDetailMenu(Menu):
             email.is_read = True
             title = f"{email.sender}: {email.subject}"
             self.email_body = email.body
+            
+            if getattr(email, 'is_salary_request', False):
+                options = [
+                    {'text': self.game_state.get_text('accept_raise', default="Gehaltserhöhung zustimmen"), 'action': self._accept_raise},
+                    {'text': self.game_state.get_text('decline_raise', default="Ablehnen"), 'action': self._decline_raise}
+                ]
+            else:
+                options = [
+                    {'text': self.game_state.get_text('delete_email'), 'action': self._delete},
+                    {'text': self.game_state.get_text('back'), 'action': lambda: "email_inbox"}
+                ]
         else:
             title = self.game_state.get_text('email_title')
             self.email_body = ""
-
-        options = [
-            {'text': self.game_state.get_text('delete_email'), 'action': self._delete},
-            {'text': self.game_state.get_text('back'), 'action': lambda: "email_inbox"}
-        ]
+            options = [
+                {'text': self.game_state.get_text('back'), 'action': lambda: "email_inbox"}
+            ]
         super().__init__(title, options, audio, game_state)
 
     def announce_entry(self):
@@ -204,4 +213,34 @@ class EmailDetailMenu(Menu):
         if 0 <= idx < len(self.game_state.emails):
             self.game_state.emails.pop(idx)
             self.audio.play_sound("confirm")
+        return "email_inbox"
+
+    def _accept_raise(self):
+        idx = getattr(self.game_state, 'selected_email_idx', 0)
+        if 0 <= idx < len(self.game_state.emails):
+            email = self.game_state.emails[idx]
+            emp_idx = getattr(email, 'employee_idx', -1)
+            if 0 <= emp_idx < len(self.game_state.employees):
+                emp = self.game_state.employees[emp_idx]
+                emp.salary = getattr(email, 'requested_salary', int(emp.salary * 1.25))
+                emp.pending_raise_request = False
+                emp.last_raise_week = self.game_state.week
+                emp.morale = min(100, emp.morale + 50)
+                self.audio.play_sound("buy")
+                self.audio.speak(self.game_state.get_text('raise_accepted', default="Die Gehaltserhöhung wurde gewährt.", name=emp.name))
+            self.game_state.emails.pop(idx)
+        return "email_inbox"
+
+    def _decline_raise(self):
+        idx = getattr(self.game_state, 'selected_email_idx', 0)
+        if 0 <= idx < len(self.game_state.emails):
+            email = self.game_state.emails[idx]
+            emp_idx = getattr(email, 'employee_idx', -1)
+            if 0 <= emp_idx < len(self.game_state.employees):
+                emp = self.game_state.employees[emp_idx]
+                emp.pending_raise_request = False
+                emp.morale = max(0, emp.morale - 50)  # Heftiger Dämpfer
+                self.audio.play_sound("error")
+                self.audio.speak(self.game_state.get_text('raise_declined', default="Forderung abgelehnt. Die Moral ist gesunken.", name=emp.name))
+            self.game_state.emails.pop(idx)
         return "email_inbox"

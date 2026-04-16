@@ -207,7 +207,7 @@ class ActiveMMO:
 
 
 class Email:
-    """Modell für Fan-Post und Bug-Reports."""
+    """Modell für Fan-Post, Bug-Reports und Mitarbeiter-Kommunikation."""
     def __init__(self, sender, subject, body, date_week, game_name=None, is_bug=False):
         self.sender = sender
         self.subject = subject
@@ -216,6 +216,11 @@ class Email:
         self.game_name = game_name
         self.is_bug = is_bug
         self.is_read = False
+        
+        # Interaktive Mails
+        self.is_salary_request = False
+        self.employee_idx = None
+        self.requested_salary = 0
 
 
 class EngineFeature:
@@ -287,6 +292,8 @@ class Employee:
         self.salary = self._calculate_salary()
         self.morale = 100          # 0-100
         self.weeks_employed = 0
+        self.last_raise_week = 0   # Wann gab es das letzte Mal eine Gehaltserhöhung?
+        self.pending_raise_request = False # Laufende Gehaltsverhandlung
 
     def _generate_skills(self):
         """Generiert Skill-Werte basierend auf Rolle und Level."""
@@ -313,14 +320,25 @@ class Employee:
 
     @property
     def quality_contribution(self):
-        """Wie viel Qualität fügt dieser Mitarbeiter hinzu (0.0 - 0.1)."""
+        """Wie viel Qualität fügt dieser Mitarbeiter hinzu (0.0 - 0.1). Sinkt stark bei schlechter Moral."""
         avg_skill = sum(self.skills.values()) / len(self.skills)
-        return avg_skill / 1000.0  # 0.0 - 0.1
+        base_contrib = avg_skill / 1000.0  # 0.0 - 0.1
+        
+        if self.morale < 40:
+            # Bis zu 50% Einbruch bei Moral 0
+            penalty = 1.0 - ((40 - self.morale) / 40.0) * 0.5
+            base_contrib *= penalty
+        return base_contrib
 
     def get_slider_bonus(self, slider_name):
-        """Bonus für einen bestimmten Slider (0.0 - 1.0)."""
+        """Bonus für einen bestimmten Slider (0.0 - 1.0). Sinkt bei schlechter Moral."""
         skill = self.skills.get(slider_name, 0)
-        return skill / 100.0
+        base_bonus = skill / 100.0
+
+        if self.morale < 40:
+            penalty = 1.0 - ((40 - self.morale) / 40.0) * 0.5
+            base_bonus *= penalty
+        return base_bonus
 
     def summary(self):
         """Zusammenfassung für NVDA."""
@@ -356,6 +374,8 @@ class Employee:
             "salary": self.salary,
             "morale": self.morale,
             "weeks_employed": self.weeks_employed,
+            "last_raise_week": self.last_raise_week,
+            "pending_raise_request": getattr(self, "pending_raise_request", False)
         }
 
 class RivalGame:

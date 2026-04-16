@@ -392,6 +392,47 @@ class GameState:
         self.money -= total_salary
         self.accounting["expenses"] += total_salary
         
+        # NEU Phase H: Erweiterte Mitarbeiter-Logik (Moral, Kündigungen, Gehalt)
+        quitting_employees = []
+        for i, emp in enumerate(self.employees):
+            emp.weeks_employed += 1
+            if not getattr(self, 'crunch_active', False):
+                emp.morale = min(100, emp.morale + 2)
+                
+            # Kündigung wegen Burnout
+            if emp.morale == 0 and random.random() < 0.05:
+                quitting_employees.append(emp)
+                continue
+                
+            # Gehaltsforderung (E-Mail)
+            if not getattr(emp, 'pending_raise_request', False) and (self.week - getattr(emp, 'last_raise_week', 0)) > 20:
+                expected_salary = sum(emp.skills.values()) * 5 + 500
+                # Will eine Erhöhung, wenn sein Skill 30% mehr wert ist als er verdient
+                if expected_salary > emp.salary * 1.3 and random.random() < 0.1:
+                    emp.pending_raise_request = True
+                    from models import Email
+                    new_salary = int(emp.salary * 1.25)
+                    mail_subj = self.get_text('subject_salary_raise')
+                    mail_body = self.get_text('body_salary_raise', name=emp.name, current=emp.salary, expected=new_salary)
+                    
+                    mail = Email(sender=emp.name, subject=mail_subj, body=mail_body, date_week=self.week)
+                    mail.is_salary_request = True
+                    mail.employee_idx = i
+                    mail.requested_salary = new_salary
+                    self.emails.insert(0, mail)
+                    
+        for e in quitting_employees:
+            if e in self.employees:
+                self.employees.remove(e)
+            from models import Email
+            self.emails.insert(0, Email(
+                sender=e.name,
+                subject=self.get_text('subject_quit'),
+                body=self.get_text('body_quit', name=e.name),
+                date_week=self.week
+            ))
+
+        
         # Kreditabzahlung
         if getattr(self, "bank_loan", None):
             payment = self.bank_loan.weekly_payment

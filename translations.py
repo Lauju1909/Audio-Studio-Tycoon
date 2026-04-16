@@ -956,6 +956,17 @@ TRANSLATIONS = {
         'release_channel': 'Release-Kanal',
         'channel_beta_warning': 'Beta-Kanal aktiviert! Beta-Versionen können Fehler enthalten.',
         'channel_stable_info': 'Stable-Kanal aktiviert. Nur getestete Versionen werden installiert.',
+        
+        # Phase H: HR Management
+        'subject_salary_raise': 'Gehaltsverhandlung',
+        'body_salary_raise': 'Hallo Chef, ich habe in letzter Zeit viel geleistet und meine Fähigkeiten verbessert. Ich fordere eine Anpassung meines Gehalts auf {expected:,} Euro (aktuell: {current:,} Euro).',
+        'subject_quit': 'Kündigung',
+        'body_quit': 'Das war\'s! {name} verlässt das Studio mit sofortiger Wirkung aufgrund furchtbarer Arbeitsbedingungen und mangelnder Moral.',
+        'accept_raise': 'Gehaltserhöhung zustimmen',
+        'decline_raise': 'Forderung ablehnen',
+        'raise_accepted': 'Du hast der Gehaltserhöhung von {name} zugestimmt! Die Moral steigt erheblich.',
+        'raise_declined': 'Du hast die Erhöhung von {name} abgelehnt. Die Moral fällt in den Keller.',
+        
     
 
 },
@@ -1877,6 +1888,16 @@ TRANSLATIONS = {
         'release_channel': 'Release Channel',
         'channel_beta_warning': 'Beta Channel activated! Beta versions may contain bugs.',
         'channel_stable_info': 'Stable Channel activated. Only tested versions will be installed.',
+        
+        # Phase H: HR Management
+        'subject_salary_raise': 'Salary Negotiation',
+        'body_salary_raise': 'Hello Boss, I have been working hard and improving my skills. I am requesting a salary adjustment to {expected:,} Euro (currently: {current:,} Euro).',
+        'subject_quit': 'Resignation',
+        'body_quit': 'I quit! {name} has left the studio immediately due to terrible working conditions and low morale.',
+        'accept_raise': 'Accept Raise Request',
+        'decline_raise': 'Decline Request',
+        'raise_accepted': 'You accepted the salary raise for {name}! Morale has increased significantly.',
+        'raise_declined': 'You declined the raise for {name}. Morale plummeted.',
     
 
 }
