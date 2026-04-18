@@ -223,7 +223,10 @@ class ConsoleSpecsMenu(Menu):
         self._update_options()
 
     def _update_options(self):
-        draft = self.game_state.current_console_draft
+        draft = getattr(self.game_state, 'current_console_draft', None)
+        if not draft:
+            self.options = [{'text': self.game_state.get_text('back'), 'action': lambda: "hardware_dev_menu"}]
+            return
         self.options = [
             {'text': f"{self.game_state.get_text('tech_level_label')}: {draft['tech_level']} (+100.000 EUR)", 'action': self._inc_tech},
             {'text': self.game_state.get_text('start_development_cost', cost=f"{draft['cost']:,}"), 'action': self._start},

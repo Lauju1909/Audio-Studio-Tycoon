@@ -374,7 +374,7 @@ class Employee:
             "salary": self.salary,
             "morale": self.morale,
             "weeks_employed": self.weeks_employed,
-            "last_raise_week": self.last_raise_week,
+            "last_raise_week": getattr(self, "last_raise_week", 0),
             "pending_raise_request": getattr(self, "pending_raise_request", False)
         }
 

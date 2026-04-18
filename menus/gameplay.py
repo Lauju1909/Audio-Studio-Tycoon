@@ -274,6 +274,9 @@ class ReviewResultMenu(Menu):
         self._update_options()
 
     def _update_options(self):
+        if not self.game_state.game_history:
+            self.options = [{'text': self.game_state.get_text('back'), 'action': lambda: "main_menu"}]
+            return
         game = self.game_state.game_history[-1]
         score = game.review.average if game.review else 0
         self.options = [

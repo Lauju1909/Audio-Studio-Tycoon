@@ -2,7 +2,7 @@
     "language": "en",
     "music_enabled": true,
     "tts_engine": "auto",
-    "auto_update": false,
+    "auto_update": true,
     "key_up": 1073741906,
     "key_down": 1073741905,
     "key_confirm": 13,
