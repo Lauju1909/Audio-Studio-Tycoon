@@ -35,32 +35,44 @@ class AudioManager:
     def __init__(self):
         self.tolk = None
         self.tolk_active = False
+        self.linux_speech = None
         
-        # Tolk-Ausgabe initialisieren
-        try:
-            # Versuche Tolk.dll zu laden (aus dem gleichen Ordner oder assets)
-            dll_path = os.path.join(os.path.abspath("."), "Tolk.dll")
-            if not os.path.exists(dll_path):
-                # Fallback für PyInstaller / assets
-                dll_path = resource_path("Tolk.dll")
-                
-            if os.path.exists(dll_path):
-                self.tolk = ctypes.windll.LoadLibrary(dll_path)
-                self.tolk.Tolk_Load()
-                self.tolk_active = self.tolk.Tolk_IsLoaded()
-                if self.tolk_active:
-                    # Damit Screenreader nicht quatschen bevor das Spiel spricht
-                    self.tolk.Tolk_TrySAPI(True)
+        # Betriebssystem-Check
+        self.is_windows = sys.platform.startswith('win')
+        self.is_linux = sys.platform.startswith('linux')
+
+        if self.is_windows:
+            # Tolk-Ausgabe für Windows initialisieren
+            try:
+                dll_path = os.path.join(os.path.abspath("."), "Tolk.dll")
+                if not os.path.exists(dll_path):
+                    dll_path = resource_path("Tolk.dll")
+                    
+                if os.path.exists(dll_path):
+                    self.tolk = ctypes.windll.LoadLibrary(dll_path)
+                    self.tolk.Tolk_Load()
+                    self.tolk_active = self.tolk.Tolk_IsLoaded()
+                    if self.tolk_active:
+                        self.tolk.Tolk_TrySAPI(True)
                 else:
-                    print("[Tolk Init Fehler]: Tolk_Load() fehlgeschlagen.")
-            else:
-                print(f"[Tolk Fehler]: Tolk.dll nicht gefunden unter {dll_path}")
-                
-        except Exception as e:
-            print(f"[Tolk Init Exception]: {e}")
-            
-        if not self.tolk_active:
-            print("[INFO] Fallback auf Konsolen-Ausgabe aktiv.")
+                    print(f"[Tolk Fehler]: Tolk.dll nicht gefunden.")
+            except Exception as e:
+                print(f"[Tolk Init Exception]: {e}")
+        
+        elif self.is_linux:
+            # Linux-Ausgabe über speech-dispatcher (speechd)
+            try:
+                import speechd
+                self.linux_speech = speechd.SSIPClient('AudioStudioTycoon')
+                # Standard-Parameter setzen
+                self.linux_speech.set_punctuation(speechd.PunctuationMode.SOME)
+                print("[Linux] Speech-Dispatcher (speechd) erfolgreich initialisiert.")
+            except Exception as e:
+                print(f"[Linux Speech Fehler]: speechd konnte nicht geladen werden. ({e})")
+                print("Bitte installiere 'python3-speechd' oder 'speech-dispatcher'.")
+
+        if not self.tolk_active and not self.linux_speech:
+            print("[INFO] Keine Screenreader-Bibliothek aktiv. Nutze Konsolen-Fallback.")
 
         # Pygame Mixer für SFX
         try:
@@ -121,15 +133,25 @@ class AudioManager:
 
     def speak(self, text, interrupt=True):
         """
-        Text an Tolk senden. Fallback: Konsolen-Ausgabe.
+        Text an Tolk (Windows) oder speechd (Linux) senden. Fallback: Konsole.
         """
         print(f"[SPRACHE]: {text}")
+        
+        # Windows (Tolk)
         if self.tolk_active and self.tolk:
             try:
-                # Tolk_Output erwartet wchar_t* (Unicode String)
                 self.tolk.Tolk_Output(ctypes.c_wchar_p(text), ctypes.c_bool(interrupt))
             except Exception as e:
                 print(f"[Tolk Speak Fehler]: {e}")
+        
+        # Linux (speech-dispatcher)
+        elif self.linux_speech:
+            try:
+                if interrupt:
+                    self.linux_speech.cancel()
+                self.linux_speech.speak(text)
+            except Exception as e:
+                print(f"[Linux Speak Fehler]: {e}")
 
     def play_sound(self, sound_name):
         """Spielt einen Sound-Effekt ab (wav, ogg oder mp3)."""
@@ -189,6 +211,13 @@ class AudioManager:
     def cleanup(self):
         """Ressourcen freigeben."""
         self.stop_loop()
+        
+        if self.linux_speech:
+            try:
+                self.linux_speech.close()
+            except Exception:
+                pass
+                
         try:
             pygame.mixer.quit()
         except Exception:
