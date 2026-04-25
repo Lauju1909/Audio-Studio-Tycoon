@@ -1,5 +1,5 @@
 {
-    "version": "3.0.2",
+    "version": "3.2.0-beta.1",
     "channel": "beta",
-    "changelog": "v3.0.2 (Beta): Aktives HR-System eingeführt – Mitarbeiter-Moral, Burnout-Mechanik, wöchentliche Verhandlungsereignisse, Gehaltserhöhungen und Kündigungen bei anhaltend niedrigem Moralwert."
+    "changelog": "v3.2.0-beta.1 (Phase 2): Mitarbeiter-Fortbildungen mit Sperrzeit, zuf\u00e4llige Krankheitsausf\u00e4lle (Burnout-System), Teambuilding-Buchhaltung. NVDA-optimiert."
 }

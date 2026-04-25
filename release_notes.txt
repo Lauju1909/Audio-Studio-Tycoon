@@ -1,0 +1,32 @@
+Release 3.2.0-beta.1 - Phase 2: HR-Erweiterung
+
+Neue Features:
+- Mitarbeiter-Fortbildungen mit echtem Sperrzeit-System:
+  * Workshop (1 Woche, +5 Skill, 5.000 EUR)
+  * Fortbildung (3 Wochen, +10 Skill, 15.000 EUR)
+  * Experten-Seminar (6 Wochen, +20 Skill, 40.000 EUR)
+  * Spezialisierungskurs (10 Wochen, neue Experten-Eigenschaft, 100.000 EUR)
+  * Trainierende Mitarbeiter sind im Menü als [T] markiert (mit Restwochen)
+  * Nach Abschluss automatische E-Mail mit Skill-Ergebnis
+
+- Krankheitsausfälle (Zufalls-Events basierend auf Moral):
+  * Moral < 30%: 8% Chance pro Woche krank
+  * Moral 30-60%: 3% Chance pro Woche krank
+  * Moral > 60%: 1% Chance pro Woche krank
+  * Ausfall: 1-3 Wochen, E-Mail bei Krankmeldung und Genesung
+  * Kranke Mitarbeiter sind als [K] markiert und leisten keinen Beitrag
+
+- Teambuilding-Buchhaltung: Kosten werden korrekt in der Jahresbilanz erfasst
+
+- Vollständige Lokalisierung (DE/EN) für alle Phase-2-Features
+
+Technische Verbesserungen:
+- _active_employees(): Nur gesunde, nicht-trainierende Mitarbeiter
+  fließen in Entwicklungsgeschwindigkeit, Qualität und Bug-Rate ein
+- start_training() als saubere GameState-Methode
+- Employee.to_dict() speichert Training/Krankheits-Status
+
+Barrierefreiheit:
+- 100% NVDA/SAPI kompatibel
+- Alle neuen Status-Meldungen als TTS-Feedback
+- Lineare Menü-Navigation ohne versteckte Zustände

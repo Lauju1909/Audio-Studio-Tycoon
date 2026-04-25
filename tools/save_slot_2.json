@@ -1,24 +1,18 @@
 {
-  "company_name": "Echo Games",
-  "money": 6500,
+  "company_name": "",
+  "money": 100000,
   "fans": 0,
-  "week": 12,
+  "week": 1,
   "high_score": 0.0,
   "games_made": 0,
   "total_revenue": 0,
   "office_level": 0,
-  "last_event_week": 9,
+  "last_event_week": 0,
   "last_trend_week": 0,
   "current_trend": {},
-  "active_events": [
-    {
-      "id": "industry_conference",
-      "effect": "hype",
-      "value": 25
-    }
-  ],
+  "active_events": [],
   "settings": {
-    "language": "de",
+    "language": "en",
     "music_enabled": true,
     "tts_engine": "auto",
     "auto_update": true,
@@ -27,12 +21,39 @@
     "key_confirm": 13,
     "key_back": 8,
     "key_home": 1073741898,
-    "key_end": 1073741901,
-    "update_channel": "stable"
+    "key_end": 1073741901
   },
   "game_history": [],
   "active_mmos": [],
-  "employees": [],
+  "employees": [
+    {
+      "name": "Profi 51",
+      "role": "Programmierer",
+      "primary_skill": "KI",
+      "secondary_skill": "Gameplay",
+      "skill_level": 3323,
+      "specialization": null,
+      "trait": {
+        "name": "Griesgram",
+        "effect": "morale_loss",
+        "value": 1.5,
+        "description": "Verliert 50% schneller Moral."
+      },
+      "skills": {
+        "Gameplay": 100,
+        "Grafik": 33225,
+        "Sound": 33237,
+        "Story": 33222,
+        "KI": 100,
+        "Welt": 33232
+      },
+      "salary": 666080,
+      "morale": 100,
+      "weeks_employed": 0,
+      "last_raise_week": 0,
+      "pending_raise_request": false
+    }
+  ],
   "engines": [
     {
       "name": "Basis-Engine",
@@ -71,21 +92,17 @@
       "name": "MicroHard",
       "target_market_share": 30,
       "games": [],
-      "next_release_week": 19,
+      "next_release_week": 22,
       "owned_shares": 0,
-      "is_owned_by_player": false,
-      "ai_personality": "Trendchaser",
-      "ai_memory": {}
+      "is_owned_by_player": false
     },
     {
       "name": "Electric Farts",
       "target_market_share": 25,
       "games": [],
-      "next_release_week": 21,
+      "next_release_week": 43,
       "owned_shares": 0,
-      "is_owned_by_player": false,
-      "ai_personality": "Aggressive",
-      "ai_memory": {}
+      "is_owned_by_player": false
     },
     {
       "name": "Nintengo",
@@ -93,13 +110,16 @@
       "games": [],
       "next_release_week": 36,
       "owned_shares": 0,
-      "is_owned_by_player": false,
-      "ai_personality": "Perfectionist",
-      "ai_memory": {}
+      "is_owned_by_player": false
     }
   ],
   "last_goty_year": 0,
-  "bank_loan": null,
+  "bank_loan": {
+    "amount_borrowed": 100000,
+    "amount_remaining": 107000,
+    "weekly_payment": 2057,
+    "weeks_remaining": 52
+  },
   "accounting": {
     "income": 0,
     "expenses": 0,
@@ -108,10 +128,10 @@
   "custom_consoles": [],
   "emails": [
     {
-      "sender": "News Reader",
-      "subject": "Markt-Ereignis",
-      "body": "Branchenkonferenz! Du hältst einen Vortrag. Hype +25!",
-      "date_week": 9,
+      "sender": "Historiker",
+      "subject": "Willkommen in der Pionierzeit!",
+      "body": "Das Jahr ist 1930. Du bist ein Visionär mit einer großen Idee: Man kann Maschinen beibringen, Spiele zu spielen und zu entwickeln! Mit bescheidenen Mitteln in einer Garage beginnst du dein Studio. Verfügbare Themen: Abakus, Mathematik, Schach und Logistik. Kämpfe dich durch die Geschichte – von der Weltwirtschaftskrise bis zur KI-Revolution 2023!",
+      "date_week": 1,
       "game_name": null,
       "is_bug": false,
       "is_read": true

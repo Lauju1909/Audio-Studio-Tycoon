@@ -295,6 +295,13 @@ class Employee:
         self.last_raise_week = 0   # Wann gab es das letzte Mal eine Gehaltserhöhung?
         self.pending_raise_request = False # Laufende Gehaltsverhandlung
 
+        # NEU: Phase 2 - Fortbildungen & Krankheit
+        self.is_training = False        # Gesperrt durch Fortbildung
+        self.training_weeks_left = 0    # Wochen bis Fortbildung fertig
+        self.training_skill_boost = 0   # Skill-Punkte die nach Abschluss vergeben werden
+        self.is_sick = False            # Krank-Status
+        self.sick_weeks_left = 0        # Wochen bis Genesung
+
     def _generate_skills(self):
         """Generiert Skill-Werte basierend auf Rolle und Level."""
         from game_data import SLIDER_NAMES
@@ -375,7 +382,13 @@ class Employee:
             "morale": self.morale,
             "weeks_employed": self.weeks_employed,
             "last_raise_week": getattr(self, "last_raise_week", 0),
-            "pending_raise_request": getattr(self, "pending_raise_request", False)
+            "pending_raise_request": getattr(self, "pending_raise_request", False),
+            # NEU: Phase 2
+            "is_training": getattr(self, "is_training", False),
+            "training_weeks_left": getattr(self, "training_weeks_left", 0),
+            "training_skill_boost": getattr(self, "training_skill_boost", 0),
+            "is_sick": getattr(self, "is_sick", False),
+            "sick_weeks_left": getattr(self, "sick_weeks_left", 0),
         }
 
 class RivalGame:
@@ -404,13 +417,15 @@ class RivalGame:
 class RivalStudio:
     """KI-gesteuertes Konkurrenz-Studio."""
     
-    def __init__(self, name, target_market_share=10, games=None, next_release_week=None, owned_shares=0, is_owned_by_player=False):
+    def __init__(self, name, target_market_share=10, games=None, next_release_week=None, owned_shares=0, is_owned_by_player=False, ai_personality="Balanced", ai_memory=None):
         self.name = name
         self.target_market_share = target_market_share
         self.games = games or []
         self.next_release_week = next_release_week or random.randint(10, 30)
         self.owned_shares = owned_shares
         self.is_owned_by_player = is_owned_by_player  # NEU: Phase F (Firmenübernahmen)
+        self.ai_personality = ai_personality
+        self.ai_memory = ai_memory or {}
 
     def to_dict(self):
         return {
@@ -419,7 +434,9 @@ class RivalStudio:
             "games": [g.to_dict() for g in self.games],
             "next_release_week": self.next_release_week,
             "owned_shares": self.owned_shares,
-            "is_owned_by_player": self.is_owned_by_player
+            "is_owned_by_player": self.is_owned_by_player,
+            "ai_personality": self.ai_personality,
+            "ai_memory": self.ai_memory
         }
 
 class BankLoan:

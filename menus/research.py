@@ -151,7 +151,7 @@ class TechnologyResearchMenu(Menu):
 
 class EngineCreateNameMenu(TextInputMenu):
     def __init__(self, audio, game_state):
-        super().__init__('create_engine_title', 'engine_name_prompt', audio, game_state,
+        super().__init__(game_state.get_text('create_engine_title'), 'engine_name_prompt', audio, game_state,
                          on_confirm=self._on_confirm, on_cancel=lambda: "research_menu")
 
     def _on_confirm(self, name):
@@ -208,7 +208,7 @@ class HardwareDevMenu(Menu):
 
 class ConsoleNameInput(TextInputMenu):
     def __init__(self, audio, game_state):
-        super().__init__('create_console_title', 'console_name_prompt', audio, game_state,
+        super().__init__(game_state.get_text('create_console_title'), 'console_name_prompt', audio, game_state,
                          on_confirm=self._on_confirm, on_cancel=lambda: "hardware_dev_menu")
 
     def _on_confirm(self, name):

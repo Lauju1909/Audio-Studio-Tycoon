@@ -2,173 +2,301 @@ import os
 import sys
 import random
 import traceback
+import pygame
 
 # Verzeichnis-Pfad korrigieren
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from logic import GameState
-from models import GameProject, Employee, Engine
-from game_data import (
-    TOPICS, GENRES, PLATFORMS, ENGINE_FEATURES, 
-    LICENSES, EMPLOYEE_ROLES, get_compatibility
-)
+from translations import set_language
+from main import get_menu_factories
 
-def run_simulation(language='de', target_money=500000):
-    print(f"\n{'='*60}")
-    print(f"STARTE SIMULATION: Sprache={language}, Ziel={target_money:,} Euro")
-    print(f"{'='*60}")
-    
-    state = GameState()
-    state.settings['language'] = language
-    state.company_name = f"SimStudio {language.upper()}"
-    state.money = 50000 # Startkapital
-    
-    weeks_passed = 0
-    max_weeks = 3000 # Erhöht auf 3000 Wochen (~60 Jahre)
-    
-    while state.money < target_money and weeks_passed < max_weeks:
-        weeks_passed += 1
+class MockEvent:
+    def __init__(self, key, unicode_char='', mods=0):
+        self.type = pygame.KEYDOWN
+        self.key = key
+        self.unicode = unicode_char
+        self.mods = mods
+
+class MockAudioManager:
+    def speak(self, text, interrupt=True):
+        pass
+    def play_sound(self, sound_name):
+        pass
+    def play_music(self, music_name):
+        pass
+    def cleanup(self):
+        pass
+    def apply_volumes(self, settings):
+        pass
+    def set_music_enabled(self, enabled):
+        pass
+    def update_tts_engine(self, engine_mode):
+        pass
+
+class AIAgent:
+    def __init__(self, language='de', target_money=500000, max_weeks=3000):
+        self.language = language
+        self.target_money = target_money
+        self.max_weeks = max_weeks
         
-        # 1. Management: Mitarbeiter einstellen
-        office_info = state.get_office_info()
-        if len(state.employees) < office_info['max_employees'] and state.money > 35000:
-            # Simuliere Einstellung
-            role_data = random.choice(EMPLOYEE_ROLES)
-            new_emp = Employee(name=f"Worker {len(state.employees)+1}", role_data=role_data)
-            state.employees.append(new_emp)
-            print(f"[Woche {state.week}] + Mitarbeiter eingestellt: {new_emp.name} ({new_emp.role})")
+        self.audio = MockAudioManager()
+        self.state = GameState()
+        self.state.audio = self.audio
+        self.state.load_global_settings()
+        self.state.settings['language'] = language
+        self.state.settings['auto_update'] = False # Kein Auto-Update beim Test
+        set_language(language)
+        
+        self.factories = get_menu_factories(self.audio, self.state)
+        
+        # 1. Teste Updater UI sofort beim Start
+        self.state.pending_update = {"version": "9.9.9", "changelog": "Test update", "download_url": None, "hash": None}
+        self.current_key = "update_confirm_menu"
+        self.current_menu = self.factories[self.current_key]()
+        
+        self.menu_history = []
+        
+        # Stats
+        self.crashes = 0
+        self.ticks_simulated = 0
+        self.successful = False
 
-        # 2. Management: Büro-Upgrade
-        if state.money > 250000 and state.office_level < 2:
-            if state.upgrade_office():
-                print(f"[Woche {state.week}] ++ Büro auf Level {state.office_level} aufgerüstet!")
+    def send_key(self, key, unicode_char=''):
+        event = MockEvent(key, unicode_char)
+        try:
+            result = self.current_menu.handle_input(event)
+            if result == "quit":
+                return "quit"
+            elif result and result in self.factories:
+                self.menu_history.append(self.current_key)
+                if len(self.menu_history) > 10:
+                    self.menu_history.pop(0)
+                    
+                self.current_key = result
+                self.current_menu = self.factories[self.current_key]()
+                # Debug info
+                print(f"[Nav] -> {self.current_key}")
+                if hasattr(self.current_menu, "announce_entry"):
+                    self.current_menu.announce_entry()
+            return result
+        except Exception as e:
+            print(f"\n[CRASH] Fehler im Menü '{self.current_key}'!")
+            print(f"Pfad Historie: {self.menu_history}")
+            print(f"State Woche: {self.state.week}, Geld: {self.state.money}")
+            traceback.print_exc()
+            self.crashes += 1
+            return "crash"
 
-        # 3. Forschung
-        if not state.is_developing and state.money > 50000:
-            # Suche nach ungelösten Features
-            for feat_data in ENGINE_FEATURES:
-                if feat_data['name'] not in [f.name for f in state.unlocked_features]:
-                    if state.money >= feat_data['cost'] + 20000:
-                        state.start_research(feat_data, "feature")
-                        print(f"[Woche {state.week}] * Forschung gestartet: {feat_data['name']}")
-                        # Simuliere Forschungsdauer
-                        state.week += 4
-                        state.complete_research()
-                        break
-
-        # 4. Engine Erstellung
-        if len(state.unlocked_features) > (len(state.engines) * 3) and state.money > 80000:
-            new_engine = Engine(f"SuperEngine v{len(state.engines)+1}", state.unlocked_features.copy())
-            state.engines.append(new_engine)
-            print(f"[Woche {state.week}] # Neue Engine erstellt: {new_engine.name}")
-
-        # 5. Lizenzen kaufen
-        if state.money > 150000 and len(state.owned_licenses) < 3:
-            lic_idx = random.randrange(len(LICENSES))
-            if state.buy_license(lic_idx):
-                print(f"[Woche {state.week}] $ Lizenz gekauft: {LICENSES[lic_idx]['name']}")
-
-        # 6. Spielentwicklung
-        if not state.is_developing:
-            # Wähle gute Kombi
-            best_topic = random.choice(TOPICS)
-            best_genre = random.choice(GENRES)
-            for _ in range(15):
-                t = random.choice(TOPICS)
-                g = random.choice(GENRES)
-                if get_compatibility(t, g) >= 3.0: # Strengere Wahl für mehr Erfolg
-                    best_topic, best_genre = t, g
-                    break
+    def navigate_standard_menu(self):
+        if not hasattr(self.current_menu, 'options') or not self.current_menu.options:
+            return self.send_key(self.state.key_back)
             
-            avail_platforms = [p['name'] for p in PLATFORMS if p['available_week'] <= state.week and (p['end_week'] is None or p['end_week'] >= state.week)]
-            proj_platform = random.choice(avail_platforms) if avail_platforms else "PC (MS-DOS)"
-
-            # Lizenz nutzen?
-            active_lics = state.get_active_licenses()
-            used_lic_name = None
-            if active_lics:
-                used_lic_name = active_lics[0]['name']
-
-            proj = GameProject(
-                name=f"Game {len(state.game_history)+1}",
-                topic=best_topic,
-                genre=best_genre,
-                sliders={"Gameplay": 8, "Grafik": 7, "Sound": 6, "Story": 5, "KI": 5, "Welt": 4},
-                platform=proj_platform,
-                audience="Jeder",
-                engine=state.engines[-1] if state.engines else None,
-                size="Mittel" if len(state.employees) >= 2 else "Klein",
-                marketing="Große Kampagne" if state.money > 200000 else "Mittelgroße Kampagne"
-            )
+        options = self.current_menu.options
+        back_idx = -1
+        for i, opt in enumerate(options):
+            txt = opt['text'].lower()
+            if "zurück" in txt or "back" in txt or "abbrechen" in txt or "cancel" in txt:
+                back_idx = i
+                
+        # Menüs in denen wir niemals zurückgehen sollten (um den Flow nicht zu brechen)
+        no_back_menus = ["topic_menu", "genre_menu", "platform_menu", "audience_menu", "game_size_menu", "engine_select_menu", "marketing_menu", "sub_genre_menu", "sequel_menu", "difficulty_menu", "email_inbox", "email_detail"]
+        
+        # Filtere Optionen heraus, die das Spiel beenden würden (quit)
+        valid_options = []
+        for i, opt in enumerate(options):
+            if "quit" not in str(opt['action']).lower() and "beenden" not in opt['text'].lower():
+                valid_options.append(i)
+                
+        if not valid_options:
+            return self.send_key(self.state.key_back)
             
-            state.current_draft = {
-                "topic": proj.topic,
-                "genre": proj.genre,
-                "sub_genre": None,
-                "platform": proj.platform,
-                "audience": proj.audience,
-                "size": proj.size,
-                "marketing": proj.marketing,
-                "engine": proj.engine
-            }
+        target_idx = random.choice(valid_options)
+        
+        # Zu 15% gehen wir zurück, wenn möglich und nicht in einem Dev-Flow
+        if back_idx != -1 and self.current_key not in no_back_menus and random.random() < 0.15:
+            target_idx = back_idx
             
-            if used_lic_name:
-                state.use_license(used_lic_name)
+        # In Dev-Flows überspringen wir den Zurück-Button komplett bei der zufälligen Auswahl
+        if back_idx != -1 and self.current_key in no_back_menus:
+            while target_idx == back_idx and len(options) > 1:
+                target_idx = random.randrange(len(options))
             
-            state.finalize_game(proj)
-            last_game = state.game_history[-1]
-            print(f"[Woche {state.week}] !!! Spiel veröffentlicht: {last_game.name} ({last_game.topic}/{last_game.genre})")
-            print(f"      Score: {last_game.review.average:.1f} | Sales: {last_game.sales:,} | Gewinn: {last_game.revenue - last_game.dev_cost:,} Euro")
-            print(f"      Status: Geld={state.money:,} | Fans={state.fans:,}")
-
-        # 7. Addons (Phase B)
-        if len(state.game_history) > 2 and random.random() < 0.1:
-            best_game_idx = 0
-            max_rev = 0
-            for i, g in enumerate(state.game_history):
-                if g.revenue > max_rev:
-                    max_rev = g.revenue
-                    best_game_idx = i
+        self.send_key(self.state.key_home)
+        current = 0
+        while current < target_idx:
+            self.send_key(self.state.key_down)
+            current += 1
             
-            addon = state.create_addon(best_game_idx)
-            if addon:
-                print(f"[Woche {state.week}] + Addon veröffentlicht für {state.game_history[best_game_idx].name} (Gewinn: {addon['revenue'] - addon['cost']:,} Euro)")
+        return self.send_key(self.state.key_confirm)
 
-        # 8. Marktanalyse Simulation (für GOTY etc.)
-        if state.week % 52 == 0:
-            print(f"--- Jahreswechsel Jahr {state.week//52} ---")
+    def fill_text_input(self):
+        import string
+        length = random.randint(4, 12)
+        word = ''.join(random.choices(string.ascii_letters, k=length))
+        for char in word:
+            self.send_key(0, char)
+        return self.send_key(self.state.key_confirm)
 
-        if state.is_bankrupt():
-            print(f"\n!!! BANKROTT IN WOCHE {state.week} !!!")
-            return False
+    def fill_sliders(self):
+        if not hasattr(self.current_menu, 'slider_names'):
+            return self.send_key(self.state.key_back)
+            
+        budget = getattr(self.current_menu, 'budget', 10)
+        for _ in range(budget):
+            self.send_key(pygame.K_RIGHT)
+            if random.random() < 0.3:
+                self.send_key(self.state.key_down)
+        return self.send_key(self.state.key_confirm)
 
-    print(f"\n--- Simulation {language.upper()} beendet ---")
-    print(f"Dauer: {state.week} Wochen ({state.week//52} Jahre)")
-    print(f"Endkontostand: {state.money:,} Euro")
-    print(f"Fans: {state.fans:,}")
-    print(f"Spiele: {len(state.game_history)}")
-    
-    if state.money >= target_money:
-        return True
-    return False
+    def think_and_act(self):
+        if self.state.is_bankrupt():
+            return "quit"
+        if self.state.money >= self.target_money:
+            self.successful = True
+            return "quit"
+            
+        menu_type = type(self.current_menu).__name__
+        
+        if menu_type == "TextInputMenu" or getattr(self.current_menu, 'is_text_input', False):
+            if random.random() < 0.5 and hasattr(self.current_menu, 'generate_random_name'):
+                self.send_key(pygame.K_F2)
+                return self.send_key(self.state.key_confirm)
+            return self.fill_text_input()
+            
+        elif menu_type == "SliderMenu" or "Slider" in menu_type:
+            return self.fill_sliders()
+            
+        elif self.current_key == "dev_progress_menu":
+            if self.state.dev_progress >= self.state.dev_total_weeks:
+                # Force finish (finish is usually option 0)
+                self.send_key(self.state.key_home)
+                return self.send_key(self.state.key_confirm)
+            else:
+                # Still developing, go back to game_menu
+                return self.send_key(self.state.key_back)
+                
+        elif self.current_key == "game_menu":
+            # Idle/Base check
+            
+            # 1. Mails prüfen
+            unread = [e for e in self.state.emails if not getattr(e, 'is_read', True)]
+            if unread and random.random() < 0.7:
+                for i, opt in enumerate(self.current_menu.options):
+                    if "E-Mail" in opt['text'] or "Email" in opt['text'] or "Postfach" in opt['text']:
+                        self.send_key(self.state.key_home)
+                        for _ in range(i): self.send_key(self.state.key_down)
+                        return self.send_key(self.state.key_confirm)
+            
+            # 2. Entwicklung läuft?
+            if self.state.is_developing:
+                if self.state.dev_progress >= self.state.dev_total_weeks:
+                    # Springe manuell in den DevScreen
+                    # print(f"[Dev] Finished! State money: {self.state.money}")
+                    self.current_key = "dev_progress_menu"
+                    self.current_menu = self.factories[self.current_key]()
+                    if hasattr(self.current_menu, "announce_entry"):
+                        self.current_menu.announce_entry()
+                    return None
+                    
+                # Zeit vorspulen (1 Woche)
+                self.state.update_tick(15000)
+                self.ticks_simulated += 1
+                if hasattr(self.current_menu, 'update'):
+                    self.current_menu.update()
+                
+                # Wenn AAA Event triggert und Spiel pausiert:
+                if self.state.time_speed == 0 and getattr(self.state, "pending_dev_event", None):
+                    self.state.time_speed = 1.0 
+                    self.current_key = "aaa_dev_event_menu"
+                    self.current_menu = self.factories[self.current_key]()
+                    if hasattr(self.current_menu, "announce_entry"):
+                        self.current_menu.announce_entry()
+                return None
+                
+            # 4. Standard Zeitablauf oder Spiel entwickeln
+            if random.random() < 0.3:
+                self.state.update_tick(15000)
+                self.ticks_simulated += 1
+                return None
+                
+            # Erhöhe Chance massiv ein neues Spiel zu starten, wenn wir nichts tun
+            if not self.state.is_developing and random.random() < 0.5:
+                # Entwickeln-Button ist meist Index 0 im game_menu
+                self.send_key(self.state.key_home)
+                return self.send_key(self.state.key_confirm)
+                
+            # 5. Menüs öffnen (Random)
+            return self.navigate_standard_menu()
+
+        elif self.current_key == "main_menu":
+            # Erhöhe Chance auf 'Neues Spiel' (Index 0), um nicht ewig im Hauptmenü festzuhängen
+            if random.random() < 0.3:
+                self.send_key(self.state.key_home)
+                return self.send_key(self.state.key_confirm)
+            return self.navigate_standard_menu()
+            
+        else:
+            return self.navigate_standard_menu()
+
+    def run(self):
+        print(f"\n{'='*60}")
+        print(f"STARTE ERWEITERTEN KI-PLAYTEST: {self.language.upper()}")
+        print(f"Ziel: {self.target_money:,} EUR, Max Wochen: {self.max_weeks}")
+        print(f"{'='*60}")
+        
+        os.environ['SDL_VIDEODRIVER'] = 'dummy'
+        pygame.init()
+        
+        loops = 0
+        max_loops = self.max_weeks * 20 # Höheres Loop-Limit durch Menü-Tasten
+        
+        while loops < max_loops:
+            loops += 1
+            res = self.think_and_act()
+            
+            # Bei Erfolg quit signalisieren
+            if getattr(self, 'successful', False):
+                print(f"[Success] Reached target money!")
+                break
+                
+            if res == "quit" or self.crashes >= 3 or self.state.week >= self.max_weeks:
+                print(f"[Quit] Loops: {loops}, Res: {res}, Week: {self.state.week}")
+                break
+                
+        pygame.quit()
+        
+        print(f"\n--- Simulation beendet ({self.language.upper()}) ---")
+        print(f"Dauer: {self.state.week} Wochen ({self.state.week//52} Jahre)")
+        print(f"Endkontostand: {self.state.money:,} Euro")
+        print(f"Spiele entwickelt: {len(self.state.game_history)}")
+        print(f"Menü-Crashes: {self.crashes}")
+        
+        return self.successful and self.crashes == 0
 
 if __name__ == "__main__":
     try:
-        success_de = run_simulation('de', 500000)
+        agent_de = AIAgent(language='de', target_money=500000, max_weeks=3000)
+        success_de = agent_de.run()
+        
         if success_de:
             print("\nDEUTSCH TEST ERFOLGREICH!")
-            success_en = run_simulation('en', 500000)
+            
+            agent_en = AIAgent(language='en', target_money=500000, max_weeks=3000)
+            success_en = agent_en.run()
+            
             if success_en:
                 print("\nENGLISCH TEST ERFOLGREICH!")
                 print("\n" + "#"*40)
-                print("ALLE TESTS ERFOLGREICH BESTANDEN!")
+                print("ALLE TESTS ERFOLGREICH BESTANDEN OHNE CRASHES!")
                 print("#"*40)
                 sys.exit(0)
             else:
-                print("\nENGLISCH TEST FEHLGESCHLAGEN!")
+                print("\nENGLISCH TEST FEHLGESCHLAGEN (Oder Crashes gefunden)!")
+                sys.exit(1)
         else:
-            print("\nDEUTSCH TEST FEHLGESCHLAGEN!")
-        sys.exit(1)
+            print("\nDEUTSCH TEST FEHLGESCHLAGEN (Oder Crashes gefunden)!")
+            sys.exit(1)
     except Exception:
         traceback.print_exc()
         sys.exit(1)

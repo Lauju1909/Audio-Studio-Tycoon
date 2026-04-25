@@ -1,133 +1,35 @@
 {
-  "company_name": "MockStudio",
-  "money": 50000000,
-  "fans": 100000,
-  "week": 1,
+  "company_name": "KhBW",
+  "money": 150000,
+  "fans": 0,
+  "week": 6,
   "high_score": 0.0,
   "games_made": 0,
   "total_revenue": 0,
-  "office_level": 2,
+  "office_level": 0,
   "last_event_week": 0,
   "last_trend_week": 0,
   "current_trend": {},
   "active_events": [],
   "settings": {
-    "language": "en",
+    "language": "de",
     "music_enabled": true,
     "tts_engine": "auto",
-    "auto_update": true
+    "auto_update": false,
+    "key_up": 1073741906,
+    "key_down": 1073741905,
+    "key_confirm": 13,
+    "key_back": 8,
+    "key_home": 1073741898,
+    "key_end": 1073741901,
+    "update_channel": "stable"
   },
-  "game_history": [
-    {
-      "name": "Mock Wars",
-      "topic": "Cyberpunk",
-      "genre": "Action",
-      "sliders": {},
-      "platform": "PC",
-      "audience": "Jugendliche",
-      "size": "Mittel",
-      "marketing": "Kein Marketing",
-      "engine_name": null,
-      "review_scores": [
-        8,
-        8,
-        9,
-        8
-      ],
-      "review_average": 8.25,
-      "sales": 100000,
-      "revenue": 0,
-      "dev_cost": 0,
-      "week_developed": 0,
-      "bugs": 0,
-      "dlc_count": 0,
-      "weeks_on_market": 0,
-      "is_active": true,
-      "ip_rating": 50,
-      "sequel_number": 0,
-      "sub_genre": null,
-      "license_bonus": 0.0,
-      "physical_copies": 0,
-      "physical_price": 45,
-      "lifetime_physical_sales": 0
-    }
-  ],
-  "active_mmos": [
-    {
-      "game_dict": {
-        "name": "Mock Wars",
-        "topic": "Cyberpunk",
-        "genre": "Action",
-        "sliders": {},
-        "platform": "PC",
-        "audience": "Jugendliche",
-        "size": "Mittel",
-        "marketing": "Kein Marketing",
-        "engine_name": null,
-        "review_scores": [
-          8,
-          8,
-          9,
-          8
-        ],
-        "review_average": 8.25,
-        "sales": 100000,
-        "revenue": 0,
-        "dev_cost": 0,
-        "week_developed": 0,
-        "bugs": 0,
-        "dlc_count": 0,
-        "weeks_on_market": 0,
-        "is_active": true,
-        "ip_rating": 50,
-        "sequel_number": 0,
-        "sub_genre": null,
-        "license_bonus": 0.0,
-        "physical_copies": 0,
-        "physical_price": 45,
-        "lifetime_physical_sales": 0
-      },
-      "players": 10000,
-      "subscription_fee": 3,
-      "server_cost_per_10k": 5000,
-      "weeks_active": 0,
-      "payment_model": "Abo"
-    }
-  ],
-  "employees": [
-    {
-      "name": "Profi Max",
-      "role": "Profi",
-      "primary_skill": "Gameplay",
-      "secondary_skill": "Grafik",
-      "skill_level": 5,
-      "specialization": null,
-      "trait": {
-        "name": "Schneller Lerner",
-        "effect": "speed",
-        "value": 1.1,
-        "description": "Arbeitet 10% schneller."
-      },
-      "skills": {
-        "Gameplay": 80,
-        "Grafik": 71,
-        "Sound": 48,
-        "Story": 53,
-        "KI": 44,
-        "Welt": 53
-      },
-      "salary": 2245,
-      "morale": 100,
-      "weeks_employed": 0
-    }
-  ],
+  "game_history": [],
+  "active_mmos": [],
+  "employees": [],
   "engines": [
     {
       "name": "Basis-Engine",
-      "features": []
-    },
-    {
-      "name": "VoxelCore",
       "features": []
     }
   ],
@@ -138,7 +40,6 @@
     "Mittelalter",
     "Sport",
     "Rennen",
-    "Dinosaurier",
     "Abakus",
     "Logistik",
     "Schach",
@@ -147,8 +48,7 @@
   "unlocked_genres": [
     "Action",
     "Puzzle",
-    "Casual",
-    "Dino-Survival"
+    "Casual"
   ],
   "unlocked_audiences": [
     "Jeder"
@@ -165,89 +65,48 @@
       "name": "MicroHard",
       "target_market_share": 30,
       "games": [],
-      "next_release_week": 13,
-      "owned_shares": 10,
-      "is_owned_by_player": true
+      "next_release_week": 14,
+      "owned_shares": 0,
+      "is_owned_by_player": false,
+      "ai_personality": "Trendchaser",
+      "ai_memory": {}
     },
     {
       "name": "Electric Farts",
       "target_market_share": 25,
       "games": [],
-      "next_release_week": 32,
+      "next_release_week": 38,
       "owned_shares": 0,
-      "is_owned_by_player": false
+      "is_owned_by_player": false,
+      "ai_personality": "Aggressive",
+      "ai_memory": {}
     },
     {
       "name": "Nintengo",
       "target_market_share": 20,
       "games": [],
-      "next_release_week": 42,
+      "next_release_week": 38,
       "owned_shares": 0,
-      "is_owned_by_player": false
+      "is_owned_by_player": false,
+      "ai_personality": "Perfectionist",
+      "ai_memory": {}
     }
   ],
   "last_goty_year": 0,
-  "bank_loan": {
-    "amount_borrowed": 50000,
-    "amount_remaining": 60000,
-    "weekly_payment": 1153,
-    "weeks_remaining": 52
-  },
+  "bank_loan": null,
   "accounting": {
     "income": 0,
     "expenses": 0,
     "loan_paid": 0
   },
-  "custom_consoles": [
-    {
-      "name": "MockStation",
-      "tech_level": 10,
-      "dev_cost": 500000,
-      "release_week": 10,
-      "market_share": 0.05
-    }
-  ],
-  "emails": [
-    {
-      "sender": "Historiker",
-      "subject": "Willkommen in der Pionierzeit!",
-      "body": "Das Jahr ist 1930. Du bist ein Visionär mit einer großen Idee: Man kann Maschinen beibringen, Spiele zu spielen und zu entwickeln! Mit bescheidenen Mitteln in einer Garage beginnst du dein Studio. Verfügbare Themen: Abakus, Mathematik, Schach und Logistik. Kämpfe dich durch die Geschichte – von der Weltwirtschaftskrise bis zur KI-Revolution 2023!",
-      "date_week": 1,
-      "game_name": null,
-      "is_bug": false,
-      "is_read": false
-    },
-    {
-      "sender": "Tester",
-      "subject": "Bug!",
-      "body": "Es funktioniert nichts.",
-      "date_week": 1,
-      "game_name": null,
-      "is_bug": true,
-      "is_read": false
-    }
-  ],
+  "custom_consoles": [],
+  "emails": [],
   "has_presswerk": false,
   "storage_capacity": 0,
   "used_storage": 0,
   "has_server_room": false,
   "server_capacity": 0,
-  "publishing_offers": [
-    {
-      "studio_name": "EA",
-      "game_name": "Sim",
-      "genre": "Simulation",
-      "quality": 80,
-      "marketing_cost": 5000,
-      "player_share": 0.4
-    }
-  ],
+  "publishing_offers": [],
   "published_third_party_games": [],
-  "office_items": [
-    {
-      "type": "plant",
-      "x": 0,
-      "y": 0
-    }
-  ]
+  "office_items": []
 }

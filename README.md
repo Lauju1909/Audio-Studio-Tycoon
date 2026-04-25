@@ -4,14 +4,18 @@ Audio Studio Tycoon ist eine 100% Screenreader-optimierte Management-Simulation,
 
 ## Features
 - **Barrierefreiheit**: Vollständige Unterstützung für NVDA (Text-to-Speech) und Sound-Effekte.
-- **Detaillierte Reviews**: Erhalte qualifiziertes Feedback von der Fachpresse.
-- **Fan-System**: Kommuniziere mit deinen Fans über E-Mails und reagiere auf Bug-Reports.
-- **Service & Support**: Veröffentliche Patches und DLCs, um deine Spiele aktuell zu halten.
+- **Detaillierte Reviews**: Erhalte qualifiziertes Feedback von der Fachpresse. Dank **KI-Pressekritiken** sind diese dynamisch und passen sich deinen Spiele-Statistiken an.
+- **Fan-System & Hype**: Kommuniziere mit deinen Fans über E-Mails, reagiere auf Bug-Reports und organisiere **Spiele-Messen**, um gigantischen Hype aufzubauen!
+- **Service & Support**: Veröffentliche Patches und DLCs, oder baue dir ein passives Einkommen mit deinem eigenen **Abo-Service (Game Pass)** auf.
 - **Plattform-Evolution**: Erlebe den Marktzyklus von Konsolen und PCs über Jahrzehnte.
+- **Co-Development**: Entwickle Spiele zusammen mit Konkurrenten für massive Speed-Boosts bei 50/50 Profit Split.
+- **Spionage & Sabotage**: Beauftrage Industriespione, um Tech-Daten zu stehlen, oder zerstöre den Ruf deiner Konkurrenz mit Schmutzkampagnen.
+- **HR-Management**: Verwalte Mitarbeiter-Moral, Burnout, Gehaltsverhandlungen und verhindere, dass deine besten Entwickler kündigen!
+- **Zweisprachig (DE/EN)**: Das gesamte Spiel, inklusive aller KI-Texte, lässt sich flexibel auf Deutsch oder Englisch spielen.
 
 ## Installation & Start
-1. Lade das Repository herunter oder nutze die EXE im `dist` Ordner (falls vorhanden).
-2. Führe `run_game.bat` aus oder starte `main.py` direkt (benötigt Python und Pygame).
+1. Lade das Repository herunter oder entpacke das aktuelle Beta-Release (`.zip` aus dem Releases-Tab).
+2. Führe `Audio_Studio_Tycoon_v[Version].exe` aus (im `_internal`-Ordner liegen alle benötigten Bibliotheken).
 3. Stelle sicher, dass dein Screenreader (z.B. NVDA) aktiv ist für das beste Erlebnis.
 
 ## Steuerung

@@ -1,8 +1,8 @@
 {
-  "company_name": "",
-  "money": 100000,
+  "company_name": "KhBW",
+  "money": 150000,
   "fans": 0,
-  "week": 1,
+  "week": 6,
   "high_score": 0.0,
   "games_made": 0,
   "total_revenue": 0,
@@ -12,48 +12,21 @@
   "current_trend": {},
   "active_events": [],
   "settings": {
-    "language": "en",
+    "language": "de",
     "music_enabled": true,
     "tts_engine": "auto",
-    "auto_update": true,
+    "auto_update": false,
     "key_up": 1073741906,
     "key_down": 1073741905,
     "key_confirm": 13,
     "key_back": 8,
     "key_home": 1073741898,
-    "key_end": 1073741901
+    "key_end": 1073741901,
+    "update_channel": "stable"
   },
   "game_history": [],
   "active_mmos": [],
-  "employees": [
-    {
-      "name": "Profi 52",
-      "role": "Supporter",
-      "primary_skill": "Story",
-      "secondary_skill": "Welt",
-      "skill_level": 1217,
-      "specialization": null,
-      "trait": {
-        "name": "Bug-Magnet",
-        "effect": "bugs",
-        "value": 1.5,
-        "description": "Verursacht 50% mehr Bugs."
-      },
-      "skills": {
-        "Gameplay": 12176,
-        "Grafik": 12164,
-        "Sound": 12166,
-        "Story": 100,
-        "KI": 12163,
-        "Welt": 100
-      },
-      "salary": 244845,
-      "morale": 100,
-      "weeks_employed": 0,
-      "last_raise_week": 0,
-      "pending_raise_request": false
-    }
-  ],
+  "employees": [],
   "engines": [
     {
       "name": "Basis-Engine",
@@ -92,51 +65,42 @@
       "name": "MicroHard",
       "target_market_share": 30,
       "games": [],
-      "next_release_week": 28,
+      "next_release_week": 14,
       "owned_shares": 0,
-      "is_owned_by_player": false
+      "is_owned_by_player": false,
+      "ai_personality": "Trendchaser",
+      "ai_memory": {}
     },
     {
       "name": "Electric Farts",
       "target_market_share": 25,
       "games": [],
-      "next_release_week": 23,
+      "next_release_week": 38,
       "owned_shares": 0,
-      "is_owned_by_player": false
+      "is_owned_by_player": false,
+      "ai_personality": "Aggressive",
+      "ai_memory": {}
     },
     {
       "name": "Nintengo",
       "target_market_share": 20,
       "games": [],
-      "next_release_week": 39,
+      "next_release_week": 38,
       "owned_shares": 0,
-      "is_owned_by_player": false
+      "is_owned_by_player": false,
+      "ai_personality": "Perfectionist",
+      "ai_memory": {}
     }
   ],
   "last_goty_year": 0,
-  "bank_loan": {
-    "amount_borrowed": 100000,
-    "amount_remaining": 107000,
-    "weekly_payment": 2057,
-    "weeks_remaining": 52
-  },
+  "bank_loan": null,
   "accounting": {
     "income": 0,
     "expenses": 0,
     "loan_paid": 0
   },
   "custom_consoles": [],
-  "emails": [
-    {
-      "sender": "Historiker",
-      "subject": "Willkommen in der Pionierzeit!",
-      "body": "Das Jahr ist 1930. Du bist ein Visionär mit einer großen Idee: Man kann Maschinen beibringen, Spiele zu spielen und zu entwickeln! Mit bescheidenen Mitteln in einer Garage beginnst du dein Studio. Verfügbare Themen: Abakus, Mathematik, Schach und Logistik. Kämpfe dich durch die Geschichte – von der Weltwirtschaftskrise bis zur KI-Revolution 2023!",
-      "date_week": 1,
-      "game_name": null,
-      "is_bug": false,
-      "is_read": true
-    }
-  ],
+  "emails": [],
   "has_presswerk": false,
   "storage_capacity": 0,
   "used_storage": 0,

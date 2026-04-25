@@ -7,10 +7,115 @@ class ServiceMenu(Menu):
         self.game_state = game_state
         title = self.game_state.get_text('service_menu')
         options = [
+            {'text': self.game_state.get_text('service_manage_subscription'), 'action': lambda: "subscription_service_menu"},
             {'text': self.game_state.get_text('game_service_options'), 'action': lambda: "game_service_options"},
             {'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"}
         ]
         super().__init__(title, options, audio, game_state)
+
+class SubscriptionServiceMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(self.game_state.get_text('subscription_menu_title'), [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        gs = self.game_state
+        self.options = []
+        if getattr(gs, 'subscription_active', False):
+            self.options.append({'text': gs.get_text('subscription_stop') + f" ({int(gs.subscription_subscribers):,} Abonnenten)", 'action': self._toggle})
+            self.options.append({'text': gs.get_text('subscription_price_up', price=gs.subscription_price), 'action': self._change_price})
+            self.options.append({'text': gs.get_text('subscription_price_down', price=gs.subscription_price), 'action': self._change_price_down})
+        else:
+            self.options.append({'text': gs.get_text('subscription_start', cost=50000), 'action': self._toggle})
+        
+        self.options.append({'text': gs.get_text('back'), 'action': lambda: "service_menu"})
+
+    def _toggle(self):
+        gs = self.game_state
+        if getattr(gs, 'subscription_active', False):
+            gs.subscription_active = False
+            self.audio.play_sound("error")
+        else:
+            if gs.money >= 50000:
+                gs.money -= 50000
+                gs.subscription_active = True
+                gs.subscription_hype = 10.0
+                self.audio.play_sound("cash")
+            else:
+                self.audio.play_sound("error")
+                self.audio.speak(gs.get_text('not_enough_money'))
+        self._update_options()
+        return None
+
+    def _change_price(self):
+        gs = self.game_state
+        gs.subscription_price += 1.0
+        if gs.subscription_price > 25.0:
+            gs.subscription_price = 5.0
+        self.audio.play_sound("click")
+        self._update_options()
+        return None
+
+    def _change_price_down(self):
+        gs = self.game_state
+        gs.subscription_price -= 1.0
+        if gs.subscription_price < 5.0:
+            gs.subscription_price = 25.0
+        self.audio.play_sound("click")
+        self._update_options()
+        return None
+
+class EspionageMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(self.game_state.get_text('espionage_menu'), [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        gs = self.game_state
+        self.options = []
+        for i, rival in enumerate(gs.rivals):
+            self.options.append({'text': gs.get_text('espionage_steal_tech', cost=200000) + f" ({rival.name})", 'action': lambda idx=i: self._spy(idx)})
+            self.options.append({'text': gs.get_text('espionage_smear_campaign', cost=100000) + f" ({rival.name})", 'action': lambda idx=i: self._sabotage(idx)})
+        self.options.append({'text': gs.get_text('back'), 'action': lambda: "stock_market_menu"})
+
+    def _spy(self, rival_idx):
+        gs = self.game_state
+        if gs.money < 200000:
+            self.audio.play_sound("error")
+            self.audio.speak(gs.get_text('espionage_not_enough_money'))
+            return None
+        gs.money -= 200000
+        if random.random() < 0.3:
+            self.audio.play_sound("cheer")
+            self.audio.speak(gs.get_text('espionage_steal_success'))
+            gs.research_progress += 50
+        else:
+            self.audio.play_sound("error")
+            self.audio.speak(gs.get_text('espionage_steal_caught', penalty=500000))
+            gs.money -= 500000
+        return "stock_market_menu"
+
+    def _sabotage(self, rival_idx):
+        gs = self.game_state
+        rival = gs.rivals[rival_idx]
+        if gs.money < 100000:
+            self.audio.play_sound("error")
+            self.audio.speak(gs.get_text('espionage_not_enough_money'))
+            return None
+        gs.money -= 100000
+        if random.random() < 0.6:
+            self.audio.play_sound("cheer")
+            self.audio.speak(gs.get_text('espionage_smear_success', name=rival.name))
+            rival.hype = max(0, rival.hype - 30)
+        else:
+            self.audio.play_sound("error")
+            self.audio.speak(gs.get_text('espionage_smear_caught', penalty=5000))
+            gs.fans = max(0, gs.fans - 5000)
+        return "stock_market_menu"
 
 class GameServiceOptionsMenu(Menu):
     def __init__(self, audio, game_state):
@@ -75,6 +180,7 @@ class StockMarketMenu(Menu):
              price = self.game_state.get_share_price(rival)
              text = self.game_state.get_text('stock_share_info', name=rival.name, shares=shares, price=price)
              self.options.append({'text': text, 'action': lambda i=idx: self._select_rival(i)})
+        self.options.append({'text': "Spionage & Sabotage (Neu)", 'action': lambda: "espionage_menu"})
         self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "bank_menu"})
 
     def _select_rival(self, idx):

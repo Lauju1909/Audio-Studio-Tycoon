@@ -28,7 +28,7 @@ class MainMenu(Menu):
 
 class CompanyNameMenu(TextInputMenu):
     def __init__(self, audio, game_state):
-        super().__init__('company_name_title', 'company_name_prompt', audio, game_state,
+        super().__init__(game_state.get_text('company_name_title'), 'company_name_prompt', audio, game_state,
                          on_confirm=self._on_confirm, on_cancel=lambda: "main_menu")
 
     def _on_confirm(self, name):
@@ -49,12 +49,15 @@ class GameMenu(Menu):
         self.audio = audio
         self.game_state = game_state
         title = self.game_state.get_text('game_menu')
+        total_emails = len(self.game_state.emails)
+        unread_emails = len([e for e in self.game_state.emails if not getattr(e, 'is_read', True)])
         options = [
-            {'text': self.game_state.get_text('menu_develop_game'), 'action': lambda: "topic_menu"},
+            {'text': self.game_state.get_text('menu_develop_game'), 'action': lambda: self._start_dev(False)},
+            {'text': self.game_state.get_text('menu_co_dev_start'), 'action': lambda: self._start_dev(True)},
             {'text': self.game_state.get_text('hr_menu'), 'action': lambda: "hr_menu"},
             {'text': self.game_state.get_text('research_menu'), 'action': lambda: "research_menu"},
             {'text': self.game_state.get_text('office_menu'), 'action': lambda: "office_menu"},
-            {'text': self.game_state.get_text('email_inbox'), 'action': lambda: "email_inbox"},
+            {'text': self.game_state.get_text('email_inbox_status', total=total_emails, unread=unread_emails), 'action': lambda: "email_inbox"},
             {'text': self.game_state.get_text('bank_menu'), 'action': lambda: "bank_menu"},
             {'text': self.game_state.get_text('service_menu'), 'action': lambda: "service_menu"},
             {'text': self.game_state.get_text('save_menu'), 'action': lambda: "save_menu"},
@@ -62,6 +65,37 @@ class GameMenu(Menu):
             {'text': self.game_state.get_text('menu_quit'), 'action': lambda: "main_menu"}
         ]
         super().__init__(title, options, audio, game_state)
+
+    def _start_dev(self, is_co_dev):
+        if is_co_dev:
+            return "co_dev_partner_menu"
+        else:
+            self.game_state.co_dev_partner = None
+            return "topic_menu"
+
+class CoDevPartnerMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(self.game_state.get_text('menu_co_dev_partner_title'), [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        self.options = []
+        for rival in self.game_state.rivals:
+            self.options.append({'text': self.game_state.get_text('co_dev_partner_option', name=rival.name), 'action': lambda r=rival.name: self._select(r)})
+        
+        # Falls es keine Konkurrenten gibt:
+        if not self.options:
+            self.options.append({'text': self.game_state.get_text('co_dev_no_partners'), 'action': lambda: "game_menu"})
+        else:
+            self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
+
+    def _select(self, partner_name):
+        self.game_state.co_dev_partner = partner_name
+        self.audio.play_sound("confirm")
+        self.audio.speak(self.game_state.get_text('co_dev_started', name=partner_name))
+        return "topic_menu"
 
 class TopicMenu(Menu):
     def __init__(self, audio, game_state):
@@ -270,8 +304,21 @@ class ReviewResultMenu(Menu):
     def __init__(self, audio, game_state):
         self.audio = audio
         self.game_state = game_state
+        self.review_text = ""
         super().__init__(self.game_state.get_text('review_result'), [], audio, game_state)
+        self._generate_review_text()
         self._update_options()
+
+    def _generate_review_text(self):
+        if not self.game_state.game_history:
+            return
+        game = self.game_state.game_history[-1]
+        score = game.review.average if game.review else 0
+        try:
+            from ai_reviewer import ai_reviewer
+            self.review_text = ai_reviewer.generate_review(self.game_state, game, score)
+        except Exception as e:
+            self.review_text = f"Wertung: {score}/10."
 
     def _update_options(self):
         if not self.game_state.game_history:
@@ -280,14 +327,21 @@ class ReviewResultMenu(Menu):
         game = self.game_state.game_history[-1]
         score = game.review.average if game.review else 0
         self.options = [
-            {'text': self.game_state.get_text('score_label', score=score), 'action': lambda: "game_menu"}
+            {'text': self.game_state.get_text('score_label', score=score), 'action': lambda: "game_menu"},
+            {'text': self.game_state.get_text('review_listen_again'), 'action': self._repeat_review}
         ]
+
+    def _repeat_review(self):
+        self.audio.speak(self.review_text)
+        return None
 
     def announce_entry(self):
         super().announce_entry()
         game = self.game_state.game_history[-1]
         score = game.review.average if game.review else 0
         self.audio.speak(self.game_state.get_text('reviews_for', name=game.name, score=score), interrupt=False)
+        if self.review_text:
+            self.audio.speak(self.game_state.get_text('review_prefix') + self.review_text, interrupt=False)
 
 class RemasterSelectMenu(Menu):
     def __init__(self, audio, game_state):
@@ -415,7 +469,109 @@ class AAADevEventMenu(Menu):
 
 class ExpoMenu(Menu):
     def __init__(self, audio, game_state):
-         super().__init__(game_state.get_text('expo_menu_title'), [], audio, game_state)
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__("Spiele-Messe veranstalten", [], audio, game_state)
+        self.state = "size"
+        self.cost = 0
+        self.base_hype = 0
+        self._update_options()
+
+    def _update_options(self):
+        self.options = []
+        if self.state == "size":
+            self.title = "Spiele-Messe: Standgröße wählen"
+            self.options.append({'text': self.game_state.get_text('expo_small_stand'), 'action': lambda: self._select_size(50000, 5)})
+            self.options.append({'text': self.game_state.get_text('expo_medium_stand'), 'action': lambda: self._select_size(250000, 15)})
+            self.options.append({'text': self.game_state.get_text('expo_large_stand'), 'action': lambda: self._select_size(1000000, 40)})
+            self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "service_menu"})
+        elif self.state == "demo":
+            self.title = "Spiele-Messe: Demo zeigen?"
+            if self.game_state.is_developing and self.game_state.dev_progress > 10:
+                self.options.append({'text': self.game_state.get_text('expo_demo_current'), 'action': lambda: self._select_demo(10000, 5)})
+            self.options.append({'text': self.game_state.get_text('expo_demo_none'), 'action': lambda: self._select_demo(0, 0)})
+        elif self.state == "influencer":
+            self.title = "Spiele-Messe: Influencer einladen?"
+            self.options.append({'text': self.game_state.get_text('expo_influencer_hire'), 'action': lambda: self._select_influencer(100000, 10)})
+            self.options.append({'text': self.game_state.get_text('expo_influencer_none'), 'action': lambda: self._select_influencer(0, 0)})
+        elif self.state == "event":
+            self.title = self.game_state.get_text('expo_event_overcrowded_title')
+            self.options.append({'text': self.game_state.get_text('expo_event_overcrowded_opt1'), 'action': lambda: self._resolve_event("security")})
+            self.options.append({'text': self.game_state.get_text('expo_event_overcrowded_opt2'), 'action': lambda: self._resolve_event("chaos")})
+
+    def _select_size(self, cost, hype):
+        if self.game_state.money < cost:
+            self.audio.play_sound("error")
+            self.audio.speak(self.game_state.get_text('not_enough_money'))
+            return None
+        self.cost += cost
+        self.base_hype += hype
+        self.state = "demo"
+        self._update_options()
+        self.announce_entry()
+        return None
+
+    def _select_demo(self, cost, hype):
+        if self.game_state.money < self.cost + cost:
+            self.audio.play_sound("error")
+            self.audio.speak(self.game_state.get_text('not_enough_money'))
+            return None
+        self.cost += cost
+        self.base_hype += hype
+        self.state = "influencer"
+        self._update_options()
+        self.announce_entry()
+        return None
+
+    def _select_influencer(self, cost, hype):
+        if self.game_state.money < self.cost + cost:
+            self.audio.play_sound("error")
+            self.audio.speak(self.game_state.get_text('not_enough_money'))
+            return None
+        self.cost += cost
+        self.base_hype += hype
+        
+        import random
+        if random.random() < 0.4:
+            self.state = "event"
+            self._update_options()
+            self.announce_entry()
+            return None
+        else:
+            return self._finish_expo()
+
+    def _resolve_event(self, choice):
+        import random
+        if choice == "security":
+            if self.game_state.money < self.cost + 50000:
+                self.audio.play_sound("error")
+                self.audio.speak(self.game_state.get_text('not_enough_money'))
+                self._apply_chaos()
+            else:
+                self.cost += 50000
+                self.audio.play_sound("cash")
+                self.audio.speak(self.game_state.get_text('expo_event_security_safe'))
+        elif choice == "chaos":
+            if random.random() < 0.5:
+                self.audio.play_sound("cheer")
+                self.audio.speak(self.game_state.get_text('expo_event_success_mega'))
+                self.base_hype *= 2
+            else:
+                self._apply_chaos()
+        return self._finish_expo()
+
+    def _apply_chaos(self):
+        self.audio.play_sound("error")
+        self.audio.speak(self.game_state.get_text('expo_event_fail_damage'))
+        self.game_state.fans = max(0, self.game_state.fans - 10000)
+        self.base_hype = max(0, self.base_hype - 10)
+
+    def _finish_expo(self):
+        self.game_state.money -= self.cost
+        self.game_state.hype += self.base_hype
+        self.audio.play_sound("cheer")
+        self.audio.speak(f"Messe abgeschlossen! Insgesamt {self.cost} Euro ausgegeben und {self.base_hype} Hype generiert.")
+        return "game_menu"
 
 class CreditsMenu(Menu):
     def __init__(self, audio, game_state):

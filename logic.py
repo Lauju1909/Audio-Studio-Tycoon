@@ -91,6 +91,9 @@ class GameState:
             date_week=1
         ))
         
+        # NEU Phase II: Sabotage-Cooldown
+        self.last_sabotage_week = -100
+
         # Aktive MMOs
         self.active_mmos = []
 
@@ -144,6 +147,16 @@ class GameState:
 
         # ACHIEVEMENTS
         self.unlocked_achievements = []
+
+        # NEU: Phase I - Abo-Service (Game Pass)
+        self.subscription_active = False
+        self.subscription_price = 9.99
+        self.subscription_subscribers = 0
+        self.subscription_games = [] # Liste von Game-IDs oder Objekten
+        self.subscription_hype = 0.0
+
+        # NEU: Phase I - Co-Entwicklung
+        self.co_dev_partner = None # Name des Partners, wenn aktiv
 
         # NEU: Phase B - Lizenzen
         self.owned_licenses = []  # [{'name': str, 'purchased_week': int, 'expires_week': int, 'used': bool}]
@@ -254,9 +267,9 @@ class GameState:
     def _init_rivals(self):
         """Erstellt 3 Konkurrenz-Studios."""
         return [
-            RivalStudio("MicroHard", target_market_share=30, next_release_week=random.randint(10, 30)),
-            RivalStudio("Electric Farts", target_market_share=25, next_release_week=random.randint(20, 45)),
-            RivalStudio("Nintengo", target_market_share=20, next_release_week=random.randint(35, 60))
+            RivalStudio("MicroHard", target_market_share=30, next_release_week=random.randint(10, 30), ai_personality="Trendchaser"),
+            RivalStudio("Electric Farts", target_market_share=25, next_release_week=random.randint(20, 45), ai_personality="Aggressive"),
+            RivalStudio("Nintengo", target_market_share=20, next_release_week=random.randint(35, 60), ai_personality="Perfectionist")
         ]
 
     def _init_starter_engine(self):
@@ -383,8 +396,19 @@ class GameState:
 
     def _on_new_week(self):
         """Logik die jede Woche passiert (Gehalt, Zufallsereignisse)."""
-        # Jahres-Reset für Buchhaltung
+        # Jahres-Reset für Buchhaltung und Jahresbilanz
         if (self.week - 1) % WEEKS_PER_YEAR == 0:
+            if self.week > 1 and hasattr(self, "accounting"):
+                inc = self.accounting.get("income", 0)
+                exp = self.accounting.get("expenses", 0)
+                prof = inc - exp
+                from models import Email
+                self.emails.insert(0, Email(
+                    sender=self.get_text('sender_accounting'),
+                    subject=self.get_text('subject_yearly_report', year=self.get_calendar_year() - 1),
+                    body=self.get_text('body_yearly_report', income=inc, expenses=exp, profit=prof),
+                    date_week=self.week
+                ))
             self.accounting = {"income": 0, "expenses": 0, "loan_paid": 0}
             
         # Gehälter abziehen
@@ -392,13 +416,91 @@ class GameState:
         self.money -= total_salary
         self.accounting["expenses"] += total_salary
         
+        # NEU Phase I: Abo-Service (Game Pass) wöchentliches Update
+        if getattr(self, 'subscription_active', False):
+            weekly_income = (self.subscription_subscribers * self.subscription_price) / 4.0
+            server_costs_weekly = max(5000, self.subscription_subscribers * 0.1) / 4.0
+            
+            self.money += weekly_income
+            self.money -= server_costs_weekly
+            self.accounting["income"] += weekly_income
+            self.accounting["expenses"] += server_costs_weekly
+            
+            # Hype fällt langsam ab
+            self.subscription_hype = max(0.0, self.subscription_hype - 0.5)
+            
+            # Abonnenten schwanken basierend auf Hype und Preis
+            # Bei Preis 10€ und Hype 100 -> Target: 100 * 1000 * (20/10) = 200,000 Subs
+            target_subs = (self.subscription_hype * 1000) * (20.0 / max(1.0, self.subscription_price))
+            diff = target_subs - self.subscription_subscribers
+            self.subscription_subscribers += diff * 0.02
+            if self.subscription_subscribers < 0:
+                self.subscription_subscribers = 0
+        
         # NEU Phase H: Erweiterte Mitarbeiter-Logik (Moral, Kündigungen, Gehalt)
         quitting_employees = []
         for i, emp in enumerate(self.employees):
             emp.weeks_employed += 1
             if not getattr(self, 'crunch_active', False):
                 emp.morale = min(100, emp.morale + 2)
-                
+
+            # -----------------------------------------------
+            # NEU Phase 2: Training-Countdown
+            # -----------------------------------------------
+            if getattr(emp, 'is_training', False):
+                emp.training_weeks_left -= 1
+                if emp.training_weeks_left <= 0:
+                    emp.is_training = False
+                    # Skill vergeben
+                    boost = getattr(emp, 'training_skill_boost', 0)
+                    if boost > 0:
+                        emp.skills[emp.primary_skill] = min(100, emp.skills[emp.primary_skill] + boost)
+                    emp.training_skill_boost = 0
+                    from models import Email
+                    self.emails.insert(0, Email(
+                        sender=self.get_text('sender_hr'),
+                        subject=self.get_text('subject_training_done', name=emp.name),
+                        body=self.get_text('body_training_done', name=emp.name, skill=emp.primary_skill, value=emp.skills[emp.primary_skill]),
+                        date_week=self.week
+                    ))
+                continue  # Trainierende Mitarbeiter kündigen nicht / bekommen keine Gehaltsanfragen
+
+            # -----------------------------------------------
+            # NEU Phase 2: Krankheitsausfälle
+            # -----------------------------------------------
+            if getattr(emp, 'is_sick', False):
+                emp.sick_weeks_left -= 1
+                if emp.sick_weeks_left <= 0:
+                    emp.is_sick = False
+                    from models import Email
+                    self.emails.insert(0, Email(
+                        sender=self.get_text('sender_hr'),
+                        subject=self.get_text('subject_sick_recovered', name=emp.name),
+                        body=self.get_text('body_sick_recovered', name=emp.name),
+                        date_week=self.week
+                    ))
+                continue  # Kranke nicht kündigen / keine Gehaltsanfragen
+
+            # Krankheits-Zufallsevent (basierend auf Burnout / Moral)
+            # Bei Moral < 30: 8% Chance, bei Moral < 60: 3% Chance, sonst 1%
+            if not emp.is_sick and not emp.is_training:
+                sick_chance = 0.01
+                if emp.morale < 30:
+                    sick_chance = 0.08
+                elif emp.morale < 60:
+                    sick_chance = 0.03
+                if random.random() < sick_chance:
+                    emp.is_sick = True
+                    emp.sick_weeks_left = random.randint(1, 3)
+                    from models import Email
+                    self.emails.insert(0, Email(
+                        sender=self.get_text('sender_hr'),
+                        subject=self.get_text('subject_sick', name=emp.name),
+                        body=self.get_text('body_sick', name=emp.name, weeks=emp.sick_weeks_left),
+                        date_week=self.week
+                    ))
+                    continue
+
             # Kündigung wegen Burnout
             if emp.morale == 0 and random.random() < 0.05:
                 quitting_employees.append(emp)
@@ -432,6 +534,7 @@ class GameState:
                 date_week=self.week
             ))
 
+
         
         # Kreditabzahlung
         if getattr(self, "bank_loan", None):
@@ -450,6 +553,85 @@ class GameState:
                     date_week=self.week
                 ))
         
+        # NEU Phase I/II: Industriespionage / Headhunting
+        if self.week % 8 == 0 and self.employees and self.rivals:
+            rival = random.choice(self.rivals)
+            
+            # Check für Sicherheits-Zentrale & Rechtsabteilung
+            security_bonus = 1.0
+            legal_bonus = 1.0
+            has_legal = False
+            for obj in getattr(self, 'office_objects', []):
+                if obj.get('bonus') == 'security':
+                    security_bonus = 0.5 # Chance halbiert
+                if obj.get('bonus') == 'legal_protection':
+                    legal_bonus = 0.7 # Weitere 30% Reduktion
+                    has_legal = True
+            
+            # Basis-Chance skaliert mit Schwierigkeit
+            diff_multi = {0: 0.2, 1: 0.5, 2: 1.0, 3: 1.8}.get(self.difficulty, 1.0)
+            chance = 0.06 * diff_multi * security_bonus * legal_bonus
+            
+            if getattr(rival, 'ai_personality', '') == "Aggressive": chance *= 1.5
+            
+            if random.random() < chance:
+                target_emp = random.choice(self.employees)
+                
+                # Schutz-Logik Phase II: Rechtsabteilung schützt Top-Leute
+                if has_legal and getattr(target_emp, 'level', 1) >= 8:
+                    # Der Versuch scheitert stillschweigend (Vertrag ist zu gut)
+                    pass
+                elif not getattr(target_emp, 'pending_poach_offer', False):
+                    target_emp.pending_poach_offer = True
+                    offer_salary = int(target_emp.salary * 1.5)
+                    from models import Email
+                    mail = Email(
+                        sender="Headhunter",
+                        subject=self.get_text('subject_poach_offer', name=target_emp.name),
+                        body=self.get_text('body_poach_offer', name=target_emp.name, rival=rival.name, salary=offer_salary),
+                        date_week=self.week
+                    )
+                    mail.is_poach_offer = True
+                    mail.employee_idx = self.employees.index(target_emp)
+                    mail.offered_salary = offer_salary
+                    self.emails.insert(0, mail)
+
+        # Mitarbeiter verlässt Studio bei ignoriertem Abwerbeangebot
+        for emp in list(self.employees):
+            if getattr(emp, 'pending_poach_offer', False):
+                # Wir nutzen ein einfaches 'timer' Attribut oder prüfen ob das Angebot alt ist
+                # Da wir kein Zeitstempel im Employee für das Angebot haben, nutzen wir eine Chance
+                if random.random() < 0.3: # 30% Chance pro Woche zu gehen
+                    self.employees.remove(emp)
+                    from models import Email
+                    self.emails.insert(0, Email(
+                        sender="System",
+                        subject=self.get_text('subject_employee_left', name=emp.name),
+                        body=self.get_text('body_employee_left_poach', name=emp.name),
+                        date_week=self.week
+                    ))
+                    self.audio.speak(self.get_text('employee_left_poach', name=emp.name))
+
+        # NEU Phase II: Marktforschung / KI-Spionage
+        has_intel = False
+        for obj in getattr(self, 'office_objects', []):
+            if obj.get('bonus') == 'competitor_intel':
+                has_intel = True
+                break
+        
+        if has_intel and self.week % 4 == 0:
+            potential_targets = [r for r in self.rivals if getattr(r, 'planned_project', None)]
+            if potential_targets:
+                target = random.choice(potential_targets)
+                plan = target.planned_project
+                from models import Email
+                self.emails.append(Email(
+                    sender=self.get_text('sender_intel'),
+                    subject=self.get_text('subject_intel_report', name=target.name),
+                    body=self.get_text('body_intel_report', name=target.name, genre=self.get_text(plan['genre'])),
+                    date_week=self.week
+                ))
+
         # Trend check (alle 20-40 Wochen)
         if self.week - self.last_trend_week >= random.randint(20, 40):
             if self.week % 8 == 0:
@@ -505,6 +687,10 @@ class GameState:
             
             # Team Speed Modifier durch Eigenschaften
             boost *= self.get_team_speed_modifier()
+            
+            # NEU Phase I: Co-Dev Boost
+            if getattr(self, "co_dev_partner", None):
+                boost *= 1.8 # Fast doppelte Geschwindigkeit
             
             self.dev_progress += boost
             
@@ -618,40 +804,48 @@ class GameState:
 
     def _process_rivals(self):
         """Lässt Rivalen Spiele veröffentlichen und Marktanteile beeinflussen."""
-        from game_data import TREND_TOPICS, TREND_GENRES
         from models import Email
+        import competitor_ai
         
         for rival in self.rivals:
-            if self.week >= rival.next_release_week:
-                # Rivale veröffentlicht ein Spiel!
-                topic = random.choice(TREND_TOPICS)["topic"]
-                genre = random.choice(TREND_GENRES)["genre"]
+            r_game = competitor_ai.evaluate_turn(rival, self)
+            
+            if r_game:
+                # Sabotage-Check: Wenn der Spieler gerade das gleiche Genre entwickelt
+                sabotage_msg = ""
+                can_sabotage = (self.week - self.last_sabotage_week) >= 4
                 
-                # Konkurrenz wird im Laufe der Jahre etwas besser
-                base_score = random.uniform(5.5, 8.5)
-                year = self.get_calendar_year()
-                # Boost: 0.1 pro Jahr seit START_YEAR, max +2.5
-                score_boost = min(2.5, (year - START_YEAR) * 0.1)
-                base_score += score_boost
-                score = round(min(10.0, base_score), 1)
-                
-                r_game = RivalGame(f"{rival.name} {genre}", topic, genre, score, week_developed=self.week)
-                rival.games.append(r_game)
-                rival.next_release_week = self.week + random.randint(30, 70)
+                if can_sabotage and self.is_developing and self.active_project and self.active_project.genre == r_game.genre:
+                    # Hype-Verlust skaliert mit Schwierigkeit
+                    diff_multi = {0: 0.3, 1: 0.6, 2: 1.0, 3: 1.5}.get(self.difficulty, 1.0)
+                    base_loss = random.randint(10, 25)
+                    loss = int(base_loss * diff_multi)
+                    
+                    # PR Defense Check (Phase II)
+                    pr_bonus = 1.0
+                    for obj in getattr(self, 'office_objects', []):
+                        if obj.get('bonus') == 'pr_defense':
+                            pr_bonus = 0.5
+                    
+                    loss = int(loss * pr_bonus)
+                    
+                    self.hype = max(0, self.hype - loss)
+                    self.last_sabotage_week = self.week
+                    sabotage_msg = f"\n\n{self.get_text('sabotage_warning', name=rival.name, genre=self.get_text(r_game.genre))}"
                 
                 # Benachrichtigung
-                if score >= 8.5:
+                if r_game.score >= 8.5 or sabotage_msg:
                     self.emails.append(Email(
                         sender=self.get_text('sender_industry_news'),
                         subject=self.get_text('subject_rival_hit', name=rival.name),
-                        body=self.get_text('body_rival_hit', name=rival.name, game=r_game.name, score=score, genre=self.get_text(genre)),
+                        body=self.get_text('body_rival_hit', name=rival.name, game=r_game.name, score=r_game.score, genre=self.get_text(r_game.genre)) + sabotage_msg,
                         date_week=self.week
                     ))
 
                 # Dividende ausschütten, falls Anteile besessen werden
                 if getattr(rival, 'is_owned_by_player', False):
                     # 100% Einnahmen!
-                    income = int(score * 100000)
+                    income = int(r_game.score * 100000)
                     self.money += income
                     self.accounting["income"] += income
                     self.emails.append(Email(
@@ -661,7 +855,7 @@ class GameState:
                         date_week=self.week
                     ))
                 elif getattr(rival, 'owned_shares', 0) > 0:
-                    dividend = int((score * 10000) * (rival.owned_shares / 100))
+                    dividend = int((r_game.score * 10000) * (rival.owned_shares / 100))
                     self.money += dividend
                     self.accounting["income"] += dividend
                     self.emails.append(Email(
@@ -673,10 +867,9 @@ class GameState:
                 
                 # Marktauswirkung: Zieht Hype und Verkäufe ab, wenn wir auch ein Spiel im gleichen Genre haben
                 for my_game in self.game_history:
-                    if my_game.is_active and my_game.genre == genre:
-                        # Unser Spiel verliert Hype
+                    if my_game.is_active and my_game.genre == r_game.genre:
+                        # Unser Spiel verliert Hype (passiv über Zeit)
                         self.hype = max(0, self.hype - 10)
-                        # Verkäufe sinken für diese Woche (implizit verringert, da Hype sinkt)
 
     def _unlock_historical_topics(self):
         """Schaltet neue historische Themen basierend auf dem aktuellen Spieljahr frei und verarbeitet Jahresevents."""
@@ -1121,38 +1314,47 @@ class GameState:
         self.fans += 1000
         return True
 
+    def _active_employees(self):
+        """Liefert nur Mitarbeiter, die nicht krank und nicht in Training sind."""
+        return [e for e in self.employees if not getattr(e, 'is_sick', False) and not getattr(e, 'is_training', False)]
+
     def get_team_bonus(self):
-        """Gesamtbonus des Teams auf Spielqualität."""
-        if not self.employees:
+        """Gesamtbonus des Teams auf Spielqualität (nur aktive Mitarbeiter)."""
+        active = self._active_employees()
+        if not active:
             return 0.0
-        base_bonus = sum(e.quality_contribution for e in self.employees)
+        base_bonus = sum(e.quality_contribution for e in active)
         return base_bonus * self.get_team_quality_modifier()
 
     def get_team_slider_bonus(self, slider_name):
-        """Durchschnittlicher Skill-Bonus des Teams für einen Slider."""
-        if not self.employees:
+        """Durchschnittlicher Skill-Bonus des Teams für einen Slider (nur aktive Mitarbeiter)."""
+        active = self._active_employees()
+        if not active:
             return 0.0
-        bonuses = [e.get_slider_bonus(slider_name) for e in self.employees]
+        bonuses = [e.get_slider_bonus(slider_name) for e in active]
         return sum(bonuses) / len(bonuses)
 
     def get_team_speed_modifier(self):
-        if not self.employees: 
+        active = self._active_employees()
+        if not active:
             return 1.0
-        mods = [e.trait["value"] if e.trait and e.trait["effect"] == "speed" else 1.0 for e in self.employees]
+        mods = [e.trait["value"] if e.trait and e.trait["effect"] == "speed" else 1.0 for e in active]
         return sum(mods) / len(mods)
 
     def get_team_bug_modifier(self):
         has_qa = self.has_office_bonus("qa")
         qa_mod = 0.8 if has_qa else 1.0
-        if not self.employees: 
+        active = self._active_employees()
+        if not active:
             return 1.0 * qa_mod
-        mods = [e.trait["value"] if e.trait and e.trait["effect"] == "bugs" else 1.0 for e in self.employees]
+        mods = [e.trait["value"] if e.trait and e.trait["effect"] == "bugs" else 1.0 for e in active]
         return (sum(mods) / len(mods)) * qa_mod
 
     def get_team_quality_modifier(self):
-        if not self.employees: 
+        active = self._active_employees()
+        if not active:
             return 1.0
-        mods = [e.trait["value"] if e.trait and e.trait["effect"] == "quality" else 1.0 for e in self.employees]
+        mods = [e.trait["value"] if e.trait and e.trait["effect"] == "quality" else 1.0 for e in active]
         return sum(mods) / len(mods)
 
     def get_status_text(self):
@@ -1837,6 +2039,25 @@ class GameState:
             project.revenue = total_revenue - dist_cost
             project.distribution_cost = dist_cost
 
+        # NEU Phase I: Co-Dev Splitting
+        if getattr(self, "co_dev_partner", None):
+            # Der Partner übernimmt 50% der Entwicklungskosten, wir bekommen sie zurück
+            refund = int(project.dev_cost * 0.5)
+            self.money += refund
+            if hasattr(self, "accounting"):
+                self.accounting["income"] += refund
+            # Umsatz wird 50/50 geteilt
+            project.revenue = int(project.revenue * 0.5)
+            from models import Email
+            self.emails.insert(0, Email(
+                sender=self.co_dev_partner,
+                subject=self.get_text('subject_co_dev', name=project.name),
+                body=self.get_text('body_co_dev', refund=refund, revenue=project.revenue),
+                date_week=self.week
+            ))
+            # Partner-Variable zurücksetzen für das nächste Spiel
+            self.co_dev_partner = None
+
         self.money += project.revenue
         if hasattr(self, "accounting"):
             self.accounting["income"] += project.revenue
@@ -2422,11 +2643,56 @@ class GameState:
         cost = costs.get(action_type, 1000)
         if self.money >= cost:
             self.money -= cost
+            self.accounting["expenses"] += cost
             boost = morale_boost.get(action_type, 10)
             for emp in self.employees:
                 emp.morale = min(100, emp.morale + boost)
             return True
         return False
+
+    def start_training(self, emp_idx, training_option):
+        """Startet eine Fortbildung für einen Mitarbeiter (Phase 2)."""
+        if not (0 <= emp_idx < len(self.employees)):
+            return False, "invalid_employee"
+        
+        emp = self.employees[emp_idx]
+        
+        if getattr(emp, 'is_training', False):
+            return False, "already_training"
+        if getattr(emp, 'is_sick', False):
+            return False, "is_sick"
+        
+        cost = training_option.get("cost", 0)
+        if self.money < cost:
+            return False, "no_money"
+        
+        self.money -= cost
+        self.accounting["expenses"] += cost
+        
+        lock_weeks = training_option.get("lock_weeks", 1)
+        skill_boost = training_option.get("skill_boost", 0)
+        is_spec = training_option.get("is_specialization", False)
+        
+        emp.is_training = True
+        emp.training_weeks_left = lock_weeks
+        emp.training_skill_boost = skill_boost
+        
+        # Spezialisierungskurs: Sofort eine zufällige freie Spezialisierung vergeben
+        if is_spec:
+            from game_data import EMPLOYEE_SPECIALIZATIONS
+            import random
+            current_spec = getattr(emp, 'specialization', None)
+            if current_spec:
+                spec_name = current_spec.get("name")
+            else:
+                spec_name = None
+            free_specs = [s for s in EMPLOYEE_SPECIALIZATIONS if s["name"] != spec_name]
+            if free_specs:
+                emp.specialization = random.choice(free_specs)
+        
+        return True, lock_weeks
+
+
 
     def has_office_bonus(self, bonus_name):
         """Prüft ob ein bestimmter Bonus (z.B. 'research', 'mmo') durch Einrichtung aktiv ist."""

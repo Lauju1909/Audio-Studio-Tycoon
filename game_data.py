@@ -448,6 +448,9 @@ RESEARCHABLE_TECHNOLOGIES = [
     {"name": "Investment & M&A",              "cost": 500000, "week": 50, "research_weeks": 10, "description": "Ermöglicht den Aufkauf von Konkurrenz-Studios am Aktienmarkt."},
     {"name": "Hardware Labor",                "cost": 1000000,"week": 60, "research_weeks": 15, "description": "Schaltet die Entwicklung eigener Konsolen frei."},
     {"name": "Büroausstattung 1",             "cost": 25000,  "week": 10, "research_weeks": 4, "description": "Schaltet Arcade-Automaten und Erholungsobjekte frei."},
+    {"name": "Arbeitsrecht-Experten",         "cost": 80000, "week": 20, "research_weeks": 6, "description": "Schaltet die Rechtsabteilung frei, um Headhunting zu erschweren."},
+    {"name": "Geheimdienst-Netzwerk",         "cost": 120000, "week": 35, "research_weeks": 8, "description": "Schaltet die Marktforschungs-Station frei (KI-Spionage)."},
+    {"name": "Krisenmanagement",              "cost": 50000, "week": 25, "research_weeks": 5, "description": "Schaltet die PR-Zentrale frei, um Hype-Verlust durch Sabotage zu reduzieren."},
     {"name": "Büroausstattung 2",             "cost": 30000,  "week": 18, "research_weeks": 4, "description": "Schaltet weitere Pflanzen und Dekorationen frei."},
     {"name": "Büroausstattung 3",             "cost": 65000,  "week": 36, "research_weeks": 5, "description": "Schaltet exotische Zimmerpflanzen und Luxus-Deko frei."},
     {"name": "Gesundes Arbeiten",             "cost": 40000,  "week": 15, "research_weeks": 5, "description": "Schaltet ergonomische Tische frei."},
@@ -820,6 +823,10 @@ BUILD_OBJECTS = {
     "door_glass": {"name": "Tür Glas", "cost": 1200, "layer": "structure", "employees": 0, "bonus": None, "desc": "Glastür."},
     "ergonomic_desk":{"name": "Ergonomischer Schreibtisch","cost": 2500,"layer": "furniture", "employees": 1, "bonus": None,       "desc": "Arbeitsplatz für Entwickler. Besser als Standard.", "req_tech": "Gesundes Arbeiten"},
     "sound_booth":   {"name": "Sound-Kabine",            "cost": 30000,  "layer": "furniture", "employees": 1, "bonus": "sound",      "desc": "+15% auf Sound-Bewertung.", "req_tech": "Studios & Kabinen"},
+    "security_hub":  {"name": "Sicherheits-Zentrale",    "cost": 45000,  "layer": "furniture", "employees": 0, "bonus": "security",   "desc": "Verringert die Chance auf Industriespionage und Abwerbeversuche um 50%.", "req_tech": "Investment & M&A"},
+    "legal_desk":    {"name": "Rechtsabteilung",         "cost": 65000,  "layer": "furniture", "employees": 1, "bonus": "legal_protection", "desc": "Erschwert Abwerbeversuche massiv und schützt Top-Mitarbeiter.", "req_tech": "Arbeitsrecht-Experten"},
+    "intel_station": {"name": "Marktforschungs-Station", "cost": 85000,  "layer": "furniture", "employees": 1, "bonus": "competitor_intel", "desc": "Analysiert Konkurrenz-Projekte und warnt vor Genre-Sniping.", "req_tech": "Geheimdienst-Netzwerk"},
+    "pr_desk":       {"name": "PR-Zentrale",             "cost": 40000,  "layer": "furniture", "employees": 1, "bonus": "pr_defense", "desc": "Reduziert Hype-Verlust durch konkurrierende Veröffentlichungen.", "req_tech": "Krisenmanagement"},
 }
 
 # Rückwärtskompatibilität für bestehende System-Methoden
@@ -921,28 +928,33 @@ TRAINING_OPTIONS = [
         "name": "Workshop",
         "skill_boost": 5,
         "cost": 5000,
-        "description": "Ein Workshop. +5 Skill-Punkte auf den Hauptbereich.",
+        "lock_weeks": 1,   # 1 Woche gesperrt
+        "description": "Ein Workshop. +5 Skill-Punkte auf den Hauptbereich. Dauer: 1 Woche.",
     },
     {
         "name": "Fortbildung",
         "skill_boost": 10,
         "cost": 15000,
-        "description": "Eine umfangreiche Fortbildung. +10 Skill-Punkte auf den Hauptbereich.",
+        "lock_weeks": 3,   # 3 Wochen gesperrt
+        "description": "Eine umfangreiche Fortbildung. +10 Skill-Punkte auf den Hauptbereich. Dauer: 3 Wochen.",
     },
     {
         "name": "Experten-Seminar",
         "skill_boost": 20,
         "cost": 40000,
-        "description": "Ein Experten-Seminar. +20 Skill-Punkte auf den Hauptbereich.",
+        "lock_weeks": 6,   # 6 Wochen gesperrt
+        "description": "Ein Experten-Seminar. +20 Skill-Punkte auf den Hauptbereich. Dauer: 6 Wochen.",
     },
     {
         "name": "Spezialisierungskurs",
         "skill_boost": 0,
         "cost": 100000,
-        "description": "Der Meister-Kurs. Verleiht dem Mitarbeiter eine sehr starke, dauerhafte Experten-Eigenschaft.",
+        "lock_weeks": 10,  # 10 Wochen gesperrt
+        "description": "Der Meister-Kurs. Verleiht dem Mitarbeiter eine sehr starke, dauerhafte Experten-Eigenschaft. Dauer: 10 Wochen.",
         "is_specialization": True
     },
 ]
+
 
 # ============================================================
 # MARKTTRENDS (dynamisch wechselnd)
@@ -1587,4 +1599,53 @@ ESPORTS_TOURNAMENTS = [
         "description": "Das gigantische E-Sports Jahreshighlight. Maximaler Hype!",
     },
 ]
+
+# ============================================================
+# BÜRO-UPGRADES (Phase 1)
+# ============================================================
+OFFICE_UPGRADES = [
+    {
+        "id": "coffee_machine",
+        "name_key": "upgrade_coffee",
+        "cost": 5000,
+        "bonus": "morale_boost",
+    },
+    {
+        "id": "ergonomic_chairs",
+        "name_key": "upgrade_chairs",
+        "cost": 15000,
+        "bonus": "dev_speed",
+    },
+    {
+        "id": "morale_room",
+        "name_key": "upgrade_morale_room",
+        "cost": 30000,
+        "bonus": "morale_room",
+    },
+    {
+        "id": "competitor_intel",
+        "name_key": "upgrade_intel",
+        "cost": 40000,
+        "bonus": "competitor_intel",
+    },
+    {
+        "id": "security",
+        "name_key": "upgrade_security",
+        "cost": 50000,
+        "bonus": "security",
+    },
+    {
+        "id": "pr_defense",
+        "name_key": "upgrade_pr",
+        "cost": 60000,
+        "bonus": "pr_defense",
+    },
+    {
+        "id": "legal_protection",
+        "name_key": "upgrade_legal",
+        "cost": 80000,
+        "bonus": "legal_protection",
+    }
+]
+
 
