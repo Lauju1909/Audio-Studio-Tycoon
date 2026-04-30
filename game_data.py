@@ -632,6 +632,13 @@ EMPLOYEE_FIRST_NAMES = [
     "Lukas", "Marie", "Jonas", "Lena", "Niklas", "Emma", "David",
     "Sophie", "Jan", "Mia", "Tom", "Lisa", "Kai", "Nina", "Ben",
     "Hanna", "Erik", "Lea", "Paul", "Clara", "Finn", "Ella",
+    "Oliver", "Emilia", "Sebastian", "Johanna", "Alexander", "Mila",
+    "Julian", "Pia", "Fabian", "Charlotte", "Moritz", "Luisa",
+    "Markus", "Sandra", "Christian", "Nicole", "Andreas", "Stefanie",
+    "Michael", "Sabine", "Thomas", "Melanie", "Jürgen", "Petra",
+    "Hans", "Ursula", "Werner", "Helga", "Peter", "Karin",
+    "James", "Mary", "Robert", "Patricia", "John", "Jennifer",
+    "Michael", "Linda", "William", "Elizabeth", "David", "Barbara",
 ]
 
 EMPLOYEE_LAST_NAMES = [
@@ -639,6 +646,11 @@ EMPLOYEE_LAST_NAMES = [
     "Koch", "Richter", "Klein", "Wolf", "Schwarz", "Braun",
     "Zimmermann", "Hartmann", "Krüger", "Hofmann", "Lange",
     "Jung", "Peters", "König", "Lang", "Berg", "Stein",
+    "Meier", "Schulz", "Hoffmann", "Schäfer", "Bayer", "Eberhardt",
+    "Vogel", "Hermann", "Kühn", "Huber", "Mayer", "Lehmann",
+    "Friedrich", "Günther", "Kohl", "Liedtke", "Zander", "Fiedler",
+    "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia",
+    "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez",
 ]
 
 EMPLOYEE_ROLES = [

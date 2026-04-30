@@ -143,6 +143,7 @@ def main():
     state.audio = audio
     state.load_global_settings()
     set_language(state.settings.get('language', 'de'))
+    state.add_welcome_emails()
     audio.apply_volumes(state.settings)
 
     current_key = "main_menu"

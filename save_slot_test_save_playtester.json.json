@@ -1,0 +1,281 @@
+{
+  "company_name": "",
+  "money": 999979999,
+  "fans": 7000,
+  "week": 94,
+  "high_score": 0.0,
+  "games_made": 0,
+  "total_revenue": 0,
+  "office_level": 0,
+  "last_event_week": 85,
+  "last_trend_week": 87,
+  "current_trend": {
+    "topic": "Fantasy",
+    "genre": "Simulation",
+    "text": "Fantasy erlebt ein Revival! Und: Simulationsspiele sind der neue Hit!",
+    "week_started": 87
+  },
+  "active_events": [
+    {
+      "id": "hist_1931",
+      "effect": "hype",
+      "value": 20,
+      "text": "Erster 'Logic-Contest'. Forschungspunkte-Bonus (+25 RP).",
+      "title": "Historisches Ereignis 1931"
+    }
+  ],
+  "settings": {
+    "language": "en",
+    "music_enabled": true,
+    "music_volume": 50,
+    "speech_volume": 100,
+    "sfx_volume": 100,
+    "tts_engine": "nvda",
+    "auto_update": false,
+    "update_channel": "stable",
+    "menu_numbering_enabled": false,
+    "key_up": 1073741906,
+    "key_down": 1073741905,
+    "key_confirm": 13,
+    "key_back": 8,
+    "key_home": 1073741898,
+    "key_end": 1073741901
+  },
+  "game_history": [],
+  "active_mmos": [],
+  "employees": [],
+  "engines": [
+    {
+      "name": "Basis-Engine",
+      "features": []
+    }
+  ],
+  "unlocked_features": [],
+  "unlocked_topics": [
+    "Fantasy",
+    "Sci-Fi",
+    "Mittelalter",
+    "Sport",
+    "Rennen",
+    "Dinosaurier",
+    "Abakus",
+    "Logistik",
+    "Schach",
+    "Mathematik",
+    "Astronomie",
+    "Landwirtschaft"
+  ],
+  "unlocked_genres": [
+    "Action",
+    "Puzzle",
+    "Casual",
+    "Dino-Survival"
+  ],
+  "unlocked_audiences": [
+    "Jeder"
+  ],
+  "unlocked_technologies": [],
+  "bought_platforms": [
+    "PC (MS-DOS)"
+  ],
+  "active_platforms": [],
+  "rivals": [],
+  "last_goty_year": 1930,
+  "bank_loan": null,
+  "accounting": {
+    "income": 0,
+    "expenses": 0,
+    "loan_paid": 0
+  },
+  "custom_consoles": [],
+  "emails": [
+    {
+      "sender": "Industry News",
+      "subject": "+++ INDUSTRY NEWS +++",
+      "body": "Studio Anniversary! Fans celebrate your existence. +2,500 Fans!",
+      "date_week": 85,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Industry News",
+      "subject": "+++ INDUSTRY NEWS +++",
+      "body": "Skilled Worker Shortage! Training costs: 8,000 Euros.",
+      "date_week": 74,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Industry News",
+      "subject": "+++ INDUSTRY NEWS +++",
+      "body": "Congratulations! Your studio wins an Indie Award. +1,500 new fans!",
+      "date_week": 64,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Industry News",
+      "subject": "+++ INDUSTRY NEWS +++",
+      "body": "event_hist_1931",
+      "date_week": 49,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Weltgeschehen",
+      "subject": "1931: Aktuelles Ereignis",
+      "body": "Erster 'Logic-Contest'. Forschungspunkte-Bonus (+25 RP).\n\nAuswirkung auf dein Studio: +20 Hype",
+      "date_week": 49,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Historiker",
+      "subject": "1931: Neue Themen verfügbar!",
+      "body": "Das Jahr 1931 bringt neue Themen, die der Zeitgeist inspiriert:\n\n• Astronomie (passt zu: Strategie, Hype: mittel)\n• Landwirtschaft (passt zu: Simulation, Hype: mittel)\n\nNutze sie für dein nächstes Spiel!",
+      "date_week": 49,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Industry News",
+      "subject": "+++ INDUSTRY NEWS +++",
+      "body": "Gone viral! A clip of your game goes viral. +2,000 new fans.",
+      "date_week": 49,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Accounting",
+      "subject": "Annual Report 1930",
+      "body": "Here is the report for the past year.\nIncome: 0 EUR\nExpenses: 0 EUR\n------------------\nProfit: 0 EUR\nKeep it up!",
+      "date_week": 49,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Industry News",
+      "subject": "+++ INDUSTRY NEWS +++",
+      "body": "Market Euphoria! Sales up 40% for 3 weeks!",
+      "date_week": 36,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Industry News",
+      "subject": "+++ INDUSTRY NEWS +++",
+      "body": "Award nomination! Your studio is nominated for an industry award. +1,000 fans.",
+      "date_week": 27,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Industry News",
+      "subject": "+++ INDUSTRY NEWS +++",
+      "body": "Tax audit! The tax office demands a back payment of 12,000 Euro.",
+      "date_week": 17,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Industry News",
+      "subject": "+++ INDUSTRY NEWS +++",
+      "body": "Talent Boom! Team develops 50% faster for 4 weeks!",
+      "date_week": 8,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Industry News",
+      "subject": "+++ INDUSTRY NEWS +++",
+      "body": "Economic crisis limits consumer spending. (Sales -15%)",
+      "date_week": 13,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Industry News",
+      "subject": "+++ INDUSTRY NEWS +++",
+      "body": "A new hardware trend boosts the market! (Sales +20%)",
+      "date_week": 16,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Industry News",
+      "subject": "+++ INDUSTRY NEWS +++",
+      "body": "A major competitor has filed for bankruptcy! (Fans +10%)",
+      "date_week": 24,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Studio Assistant",
+      "subject": "Audio Expo is here!",
+      "body": "The Audio Expo takes place this week. Go to the Management menu to attend!",
+      "date_week": 24,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Industry News",
+      "subject": "+++ INDUSTRY NEWS +++",
+      "body": "Economic crisis limits consumer spending. (Sales -15%)",
+      "date_week": 56,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Industry News",
+      "subject": "+++ INDUSTRY NEWS +++",
+      "body": "Economic crisis limits consumer spending. (Sales -15%)",
+      "date_week": 67,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Industry News",
+      "subject": "+++ INDUSTRY NEWS +++",
+      "body": "A major competitor has filed for bankruptcy! (Fans +10%)",
+      "date_week": 69,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Studio Assistant",
+      "subject": "Audio Expo is here!",
+      "body": "The Audio Expo takes place this week. Go to the Management menu to attend!",
+      "date_week": 72,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    }
+  ],
+  "has_presswerk": false,
+  "storage_capacity": 0,
+  "used_storage": 0,
+  "has_server_room": false,
+  "server_capacity": 0,
+  "publishing_offers": [],
+  "published_third_party_games": [],
+  "office_items": []
+}

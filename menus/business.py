@@ -135,10 +135,16 @@ class BankMenu(Menu):
         self.game_state = game_state
         title = self.game_state.get_text('bank_menu')
         options = [
+            {'text': self.game_state.get_text('bank_statement_option'), 'action': self._show_report},
             {'text': self.game_state.get_text('loans'), 'action': lambda: "loan_menu"},
             {'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"}
         ]
         super().__init__(title, options, audio, game_state)
+
+    def _show_report(self):
+        report = self.game_state.get_financial_report()
+        self.audio.speak(report)
+        return None
 
 class LoanMenu(Menu):
     def __init__(self, audio, game_state):

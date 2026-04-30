@@ -70,14 +70,14 @@ class GameState:
         # Aktuelles Projekt
         self.current_draft = {
             "name": "",
-            "topic": None,
-            "genre": None,
-            "platform": None,
-            "audience": None,
+            "topic": "Fantasy",
+            "genre": "Action",
+            "platform": "PC",
+            "audience": "Jeder",
             "engine": None,
             "sliders": {},
             "size": "Mittel",
-            "marketing": "Kein Marketing",
+            "marketing": "none",
         }
         
         # Posteingang
@@ -100,15 +100,6 @@ class GameState:
             "update_channel": "stable"
         }
 
-        # Willkommensnachricht: Die 1930er Ära
-        from models import Email
-        self.emails.append(Email(
-            sender=self.get_text('sender_historian'),
-            subject=self.get_text('subject_pioneer_times'),
-            body=self.get_text('body_pioneer_times'),
-            date_week=1
-        ))
-
         # Echtzeit-Zeitsteuerung
         self.time_speed = 1.0  # 0=Pause, 1=Normal, 2=Schnell, 4=Sehr Schnell
         self.pause_for_menu = False # Flag für Menüs (z.B. Texteingabe)
@@ -122,18 +113,19 @@ class GameState:
         self.hype = 0.0
         self.active_expo_hype = 0
         
-        # NEU: Phase 7 - Konkurrenz & GOTY
-        self.rivals = self._init_rivals()
+        # Initialisierung wichtiger Subsysteme
+        self.bank_loan = None
+        self.financial_history = []
+        self.current_week_balance = {
+            "income": {"sales": 0, "mmo": 0, "merch": 0, "publishing": 0, "other": 0},
+            "expenses": {"salaries": 0, "rent": 0, "marketing": 0, "research": 0, "production": 0, "training": 0, "other": 0}
+        }
+        self.accounting = {"income": 0, "expenses": 0, "loan_paid": 0}
+        self.rivals = [] # Wird später via _init_rivals gefüllt
+        self.bought_platforms = ["PC (MS-DOS)"]
+        self.active_platforms = []
         self.last_goty_year = 0
         self.goty_history = {}
-        
-        # NEU: Phase 7 - DevKits & Hardware Markt
-        self.bought_platforms = ["PC (MS-DOS)"]
-        self.active_platforms = [p['name'] for p in get_available_platforms(1)]
-        
-        # NEU: Phase 7 - Finanzen & Buchhaltung
-        self.bank_loan = None
-        self.accounting = {"income": 0, "expenses": 0, "loan_paid": 0}
         
         # NEU: Phase 7 - Eigene Konsole
         self.custom_consoles = []
@@ -220,6 +212,22 @@ class GameState:
         
         # NEU: Multiplayer
         self.multiplayer = None
+
+    def add_welcome_emails(self):
+        """Erstellt die Willkommens-E-Mails in der aktuell gesetzten Sprache."""
+        from models import Email
+        # Willkommensnachricht: Die 1930er Ära
+        self.emails.append(Email(
+            sender=self.get_text('sender_historian'),
+            subject=self.get_text('subject_pioneer_times'),
+            body=self.get_text('body_pioneer_times'),
+            date_week=1
+        ))
+        
+        # Initialisierung von Inhalten, die Sprach-Keys benötigen
+        self.rivals = self._init_rivals()
+        from game_data import get_available_platforms
+        self.active_platforms = [p['name'] for p in get_available_platforms(1)]
 
     def get_market_platforms(self):
         from game_data import get_available_platforms
@@ -787,17 +795,16 @@ class GameState:
         """Berechnet den Hype für ein Spiel basierend auf Marketing, Lizenzen und Events."""
         hype = 0
         # Marketing
-        if project.marketing == self.get_text('marketing_small'):
+        m = project.marketing
+        if m == 'small':
             hype += 10
-        elif project.marketing == self.get_text('marketing_medium'):
+        elif m == 'medium':
             hype += 25
-        elif project.marketing == self.get_text('marketing_large'):
+        elif m == 'large':
             hype += 50
-        elif project.marketing == self.get_text('marketing_viral'):
+        elif m == 'viral':
             hype += 75
-        
-        # Publisher Marketing
-        if getattr(project, 'marketing', None) == self.get_text('marketing_publisher_deal'):
+        elif m == 'publisher_deal':
             hype += 40
             
         # Lizenzen
@@ -1036,7 +1043,7 @@ class GameState:
         hire_cost = employee.salary * 2
         if self.money < hire_cost:
             return False
-        self.money -= hire_cost
+        self.track_expense("salaries", hire_cost)
         self.employees.append(employee)
         return True
 
@@ -1045,14 +1052,14 @@ class GameState:
         if 0 <= index < len(self.employees):
             emp = self.employees.pop(index)
             # Abfindung = 4 Wochen Gehalt
-            self.money -= emp.salary * 4
+            self.track_expense("salaries", emp.salary * 4)
             return emp
         return None
 
     def pay_salaries(self):
         """Bezahlt alle Gehälter (wöchentlich)."""
         total = sum(e.salary for e in self.employees)
-        self.money -= total
+        self.track_expense("salaries", total)
         return total
 
     def advance_week(self, weeks=1):
@@ -1066,6 +1073,18 @@ class GameState:
             
             # Saisonale Modifikatoren berechnen
             week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
+            
+            if week_in_year == 1 and self.week > 1:
+                # Neues Jahr beginnt! Bericht senden.
+                report = self.get_yearly_report()
+                from models import Email
+                self.emails.insert(0, Email(
+                    sender=self.get_text('sender_accounting'),
+                    subject=self.get_text('subject_yearly_report', year=self.week // WEEKS_PER_YEAR + START_YEAR - 1),
+                    body=report,
+                    date_week=self.week
+                ))
+
             season_mod = 1.0
             if 48 <= week_in_year <= 52:
                 season_mod = 1.5  # Weihnachtsgeschäft
@@ -1108,6 +1127,9 @@ class GameState:
                     digital_rev = digital_sold * price
                     
                     g.sales += new_sales
+                    total_rev = digital_rev + physical_rev
+                    g.revenue += total_rev
+                    self.track_income("sales", total_rev)
                     # Optional: Addons pushen die Verkäufe
                     for addon in self.active_addons:
                         if addon.base_game_name == g.name:
@@ -1126,9 +1148,7 @@ class GameState:
                         revenue = sales * 15 # Addons kosten fix 15
                         addon.sales += sales
                         addon.revenue += revenue
-                        self.money += revenue
-                        if hasattr(self, "accounting"):
-                            self.accounting["income"] += revenue
+                        self.track_income("sales", revenue)
 
             # Einnahmen durch Bundles generieren
             for bundle in self.active_bundles:
@@ -1138,13 +1158,14 @@ class GameState:
                 revenue = sales * bundle.base_price
                 bundle.sales += sales
                 bundle.revenue += revenue
-                self.money += revenue
-                if hasattr(self, "accounting"):
-                    self.accounting["income"] += revenue
+                self.track_income("sales", revenue)
 
             # Lizenzen verwalten (werden in Wochen heruntergezählt oder durch Kauf fixiert)
             # Eine Nutzung wird beim Release eines Spiels markiert (used=True)
             licenses_to_remove = []
+            
+            # WÖCHENTLICHE BILANZ ABSPEICHERN
+            self.finalize_weekly_balance()
             for license in self.active_licenses:
                 if license.duration > 0:
                     license.duration -= 1
@@ -1186,7 +1207,13 @@ class GameState:
             if server_overloaded and total_mmo_players > 0:
                 if self.week % 4 == 0:
                     from models import Email
-                    self.emails.append(Email("System", "SERVER ÜBERLASTET", "Die Serverkapazität ist aufgebraucht! Spieler können sich nicht einloggen und kündigen massig ihre Accounts. Bitte baue sofort Server aus!", self.week, is_bug=True))
+                    self.emails.append(Email(
+                        sender=self.get_text('sender_system'),
+                        subject=self.get_text('subject_server_overload'),
+                        body=self.get_text('body_server_overload'),
+                        date_week=self.week,
+                        is_bug=True
+                    ))
 
             # Fan-Mails & Bugs generieren
             self.process_emails()
@@ -1394,10 +1421,10 @@ class GameState:
         if lang == "de":
             status = (
                 f"{self.company_name} | {cal}{dev_info} | "
-                f"Kontostand: {self.money:,.0f} € | "
-                f"Fans: {self.fans:,} | "
-                f"Büro: {office_name} ({emp_count}/{max_emp} MA) | "
-                f"Spiele: {self.games_made} | "
+                f"{self.get_text('money_label')}: {self.money:,.0f} € | "
+                f"{self.get_text('fans')}: {self.fans:,} | "
+                f"{self.get_text('office')}: {office_name} ({emp_count}/{max_emp} MA) | "
+                f"{self.get_text('menu_history_count').replace('{count}.', str(self.games_made))} | "
                 f"Hype: {int(self.hype)}"
             )
             if unread > 0:
@@ -1405,10 +1432,10 @@ class GameState:
         else:
             status = (
                 f"{self.company_name} | {cal}{dev_info} | "
-                f"Balance: {self.money:,.0f} € | "
-                f"Fans: {self.fans:,} | "
-                f"Office: {office_name} ({emp_count}/{max_emp} staff) | "
-                f"Games: {self.games_made} | "
+                f"{self.get_text('money_label')}: {self.money:,.0f} € | "
+                f"{self.get_text('fans')}: {self.fans:,} | "
+                f"{self.get_text('office')}: {office_name} ({emp_count}/{max_emp} staff) | "
+                f"{self.get_text('menu_history_count').replace('{count}.', str(self.games_made))} | "
                 f"Hype: {int(self.hype)}"
             )
             if unread > 0:
@@ -1428,7 +1455,7 @@ class GameState:
         if self.money < res_data["cost"] or self.is_researching or self.is_developing:
             return False
             
-        self.money -= res_data["cost"]
+        self.track_expense("research", res_data["cost"])
         self.is_researching = True
         self.research_progress = 0
         self.research_total_weeks = res_data.get("research_weeks", 4)
@@ -1607,12 +1634,11 @@ class GameState:
             ev_copy = dict(event)
             self.active_events.append(ev_copy)
             
-        # Spieler benachrichtigen
         from models import Email
         body = self.get_text("event_" + event["id"], weeks=event.get("duration", 0), hype=event.get("hype_amount", 0))
         self.emails.insert(0, Email(
-            sender="News Reader",
-            subject="Markt-Ereignis",
+            sender=self.get_text('sender_industry_news'),
+            subject=self.get_text('news_title'),
             body=body,
             date_week=self.week
         ))
@@ -2172,9 +2198,9 @@ class GameState:
         # Benachrichtigung via Email
         from models import Email
         self.emails.append(Email(
-            sender="Marktforschung",
-            subject="Marktanalyse veröffentlicht",
-            body=f"Unsere Daten zeigen: {self.current_trend['text']}",
+            sender=self.get_text('sender_intel'),
+            subject=self.get_text('sender_intel'),
+            body=f"{self.get_text('main_trend')} {self.current_trend['text']}",
             date_week=self.week
         ))
 
@@ -2523,9 +2549,9 @@ class GameState:
         words = ["Quest", "Saga", "Chronicles", "World", "Strike", "Legends", "Simulator", "Manager"]
         
         studio = random.choice(studios)
-        game_topic = random.choice(list(START_TOPICS.keys()))
-        game_genre = random.choice(list(START_GENRES.keys()))
-        game_name = f"{game_topic} {random.choice(words)}"
+        game_topic = random.choice(list(START_TOPICS))
+        game_genre = random.choice(list(START_GENRES))
+        game_name = f"{self.get_text(game_topic)} {random.choice(words)}"
         
         quality = random.randint(30, 95)
         # Marketingkosten skalieren mit Qualität
@@ -2541,11 +2567,14 @@ class GameState:
         self.publishing_offers.append(offer)
         
         # Email Notification
-        msg = f"{studio} sucht einen Publisher für ihr neues Spiel '{game_name}'.\n" \
-              f"Sie schätzen die Qualität auf {quality}% und benötigen ein Marketing-Budget von {marketing_cost:,} Euro.\n" \
-              f"Als Publisher erhältst du {int(player_share*100)}% der Umsätze.\n" \
-              f"Schau in dein Publishing-Menü, um das Angebot zu prüfen!"
-        self.emails.append(Email("Indie Dev", "Publishing Angebot", msg, self.week, is_bug=False))
+        msg = self.get_text('publisher_deal_info_email', studio=studio, game=game_name, quality=quality, cost=marketing_cost, share=int(player_share*100))
+        self.emails.append(Email(
+            sender=self.get_text('sender_headhunter'), 
+            subject=self.get_text('publisher_deals_title'), 
+            body=msg, 
+            date_week=self.week, 
+            is_bug=False
+        ))
 
     def accept_publishing_offer(self, idx):
         """Akzeptiert ein Angebot und startet den Verkauf."""
@@ -2865,4 +2894,119 @@ class GameState:
                 })
         entries.sort(key=lambda e: e['sales'], reverse=True)
         return entries[:top_n]
+
+    def track_income(self, category, amount):
+        """Trackt Einnahmen in einer Kategorie."""
+        if not hasattr(self, "current_week_balance"):
+            self.money += amount
+            return
+        if category in self.current_week_balance["income"]:
+            self.current_week_balance["income"][category] += amount
+        else:
+            self.current_week_balance["income"]["other"] += amount
+        self.money += amount
+        if hasattr(self, "accounting"):
+            self.accounting["income"] += amount
+
+    def track_expense(self, category, amount):
+        """Trackt Ausgaben in einer Kategorie."""
+        if not hasattr(self, "current_week_balance"):
+            self.money -= amount
+            return
+        if category in self.current_week_balance["expenses"]:
+            self.current_week_balance["expenses"][category] += amount
+        else:
+            self.current_week_balance["expenses"]["other"] += amount
+        self.money -= amount
+        if hasattr(self, "accounting"):
+            self.accounting["expenses"] += amount
+
+    def finalize_weekly_balance(self):
+        """Speichert die aktuelle Wochenbilanz in die Historie und setzt sie zurück."""
+        if not hasattr(self, "current_week_balance"): return
+        
+        total_income = sum(self.current_week_balance["income"].values())
+        total_expenses = sum(self.current_week_balance["expenses"].values())
+        
+        balance_entry = {
+            "week": self.week,
+            "income": self.current_week_balance["income"].copy(),
+            "expenses": self.current_week_balance["expenses"].copy(),
+            "total_income": total_income,
+            "total_expenses": total_expenses,
+            "profit": total_income - total_expenses
+        }
+        if not hasattr(self, "financial_history"): self.financial_history = []
+        self.financial_history.append(balance_entry)
+        
+        if len(self.financial_history) > 200:
+            self.financial_history.pop(0)
+            
+        # Reset für neue Woche
+        self.current_week_balance = {
+            "income": {k: 0 for k in self.current_week_balance["income"]},
+            "expenses": {k: 0 for k in self.current_week_balance["expenses"]}
+        }
+
+    def get_financial_report(self):
+        """Gibt einen Bericht über die Finanzen der letzten Woche aus."""
+        if not self.financial_history:
+            return self.get_text('no_finances_yet')
+            
+        last = self.financial_history[-1]
+        
+        # Einnahmen Details
+        inc_parts = []
+        for cat, val in last["income"].items():
+            if val > 0:
+                inc_parts.append(f"{self.get_text('finance_' + cat)}: {val:,.0f} €")
+        
+        # Ausgaben Details
+        exp_parts = []
+        for cat, val in last["expenses"].items():
+            if val > 0:
+                exp_parts.append(f"{self.get_text('finance_' + cat)}: {val:,.0f} €")
+                
+        report = [
+            f"--- {self.get_text('finance_report_title')} ({self.get_text('calendar_week')} {last['week']}) ---",
+            f"{self.get_text('finance_total_income')}: {last['total_income']:,.0f} €",
+            ". ".join(inc_parts) if inc_parts else self.get_text('none'),
+            f"{self.get_text('finance_total_expenses')}: {last['total_expenses']:,.0f} €",
+            ". ".join(exp_parts) if exp_parts else self.get_text('none'),
+            f"{self.get_text('finance_net_profit')}: {last['profit']:,.0f} €",
+            f"--- {self.get_text('current_balance')}: {self.money:,.0f} € ---"
+        ]
+        return "\n".join(report)
+
+    def get_yearly_report(self):
+        """Generiert eine Zusammenfassung des vergangenen Spieljahres."""
+        from game_data import WEEKS_PER_YEAR, START_YEAR
+        if not hasattr(self, "financial_history") or not self.financial_history:
+            return self.get_text('no_finances_yet')
+            
+        if len(self.financial_history) < WEEKS_PER_YEAR:
+            history = self.financial_history
+        else:
+            history = self.financial_history[-WEEKS_PER_YEAR:]
+            
+        total_inc = sum(w["total_income"] for w in history)
+        total_exp = sum(w["total_expenses"] for w in history)
+        profit = total_inc - total_exp
+        
+        # Meistverkauftes Spiel in diesem Jahr
+        year_start_week = self.week - WEEKS_PER_YEAR
+        year_games = [g for g in self.game_history if g.week_developed >= year_start_week]
+        best_game = max(year_games, key=lambda g: g.sales) if year_games else None
+        
+        report = [
+            f"--- {self.get_text('yearly_report_title', year=self.week // WEEKS_PER_YEAR + START_YEAR - 1)} ---",
+            f"{self.get_text('finance_total_income')}: {total_inc:,.0f} €",
+            f"{self.get_text('finance_total_expenses')}: {total_exp:,.0f} €",
+            f"{self.get_text('finance_net_profit')}: {profit:,.0f} €",
+        ]
+        
+        if best_game:
+            report.append(f"{self.get_text('yearly_best_game')}: {best_game.name} ({best_game.sales:,} {self.get_text('sales')})")
+        
+        return "\n".join(report)
 

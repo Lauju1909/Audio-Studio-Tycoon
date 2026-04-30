@@ -109,7 +109,7 @@ class TopicMenu(Menu):
     def _update_options(self):
         self.options = []
         for topic in self.game_state.unlocked_topics:
-            self.options.append({'text': topic, 'action': lambda t=topic: self._select(t)})
+            self.options.append({'text': self.game_state.get_text(topic), 'action': lambda t=topic: self._select(t)})
         self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
 
     def _select(self, topic):
@@ -126,7 +126,7 @@ class GenreMenu(Menu):
     def _update_options(self):
         self.options = []
         for genre in self.game_state.unlocked_genres:
-            self.options.append({'text': genre, 'action': lambda g=genre: self._select(g)})
+            self.options.append({'text': self.game_state.get_text(genre), 'action': lambda g=genre: self._select(g)})
         self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "topic_menu"})
 
     def _select(self, genre):
@@ -161,7 +161,7 @@ class AudienceMenu(Menu):
     def _update_options(self):
         self.options = []
         for aud in self.game_state.unlocked_audiences:
-            self.options.append({'text': aud, 'action': lambda a=aud: self._select(a)})
+            self.options.append({'text': self.game_state.get_text(aud), 'action': lambda a=aud: self._select(a)})
         self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "platform_menu"})
 
     def _select(self, aud):
@@ -179,7 +179,7 @@ class GameSizeMenu(Menu):
         self.options = []
         for size in GAME_SIZES:
             name = size['name'] if isinstance(size, dict) else size
-            self.options.append({'text': name, 'action': lambda s=name: self._select(s)})
+            self.options.append({'text': self.game_state.get_text(name), 'action': lambda s=name: self._select(s)})
         self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "audience_menu"})
 
     def _select(self, size):
