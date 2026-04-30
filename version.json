@@ -1,5 +1,5 @@
 {
-    "version": "3.2.0-beta.1",
-    "channel": "beta",
-    "changelog": "v3.2.0-beta.1 (Phase 2): Mitarbeiter-Fortbildungen mit Sperrzeit, zuf\u00e4llige Krankheitsausf\u00e4lle (Burnout-System), Teambuilding-Buchhaltung. NVDA-optimiert."
+    "version": "1.3.0",
+    "channel": "stable",
+    "changelog": "v1.3.0: Erster stabiler Release. Behebt Keybinding-Crashes, Audio-Platzhalter und Lokalisierungsfehler. 100% Playtester-geprüft."
 }

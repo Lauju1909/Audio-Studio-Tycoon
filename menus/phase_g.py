@@ -1,6 +1,5 @@
 import pygame
 from menus.base import Menu
-from translations import get_text
 
 class BuildMenu(Menu):
     """
@@ -10,7 +9,7 @@ class BuildMenu(Menu):
     def __init__(self, audio, game_state):
         self.audio = audio
         self.game_state = game_state
-        self.title = get_text('menu_build_office')
+        self.title = game_state.get_text('menu_build_office')
         self.cursor_x = 0
         self.cursor_y = 0
         
@@ -29,7 +28,7 @@ class BuildMenu(Menu):
     def _speak_position(self):
         item = self.game_state.office_grid[self.cursor_y][self.cursor_x]
         from game_data import BUILD_OBJECTS
-        item_text = get_text('empty')
+        item_text = self.game_state.get_text('empty')
         if item:
             item_id = item["type"]
             item_text = BUILD_OBJECTS.get(item_id, {}).get("name", item_id)
@@ -81,7 +80,6 @@ class BuildMenu(Menu):
 
     def handle_input(self, event):
         gs = self.game_state
-        t = gs.get_text
 
         if event.key == pygame.K_TAB:
             if self.state == "navigation":
@@ -120,7 +118,7 @@ class BuildMenu(Menu):
             elif event.key == gs.key_confirm:
                 self.state = "placement"
                 self.audio.play_sound("click")
-                self.audio.speak(get_text('build_placement_mode', default="Platzieren. Bewegen und Enter drücken."))
+                self.audio.speak(self.game_state.get_text('build_placement_mode'))
             elif event.key == gs.key_back:
                 self.state = "mode_selection"
                 self._announce_category()
@@ -169,7 +167,7 @@ class BuildMenu(Menu):
         return None
 
     def _announce_category(self):
-        cats = [get_text('build_cat_structure'), get_text('build_cat_furniture'), get_text('build_cat_remove')]
+        cats = [self.game_state.get_text('build_cat_structure'), self.game_state.get_text('build_cat_furniture'), self.game_state.get_text('build_cat_remove')]
         self.audio.speak(cats[self.category_idx])
 
     def _select_mode(self):
@@ -194,10 +192,10 @@ class BuildMenu(Menu):
             success = self.game_state.remove_office_item(self.cursor_x, self.cursor_y)
             if success:
                 self.audio.play_sound("confirm")
-                self.audio.speak(get_text('build_remove_success'))
+                self.audio.speak(self.game_state.get_text('build_remove_success'))
             else:
                 self.audio.play_sound("error")
-                self.audio.speak(get_text('build_remove_failed'))
+                self.audio.speak(self.game_state.get_text('build_remove_failed'))
             self.state = "navigation"
             self._speak_position()
 
@@ -212,32 +210,36 @@ class BuildMenu(Menu):
         item_id = self.category_items[self.item_idx]
         success, msg_key = self.game_state.place_office_item(item_id, self.cursor_x, self.cursor_y)
         if success:
+            from game_data import BUILD_OBJECTS
+            item_name = BUILD_OBJECTS[item_id]["name"]
             self.audio.play_sound("build")
-            self.audio.speak(get_text('build_success', default="Gebaut."))
+            self.audio.speak(self.game_state.get_text('build_success', item=item_name))
             # Wir bleiben im 'placement' state für weiteres Bauen!
         else:
             self.audio.play_sound("error")
-            self.audio.speak(get_text(f'build_error_{msg_key}', default="Bau fehlgeschlagen."))
+            self.audio.speak(self.game_state.get_text(f'build_error_{msg_key}'))
 
 class TeambuildingMenu(Menu):
     """Menü für Team-Maßnahmen."""
     def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
         options = [
-            {"text": get_text('teambuilding_pizza'), "action": lambda: self._do("Pizza")},
-            {"text": get_text('teambuilding_party'), "action": lambda: self._do("Party")},
-            {"text": get_text('teambuilding_trip'), "action": lambda: self._do("Ausflug")},
-            {"text": get_text('back'), "action": lambda: "hr_menu"}
+            {"text": game_state.get_text('teambuilding_pizza'), "action": lambda: self._do("Pizza")},
+            {"text": game_state.get_text('teambuilding_party'), "action": lambda: self._do("Party")},
+            {"text": game_state.get_text('teambuilding_trip'), "action": lambda: self._do("Ausflug")},
+            {"text": game_state.get_text('back'), "action": lambda: "hr_menu"}
         ]
-        super().__init__(get_text('menu_teambuilding'), options, audio, game_state)
+        super().__init__(game_state.get_text('menu_teambuilding'), options, audio, game_state)
 
     def _do(self, type):
         success = self.game_state.perform_teambuilding(type)
         if success:
             self.audio.play_sound("cheer")
-            self.audio.speak(get_text('teambuilding_success', type=type))
+            self.audio.speak(self.game_state.get_text('teambuilding_success', type=type))
         else:
             self.audio.play_sound("error")
-            self.audio.speak(get_text('insufficient_funds'))
+            self.audio.speak(self.game_state.get_text('insufficient_funds'))
 
 class ModPortalMenu(Menu):
     """Lokaler Datei-basierter Mod-Manager."""
@@ -249,9 +251,8 @@ class ModPortalMenu(Menu):
         if self.mod_manager and hasattr(self.mod_manager, 'installed_mods'):
             for mod in self.mod_manager.installed_mods:
                 is_active = self.mod_manager.is_mod_active(mod['id'])
-                # Lese-Tipp: Dinosaurier Mod (Aktiv)
                 status_key = 'on' if is_active else 'off'
-                txt = f"{mod['name']} ({get_text(status_key)})"
+                txt = f"{mod['name']} ({game_state.get_text(status_key)})"
                 options.append({
                     "text": txt,
                     "action": lambda m=mod['id']: self._toggle_mod(m)
@@ -259,21 +260,21 @@ class ModPortalMenu(Menu):
         else:
             options.append({"text": "Fehler: Mod-Manager nicht bereit.", "action": lambda: None})
 
-        options.append({"text": get_text('back'), "action": lambda: "main_menu"})
-        super().__init__(get_text('menu_mod_portal'), options, audio, game_state)
+        options.append({"text": game_state.get_text('back'), "action": lambda: "main_menu"})
+        super().__init__(game_state.get_text('menu_mod_portal'), options, audio, game_state)
 
     def _toggle_mod(self, mod_id):
         new_state = self.mod_manager.toggle_mod(mod_id)
         if new_state:
             self.audio.play_sound("confirm")
-            self.audio.speak(get_text('mod_installed')) # Text wiederverwenden: "Mod aktiviert!"
+            self.audio.speak(self.game_state.get_text('mod_installed')) # Text wiederverwenden: "Mod aktiviert!"
         else:
             self.audio.play_sound("error")
-            self.audio.speak(get_text('mod_turned_off', default="Mod deaktiviert."))
+            self.audio.speak(self.game_state.get_text('mod_turned_off'))
         # Menü neu laden, um Anzeige zu aktualisieren
         return "mod_portal"
 
 class ModBrowserListMenu(Menu):
     """Dummy-Klasse für veraltete Aufrufe, falls sie noch irgendwo existieren."""
     def __init__(self, audio, game_state):
-        super().__init__("Veraltet", [{"text": get_text('back'), "action": lambda: "mod_portal"}], audio, game_state)
+        super().__init__("Veraltet", [{"text": game_state.get_text('back'), "action": lambda: "mod_portal"}], audio, game_state)

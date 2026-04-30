@@ -16,8 +16,11 @@ class Menu:
     def speak_current(self, interrupt=True):
         if self.options:
             text = self.options[self.current_index]['text']
-            pos = f"{self.current_index + 1} {self.game_state.get_text('of_label')} {len(self.options)}"
-            self.audio.speak(f"{text}. {pos}", interrupt=interrupt)
+            if self.game_state.settings.get('menu_numbering_enabled', True):
+                pos = f"{self.current_index + 1} {self.game_state.get_text('of_label')} {len(self.options)}"
+                self.audio.speak(f"{text}. {pos}", interrupt=interrupt)
+            else:
+                self.audio.speak(text, interrupt=interrupt)
 
     def announce_entry(self):
         self.current_index = 0

@@ -28,11 +28,13 @@ from menus import (
     DifficultyMenu, SubGenreMenu, SequelMenu, ChartMenu,
     LicenseShopMenu, LicenseSelectMenu, AddonMenu, AddonNameMenu,
     BundleMenu, BundleNameMenu, ProductionMenu, ProductionAmountMenu,
+    ActiveGamesMenu,
     MMOPaymentMenu, MMOManagementMenu, MMOOptionsMenu,
     PublisherDealsMenu, PublisherDealDetailsMenu, MerchMenu, MerchAmountMenu,
     ESportsMenu, AcquisitionMenu, StockRivalDetailMenu,
     SaveMenu, LoadMenu, HelpMenu, GOTYMenu, AAADevEventMenu, CreditsMenu,
-    BuildMenu, TeambuildingMenu, ModPortalMenu, ModBrowserListMenu
+    BuildMenu, TeambuildingMenu, ModPortalMenu, ModBrowserListMenu,
+    MultiplayerMainMenu, MultiplayerRoomIdInput, MultiplayerLobbyMenu
 )
 
 def get_menu_factories(audio, state):
@@ -121,6 +123,11 @@ def get_menu_factories(audio, state):
         "teambuilding_menu": lambda: TeambuildingMenu(audio, state),
         "mod_portal": lambda: ModPortalMenu(audio, state),
         "mod_browser_list": lambda: ModBrowserListMenu(audio, state),
+        "multiplayer_main": lambda: MultiplayerMainMenu(audio, state),
+        "multiplayer_room_id_input": lambda: MultiplayerRoomIdInput(audio, state),
+        "multiplayer_create_id_input": lambda: MultiplayerRoomIdInput(audio, state), # Reuse for now
+        "multiplayer_lobby": lambda: MultiplayerLobbyMenu(audio, state),
+        "active_games_menu": lambda: ActiveGamesMenu(audio, state),
     }
 
 def main():
@@ -129,7 +136,7 @@ def main():
     pygame.init()
     pygame.key.set_repeat(300, 50)
     screen = pygame.display.set_mode((800, 600))
-    pygame.display.set_caption("Audio Studio Tycoon - v3.0.0 Visionary")
+    pygame.display.set_caption("Audio Studio Tycoon - v3.2.0-beta.2")
 
     audio = AudioManager()
     state = GameState()

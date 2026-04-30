@@ -42,16 +42,15 @@ class HireMenu(Menu):
         self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "hr_menu"})
 
     def _hire(self, emp):
-        # Check Max Employees
-        if len(self.game_state.employees) >= self.game_state.get_max_employees():
+        cost = emp.salary * 2
+        if self.game_state.hire_employee(emp):
+            self.audio.play_sound("confirm")
+            self.audio.speak(self.game_state.get_text('hire_success', name=emp.name, cost=cost, money=self.game_state.money))
+            return "hr_menu"
+        else:
             self.audio.play_sound("error")
-            self.audio.speak(self.game_state.get_text('hire_full'))
+            self.audio.speak(self.game_state.get_text('hire_full' if len(self.game_state.employees) >= self.game_state.get_max_employees() else 'insufficient_funds'))
             return None
-            
-        self.game_state.employees.append(emp)
-        self.audio.play_sound("confirm")
-        self.audio.speak(self.game_state.get_text('hire_success', name=emp.name))
-        return "hr_menu"
 
 class FireMenu(Menu):
     def __init__(self, audio, game_state):
@@ -68,9 +67,11 @@ class FireMenu(Menu):
 
     def _fire(self, idx):
         if 0 <= idx < len(self.game_state.employees):
-            emp = self.game_state.employees.pop(idx)
-            self.audio.play_sound("confirm")
-            self.audio.speak(self.game_state.get_text('fire_success', name=emp.name))
+            emp = self.game_state.employees[idx]
+            name = emp.name
+            if self.game_state.fire_employee(idx):
+                self.audio.play_sound("confirm")
+                self.audio.speak(self.game_state.get_text('fire_success', name=name, money=self.game_state.money))
         return "hr_menu"
 
 class TrainingEmployeeSelectMenu(Menu):
@@ -201,18 +202,60 @@ class EmailInboxMenu(Menu):
     def __init__(self, audio, game_state):
         self.audio = audio
         self.game_state = game_state
-        total_emails = len(self.game_state.emails)
-        unread_emails = len([e for e in self.game_state.emails if not getattr(e, 'is_read', True)])
-        super().__init__(self.game_state.get_text('email_inbox_status', total=total_emails, unread=unread_emails), [], audio, game_state)
+        self.filter_type = 'all'
+        super().__init__("Posteingang", [], audio, game_state)
         self._update_options()
 
     def _update_options(self):
+        total_emails = len(self.game_state.emails)
+        unread_emails = len([e for e in self.game_state.emails if not getattr(e, 'is_read', True)])
+        self.title = self.game_state.get_text('email_inbox_status', total=total_emails, unread=unread_emails)
+        
         self.options = []
+        filter_names = {'all': "Alle", 'hr': "Personal", 'bugs': "Bugs", 'other': "Sonstige"}
+        self.options.append({'text': f"Filter: {filter_names[self.filter_type]}", 'action': self._toggle_filter})
+        
         for i, email in enumerate(self.game_state.emails):
+            is_hr = getattr(email, 'is_salary_request', False) or getattr(email, 'is_poach_offer', False)
+            is_bug = getattr(email, 'is_bug', False)
+            is_other = not is_hr and not is_bug
+            
+            if self.filter_type == 'hr' and not is_hr: continue
+            if self.filter_type == 'bugs' and not is_bug: continue
+            if self.filter_type == 'other' and not is_other: continue
+            
             status = self.game_state.get_text('new_label') + " " if not getattr(email, 'is_read', True) else ""
             txt = f"{status}{email.sender}: {email.subject}"
-            self.options.append({'text': txt, 'action': lambda idx=i: self._read(idx)})
+            self.options.append({'text': txt, 'action': lambda idx=i: self._read(idx), 'email_idx': i})
+            
         self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"} )
+
+    def _toggle_filter(self):
+        types = ['all', 'hr', 'bugs', 'other']
+        idx = types.index(self.filter_type)
+        self.filter_type = types[(idx + 1) % len(types)]
+        self._update_options()
+        self.current_index = 0
+        self.speak_current(interrupt=True)
+        return None
+
+    def handle_input(self, event):
+        import pygame
+        if event.key == pygame.K_DELETE:
+            if self.options and self.current_index < len(self.options):
+                opt = self.options[self.current_index]
+                if 'email_idx' in opt:
+                    real_idx = opt['email_idx']
+                    if 0 <= real_idx < len(self.game_state.emails):
+                        self.game_state.emails.pop(real_idx)
+                        self.audio.play_sound("confirm")
+                        self.audio.speak(self.game_state.get_text('email_deleted', default="E-Mail gelöscht"))
+                        self._update_options()
+                        if self.current_index >= len(self.options):
+                            self.current_index = max(0, len(self.options) - 1)
+                        self.speak_current(interrupt=True)
+                        return None
+        return super().handle_input(event)
 
     def _read(self, idx):
         self.game_state.selected_email_idx = idx
@@ -236,8 +279,14 @@ class EmailDetailMenu(Menu):
                 ]
             elif getattr(email, 'is_poach_offer', False):
                 options = [
-                    {'text': self.game_state.get_text('accept_counter_offer', default="Gegenangebot machen (Gehalt erhöhen)"), 'action': self._accept_counter_offer},
-                    {'text': self.game_state.get_text('decline_poach', default="Angebot ignorieren"), 'action': self._delete}
+                    {'text': self.game_state.get_text('accept_counter_offer'), 'action': self._accept_counter_offer},
+                    {'text': self.game_state.get_text('decline_poach'), 'action': self._delete}
+                ]
+            elif getattr(email, 'is_expo_invite', False):
+                options = [
+                    {'text': self.game_state.get_text('attend_expo', default="Messe besuchen (Menü öffnen)"), 'action': lambda: "expo_menu"},
+                    {'text': self.game_state.get_text('delete_email'), 'action': self._delete},
+                    {'text': self.game_state.get_text('back'), 'action': lambda: "email_inbox"}
                 ]
             else:
                 options = [
@@ -253,9 +302,18 @@ class EmailDetailMenu(Menu):
         super().__init__(title, options, audio, game_state)
 
     def announce_entry(self):
-        super().announce_entry()
-        if self.email_body:
+        self.current_index = 0
+        self.audio.speak(self.title)
+        if hasattr(self, 'email_body') and self.email_body:
             self.audio.speak(self.email_body, interrupt=False)
+        if self.options:
+            self.speak_current(interrupt=False)
+
+    def handle_input(self, event):
+        import pygame
+        if event.key == pygame.K_DELETE:
+            return self._delete()
+        return super().handle_input(event)
 
     def _delete(self):
         idx = getattr(self.game_state, 'selected_email_idx', 0)
@@ -276,7 +334,7 @@ class EmailDetailMenu(Menu):
                 emp.last_raise_week = self.game_state.week
                 emp.morale = min(100, emp.morale + 50)
                 self.audio.play_sound("buy")
-                self.audio.speak(self.game_state.get_text('raise_accepted', default="Die Gehaltserhöhung wurde gewährt.", name=emp.name))
+                self.audio.speak(self.game_state.get_text('raise_accepted', name=emp.name))
             self.game_state.emails.pop(idx)
         return "email_inbox"
 
@@ -290,7 +348,7 @@ class EmailDetailMenu(Menu):
                 emp.pending_raise_request = False
                 emp.morale = max(0, emp.morale - 50)  # Heftiger Dämpfer
                 self.audio.play_sound("error")
-                self.audio.speak(self.game_state.get_text('raise_declined', default="Forderung abgelehnt. Die Moral ist gesunken.", name=emp.name))
+                self.audio.speak(self.game_state.get_text('raise_declined', name=emp.name))
             self.game_state.emails.pop(idx)
         return "email_inbox"
 
@@ -305,7 +363,7 @@ class EmailDetailMenu(Menu):
                 emp.pending_poach_offer = False
                 emp.morale = min(100, emp.morale + 30)
                 self.audio.play_sound("buy")
-                self.audio.speak(self.game_state.get_text('poach_counter_success', default="Gegenangebot angenommen! {name} bleibt im Studio.", name=emp.name))
+                self.audio.speak(self.game_state.get_text('poach_counter_success', name=emp.name))
             self.game_state.emails.pop(idx)
         return "email_inbox"
 

@@ -14,9 +14,17 @@ Audio Studio Tycoon ist eine 100% Screenreader-optimierte Management-Simulation,
 - **Zweisprachig (DE/EN)**: Das gesamte Spiel, inklusive aller KI-Texte, lässt sich flexibel auf Deutsch oder Englisch spielen.
 
 ## Installation & Start
-1. Lade das Repository herunter oder entpacke das aktuelle Beta-Release (`.zip` aus dem Releases-Tab).
-2. Führe `Audio_Studio_Tycoon_v[Version].exe` aus (im `_internal`-Ordner liegen alle benötigten Bibliotheken).
-3. Stelle sicher, dass dein Screenreader (z.B. NVDA) aktiv ist für das beste Erlebnis.
+
+### Windows
+1. Lade das aktuelle Release (`.zip` aus dem Releases-Tab) herunter und entpacke es.
+2. Führe `Audio_Studio_Tycoon_v[Version].exe` aus.
+3. Stelle sicher, dass dein Screenreader (z.B. NVDA) aktiv ist.
+
+### Linux (Ubuntu, Debian, Fedora, Arch)
+1. Lade das Linux-Release (`_Linux.zip`) herunter und entpacke es.
+2. Mache den Runner ausführbar: `chmod +x Audio_Studio_Tycoon_Linux.sh`
+3. Starte das Spiel: `./Audio_Studio_Tycoon_Linux.sh`
+   *Das Skript prüft automatisch auf Abhängigkeiten (Pygame/Speechd) und installiert diese auf Wunsch.*
 
 ## Steuerung
 - **Pfeiltasten**: Navigieren in Menüs und Slidern.

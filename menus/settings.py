@@ -1,20 +1,16 @@
 import pygame
 from .base import Menu
 
-class SettingsMenu:
+class SettingsMenu(Menu):
     def __init__(self, audio, game_state, on_back):
-        self.audio = audio
-        self.game_state = game_state
-        self.title = self.game_state.get_text('settings_menu', default="Einstellungen")
         self.on_back = on_back
-        self.current_index = 0
-        self.options = []
+        super().__init__(game_state.get_text('settings_menu'), [], audio, game_state)
         self._update_options()
 
     def _update_options(self):
         s = self.game_state.settings
-        lang_name = "Deutsch" if s['language'] == 'de' else "English"
-        music_status = self.game_state.get_text('on') if s['music_enabled'] else self.game_state.get_text('off')
+        lang_name = "Deutsch" if s.get('language', 'de') == 'de' else "English"
+        music_status = self.game_state.get_text('on') if s.get('music_enabled', True) else self.game_state.get_text('off')
 
         tts_mode = s.get('tts_engine', 'auto')
         if tts_mode == 'nvda':
@@ -22,7 +18,7 @@ class SettingsMenu:
         elif tts_mode == 'sapi':
             tts_name = "SAPI (MS David)"
         else:
-            tts_name = "Auto"
+            tts_name = self.game_state.get_text('tts_auto')
 
         auto_update_st = self.game_state.get_text('on') if s.get('auto_update', True) else self.game_state.get_text('off')
 
@@ -31,12 +27,13 @@ class SettingsMenu:
         channel_name = "Stable" if channel == 'stable' else "Beta"
 
         self.options = [
-            {'text': self.game_state.get_text('volume_settings', default="Lautstärkeeinstellungen"), 'action': self._goto_volume_settings},
+            {'text': self.game_state.get_text('volume_settings'), 'action': self._goto_volume_settings},
             {'text': f"{self.game_state.get_text('music')}: {music_status}", 'action': self._toggle_music},
-            {'text': f"{self.game_state.get_text('language')}: {lang_name}", 'action': self._toggle_language},
+            {'text': f"{self.game_state.get_text('language')}: {self.game_state.get_text('lang_de' if s.get('language', 'de') == 'de' else 'lang_en')}", 'action': self._toggle_language},
             {'text': f"{self.game_state.get_text('tts_mode')}: {tts_name}", 'action': self._toggle_tts},
             {'text': self.game_state.get_text('auto_update_toggle', status=auto_update_st), 'action': self._toggle_auto_update},
-            {'text': self.game_state.get_text('release_channel', default=f"Release-Kanal: {channel_name}") + f": {channel_name}", 'action': self._toggle_channel},
+            {'text': f"{self.game_state.get_text('release_channel')}: {channel_name}", 'action': self._toggle_channel},
+            {'text': f"{self.game_state.get_text('menu_numbering')}: {self.game_state.get_text('on') if s.get('menu_numbering_enabled', True) else self.game_state.get_text('off')}", 'action': self._toggle_menu_numbering},
             {'text': self.game_state.get_text('keybindings'), 'action': self._goto_keybindings},
             {'text': self.game_state.get_text('check_update'), 'action': self._check_update},
             {'text': self.game_state.get_text('back'), 'action': self.on_back}
@@ -47,6 +44,12 @@ class SettingsMenu:
 
     def _goto_keybindings(self):
         return "keybinding_menu"
+
+    def _toggle_menu_numbering(self):
+        self.game_state.settings['menu_numbering_enabled'] = not self.game_state.settings.get('menu_numbering_enabled', True)
+        self.game_state.save_global_settings()
+        self._update_options()
+        self.speak_current(interrupt=False)
 
     def _toggle_auto_update(self):
         self.game_state.settings['auto_update'] = not self.game_state.settings.get('auto_update', True)
@@ -60,22 +63,21 @@ class SettingsMenu:
         new_channel = 'beta' if current == 'stable' else 'stable'
         self.game_state.settings['update_channel'] = new_channel
         self.game_state.save_global_settings()
-        channel_name = "Beta" if new_channel == 'beta' else "Stable"
+        
         if new_channel == 'beta':
             self.audio.speak(
                 self.game_state.get_text(
-                    'channel_beta_warning',
-                    default="Beta-Kanal aktiviert. Beta-Versionen können Fehler enthalten!"
+                    'channel_beta_warning'
                 )
             )
         else:
             self.audio.speak(
                 self.game_state.get_text(
-                    'channel_stable_info',
-                    default="Stable-Kanal aktiviert. Nur getestete Versionen."
+                    'channel_stable_info'
                 )
             )
         self._update_options()
+        self.speak_current(interrupt=False)
         
     def _check_update(self):
         from updater import check_for_updates
@@ -93,12 +95,10 @@ class SettingsMenu:
             except Exception:
                 pass
 
-        # Kanal aus Settings lesen – Standard ist immer 'stable'
         channel = self.game_state.settings.get('update_channel', 'stable')
         result = check_for_updates(current_version, channel=channel)
 
         if result and result.get("update_available"):
-            # Beta-Warnung im Menü anzeigen
             if result.get('is_prerelease'):
                 result['changelog'] = "[BETA] " + result.get('changelog', '')
             self.game_state.pending_update = result
@@ -127,7 +127,7 @@ class SettingsMenu:
         self.speak_current(interrupt=False)
 
     def _toggle_music(self):
-        self.game_state.settings['music_enabled'] = not self.game_state.settings['music_enabled']
+        self.game_state.settings['music_enabled'] = not self.game_state.settings.get('music_enabled', True)
         self.game_state.save_global_settings()
         self.audio.set_music_enabled(self.game_state.settings['music_enabled'])
         if self.game_state.settings['music_enabled']:
@@ -137,63 +137,30 @@ class SettingsMenu:
 
     def _toggle_language(self):
         import translations
-        new_lang = 'en' if self.game_state.settings['language'] == 'de' else 'de'
+        current_lang = self.game_state.settings.get('language', 'de')
+        new_lang = 'en' if current_lang == 'de' else 'de'
         self.game_state.settings['language'] = new_lang
         self.game_state.save_global_settings()
         translations.set_language(new_lang)
         
-        self.audio.speak(self.game_state.get_text('language') + " " + ("English" if new_lang == 'en' else "Deutsch"))
+        lang_display = self.game_state.get_text('lang_de' if new_lang == 'de' else 'lang_en')
+        self.audio.speak(self.game_state.get_text('language') + " " + lang_display)
         self._update_options()
         self.speak_current(interrupt=False)
 
-    def speak_current(self, interrupt=True):
-        text = self.options[self.current_index]['text']
-        self.audio.speak(text, interrupt=interrupt)
-
     def announce_entry(self):
         self.current_index = 0
-        self.audio.speak(self.game_state.get_text('settings_menu'))
+        self._update_options()
+        self.audio.speak(self.title)
         self.speak_current(interrupt=False)
 
     def handle_input(self, event):
+        # Wir nutzen die handle_input von Menu, aber fangen ESC/Back ab
         gs = self.game_state
-        if event.key == gs.key_up:
-            if self.current_index > 0:
-                self.current_index -= 1
-                self.audio.play_sound("click")
-                self.speak_current()
-            else:
-                self.audio.play_sound("error")
-        elif event.key == gs.key_down:
-            if self.current_index < len(self.options) - 1:
-                self.current_index += 1
-                self.audio.play_sound("click")
-                self.speak_current()
-            else:
-                self.audio.play_sound("error")
-        elif event.key == gs.key_home:
-            if self.current_index > 0:
-                self.current_index = 0
-                self.audio.play_sound("click")
-                self.speak_current()
-            else:
-                self.audio.play_sound("error")
-        elif event.key == gs.key_end:
-            if self.current_index < len(self.options) - 1:
-                self.current_index = len(self.options) - 1
-                self.audio.play_sound("click")
-                self.speak_current()
-            else:
-                self.audio.play_sound("error")
-        elif event.key == gs.key_confirm:
-            self.audio.play_sound("confirm")
-            return self.options[self.current_index]['action']()
-        elif event.key == gs.key_back or event.key == pygame.K_ESCAPE:
+        if event.key == gs.key_back or event.key == pygame.K_ESCAPE:
             return self.on_back()
-        return None
-
-    def update(self):
-        pass
+        
+        return super().handle_input(event)
 
 class KeybindingMenu(Menu):
     def __init__(self, audio, game_state):
@@ -251,15 +218,15 @@ class VolumeSettingsMenu(Menu):
     def __init__(self, audio, game_state):
         self.audio = audio
         self.game_state = game_state
-        super().__init__(self.game_state.get_text('volume_settings', default="Lautstärkeeinstellungen"), [], audio, game_state)
+        super().__init__(self.game_state.get_text('volume_settings'), [], audio, game_state)
         
     def _update_options(self):
         s = self.game_state.settings
         self.options = [
-            {'text': f"Musiklautstärke: {s.get('music_volume', 50)}%", 'action': lambda: self._adjust_volume('music_volume', 10)},
-            {'text': f"Sprachausgabe (Tolk/TTS): {s.get('speech_volume', 100)}%", 'action': lambda: self._adjust_volume('speech_volume', 10)},
-            {'text': f"Geräuschelautstärke: {s.get('sfx_volume', 100)}%", 'action': lambda: self._adjust_volume('sfx_volume', 10)},
-            {'text': self.game_state.get_text('back', default="Zurück"), 'action': self._back}
+            {'text': f"{self.game_state.get_text('volume_music')}: {s.get('music_volume', 50)}%", 'action': lambda: self._adjust_volume('music_volume', 10)},
+            {'text': f"{self.game_state.get_text('volume_speech')}: {s.get('speech_volume', 100)}%", 'action': lambda: self._adjust_volume('speech_volume', 10)},
+            {'text': f"{self.game_state.get_text('volume_sfx')}: {s.get('sfx_volume', 100)}%", 'action': lambda: self._adjust_volume('sfx_volume', 10)},
+            {'text': self.game_state.get_text('back'), 'action': self._back}
         ]
         
     def _adjust_volume(self, key, amount, loop=True):
@@ -280,11 +247,11 @@ class VolumeSettingsMenu(Menu):
         # self.speak_current(interrupt=True)
         
         if key == 'music_volume':
-            text = f"Musik {val} Prozent"
+            text = self.game_state.get_text('volume_music') + " " + self.game_state.get_text('percent_label', val=val)
         elif key == 'speech_volume':
-            text = f"Sprachausgabe {val} Prozent"
+            text = self.game_state.get_text('volume_speech') + " " + self.game_state.get_text('percent_label', val=val)
         else:
-            text = f"Geräusche {val} Prozent"
+            text = self.game_state.get_text('volume_sfx') + " " + self.game_state.get_text('percent_label', val=val)
             
         self.audio.speak(text, interrupt=True)
         

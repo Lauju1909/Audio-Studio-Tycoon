@@ -24,16 +24,27 @@ def build():
     os.chdir(APP_DIR)
     
     # Run PyInstaller with PyInstaller one-dir mode
+    # --clean:          Löscht alten Build-Cache (verhindert veraltete Dateien)
+    # --exclude-module: Entfernt Debug-Module die Windows Defender triggern
     print(f"Running PyInstaller ONE-DIR for {VERSION}...")
     subprocess.run([
-        "python", "-m", "PyInstaller", "main.py", "--noconfirm", "--onedir",
+        "python", "-m", "PyInstaller", "main.py",
+        "--noconfirm",
+        "--onedir",
+        "--clean",
+        "--distpath", "releases",
         "--name", f"Audio_Studio_Tycoon_v{VERSION}",
         "--hidden-import", "urllib.request",
-        "--hidden-import", "urllib.error"
+        "--hidden-import", "urllib.error",
+        "--exclude-module", "tkinter",
+        "--exclude-module", "test",
+        "--exclude-module", "unittest",
+        "--exclude-module", "distutils",
+        "--exclude-module", "pdb",
     ], check=True)
     
-    # The output is in dist/Audio_Studio_Tycoon_v2.0/
-    base_dist = os.path.join("dist", f"Audio_Studio_Tycoon_v{VERSION}")
+    # The output is in releases/Audio_Studio_Tycoon_v2.0/
+    base_dist = os.path.join("releases", f"Audio_Studio_Tycoon_v{VERSION}")
     
     # Copy essential files into the directory BEFORE zipping so everything is grouped
     essential_files = ["nvdaControllerClient64.dll", "Tolk.dll", "README.md", "version.json"]
@@ -56,7 +67,7 @@ def build():
             for file in files:
                 abs_path = os.path.join(root, file)
                 # Ensure the zip structure includes the base package folder but not "dist"
-                rel_path = os.path.relpath(abs_path, "dist")
+                rel_path = os.path.relpath(abs_path, "releases")
                 zf.write(abs_path, rel_path)
                 
     print("Build and package completed successfully! Contains _internal folder.")

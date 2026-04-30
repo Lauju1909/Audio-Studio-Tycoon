@@ -15,6 +15,7 @@ class MainMenu(Menu):
         options = [
             {'text': self.game_state.get_text('menu_new_game'), 'action': lambda: "company_name_input"},
             {'text': self.game_state.get_text('menu_load_game'), 'action': lambda: "load_menu"},
+            {'text': self.game_state.get_text('multiplayer_menu_title', default="Multiplayer"), 'action': lambda: "multiplayer_main"},
             {'text': self.game_state.get_text('menu_mod_portal'), 'action': lambda: "mod_portal"},
             {'text': self.game_state.get_text('menu_settings'), 'action': lambda: "settings_menu"},
             {'text': self.game_state.get_text('menu_help'), 'action': lambda: "help_menu"},
@@ -60,6 +61,7 @@ class GameMenu(Menu):
             {'text': self.game_state.get_text('email_inbox_status', total=total_emails, unread=unread_emails), 'action': lambda: "email_inbox"},
             {'text': self.game_state.get_text('bank_menu'), 'action': lambda: "bank_menu"},
             {'text': self.game_state.get_text('service_menu'), 'action': lambda: "service_menu"},
+            {'text': self.game_state.get_text('active_games_menu_title', default="Aktive Spiele & Einnahmen"), 'action': lambda: "active_games_menu"},
             {'text': self.game_state.get_text('save_menu'), 'action': lambda: "save_menu"},
             {'text': self.game_state.get_text('menu_settings'), 'action': lambda: "settings_menu_ingame"},
             {'text': self.game_state.get_text('menu_quit'), 'action': lambda: "main_menu"}
@@ -463,6 +465,26 @@ class ChartMenu(Menu):
              
         self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
 
+class ActiveGamesMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(self.game_state.get_text('active_games_menu_title', default="Aktive Spiele & Einnahmen"), [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        self.options = []
+        active_games = [g for g in self.game_state.game_history if g.is_active]
+        for g in active_games:
+            woche = g.weeks_on_market
+            text = f"{g.name}: Woche {woche}, {g.sales:,} Sales, {g.revenue:,} EUR Einnahmen bisher."
+            self.options.append({'text': text, 'action': lambda: None})
+            
+        if not self.options:
+            self.options.append({'text': self.game_state.get_text('no_active_games', default="Momentan keine aktiven Spiele auf dem Markt."), 'action': lambda: "game_menu"})
+            
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
+
 class AAADevEventMenu(Menu):
     def __init__(self, audio, game_state):
          super().__init__(game_state.get_text('aaa_event_title'), [], audio, game_state)
@@ -570,7 +592,7 @@ class ExpoMenu(Menu):
         self.game_state.money -= self.cost
         self.game_state.hype += self.base_hype
         self.audio.play_sound("cheer")
-        self.audio.speak(f"Messe abgeschlossen! Insgesamt {self.cost} Euro ausgegeben und {self.base_hype} Hype generiert.")
+        self.audio.speak(self.game_state.get_text('expo_finished', cost=self.cost, hype=self.base_hype))
         return "game_menu"
 
 class CreditsMenu(Menu):

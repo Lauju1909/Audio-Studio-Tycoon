@@ -22,10 +22,11 @@ from .gameplay import (
     AudienceMenu, GameSizeMenu, MarketingMenu, EngineSelectMenu, GameNameMenu, 
     DevelopmentSliderMenu, DevProgressMenu, ReviewResultMenu, RemasterSelectMenu, 
     PublisherMenu, ExpoMenu, GOTYMenu, DifficultyMenu, SubGenreMenu, SequelMenu, 
-    ChartMenu, AAADevEventMenu, CreditsMenu
+    ChartMenu, AAADevEventMenu, CreditsMenu, ActiveGamesMenu
 )
 
 from .phase_g import BuildMenu, TeambuildingMenu, ModPortalMenu, ModBrowserListMenu
+from .multiplayer import MultiplayerMainMenu, MultiplayerRoomIdInput, MultiplayerLobbyMenu
 
 __all__ = [
     "Menu", "TextInputMenu", "SliderMenu", "SettingsMenu", "KeybindingMenu",
@@ -46,6 +47,7 @@ __all__ = [
     "AudienceMenu", "GameSizeMenu", "MarketingMenu", "EngineSelectMenu",
     "GameNameMenu", "DevelopmentSliderMenu", "DevProgressMenu", "ReviewResultMenu",
     "RemasterSelectMenu", "PublisherMenu", "ExpoMenu", "GOTYMenu", "DifficultyMenu",
-    "SubGenreMenu", "SequelMenu", "ChartMenu", "AAADevEventMenu", "CreditsMenu",
-    "BuildMenu", "TeambuildingMenu", "ModPortalMenu", "ModBrowserListMenu"
+    "SubGenreMenu", "SequelMenu", "ChartMenu", "AAADevEventMenu", "CreditsMenu", "ActiveGamesMenu",
+    "BuildMenu", "TeambuildingMenu", "ModPortalMenu", "ModBrowserListMenu",
+    "MultiplayerMainMenu", "MultiplayerRoomIdInput", "MultiplayerLobbyMenu"
 ]

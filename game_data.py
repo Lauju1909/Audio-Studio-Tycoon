@@ -479,36 +479,36 @@ RESEARCHABLE_TECHNOLOGIES = [
 # ============================================================
 DIFFICULTY_LEVELS = [
     {
-        "name": "Einfach",
+        "name": "difficulty_easy",
         "start_money": 150000,
         "rival_strength": 0.7,
         "review_bonus": 0.5,
         "market_multi": 1.3,
-        "description": "Mehr Startgeld, schwächere Rivalen, großzügigere Reviews.",
+        "description": "difficulty_easy_desc",
     },
     {
-        "name": "Normal",
+        "name": "difficulty_normal",
         "start_money": 100000,
         "rival_strength": 1.0,
         "review_bonus": 0.0,
         "market_multi": 1.0,
-        "description": "Die Standard-Erfahrung.",
+        "description": "difficulty_normal_desc",
     },
     {
-        "name": "Schwer",
+        "name": "difficulty_hard",
         "start_money": 50000,
         "rival_strength": 1.3,
         "review_bonus": -0.5,
         "market_multi": 0.8,
-        "description": "Weniger Startgeld, stärkere Rivalen, strengere Reviews.",
+        "description": "difficulty_hard_desc",
     },
     {
-        "name": "Legendär",
+        "name": "difficulty_legendary",
         "start_money": 20000,
         "rival_strength": 1.6,
         "review_bonus": -1.0,
         "market_multi": 0.6,
-        "description": "Extrem wenig Geld, übermächtige Rivalen, gnadenlose Reviews.",
+        "description": "difficulty_legendary_desc",
     },
 ]
 

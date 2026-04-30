@@ -76,9 +76,11 @@ class AudioManager:
 
         # Pygame Mixer für SFX
         try:
+            # Puffer und Frequenz für bessere Kompatibilität und Latenz
+            pygame.mixer.pre_init(44100, -16, 2, 512)
             pygame.mixer.init()
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[Mixer Init Fehler]: {e}")
 
         self.music_enabled = True
         self.current_loop = None
@@ -95,10 +97,10 @@ class AudioManager:
         self.speech_volume = settings.get("speech_volume", 100)
         
         if pygame.mixer.music.get_busy():
-            pygame.mixer.music.set_volume(self.music_volume / 100.0 * 0.05)
+            pygame.mixer.music.set_volume(self.music_volume / 100.0 * 0.2)
             
         if self.current_loop:
-            self.current_loop.set_volume(self.sfx_volume / 100.0 * 0.1)
+            self.current_loop.set_volume(self.sfx_volume / 100.0 * 0.3)
         
     def update_tts_engine(self, engine_mode):
         """Wechselt den TTS-Modus: auto, nvda, sapi"""
@@ -161,7 +163,7 @@ class AudioManager:
                 sound_path = resource_path(f"assets/{sound_name}.{fmt}")
                 if os.path.exists(sound_path):
                     sound = pygame.mixer.Sound(sound_path)
-                    sound.set_volume(self.sfx_volume / 100.0 * 0.15)
+                    sound.set_volume(self.sfx_volume / 100.0 * 0.5)
                     sound.play()
                     return
             except Exception:
@@ -175,7 +177,7 @@ class AudioManager:
                 sound_path = resource_path(f"assets/{sound_name}.{fmt}")
                 if os.path.exists(sound_path):
                     self.current_loop = pygame.mixer.Sound(sound_path)
-                    self.current_loop.set_volume(self.sfx_volume / 100.0 * 0.1)
+                    self.current_loop.set_volume(self.sfx_volume / 100.0 * 0.3)
                     self.current_loop.play(loops=-1)
                     return
             except Exception:
@@ -192,7 +194,7 @@ class AudioManager:
                 music_path = resource_path(f"assets/{music_name}.{fmt}")
                 if os.path.exists(music_path):
                     pygame.mixer.music.load(music_path)
-                    pygame.mixer.music.set_volume(self.music_volume / 100.0 * 0.05)
+                    pygame.mixer.music.set_volume(self.music_volume / 100.0 * 0.2)
                     pygame.mixer.music.play(loops=-1)
                     return
             except Exception:

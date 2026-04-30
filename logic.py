@@ -9,7 +9,7 @@ import random
 import json
 import os
 from models import GameProject, ReviewScore, Employee, Engine, EngineFeature, RivalStudio, RivalGame
-from translations import TRANSLATIONS
+from translations import TRANSLATIONS, get_system_language
 from game_data import (
     get_compatibility, get_ideal_sliders, SLIDER_NAMES, PLATFORMS, AUDIENCE_MULTI, AUDIENCE_PRICE,
     RANDOM_EVENTS, OFFICE_LEVELS, ENGINE_FEATURES,
@@ -82,15 +82,6 @@ class GameState:
         
         # Posteingang
         self.emails = []
-        # Willkommensnachricht: Die 1930er Ära
-        from models import Email
-        self.emails.append(Email(
-            sender="Historiker",
-            subject="Willkommen in der Pionierzeit!",
-            body="Das Jahr ist 1930. Du bist ein Visionär mit einer großen Idee: Man kann Maschinen beibringen, Spiele zu spielen und zu entwickeln! Mit bescheidenen Mitteln in einer Garage beginnst du dein Studio. Verfügbare Themen: Abakus, Mathematik, Schach und Logistik. Kämpfe dich durch die Geschichte – von der Weltwirtschaftskrise bis zur KI-Revolution 2023!",
-            date_week=1
-        ))
-        
         # NEU Phase II: Sabotage-Cooldown
         self.last_sabotage_week = -100
 
@@ -99,11 +90,24 @@ class GameState:
 
         # Einstellungen
         self.settings = {
-            "language": "de",
+            "language": get_system_language(),
             "music_enabled": True,
+            "music_volume": 50,
+            "speech_volume": 100,
+            "sfx_volume": 100,
             "tts_engine": "auto", # mgl: auto, nvda, sapi
-            "auto_update": True
+            "auto_update": True,
+            "update_channel": "stable"
         }
+
+        # Willkommensnachricht: Die 1930er Ära
+        from models import Email
+        self.emails.append(Email(
+            sender=self.get_text('sender_historian'),
+            subject=self.get_text('subject_pioneer_times'),
+            body=self.get_text('body_pioneer_times'),
+            date_week=1
+        ))
 
         # Echtzeit-Zeitsteuerung
         self.time_speed = 1.0  # 0=Pause, 1=Normal, 2=Schnell, 4=Sehr Schnell
@@ -213,6 +217,9 @@ class GameState:
             self.mod_manager.apply_active_mods()
         except Exception as e:
             print(f"Fehler beim Laden des ModManagers: {e}")
+        
+        # NEU: Multiplayer
+        self.multiplayer = None
 
     def get_market_platforms(self):
         from game_data import get_available_platforms
@@ -238,19 +245,19 @@ class GameState:
             except Exception:
                 pass
                 
-        self.settings = sets
+        # Bestehende Settings aktualisieren statt komplett zu ersetzen (erhält Defaults)
+        self.settings.update(sets)
         
         # Tasten auslesen (falls vorhanden), ansonsten Standard lassen
         import pygame
-        self.key_up = sets.get("key_up", pygame.K_UP)
-        self.key_down = sets.get("key_down", pygame.K_DOWN)
-        self.key_confirm = sets.get("key_confirm", pygame.K_RETURN)
-        self.key_back = sets.get("key_back", pygame.K_BACKSPACE)
-        self.key_home = sets.get("key_home", pygame.K_HOME)
-        self.key_end = sets.get("key_end", pygame.K_END)
+        self.key_up = self.settings.get("key_up", pygame.K_UP)
+        self.key_down = self.settings.get("key_down", pygame.K_DOWN)
+        self.key_confirm = self.settings.get("key_confirm", pygame.K_RETURN)
+        self.key_back = self.settings.get("key_back", pygame.K_BACKSPACE)
+        self.key_home = self.settings.get("key_home", pygame.K_HOME)
+        self.key_end = self.settings.get("key_end", pygame.K_END)
         
-        # ... abwärtskompatibilität ...
-        return sets
+        return self.settings
 
     def save_global_settings(self):
         """Speichert globale Einstellungen ab."""
@@ -339,10 +346,10 @@ class GameState:
         self.current_bugs = getattr(self, "current_bugs", 0)
         self.dev_ready_to_finish = False
 
-    def get_text(self, key, **kwargs):
+    def get_text(self, text_key, **kwargs):
         """Holt einen übersetzten Text basierend auf dem aktuellen Sprach-Setting."""
         lang = self.settings.get("language", "de")
-        text = TRANSLATIONS.get(lang, TRANSLATIONS['de']).get(key, key)
+        text = TRANSLATIONS.get(lang, TRANSLATIONS['de']).get(text_key, text_key)
         if kwargs:
             try:
                 return text.format(**kwargs)
@@ -761,10 +768,12 @@ class GameState:
             from models import Email
             self.emails.append(Email(
                 sender=self.get_text('sender_assistant'),
-                subject=self.get_text('subject_expo'),
-                body=self.get_text('body_expo'),
-                date_week=self.week
+                subject=self.get_text('subject_expo', default="Spiele-Messe: Ausstellung!"),
+                body=self.get_text('body_expo', default="Die jährliche Spiele-Messe steht vor der Tür. Wir können dort ausstellen!"),
+                date_week=self.week,
+                is_bug=False
             ))
+            self.emails[-1].is_expo_invite = True
             
         # NEU: Phase B - Lizenzen ablaufen lassen
         # Wird in advance_week direkt verarbeitet
