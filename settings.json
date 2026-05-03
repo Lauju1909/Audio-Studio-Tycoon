@@ -1,17 +1,17 @@
 {
-    "language": "en",
-    "music_enabled": true,
+    "language": "de",
+    "music_enabled": false,
     "music_volume": 50,
-    "speech_volume": 100,
+    "speech_volume": 0,
     "sfx_volume": 100,
-    "tts_engine": "nvda",
-    "auto_update": false,
+    "tts_engine": "sapi",
+    "auto_update": true,
     "update_channel": "stable",
-    "menu_numbering_enabled": false,
     "key_up": 1073741906,
     "key_down": 1073741905,
     "key_confirm": 13,
     "key_back": 8,
     "key_home": 1073741898,
-    "key_end": 1073741901
+    "key_end": 1073741901,
+    "menu_numbering_enabled": true
 }

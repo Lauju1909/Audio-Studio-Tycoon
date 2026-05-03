@@ -1,0 +1,10 @@
+
+--- CRASH AT 2026-05-03 16:58:24 ---
+Menu: team_select_menu
+Traceback (most recent call last):
+  File "main.py", line 265, in main
+  File "menus\base.py", line 91, in handle_input
+  File "menus\gameplay.py", line 271, in <lambda>
+  File "menus\gameplay.py", line 280, in _toggle
+AttributeError: 'ProjectTeamSelectMenu' object has no attribute 'selectable_employees'
+----------------------------------------

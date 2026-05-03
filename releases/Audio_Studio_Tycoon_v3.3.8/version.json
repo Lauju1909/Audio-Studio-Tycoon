@@ -1,0 +1,5 @@
+{
+    "version": "3.3.8",
+    "channel": "stable",
+    "changelog": "v3.3.8: Kritischer Fix für Team-Auswahl (AttributeError behoben). Logik-Vereinfachung für Mitarbeiter-Referenzierung."
+}

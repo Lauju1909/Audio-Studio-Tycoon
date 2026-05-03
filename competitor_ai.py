@@ -50,8 +50,9 @@ class AdvancedCompetitorAI:
             genre = random.choice(TREND_GENRES)["genre"]
 
             # Sabotage Logik in Planung
-            if game_state.is_developing and game_state.active_project:
-                target_genre = game_state.active_project.genre
+            if game_state.is_developing:
+                targets = [ap["project"].genre for ap in game_state.active_projects]
+                target_genre = random.choice(targets)
                 sabotage_chance = 0.2
                 if personality == "Aggressive": sabotage_chance = 0.5
                 if personality == "Trendchaser": sabotage_chance = 0.4

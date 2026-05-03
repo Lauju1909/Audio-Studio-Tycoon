@@ -11,23 +11,32 @@ import sys
 import ctypes
 
 def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS (one-file)
-        base_path = sys._MEIPASS
-    except Exception:
-        # Fallback for dev or multi-file build
-        base_path = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.abspath(".")
+    """ Findet den absoluten Pfad zur Ressource, kompatibel mit Dev-Umgebung und PyInstaller. """
+    # 1. Check PyInstaller _MEIPASS (one-file temp folder)
+    if hasattr(sys, '_MEIPASS'):
+        path = os.path.join(sys._MEIPASS, relative_path)
+        if os.path.exists(path):
+            return path
+
+    # 2. Check EXE directory (frozen) or script directory (dev)
+    if getattr(sys, 'frozen', False):
+        base_path = os.path.dirname(sys.executable)
+    else:
+        base_path = os.path.dirname(os.path.abspath(__file__))
     
-    # Check normal path
     path = os.path.join(base_path, relative_path)
     if os.path.exists(path):
         return path
         
-    # Check _internal path (common in PyInstaller 6 multi-file builds)
+    # 3. Check _internal directory (PyInstaller 6 one-dir)
     internal_path = os.path.join(base_path, "_internal", relative_path)
     if os.path.exists(internal_path):
         return internal_path
+        
+    # 4. Check CWD
+    cwd_path = os.path.join(os.getcwd(), relative_path)
+    if os.path.exists(cwd_path):
+        return cwd_path
         
     return path
 
@@ -44,20 +53,31 @@ class AudioManager:
         if self.is_windows:
             # Tolk-Ausgabe für Windows initialisieren
             try:
-                dll_path = os.path.join(os.path.abspath("."), "Tolk.dll")
-                if not os.path.exists(dll_path):
-                    dll_path = resource_path("Tolk.dll")
+                # Suche Tolk.dll an verschiedenen Orten
+                possible_paths = [
+                    os.path.join(os.path.abspath("."), "Tolk.dll"),
+                    resource_path("Tolk.dll"),
+                    os.path.join(os.path.dirname(sys.executable), "Tolk.dll") if getattr(sys, 'frozen', False) else ""
+                ]
+                
+                dll_path = None
+                for p in possible_paths:
+                    if p and os.path.exists(p):
+                        dll_path = p
+                        break
                     
-                if os.path.exists(dll_path):
+                if dll_path:
+                    print(f"[Audio] Lade Tolk von: {dll_path}")
                     self.tolk = ctypes.windll.LoadLibrary(dll_path)
                     self.tolk.Tolk_Load()
                     self.tolk_active = self.tolk.Tolk_IsLoaded()
                     if self.tolk_active:
                         self.tolk.Tolk_TrySAPI(True)
+                        print("[Audio] Tolk Screenreader-Support aktiv.")
                 else:
-                    print(f"[Tolk Fehler]: Tolk.dll nicht gefunden.")
+                    print(f"[Audio Fehler]: Tolk.dll wurde an keinem Ort gefunden.")
             except Exception as e:
-                print(f"[Tolk Init Exception]: {e}")
+                print(f"[Audio Exception]: Tolk-Init fehlgeschlagen: {e}")
         
         elif self.is_linux:
             # Linux-Ausgabe über speech-dispatcher (speechd)
@@ -97,10 +117,10 @@ class AudioManager:
         self.speech_volume = settings.get("speech_volume", 100)
         
         if pygame.mixer.music.get_busy():
-            pygame.mixer.music.set_volume(self.music_volume / 100.0 * 0.2)
+            pygame.mixer.music.set_volume(self.music_volume / 100.0 * 0.5)
             
         if self.current_loop:
-            self.current_loop.set_volume(self.sfx_volume / 100.0 * 0.3)
+            self.current_loop.set_volume(self.sfx_volume / 100.0 * 0.6)
         
     def update_tts_engine(self, engine_mode):
         """Wechselt den TTS-Modus: auto, nvda, sapi"""
@@ -162,10 +182,15 @@ class AudioManager:
             try:
                 sound_path = resource_path(f"assets/{sound_name}.{fmt}")
                 if os.path.exists(sound_path):
+                    print(f"[Audio] Spiele Sound: {sound_path}")
                     sound = pygame.mixer.Sound(sound_path)
-                    sound.set_volume(self.sfx_volume / 100.0 * 0.5)
+                    sound.set_volume(self.sfx_volume / 100.0 * 0.8)
                     sound.play()
                     return
+                else:
+                    # Nur loggen wenn es die letzte Option war (oder gar nicht um Spam zu vermeiden)
+                    pass
+                    print(f"[Audio] Sound nicht gefunden: {sound_path}")
             except Exception:
                 continue
 
@@ -193,10 +218,13 @@ class AudioManager:
             try:
                 music_path = resource_path(f"assets/{music_name}.{fmt}")
                 if os.path.exists(music_path):
+                    print(f"[Audio] Spiele Musik: {music_path}")
                     pygame.mixer.music.load(music_path)
-                    pygame.mixer.music.set_volume(self.music_volume / 100.0 * 0.2)
+                    pygame.mixer.music.set_volume(self.music_volume / 100.0 * 0.5)
                     pygame.mixer.music.play(loops=-1)
                     return
+                else:
+                    print(f"[Audio] Musikdatei nicht gefunden: {music_path}")
             except Exception:
                 continue
 

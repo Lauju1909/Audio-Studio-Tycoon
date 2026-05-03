@@ -1,49 +1,83 @@
 {
   "company_name": "",
-  "money": 999979999,
-  "fans": 7000,
-  "week": 94,
+  "money": 1000197624.0363915,
+  "fans": 3000,
+  "week": 93,
   "high_score": 0.0,
   "games_made": 0,
   "total_revenue": 0,
   "office_level": 0,
-  "last_event_week": 85,
-  "last_trend_week": 87,
+  "last_event_week": 88,
+  "last_trend_week": 81,
   "current_trend": {
-    "topic": "Fantasy",
-    "genre": "Simulation",
-    "text": "Fantasy erlebt ein Revival! Und: Simulationsspiele sind der neue Hit!",
-    "week_started": 87
+    "topic": "Superheld",
+    "genre": "Action",
+    "text": "Superhelden-Spiele sind mega populär! Und: Action-Spiele dominieren die Charts!",
+    "week_started": 81
   },
   "active_events": [
     {
       "id": "hist_1931",
       "effect": "hype",
       "value": 20,
-      "text": "Erster 'Logic-Contest'. Forschungspunkte-Bonus (+25 RP).",
+      "text": "event_1931",
       "title": "Historisches Ereignis 1931"
     }
   ],
   "settings": {
-    "language": "en",
-    "music_enabled": true,
+    "language": "de",
+    "music_enabled": false,
     "music_volume": 50,
-    "speech_volume": 100,
+    "speech_volume": 0,
     "sfx_volume": 100,
-    "tts_engine": "nvda",
-    "auto_update": false,
+    "tts_engine": "sapi",
+    "auto_update": true,
     "update_channel": "stable",
-    "menu_numbering_enabled": false,
     "key_up": 1073741906,
     "key_down": 1073741905,
     "key_confirm": 13,
     "key_back": 8,
     "key_home": 1073741898,
-    "key_end": 1073741901
+    "key_end": 1073741901,
+    "menu_numbering_enabled": true
   },
   "game_history": [],
   "active_mmos": [],
-  "employees": [],
+  "employees": [
+    {
+      "name": "Chef",
+      "role": "Chef",
+      "primary_skill": "Gameplay",
+      "secondary_skill": "Design",
+      "skill_level": 3,
+      "specialization": null,
+      "trait": {
+        "name": "Griesgram",
+        "effect": "morale_loss",
+        "value": 1.5,
+        "description": "Verliert 50% schneller Moral."
+      },
+      "skills": {
+        "Gameplay": 69,
+        "Grafik": 31,
+        "Sound": 19,
+        "Story": 19,
+        "KI": 21,
+        "Welt": 23
+      },
+      "salary": 0,
+      "morale": 100,
+      "weeks_employed": 92,
+      "last_raise_week": 0,
+      "pending_raise_request": true,
+      "is_ceo": true,
+      "is_training": false,
+      "training_weeks_left": 0,
+      "training_skill_boost": 0,
+      "is_sick": false,
+      "sick_weeks_left": 0
+    }
+  ],
   "engines": [
     {
       "name": "Basis-Engine",
@@ -57,7 +91,6 @@
     "Mittelalter",
     "Sport",
     "Rennen",
-    "Dinosaurier",
     "Abakus",
     "Logistik",
     "Schach",
@@ -68,8 +101,7 @@
   "unlocked_genres": [
     "Action",
     "Puzzle",
-    "Casual",
-    "Dino-Survival"
+    "Casual"
   ],
   "unlocked_audiences": [
     "Jeder"
@@ -83,42 +115,249 @@
   "last_goty_year": 1930,
   "bank_loan": null,
   "accounting": {
-    "income": 0,
-    "expenses": 0,
+    "income": 137653.86868737082,
+    "expenses": 56250.0,
     "loan_paid": 0
   },
   "custom_consoles": [],
   "emails": [
     {
-      "sender": "Industry News",
-      "subject": "+++ INDUSTRY NEWS +++",
-      "body": "Studio Anniversary! Fans celebrate your existence. +2,500 Fans!",
+      "sender": "Erste Spielerbank AG",
+      "subject": "Ihr Kontoauszug - Dezember 1931, Woche 1",
+      "body": "Abrechnungszeitraum: Dezember 1931, Woche 1\n\nGesamteinnahmen: 0 EUR\n\nGesamtausgaben: 0 EUR\n\nNetto-Gewinn: +0 EUR\nAktueller Kontostand: 1,000,196,979 EUR",
+      "date_week": 93,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Kalender",
+      "subject": "Neuer Monat: Dezember 1931, Woche 1",
+      "body": "Ein neuer Monat hat begonnen: Dezember 1931, Woche 1. Kapital: 1,000,196,979 EUR. Fans: 3,000",
+      "date_week": 93,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Erste Spielerbank AG",
+      "subject": "Ihr Kontoauszug - November 1931, Woche 1",
+      "body": "Abrechnungszeitraum: November 1931, Woche 1\n\nGesamteinnahmen: 0 EUR\n\nGesamtausgaben: 0 EUR\n\nNetto-Gewinn: +0 EUR\nAktueller Kontostand: 1,000,194,002 EUR",
+      "date_week": 89,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Kalender",
+      "subject": "Neuer Monat: November 1931, Woche 1",
+      "body": "Ein neuer Monat hat begonnen: November 1931, Woche 1. Kapital: 1,000,194,002 EUR. Fans: 3,000",
+      "date_week": 89,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Branchen-News",
+      "subject": "+++ BRANCHEN-NEWS +++",
+      "body": "Fan-Turnier! Deine Fans organisieren ein riesiges Online-Turnier. +3.000 Fans!",
+      "date_week": 88,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Erste Spielerbank AG",
+      "subject": "Ihr Kontoauszug - Oktober 1931, Woche 1",
+      "body": "Abrechnungszeitraum: Oktober 1931, Woche 1\n\nGesamteinnahmen: 0 EUR\n\nGesamtausgaben: 0 EUR\n\nNetto-Gewinn: +0 EUR\nAktueller Kontostand: 1,000,190,354 EUR",
       "date_week": 85,
       "game_name": null,
       "is_bug": false,
       "is_read": false
     },
     {
-      "sender": "Industry News",
-      "subject": "+++ INDUSTRY NEWS +++",
-      "body": "Skilled Worker Shortage! Training costs: 8,000 Euros.",
-      "date_week": 74,
+      "sender": "Kalender",
+      "subject": "Neuer Monat: Oktober 1931, Woche 1",
+      "body": "Ein neuer Monat hat begonnen: Oktober 1931, Woche 1. Kapital: 1,000,190,354 EUR. Fans: 0",
+      "date_week": 85,
       "game_name": null,
       "is_bug": false,
       "is_read": false
     },
     {
-      "sender": "Industry News",
-      "subject": "+++ INDUSTRY NEWS +++",
-      "body": "Congratulations! Your studio wins an Indie Award. +1,500 new fans!",
-      "date_week": 64,
+      "sender": "Erste Spielerbank AG",
+      "subject": "Ihr Kontoauszug - September 1931, Woche 1",
+      "body": "Abrechnungszeitraum: September 1931, Woche 1\n\nGesamteinnahmen: 0 EUR\n\nGesamtausgaben: 0 EUR\n\nNetto-Gewinn: +0 EUR\nAktueller Kontostand: 1,000,185,979 EUR",
+      "date_week": 81,
       "game_name": null,
       "is_bug": false,
       "is_read": false
     },
     {
-      "sender": "Industry News",
-      "subject": "+++ INDUSTRY NEWS +++",
+      "sender": "Kalender",
+      "subject": "Neuer Monat: September 1931, Woche 1",
+      "body": "Ein neuer Monat hat begonnen: September 1931, Woche 1. Kapital: 1,000,185,979 EUR. Fans: 0",
+      "date_week": 81,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Erste Spielerbank AG",
+      "subject": "Ihr Kontoauszug - August 1931, Woche 1",
+      "body": "Abrechnungszeitraum: August 1931, Woche 1\n\nGesamteinnahmen: 0 EUR\n\nGesamtausgaben: 0 EUR\n\nNetto-Gewinn: +0 EUR\nAktueller Kontostand: 1,000,180,814 EUR",
+      "date_week": 77,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Kalender",
+      "subject": "Neuer Monat: August 1931, Woche 1",
+      "body": "Ein neuer Monat hat begonnen: August 1931, Woche 1. Kapital: 1,000,180,814 EUR. Fans: 0",
+      "date_week": 77,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Branchen-News",
+      "subject": "+++ BRANCHEN-NEWS +++",
+      "body": "Server-Ausfall! Technische Probleme kosten dich 500 Fans.",
+      "date_week": 75,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Erste Spielerbank AG",
+      "subject": "Ihr Kontoauszug - Juli 1931, Woche 1",
+      "body": "Abrechnungszeitraum: Juli 1931, Woche 1\n\nGesamteinnahmen: 0 EUR\n\nGesamtausgaben: 0 EUR\n\nNetto-Gewinn: +0 EUR\nAktueller Kontostand: 1,000,174,794 EUR",
+      "date_week": 73,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Kalender",
+      "subject": "Neuer Monat: Juli 1931, Woche 1",
+      "body": "Ein neuer Monat hat begonnen: Juli 1931, Woche 1. Kapital: 1,000,174,794 EUR. Fans: 500",
+      "date_week": 73,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Erste Spielerbank AG",
+      "subject": "Ihr Kontoauszug - Juni 1931, Woche 1",
+      "body": "Abrechnungszeitraum: Juni 1931, Woche 1\n\nGesamteinnahmen: 0 EUR\n\nGesamtausgaben: 0 EUR\n\nNetto-Gewinn: +0 EUR\nAktueller Kontostand: 1,000,167,846 EUR",
+      "date_week": 69,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Kalender",
+      "subject": "Neuer Monat: Juni 1931, Woche 1",
+      "body": "Ein neuer Monat hat begonnen: Juni 1931, Woche 1. Kapital: 1,000,167,846 EUR. Fans: 500",
+      "date_week": 69,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Branchen-News",
+      "subject": "+++ BRANCHEN-NEWS +++",
+      "body": "Steuererstattung! Das Finanzamt zahlt dir 18.000 Euro zurück.",
+      "date_week": 67,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Erste Spielerbank AG",
+      "subject": "Ihr Kontoauszug - Mai 1931, Woche 1",
+      "body": "Abrechnungszeitraum: Mai 1931, Woche 1\n\nGesamteinnahmen: 0 EUR\n\nGesamtausgaben: 0 EUR\n\nNetto-Gewinn: +0 EUR\nAktueller Kontostand: 1,000,141,893 EUR",
+      "date_week": 65,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Kalender",
+      "subject": "Neuer Monat: Mai 1931, Woche 1",
+      "body": "Ein neuer Monat hat begonnen: Mai 1931, Woche 1. Kapital: 1,000,141,893 EUR. Fans: 500",
+      "date_week": 65,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Erste Spielerbank AG",
+      "subject": "Ihr Kontoauszug - April 1931, Woche 1",
+      "body": "Abrechnungszeitraum: April 1931, Woche 1\n\nGesamteinnahmen: 0 EUR\n\nGesamtausgaben: 0 EUR\n\nNetto-Gewinn: +0 EUR\nAktueller Kontostand: 1,000,132,849 EUR",
+      "date_week": 61,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Kalender",
+      "subject": "Neuer Monat: April 1931, Woche 1",
+      "body": "Ein neuer Monat hat begonnen: April 1931, Woche 1. Kapital: 1,000,132,849 EUR. Fans: 500",
+      "date_week": 61,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Erste Spielerbank AG",
+      "subject": "Ihr Kontoauszug - März 1931, Woche 1",
+      "body": "Abrechnungszeitraum: März 1931, Woche 1\n\nGesamteinnahmen: 0 EUR\n\nGesamtausgaben: 0 EUR\n\nNetto-Gewinn: +0 EUR\nAktueller Kontostand: 1,000,122,624 EUR",
+      "date_week": 57,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Kalender",
+      "subject": "Neuer Monat: März 1931, Woche 1",
+      "body": "Ein neuer Monat hat begonnen: März 1931, Woche 1. Kapital: 1,000,122,624 EUR. Fans: 500",
+      "date_week": 57,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Erste Spielerbank AG",
+      "subject": "Ihr Kontoauszug - Februar 1931, Woche 1",
+      "body": "Abrechnungszeitraum: Februar 1931, Woche 1\n\nGesamteinnahmen: 0 EUR\n\nGesamtausgaben: 0 EUR\n\nNetto-Gewinn: +0 EUR\nAktueller Kontostand: 1,000,111,117 EUR",
+      "date_week": 53,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Kalender",
+      "subject": "Neuer Monat: Februar 1931, Woche 1",
+      "body": "Ein neuer Monat hat begonnen: Februar 1931, Woche 1. Kapital: 1,000,111,117 EUR. Fans: 500",
+      "date_week": 53,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Branchen-News",
+      "subject": "+++ BRANCHEN-NEWS +++",
+      "body": "Markt-Euphorie! Verkäufe steigen 40% für 3 Wochen!",
+      "date_week": 52,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Branchen-News",
+      "subject": "+++ BRANCHEN-NEWS +++",
       "body": "event_hist_1931",
       "date_week": 49,
       "game_name": null,
@@ -128,7 +367,7 @@
     {
       "sender": "Weltgeschehen",
       "subject": "1931: Aktuelles Ereignis",
-      "body": "Erster 'Logic-Contest'. Forschungspunkte-Bonus (+25 RP).\n\nAuswirkung auf dein Studio: +20 Hype",
+      "body": "Erster 'Logic-Contest'. Forschungspunkte-Bonus (+25 RP).\n\nAuswirkung auf dein Studio: +20 hype",
       "date_week": 49,
       "game_name": null,
       "is_bug": false,
@@ -144,64 +383,271 @@
       "is_read": false
     },
     {
-      "sender": "Industry News",
-      "subject": "+++ INDUSTRY NEWS +++",
-      "body": "Gone viral! A clip of your game goes viral. +2,000 new fans.",
+      "sender": "Buchhaltung",
+      "subject": "Jahresbilanz 1930",
+      "body": "Hier ist der Bericht für das vergangene Jahr.\nEinnahmen: 244471.16770361486 EUR\nAusgaben: 76250.0 EUR\n------------------\nGewinn: 168221.16770361486 EUR\nWeiter so!",
       "date_week": 49,
       "game_name": null,
       "is_bug": false,
       "is_read": false
     },
     {
-      "sender": "Accounting",
-      "subject": "Annual Report 1930",
-      "body": "Here is the report for the past year.\nIncome: 0 EUR\nExpenses: 0 EUR\n------------------\nProfit: 0 EUR\nKeep it up!",
+      "sender": "Erste Spielerbank AG",
+      "subject": "Ihr Kontoauszug - Januar 1931, Woche 1",
+      "body": "Abrechnungszeitraum: Januar 1931, Woche 1\n\nGesamteinnahmen: 0 EUR\n\nGesamtausgaben: 0 EUR\n\nNetto-Gewinn: +0 EUR\nAktueller Kontostand: 1,000,098,220 EUR",
       "date_week": 49,
       "game_name": null,
       "is_bug": false,
       "is_read": false
     },
     {
-      "sender": "Industry News",
-      "subject": "+++ INDUSTRY NEWS +++",
-      "body": "Market Euphoria! Sales up 40% for 3 weeks!",
-      "date_week": 36,
+      "sender": "Kalender",
+      "subject": "Neuer Monat: Januar 1931, Woche 1",
+      "body": "Ein neuer Monat hat begonnen: Januar 1931, Woche 1. Kapital: 1,000,098,220 EUR. Fans: 500",
+      "date_week": 49,
       "game_name": null,
       "is_bug": false,
       "is_read": false
     },
     {
-      "sender": "Industry News",
-      "subject": "+++ INDUSTRY NEWS +++",
-      "body": "Award nomination! Your studio is nominated for an industry award. +1,000 fans.",
-      "date_week": 27,
+      "sender": "Chef",
+      "subject": "Gehaltsverhandlung",
+      "body": "Hallo Chef, ich habe in letzter Zeit viel geleistet und meine Fähigkeiten verbessert. Ich fordere eine Anpassung meines Gehalts auf 0 Euro (aktuell: 0 Euro).",
+      "date_week": 45,
       "game_name": null,
       "is_bug": false,
       "is_read": false
     },
     {
-      "sender": "Industry News",
-      "subject": "+++ INDUSTRY NEWS +++",
-      "body": "Tax audit! The tax office demands a back payment of 12,000 Euro.",
+      "sender": "Erste Spielerbank AG",
+      "subject": "Ihr Kontoauszug - Dezember 1930, Woche 1",
+      "body": "Abrechnungszeitraum: Dezember 1930, Woche 1\n\nGesamteinnahmen: 0 EUR\n\nGesamtausgaben: 0 EUR\n\nNetto-Gewinn: +0 EUR\nAktueller Kontostand: 1,000,083,818 EUR",
+      "date_week": 45,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Kalender",
+      "subject": "Neuer Monat: Dezember 1930, Woche 1",
+      "body": "Ein neuer Monat hat begonnen: Dezember 1930, Woche 1. Kapital: 1,000,083,818 EUR. Fans: 500",
+      "date_week": 45,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Erste Spielerbank AG",
+      "subject": "Ihr Kontoauszug - November 1930, Woche 1",
+      "body": "Abrechnungszeitraum: November 1930, Woche 1\n\nGesamteinnahmen: 0 EUR\n\nGesamtausgaben: 0 EUR\n\nNetto-Gewinn: +0 EUR\nAktueller Kontostand: 1,000,067,782 EUR",
+      "date_week": 41,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Kalender",
+      "subject": "Neuer Monat: November 1930, Woche 1",
+      "body": "Ein neuer Monat hat begonnen: November 1930, Woche 1. Kapital: 1,000,067,782 EUR. Fans: 500",
+      "date_week": 41,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Branchen-News",
+      "subject": "+++ BRANCHEN-NEWS +++",
+      "body": "Rezession! Die Wirtschaft schwächelt â€” Unerwartete Kosten von 10.000 Euro.",
+      "date_week": 39,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Erste Spielerbank AG",
+      "subject": "Ihr Kontoauszug - Oktober 1930, Woche 1",
+      "body": "Abrechnungszeitraum: Oktober 1930, Woche 1\n\nGesamteinnahmen: 0 EUR\n\nGesamtausgaben: 0 EUR\n\nNetto-Gewinn: +0 EUR\nAktueller Kontostand: 1,000,059,976 EUR",
+      "date_week": 37,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Kalender",
+      "subject": "Neuer Monat: Oktober 1930, Woche 1",
+      "body": "Ein neuer Monat hat begonnen: Oktober 1930, Woche 1. Kapital: 1,000,059,976 EUR. Fans: 500",
+      "date_week": 37,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Erste Spielerbank AG",
+      "subject": "Ihr Kontoauszug - September 1930, Woche 1",
+      "body": "Abrechnungszeitraum: September 1930, Woche 1\n\nGesamteinnahmen: 0 EUR\n\nGesamtausgaben: 0 EUR\n\nNetto-Gewinn: +0 EUR\nAktueller Kontostand: 1,000,040,250 EUR",
+      "date_week": 33,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Kalender",
+      "subject": "Neuer Monat: September 1930, Woche 1",
+      "body": "Ein neuer Monat hat begonnen: September 1930, Woche 1. Kapital: 1,000,040,250 EUR. Fans: 500",
+      "date_week": 33,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Branchen-News",
+      "subject": "+++ BRANCHEN-NEWS +++",
+      "body": "Branchentreff! Eine große Gaming-Expo bringt +500 neue Fans für dein Studio.",
+      "date_week": 31,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Erste Spielerbank AG",
+      "subject": "Ihr Kontoauszug - August 1930, Woche 1",
+      "body": "Abrechnungszeitraum: August 1930, Woche 1\n\nGesamteinnahmen: 0 EUR\n\nGesamtausgaben: 0 EUR\n\nNetto-Gewinn: +0 EUR\nAktueller Kontostand: 1,000,018,443 EUR",
+      "date_week": 29,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Kalender",
+      "subject": "Neuer Monat: August 1930, Woche 1",
+      "body": "Ein neuer Monat hat begonnen: August 1930, Woche 1. Kapital: 1,000,018,443 EUR. Fans: 0",
+      "date_week": 29,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Erste Spielerbank AG",
+      "subject": "Ihr Kontoauszug - Juli 1930, Woche 1",
+      "body": "Abrechnungszeitraum: Juli 1930, Woche 1\n\nGesamteinnahmen: 0 EUR\n\nGesamtausgaben: 0 EUR\n\nNetto-Gewinn: +0 EUR\nAktueller Kontostand: 999,994,380 EUR",
+      "date_week": 25,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Kalender",
+      "subject": "Neuer Monat: Juli 1930, Woche 1",
+      "body": "Ein neuer Monat hat begonnen: Juli 1930, Woche 1. Kapital: 999,994,380 EUR. Fans: 0",
+      "date_week": 25,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Erste Spielerbank AG",
+      "subject": "Ihr Kontoauszug - Juni 1930, Woche 1",
+      "body": "Abrechnungszeitraum: Juni 1930, Woche 1\n\nGesamteinnahmen: 0 EUR\n\nGesamtausgaben: 0 EUR\n\nNetto-Gewinn: +0 EUR\nAktueller Kontostand: 999,968,908 EUR",
+      "date_week": 21,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Kalender",
+      "subject": "Neuer Monat: Juni 1930, Woche 1",
+      "body": "Ein neuer Monat hat begonnen: Juni 1930, Woche 1. Kapital: 999,968,908 EUR. Fans: 0",
+      "date_week": 21,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Branchen-News",
+      "subject": "+++ BRANCHEN-NEWS +++",
+      "body": "Rezession! Die Wirtschaft schwächelt â€” Unerwartete Kosten von 10.000 Euro.",
+      "date_week": 19,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Erste Spielerbank AG",
+      "subject": "Ihr Kontoauszug - Mai 1930, Woche 1",
+      "body": "Abrechnungszeitraum: Mai 1930, Woche 1\n\nGesamteinnahmen: 0 EUR\n\nGesamtausgaben: 0 EUR\n\nNetto-Gewinn: +0 EUR\nAktueller Kontostand: 999,955,057 EUR",
       "date_week": 17,
       "game_name": null,
       "is_bug": false,
       "is_read": false
     },
     {
-      "sender": "Industry News",
-      "subject": "+++ INDUSTRY NEWS +++",
-      "body": "Talent Boom! Team develops 50% faster for 4 weeks!",
-      "date_week": 8,
+      "sender": "Kalender",
+      "subject": "Neuer Monat: Mai 1930, Woche 1",
+      "body": "Ein neuer Monat hat begonnen: Mai 1930, Woche 1. Kapital: 999,955,057 EUR. Fans: 0",
+      "date_week": 17,
       "game_name": null,
       "is_bug": false,
       "is_read": false
     },
     {
-      "sender": "Industry News",
-      "subject": "+++ INDUSTRY NEWS +++",
-      "body": "Economic crisis limits consumer spending. (Sales -15%)",
+      "sender": "Erste Spielerbank AG",
+      "subject": "Ihr Kontoauszug - April 1930, Woche 1",
+      "body": "Abrechnungszeitraum: April 1930, Woche 1\n\nGesamteinnahmen: 0 EUR\n\nGesamtausgaben: 0 EUR\n\nNetto-Gewinn: +0 EUR\nAktueller Kontostand: 999,936,332 EUR",
       "date_week": 13,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Kalender",
+      "subject": "Neuer Monat: April 1930, Woche 1",
+      "body": "Ein neuer Monat hat begonnen: April 1930, Woche 1. Kapital: 999,936,332 EUR. Fans: 0",
+      "date_week": 13,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Branchen-News",
+      "subject": "+++ BRANCHEN-NEWS +++",
+      "body": "Sommerloch! Fans sind beim Baden. -800 Fans diese Woche.",
+      "date_week": 10,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Erste Spielerbank AG",
+      "subject": "Ihr Kontoauszug - März 1930, Woche 1",
+      "body": "Abrechnungszeitraum: März 1930, Woche 1\n\nGesamteinnahmen: 0 EUR\n\nGesamtausgaben: 0 EUR\n\nNetto-Gewinn: +0 EUR\nAktueller Kontostand: 999,926,530 EUR",
+      "date_week": 9,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Kalender",
+      "subject": "Neuer Monat: März 1930, Woche 1",
+      "body": "Ein neuer Monat hat begonnen: März 1930, Woche 1. Kapital: 999,926,530 EUR. Fans: 0",
+      "date_week": 9,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Bank",
+      "subject": "Your Monthly Statement - February 1930, Week 1",
+      "body": "Billing Period: February 1930, Week 1\n\nTotal Income: 0 EUR\n\nTotal Expenses: 0 EUR\n\nNet Profit: +0 EUR\nCurrent Balance: 999,977,499 EUR",
+      "date_week": 5,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Calendar",
+      "subject": "New Month: February 1930, Week 1",
+      "body": "A new month has begun: February 1930, Week 1. Current capital: 999,977,499 EUR. Fans: 0",
+      "date_week": 5,
       "game_name": null,
       "is_bug": false,
       "is_read": false
@@ -210,61 +656,61 @@
       "sender": "Industry News",
       "subject": "+++ INDUSTRY NEWS +++",
       "body": "A new hardware trend boosts the market! (Sales +20%)",
-      "date_week": 16,
+      "date_week": 2,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": true
+    },
+    {
+      "sender": "Branchen-News",
+      "subject": "+++ BRANCHEN-NEWS +++",
+      "body": "Wirtschaftskrise bremst Konsumausgaben. (Verkäufe -15%)",
+      "date_week": 21,
       "game_name": null,
       "is_bug": false,
       "is_read": false
     },
     {
-      "sender": "Industry News",
-      "subject": "+++ INDUSTRY NEWS +++",
-      "body": "A major competitor has filed for bankruptcy! (Fans +10%)",
+      "sender": "Studio-Assistent",
+      "subject": "Audio Expo steht an!",
+      "body": "In dieser Woche findet die Audio Expo statt. Gehe ins Management-Menü, um teilzunehmen!",
       "date_week": 24,
       "game_name": null,
       "is_bug": false,
       "is_read": false
     },
     {
-      "sender": "Studio Assistant",
-      "subject": "Audio Expo is here!",
-      "body": "The Audio Expo takes place this week. Go to the Management menu to attend!",
-      "date_week": 24,
+      "sender": "Branchen-News",
+      "subject": "+++ BRANCHEN-NEWS +++",
+      "body": "Ein neuer Hardware-Hype beflügelt den Markt! (Verkäufe +20%)",
+      "date_week": 40,
       "game_name": null,
       "is_bug": false,
       "is_read": false
     },
     {
-      "sender": "Industry News",
-      "subject": "+++ INDUSTRY NEWS +++",
-      "body": "Economic crisis limits consumer spending. (Sales -15%)",
-      "date_week": 56,
+      "sender": "Branchen-News",
+      "subject": "+++ BRANCHEN-NEWS +++",
+      "body": "Ein großer Konkurrent hat Insolvenz angemeldet! (Fans +10%)",
+      "date_week": 49,
       "game_name": null,
       "is_bug": false,
       "is_read": false
     },
     {
-      "sender": "Industry News",
-      "subject": "+++ INDUSTRY NEWS +++",
-      "body": "Economic crisis limits consumer spending. (Sales -15%)",
-      "date_week": 67,
-      "game_name": null,
-      "is_bug": false,
-      "is_read": false
-    },
-    {
-      "sender": "Industry News",
-      "subject": "+++ INDUSTRY NEWS +++",
-      "body": "A major competitor has filed for bankruptcy! (Fans +10%)",
-      "date_week": 69,
-      "game_name": null,
-      "is_bug": false,
-      "is_read": false
-    },
-    {
-      "sender": "Studio Assistant",
-      "subject": "Audio Expo is here!",
-      "body": "The Audio Expo takes place this week. Go to the Management menu to attend!",
+      "sender": "Studio-Assistent",
+      "subject": "Audio Expo steht an!",
+      "body": "In dieser Woche findet die Audio Expo statt. Gehe ins Management-Menü, um teilzunehmen!",
       "date_week": 72,
+      "game_name": null,
+      "is_bug": false,
+      "is_read": false
+    },
+    {
+      "sender": "Branchen-News",
+      "subject": "+++ BRANCHEN-NEWS +++",
+      "body": "Ein großer Konkurrent hat Insolvenz angemeldet! (Fans +10%)",
+      "date_week": 91,
       "game_name": null,
       "is_bug": false,
       "is_read": false

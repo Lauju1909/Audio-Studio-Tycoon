@@ -1,8 +1,8 @@
 {
-  "company_name": "",
-  "money": 999390442,
+  "company_name": "TestBot",
+  "money": 94500,
   "fans": 0,
-  "week": 6,
+  "week": 2,
   "high_score": 0.0,
   "games_made": 0,
   "total_revenue": 0,
@@ -12,7 +12,7 @@
   "current_trend": {},
   "active_events": [],
   "settings": {
-    "language": "de",
+    "language": "en",
     "music_enabled": true,
     "music_volume": 50,
     "speech_volume": 100,
@@ -23,7 +23,41 @@
   },
   "game_history": [],
   "active_mmos": [],
-  "employees": [],
+  "employees": [
+    {
+      "name": "Chef",
+      "role": "Chef",
+      "primary_skill": "Gameplay",
+      "secondary_skill": "Design",
+      "skill_level": 3,
+      "specialization": null,
+      "trait": {
+        "name": "Griesgram",
+        "effect": "morale_loss",
+        "value": 1.5,
+        "description": "Verliert 50% schneller Moral."
+      },
+      "skills": {
+        "Gameplay": 56,
+        "Grafik": 26,
+        "Sound": 15,
+        "Story": 24,
+        "KI": 16,
+        "Welt": 27
+      },
+      "salary": 0,
+      "morale": 100,
+      "weeks_employed": 1,
+      "last_raise_week": 0,
+      "pending_raise_request": false,
+      "is_ceo": true,
+      "is_training": false,
+      "training_weeks_left": 0,
+      "training_skill_boost": 0,
+      "is_sick": false,
+      "sick_weeks_left": 0
+    }
+  ],
   "engines": [
     {
       "name": "Basis-Engine",
@@ -58,28 +92,18 @@
   "rivals": [],
   "last_goty_year": 0,
   "bank_loan": {
-    "amount_borrowed": 100000,
-    "amount_remaining": 104943,
-    "weekly_payment": 2057,
-    "weeks_remaining": 51
+    "amount_borrowed": 50000,
+    "amount_remaining": 52500,
+    "weekly_payment": 1009,
+    "weeks_remaining": 52
   },
   "accounting": {
     "income": 0,
-    "expenses": 7500,
-    "loan_paid": 2057
+    "expenses": 5500,
+    "loan_paid": 0
   },
   "custom_consoles": [],
-  "emails": [
-    {
-      "sender": "Branchen-News",
-      "subject": "+++ BRANCHEN-NEWS +++",
-      "body": "Ein großer Konkurrent hat Insolvenz angemeldet! (Fans +10%)",
-      "date_week": 3,
-      "game_name": null,
-      "is_bug": false,
-      "is_read": false
-    }
-  ],
+  "emails": [],
   "has_presswerk": false,
   "storage_capacity": 0,
   "used_storage": 0,

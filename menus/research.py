@@ -67,8 +67,12 @@ class TopicResearchMenu(Menu):
                 return "game_menu"
             else:
                 self.audio.play_sound("error")
-                self.audio.speak(self.game_state.get_text('research_already_active'))
+                reason = self.game_state.get_research_block_reason() or self.game_state.get_text('research_already_active')
+                self.audio.speak(reason)
                 return None
+        else:
+            self.audio.play_sound("error")
+            self.audio.speak(self.game_state.get_text('not_enough_money'))
         return None
 
 class GenreResearchMenu(Menu):
@@ -93,8 +97,12 @@ class GenreResearchMenu(Menu):
                 return "game_menu"
             else:
                 self.audio.play_sound("error")
-                self.audio.speak(self.game_state.get_text('research_already_active'))
+                reason = self.game_state.get_research_block_reason() or self.game_state.get_text('research_already_active')
+                self.audio.speak(reason)
                 return None
+        else:
+            self.audio.play_sound("error")
+            self.audio.speak(self.game_state.get_text('not_enough_money'))
         return None
 
 class AudienceResearchMenu(Menu):
@@ -119,8 +127,12 @@ class AudienceResearchMenu(Menu):
                 return "game_menu"
             else:
                 self.audio.play_sound("error")
-                self.audio.speak(self.game_state.get_text('research_already_active'))
+                reason = self.game_state.get_research_block_reason() or self.game_state.get_text('research_already_active')
+                self.audio.speak(reason)
                 return None
+        else:
+            self.audio.play_sound("error")
+            self.audio.speak(self.game_state.get_text('not_enough_money'))
         return None
 
 class TechnologyResearchMenu(Menu):
@@ -145,8 +157,12 @@ class TechnologyResearchMenu(Menu):
                 return "game_menu"
             else:
                 self.audio.play_sound("error")
-                self.audio.speak(self.game_state.get_text('research_already_active'))
+                reason = self.game_state.get_research_block_reason() or self.game_state.get_text('research_already_active')
+                self.audio.speak(reason)
                 return None
+        else:
+            self.audio.play_sound("error")
+            self.audio.speak(self.game_state.get_text('not_enough_money'))
         return None
 
 class EngineCreateNameMenu(TextInputMenu):
@@ -229,7 +245,7 @@ class ConsoleSpecsMenu(Menu):
             return
         self.options = [
             {'text': f"{self.game_state.get_text('tech_level_label')}: {draft['tech_level']} (+100.000 EUR)", 'action': self._inc_tech},
-            {'text': self.game_state.get_text('start_development_cost', cost=f"{draft['cost']:,}"), 'action': self._start},
+            {'text': self.game_state.get_text('start_development_cost', cost=draft['cost']), 'action': self._start},
             {'text': self.game_state.get_text('back'), 'action': lambda: "hardware_dev_menu"}
         ]
 

@@ -686,7 +686,16 @@ EMPLOYEE_SPECIALIZATIONS = [
     {"name": "Motivationstrainer", "bonus_type": "Moral",   "bonus_value": 10,  "description": "Hält die Moral im Team hoch."},
     {"name": "Bug-Jäger",        "bonus_type": "Bugs",     "bonus_value": 0.5, "description": "Findet und behebt Bugs doppelt so schnell."},
     {"name": "Marketing-Experte", "bonus_type": "Marketing", "bonus_value": 0.3, "description": "Erhöht die Effektivität von Marketing."},
+    {"name": "Action-Experte",    "bonus_type": "Genre", "target": "Action",    "bonus_value": 0.15, "description": "Bonus auf Action-Spiele."},
+    {"name": "RPG-Veteran",       "bonus_type": "Genre", "target": "RPG",       "bonus_value": 0.15, "description": "Bonus auf Rollenspiele."},
+    {"name": "Strategie-Genie",   "bonus_type": "Genre", "target": "Strategie", "bonus_value": 0.15, "description": "Bonus auf Strategiespiele."},
+    {"name": "Simulations-Profi", "bonus_type": "Genre", "target": "Simulation","bonus_value": 0.15, "description": "Bonus auf Simulationen."},
+    {"name": "Sport-Fanatiker",   "bonus_type": "Genre", "target": "Sport",      "bonus_value": 0.15, "description": "Bonus auf Sportspiele."},
+    {"name": "Fantasy-Fan",       "bonus_type": "Topic", "target": "Fantasy",   "bonus_value": 0.1,  "description": "Bonus auf Fantasy-Themen."},
+    {"name": "Sci-Fi-Nerd",       "bonus_type": "Topic", "target": "Sci-Fi",    "bonus_value": 0.1,  "description": "Bonus auf Sci-Fi-Themen."},
+    {"name": "Geschichts-Kenner", "bonus_type": "Topic", "target": "Mittelalter","bonus_value": 0.1,  "description": "Bonus auf historische Themen."},
 ]
+
 
 # ============================================================
 # ENTWICKLUNGSPHASEN
@@ -727,6 +736,71 @@ AAA_DEV_EVENTS = [
         ]
     }
 ]
+
+# ============================================================
+# ALLGEMEINE ENTWICKLUNGS-EVENTS (fuer alle Spielgroessen)
+# Konsequenzen: delay=+Wochen, speed=-Wochen (beschleunigt),
+#               cost=EUR, hype=Hype-Aend., bugs=Bugs, morale=Moral-Aend.
+# ============================================================
+GENERAL_DEV_EVENTS = [
+    {
+        "id": "dev_key_employee_sick",
+        "options": [
+            {"id": "hire_freelancer", "cost": 15000, "delay": 0, "speed": 0, "hype": 0, "bugs": 5, "morale": 0},
+            {"id": "continue_without", "cost": 0, "delay": 3, "speed": 0, "hype": 0, "bugs": 10, "morale": -10}
+        ]
+    },
+    {
+        "id": "dev_tech_breakthrough",
+        "options": [
+            {"id": "implement_now", "cost": 5000, "delay": 2, "speed": 0, "hype": 15, "bugs": 5, "morale": 5},
+            {"id": "save_for_sequel", "cost": 0, "delay": 0, "speed": 0, "hype": 0, "bugs": 0, "morale": 0}
+        ]
+    },
+    {
+        "id": "dev_scope_creep",
+        "options": [
+            {"id": "add_feature", "cost": 8000, "delay": 4, "speed": 0, "hype": 20, "bugs": 15, "morale": -5},
+            {"id": "stay_focused", "cost": 0, "delay": 0, "speed": 0, "hype": -5, "bugs": 0, "morale": 5}
+        ]
+    },
+    {
+        "id": "dev_crunch_offer",
+        "options": [
+            {"id": "accept_crunch", "cost": 0, "delay": 0, "speed": 3, "hype": 0, "bugs": 20, "morale": -25},
+            {"id": "decline_crunch", "cost": 0, "delay": 0, "speed": 0, "hype": 0, "bugs": 0, "morale": 0}
+        ]
+    },
+    {
+        "id": "dev_positive_review",
+        "options": [
+            {"id": "release_demo", "cost": 3000, "delay": 1, "speed": 0, "hype": 30, "bugs": 0, "morale": 10},
+            {"id": "keep_secret", "cost": 0, "delay": 0, "speed": 0, "hype": 5, "bugs": 0, "morale": 0}
+        ]
+    },
+    {
+        "id": "dev_data_loss",
+        "options": [
+            {"id": "restore_backup", "cost": 2000, "delay": 1, "speed": 0, "hype": 0, "bugs": 5, "morale": -10},
+            {"id": "rewrite", "cost": 0, "delay": 5, "speed": 0, "hype": 0, "bugs": 0, "morale": -20}
+        ]
+    },
+    {
+        "id": "dev_viral_moment",
+        "options": [
+            {"id": "embrace_hype", "cost": 5000, "delay": 0, "speed": 0, "hype": 50, "bugs": 0, "morale": 15},
+            {"id": "focus_quality", "cost": 0, "delay": 0, "speed": 0, "hype": 10, "bugs": 0, "morale": 0}
+        ]
+    },
+    {
+        "id": "dev_rival_copy",
+        "options": [
+            {"id": "speed_up", "cost": 10000, "delay": 0, "speed": 2, "hype": 10, "bugs": 10, "morale": -5},
+            {"id": "ignore_rival", "cost": 0, "delay": 0, "speed": 0, "hype": -10, "bugs": 0, "morale": 5}
+        ]
+    },
+]
+
 
 # ============================================================
 # BÜRO-STUFEN
@@ -994,22 +1068,22 @@ TREND_GENRES = [
 # PUBLISHER
 PUBLISHERS = [
     {
-        "name": "Global-Play",
-        "description": "Ein solider Publisher mit gutem Vertrieb.",
+        "name": "publisher_global",
+        "description": "publisher_global_desc",
         "advance": 5000,
         "royalty": 0.40,
         "min_score": 6
     },
     {
-        "name": "Titan-Publishing",
-        "description": "Premium-Partner für AAA-Titel.",
+        "name": "publisher_titan",
+        "description": "publisher_titan_desc",
         "advance": 25000,
         "royalty": 0.60,
         "min_score": 8
     },
     {
-        "name": "Star-Distribute",
-        "description": "Perfekt für Einsteiger, geringe Hürden.",
+        "name": "publisher_star",
+        "description": "publisher_star_desc",
         "advance": 1000,
         "royalty": 0.20,
         "min_score": 4
@@ -1018,10 +1092,10 @@ PUBLISHERS = [
 
 # MARKETING-OPTIONEN PH_5
 MARKETING_OPTIONS_PH5 = [
-    {"name": "Social Media Hype", "cost": 500, "hype": 10, "description": "Günstiger Hype auf X und TikTok."},
-    {"name": "Gaming Web-Ads", "cost": 2500, "hype": 25, "description": "Banner auf großen Audio-Seiten."},
-    {"name": "TV & Cinema Spots", "cost": 15000, "hype": 70, "description": "Massive Präsenz, sehr teuer."},
-    {"name": "Global PR Tour", "cost": 50000, "hype": 150, "description": "Die ultimative Werbekampagne."},
+    {"name": "marketing_social", "cost": 500, "hype": 10, "description": "marketing_social_desc"},
+    {"name": "marketing_web", "cost": 2500, "hype": 25, "description": "marketing_web_desc"},
+    {"name": "marketing_tv", "cost": 15000, "hype": 70, "description": "marketing_tv_desc"},
+    {"name": "marketing_pr", "cost": 50000, "hype": 150, "description": "marketing_pr_desc"},
 ]
 
 # ============================================================
@@ -1029,103 +1103,103 @@ MARKETING_OPTIONS_PH5 = [
 # effect: money | fans | market_boom | market_crash | hype
 # ============================================================
 HISTORICAL_YEAR_EVENTS = {
-    1930: {"text": "Weltwirtschaftskrise. -20% Profit. Fokus auf Billig-Logik.", "effect": "money", "value": -10000},
-    1931: {"text": "Erster 'Logic-Contest'. Forschungspunkte-Bonus (+25 RP).", "effect": "hype", "value": 20},
-    1932: {"text": "Olympia Los Angeles. Thema 'Sport' wird Trend.", "effect": "fans", "value": 5000},
-    1933: {"text": "Ende der Prohibition. Bars brauchen Unterhaltung (+20% Sales).", "effect": "money", "value": 10000},
-    1934: {"text": "Erfindung des Radars. Technik-Hype für Detektiv-Themen.", "effect": "hype", "value": 20},
-    1935: {"text": "Monopoly Veröffentlichung. Thema 'Brettspiel' ist Gigantisch.", "effect": "fans", "value": 5000},
-    1936: {"text": "Jesse Owens Erfolg. Thema 'Leichtathletik' erhält Boost.", "effect": "hype", "value": 20},
-    1937: {"text": "Luftschiff-Unglück. Thema 'Luftfahrt' verliert Hype (-50%).", "effect": "hype", "value": 20},
-    1938: {"text": "Mars-Hörspiel Panik. Thema 'Aliens' wird zum Dauerbrenner.", "effect": "hype", "value": 20},
-    1939: {"text": "Ausbruch 2. Weltkrieg. Steuern +10%, Recruiting verlangsamt.", "effect": "hype", "value": 20},
-    1940: {"text": "Enigma-Entschlüsselung. Forschung 'Logik' wird 30% effektiver.", "effect": "hype", "value": 20},
-    1941: {"text": "Pearl Harbor. Thema 'Pazifik-Krieg' wird Trend.", "effect": "fans", "value": 5000},
-    1942: {"text": "Zuse Z3 Demonstration. Thema 'Mathematik' erhält +200% Hype.", "effect": "hype", "value": 20},
-    1943: {"text": "Casablanca Film-Hype. Thema 'Agenten/Liebe' wird Trend.", "effect": "fans", "value": 5000},
-    1944: {"text": "D-Day. Thema 'Militär' erreicht Allzeithoch.", "effect": "hype", "value": 20},
-    1945: {"text": "Kriegsende. Friedens-Feiern (+100% Sales).", "effect": "money", "value": 10000},
-    1946: {"text": "Erster Linienflug. Thema 'Pioniere' wird Trend.", "effect": "fans", "value": 5000},
-    1947: {"text": "Roswell-UFO. Thema 'UFO' bringt 5 Jahre Hype.", "effect": "hype", "value": 20},
-    1948: {"text": "Marshall-Plan. Firmen-Zuschuss (Einmalig 1.000$).", "effect": "money", "value": -10000},
-    1949: {"text": "Erfindung der LP-Platte. Sound-Forschung wird freigeschaltet.", "effect": "hype", "value": 20},
-    1950: {"text": "Koreakrieg. Thema 'Militär' bleibt stark.", "effect": "hype", "value": 20},
-    1951: {"text": "Erste Computer 'UNIVAC'. Großrechner-Wahn (+50% Prestige).", "effect": "hype", "value": 20},
-    1952: {"text": "Erstes Video-Game (OXO). Geburtsstunde digitaler Unterhaltung.", "effect": "hype", "value": 20},
-    1953: {"text": "DNA-Entdeckung. Thema 'Wissenschaft' wird Trend.", "effect": "fans", "value": 5000},
-    1954: {"text": "Wunder von Bern. Thema 'Fussball' ist Pflicht für Erfolg.", "effect": "hype", "value": 20},
-    1955: {"text": "Disneyland. Thema 'Themenpark' boomt.", "effect": "hype", "value": 20},
-    1956: {"text": "Elvis Presley Durchbruch. Thema 'Musik/Rock' ist Trend.", "effect": "fans", "value": 5000},
-    1957: {"text": "Sputnik 1. Weltraum-Trend (500% Hype).", "effect": "fans", "value": 5000},
-    1958: {"text": "Tennis for Two. Sport-Genre wird moderner.", "effect": "hype", "value": 20},
-    1959: {"text": "Barbie-Puppe. Thema 'Mode/Puppen' wird Trend.", "effect": "fans", "value": 5000},
-    1960: {"text": "Pille-Einführung. Thema 'Freiheit' wird Trend.", "effect": "fans", "value": 5000},
-    1961: {"text": "Berliner Mauerbau. Exportkosten nach Osten steigen um 50%.", "effect": "hype", "value": 20},
-    1962: {"text": "Spacewar! Release. Action-Genre wird erfunden.", "effect": "hype", "value": 20},
-    1963: {"text": "Kennedy Attentat. Weltweite Trauer: Sales -30%.", "effect": "money", "value": -10000},
-    1964: {"text": "Beatles in USA. Thema 'Band' erhält massiven Bonus.", "effect": "hype", "value": 20},
-    1965: {"text": "Vietnam-Eskalation. Thema 'Chaos/Protest' wird Trend.", "effect": "fans", "value": 5000},
-    1966: {"text": "Star Trek. Sci-Fi RPGs werden möglich.", "effect": "hype", "value": 20},
-    1967: {"text": "Summer of Love. Thema 'Hippie' wird Trend.", "effect": "fans", "value": 5000},
-    1968: {"text": "Mai-Unruhen. Personal verlangt mehr Lohn (+15%).", "effect": "hype", "value": 20},
-    1969: {"text": "Apollo 11. Maximaler Hype für Technik-Menschheit.", "effect": "hype", "value": 20},
-    1970: {"text": "Earth Day Start. Thema 'Natur' wird Trend.", "effect": "fans", "value": 5000},
-    1971: {"text": "Oregon Trail. Thema 'Pioniere/Lernen' wird Trend.", "effect": "fans", "value": 5000},
-    1972: {"text": "Pong Release. Die Industrie explodiert (+200% Markt).", "effect": "fans", "value": 5000},
-    1973: {"text": "Ölkrise. Stromkosten im Studio +50%.", "effect": "hype", "value": 20},
-    1974: {"text": "D&D Veröffentlichung. RPG-Genre wird massentauglich.", "effect": "hype", "value": 20},
-    1975: {"text": "Bill Gates gründet MS. Rivalen-KI wird intelligenter.", "effect": "hype", "value": 20},
-    1976: {"text": "Apple I Release. Heimcomputer-Markt öffnet sich.", "effect": "fans", "value": -5000},
-    1977: {"text": "Star Wars. Thema 'Weltraum-Krieg' ist Gigantisch.", "effect": "fans", "value": 5000},
-    1978: {"text": "Space Invaders. Action-Genre dominiert den Markt.", "effect": "fans", "value": -5000},
-    1979: {"text": "Sony Walkman. Sound-Marketing wird verfügbar.", "effect": "hype", "value": 20},
-    1980: {"text": "Pac-Man Fieber. Geschicklichkeits-Genre ist Trend.", "effect": "fans", "value": 5000},
-    1981: {"text": "IBM PC Veröffentlichung. Standardisierung der Büro-Technik.", "effect": "hype", "value": 20},
-    1982: {"text": "Marktüberschwemmung. **Crash:** Nur Top-Spiele verkaufen sich.", "effect": "hype", "value": 20},
-    1983: {"text": "Dragon's Lair (LD). Grafik-Anforderungen steigen massiv.", "effect": "hype", "value": 20},
-    1984: {"text": "Tetris Erfindung. Puzzle-Genre erhält +300% Hype.", "effect": "hype", "value": 20},
-    1985: {"text": "Super Mario Bros. Platformer wird zum Weltstandard.", "effect": "hype", "value": 20},
-    1986: {"text": "Zelda Release. Umfang-Anforderungen steigen (Speichern).", "effect": "hype", "value": 20},
-    1987: {"text": "Final Fantasy. RPG-Storytelling wird wichtiger.", "effect": "hype", "value": 20},
-    1988: {"text": "Mega Drive Launch. 16-Bit Grafik wird Erwartungs-Standard.", "effect": "hype", "value": 20},
-    1989: {"text": "Gameboy Release. Der Handheld-Markt explodiert.", "effect": "fans", "value": -5000},
-    1990: {"text": "Mauerfall (BRD). Neuer Markt 'Ostdeutschland' (+15% Sales).", "effect": "money", "value": 10000},
-    1991: {"text": "Street Fighter II. Fighting-Genre wird Trend.", "effect": "fans", "value": 5000},
-    1992: {"text": "Wolfenstein 3D. Ego-Shooter Genre wird erfunden.", "effect": "hype", "value": 20},
-    1993: {"text": "Doom Release. Gewalt-Debatte: Zensur-Risiko steigt.", "effect": "hype", "value": 20},
-    1994: {"text": "PlayStation Launch. CD-ROM wird zum Pflicht-Medium.", "effect": "hype", "value": 20},
-    1995: {"text": "Windows 95. PC-Markt wird Einsteigerfreundlich.", "effect": "fans", "value": -5000},
-    1996: {"text": "Pokémon Boom. Thema 'Monster' ist unschlagbar.", "effect": "hype", "value": 20},
-    1997: {"text": "Ultima Online. MMO-Zeitalter beginnt (Serverkosten!).", "effect": "hype", "value": 20},
-    1998: {"text": "Metal Gear Solid. Stealth-Action wird Trend.", "effect": "fans", "value": 5000},
-    1999: {"text": "Matrix Film. Thema 'Simulation/Neo' ist Trend.", "effect": "fans", "value": 5000},
-    2000: {"text": "PS2 Launch. DVD-Standard setzt sich durch.", "effect": "hype", "value": 20},
-    2001: {"text": "9/11 Terror. Markt ist sensibel für Gewalt (-20%).", "effect": "fans", "value": -5000},
-    2002: {"text": "Xbox Live Start. Online-Multiplayer wird Standard.", "effect": "hype", "value": 20},
-    2003: {"text": "Steam Launch. Digitaler Verkauf öffnet seine Tore.", "effect": "hype", "value": 20},
-    2004: {"text": "World of Warcraft. Abomodelle bringen Millionen Dollar.", "effect": "hype", "value": 20},
-    2005: {"text": "YouTube Gründung. Das Ende der Print-Magazine naht.", "effect": "hype", "value": 20},
-    2006: {"text": "Wii Console. Fuchtel-Steuerung wird Megatrend.", "effect": "hype", "value": 20},
-    2007: {"text": "iPhone Release. Casual-Gaming vernichtet Core-Markt.", "effect": "fans", "value": -5000},
-    2008: {"text": "Finanzkrise. Bank-Zinsen +20%.", "effect": "money", "value": 10000},
-    2009: {"text": "Minecraft Alpha. Sandbox/Voxel wird zum Genre-König.", "effect": "hype", "value": 20},
-    2010: {"text": "iPad Release. Touch-Gaming wird massiv.", "effect": "hype", "value": 20},
-    2011: {"text": "Twitch Launch. Streamer entscheiden über Erfolg/Misserfolg.", "effect": "hype", "value": 20},
-    2012: {"text": "Crowdfunding-Boom. Du kannst Projekte vorfinanzieren lassen.", "effect": "hype", "value": 20},
-    2013: {"text": "GTA V Release. Open-World Standards sind extrem hoch.", "effect": "hype", "value": 20},
-    2014: {"text": "VR-Fieber (Oculus). Thema 'VR' bringt Prestige.", "effect": "hype", "value": 20},
-    2015: {"text": "Witcher 3 Release. Story-Telling muss Weltklasse sein.", "effect": "hype", "value": 20},
-    2016: {"text": "Switch Ankündigung. Hybrid-Gaming wird Thema.", "effect": "hype", "value": 20},
-    2017: {"text": "Battle Royale Boom. Jeder will 100-Spieler-Modus.", "effect": "hype", "value": 20},
-    2018: {"text": "Raytracing-GPU. Grafik-Wertungen über 90 fordern RT.", "effect": "hype", "value": 20},
-    2019: {"text": "Game Pass Start. Neue Monetarisierung: Pauschale.", "effect": "hype", "value": 20},
-    2020: {"text": "Pandemie / Lockdown. Alle Sales +150%. Home-Office möglich.", "effect": "money", "value": 10000},
-    2021: {"text": "Krypto-Crash. In-Game Krypto-Gewinne wertlos.", "effect": "hype", "value": 20},
-    2022: {"text": "Elden Ring Boom. Schwierige Spiele werden zum Trend.", "effect": "fans", "value": 5000},
-    2023: {"text": "KI-Explosion. Programmierung 50% schneller (KI-Tool).", "effect": "hype", "value": 20},
-    2024: {"text": "Erste Mars-Mission. Thema 'Mars' ist Trend bis Ende Spiel.", "effect": "fans", "value": 5000},
-    2025: {"text": "Cyber-Brain Launch. Neue Plattform 'Neural' verfügbar.", "effect": "hype", "value": 20},
-    2026: {"text": "Neural-Sync Standard. Das Spiel endet hier - oder geht ewig weiter.", "effect": "hype", "value": 20},
+    1930: {"text": "event_1930", "effect": "money", "value": -10000},
+    1931: {"text": "event_1931", "effect": "hype", "value": 20},
+    1932: {"text": "event_1932", "effect": "fans", "value": 5000},
+    1933: {"text": "event_1933", "effect": "money", "value": 10000},
+    1934: {"text": "event_1934", "effect": "hype", "value": 20},
+    1935: {"text": "event_1935", "effect": "fans", "value": 5000},
+    1936: {"text": "event_1936", "effect": "hype", "value": 20},
+    1937: {"text": "event_1937", "effect": "hype", "value": 20},
+    1938: {"text": "event_1938", "effect": "hype", "value": 20},
+    1939: {"text": "event_1939", "effect": "hype", "value": 20},
+    1940: {"text": "event_1940", "effect": "hype", "value": 20},
+    1941: {"text": "event_1941", "effect": "fans", "value": 5000},
+    1942: {"text": "event_1942", "effect": "hype", "value": 20},
+    1943: {"text": "event_1943", "effect": "fans", "value": 5000},
+    1944: {"text": "event_1944", "effect": "hype", "value": 20},
+    1945: {"text": "event_1945", "effect": "money", "value": 10000},
+    1946: {"text": "event_1946", "effect": "fans", "value": 5000},
+    1947: {"text": "event_1947", "effect": "hype", "value": 20},
+    1948: {"text": "event_1948", "effect": "money", "value": -10000},
+    1949: {"text": "event_1949", "effect": "hype", "value": 20},
+    1950: {"text": "event_1950", "effect": "hype", "value": 20},
+    1951: {"text": "event_1951", "effect": "hype", "value": 20},
+    1952: {"text": "event_1952", "effect": "hype", "value": 20},
+    1953: {"text": "event_1953", "effect": "fans", "value": 5000},
+    1954: {"text": "event_1954", "effect": "hype", "value": 20},
+    1955: {"text": "event_1955", "effect": "hype", "value": 20},
+    1956: {"text": "event_1956", "effect": "fans", "value": 5000},
+    1957: {"text": "event_1957", "effect": "fans", "value": 5000},
+    1958: {"text": "event_1958", "effect": "hype", "value": 20},
+    1959: {"text": "event_1959", "effect": "fans", "value": 5000},
+    1960: {"text": "event_1960", "effect": "fans", "value": 5000},
+    1961: {"text": "event_1961", "effect": "hype", "value": 20},
+    1962: {"text": "event_1962", "effect": "hype", "value": 20},
+    1963: {"text": "event_1963", "effect": "money", "value": -10000},
+    1964: {"text": "event_1964", "effect": "hype", "value": 20},
+    1965: {"text": "event_1965", "effect": "fans", "value": 5000},
+    1966: {"text": "event_1966", "effect": "hype", "value": 20},
+    1967: {"text": "event_1967", "effect": "fans", "value": 5000},
+    1968: {"text": "event_1968", "effect": "hype", "value": 20},
+    1969: {"text": "event_1969", "effect": "hype", "value": 20},
+    1970: {"text": "event_1970", "effect": "fans", "value": 5000},
+    1971: {"text": "event_1971", "effect": "fans", "value": 5000},
+    1972: {"text": "event_1972", "effect": "fans", "value": 5000},
+    1973: {"text": "event_1973", "effect": "hype", "value": 20},
+    1974: {"text": "event_1974", "effect": "hype", "value": 20},
+    1975: {"text": "event_1975", "effect": "hype", "value": 20},
+    1976: {"text": "event_1976", "effect": "fans", "value": -5000},
+    1977: {"text": "event_1977", "effect": "fans", "value": 5000},
+    1978: {"text": "event_1978", "effect": "fans", "value": -5000},
+    1979: {"text": "event_1979", "effect": "hype", "value": 20},
+    1980: {"text": "event_1980", "effect": "fans", "value": 5000},
+    1981: {"text": "event_1981", "effect": "hype", "value": 20},
+    1982: {"text": "event_1982", "effect": "hype", "value": 20},
+    1983: {"text": "event_1983", "effect": "hype", "value": 20},
+    1984: {"text": "event_1984", "effect": "hype", "value": 20},
+    1985: {"text": "event_1985", "effect": "hype", "value": 20},
+    1986: {"text": "event_1986", "effect": "hype", "value": 20},
+    1987: {"text": "event_1987", "effect": "hype", "value": 20},
+    1988: {"text": "event_1987", "effect": "hype", "value": 20},
+    1989: {"text": "event_1989", "effect": "fans", "value": -5000},
+    1990: {"text": "event_1990", "effect": "money", "value": 10000},
+    1991: {"text": "event_1991", "effect": "fans", "value": 5000},
+    1992: {"text": "event_1992", "effect": "hype", "value": 20},
+    1993: {"text": "event_1993", "effect": "hype", "value": 20},
+    1994: {"text": "event_1994", "effect": "hype", "value": 20},
+    1995: {"text": "event_1995", "effect": "fans", "value": -5000},
+    1996: {"text": "event_1996", "effect": "hype", "value": 20},
+    1997: {"text": "event_1997", "effect": "hype", "value": 20},
+    1998: {"text": "event_1998", "effect": "fans", "value": 5000},
+    1999: {"text": "event_1999", "effect": "fans", "value": 5000},
+    2000: {"text": "event_2000", "effect": "hype", "value": 20},
+    2001: {"text": "event_2001", "effect": "fans", "value": -5000},
+    2002: {"text": "event_2002", "effect": "hype", "value": 20},
+    2003: {"text": "event_2003", "effect": "hype", "value": 20},
+    2004: {"text": "event_2004", "effect": "hype", "value": 20},
+    2005: {"text": "event_2005", "effect": "hype", "value": 20},
+    2006: {"text": "event_2006", "effect": "hype", "value": 20},
+    2007: {"text": "event_2007", "effect": "fans", "value": -5000},
+    2008: {"text": "event_2008", "effect": "money", "value": 10000},
+    2009: {"text": "event_2009", "effect": "hype", "value": 20},
+    2010: {"text": "event_2010", "effect": "hype", "value": 20},
+    2011: {"text": "event_2011", "effect": "hype", "value": 20},
+    2012: {"text": "event_2012", "effect": "hype", "value": 20},
+    2013: {"text": "event_2013", "effect": "hype", "value": 20},
+    2014: {"text": "event_2014", "effect": "hype", "value": 20},
+    2015: {"text": "event_2015", "effect": "hype", "value": 20},
+    2016: {"text": "event_2016", "effect": "hype", "value": 20},
+    2017: {"text": "event_2017", "effect": "hype", "value": 20},
+    2018: {"text": "event_2018", "effect": "hype", "value": 20},
+    2019: {"text": "event_2019", "effect": "hype", "value": 20},
+    2020: {"text": "event_2020", "effect": "money", "value": 10000},
+    2021: {"text": "event_2021", "effect": "hype", "value": 20},
+    2022: {"text": "event_2022", "effect": "fans", "value": 5000},
+    2023: {"text": "event_2023", "effect": "hype", "value": 20},
+    2024: {"text": "event_2024", "effect": "fans", "value": 5000},
+    2025: {"text": "event_2025", "effect": "hype", "value": 20},
+    2026: {"text": "event_2026", "effect": "hype", "value": 20},
 }
 
 
@@ -1140,12 +1214,12 @@ def get_year_event(calendar_year):
 # ============================================================
 MAIL_TEMPLATES = {
     "bug_report": {
-        "subject": "Beschwerde zu {game}",
-        "body": "Hallo! Ich habe '{game}' gespielt, aber es stürzt ständig ab. Bitte behebt die Fehler!",
+        "subject": "subject_bug_report",
+        "body": "body_bug_report",
     },
     "fan_praise": {
-        "subject": "Ich liebe {game}!",
-        "body": "Hey! '{game}' ist fantastisch. Besonders das Thema {topic} gefällt mir sehr gut. Weiter so!",
+        "subject": "subject_fan_praise",
+        "body": "body_fan_praise",
     }
 }
 

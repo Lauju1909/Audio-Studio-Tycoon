@@ -59,6 +59,7 @@ class GameProject:
         self.sequel_number = 0  # 0 = Original, 2 = Sequel, 3 = Teil 3 etc.
         self.sub_genre = None
         self.license_bonus = 0.0  # NEU: Phase B Lizenzen
+        self.assigned_employee_ids = []  # NEU: Team-Zuweisung
 
         # NEU: Phase C - Produktion & Retail
         self.physical_copies = 0
@@ -111,6 +112,7 @@ class GameProject:
             "physical_copies": getattr(self, "physical_copies", 0),
             "physical_price": getattr(self, "physical_price", 45),
             "lifetime_physical_sales": getattr(self, "lifetime_physical_sales", 0),
+            "assigned_employee_ids": getattr(self, "assigned_employee_ids", []),
         }
 
 class AddonProject:
@@ -294,6 +296,7 @@ class Employee:
         self.weeks_employed = 0
         self.last_raise_week = 0   # Wann gab es das letzte Mal eine Gehaltserhöhung?
         self.pending_raise_request = False # Laufende Gehaltsverhandlung
+        self.is_ceo = False        # Chef-Flag
 
         # NEU: Phase 2 - Fortbildungen & Krankheit
         self.is_training = False        # Gesperrt durch Fortbildung
@@ -336,6 +339,17 @@ class Employee:
             penalty = 1.0 - ((40 - self.morale) / 40.0) * 0.5
             base_contrib *= penalty
         return base_contrib
+
+    @property
+    def speed(self):
+        """Wöchentlicher Fortschritt-Beitrag (basierend auf Programmierung)."""
+        return self.skills.get("Programmierung", 50)
+
+    @property
+    def bug_modifier(self):
+        """Einfluss auf die Bug-Rate (basierend auf Design)."""
+        # Höheres Design = weniger Bugs
+        return max(0.5, 1.5 - (self.skills.get("Design", 50) / 50.0))
 
     def get_slider_bonus(self, slider_name):
         """Bonus für einen bestimmten Slider (0.0 - 1.0). Sinkt bei schlechter Moral."""
@@ -383,6 +397,7 @@ class Employee:
             "weeks_employed": self.weeks_employed,
             "last_raise_week": getattr(self, "last_raise_week", 0),
             "pending_raise_request": getattr(self, "pending_raise_request", False),
+            "is_ceo": getattr(self, "is_ceo", False),
             # NEU: Phase 2
             "is_training": getattr(self, "is_training", False),
             "training_weeks_left": getattr(self, "training_weeks_left", 0),

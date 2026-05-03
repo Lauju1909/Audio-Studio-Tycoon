@@ -9,6 +9,7 @@ Steuerung: Pfeiltasten + Enter + Buchstaben für Texteingabe.
 import pygame
 import time
 import os
+import ctypes
 from audio import AudioManager
 from logic import GameState
 from translations import get_text, set_language
@@ -34,7 +35,8 @@ from menus import (
     ESportsMenu, AcquisitionMenu, StockRivalDetailMenu,
     SaveMenu, LoadMenu, HelpMenu, GOTYMenu, AAADevEventMenu, CreditsMenu,
     BuildMenu, TeambuildingMenu, ModPortalMenu, ModBrowserListMenu,
-    MultiplayerMainMenu, MultiplayerRoomIdInput, MultiplayerLobbyMenu
+    MultiplayerMainMenu, MultiplayerRoomIdInput, MultiplayerLobbyMenu,
+    ProjectTeamSelectMenu, DeveloperMenu
 )
 
 def get_menu_factories(audio, state):
@@ -50,6 +52,7 @@ def get_menu_factories(audio, state):
         "audience_menu": lambda: AudienceMenu(audio, state),
         "game_size_menu": lambda: GameSizeMenu(audio, state),
         "marketing_menu": lambda: MarketingMenu(audio, state),
+        "team_select_menu": lambda: ProjectTeamSelectMenu(audio, state),
         "engine_select_menu": lambda: EngineSelectMenu(audio, state),
         "remaster_select": lambda: RemasterSelectMenu(audio, state),
         "publisher_menu": lambda: PublisherMenu(audio, state),
@@ -128,15 +131,44 @@ def get_menu_factories(audio, state):
         "multiplayer_create_id_input": lambda: MultiplayerRoomIdInput(audio, state), # Reuse for now
         "multiplayer_lobby": lambda: MultiplayerLobbyMenu(audio, state),
         "active_games_menu": lambda: ActiveGamesMenu(audio, state),
+        "developer_menu": lambda: DeveloperMenu(audio, state),
     }
 
 def main():
     """Hauptspielschleife."""
     os.environ['SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS'] = '0'
+    
+    # --- AUDIO PRE-INIT (WICHTIG VOR PYGAME.INIT) ---
+    try:
+        pygame.mixer.pre_init(44100, -16, 2, 512)
+    except Exception:
+        pass
+
     pygame.init()
     pygame.key.set_repeat(300, 50)
-    screen = pygame.display.set_mode((800, 600))
-    pygame.display.set_caption("Audio Studio Tycoon - v3.2.0-beta.2")
+    # Nutze HWSURFACE, DOUBLEBUF und SCALED für maximale GPU-Beschleunigung und CPU-Effizienz
+    screen = pygame.display.set_mode((800, 600), pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.SCALED | pygame.RESIZABLE)
+    pygame.display.set_caption("Audio Studio Tycoon v3.3.2-beta1 - Multi-Project Beta")
+
+    # --- PERFORMANCE & WOW CACHE ---
+    # Fonts einmalig laden (Extrem CPU-schonend)
+    fonts = {
+        'title': pygame.font.SysFont("Arial", 32, bold=True),
+        'opt': pygame.font.SysFont("Arial", 24),
+        'ticker': pygame.font.SysFont("Arial", 18, bold=True),
+        'footer': pygame.font.SysFont("Arial", 16)
+    }
+
+    # Hintergrund-Gradient vorrendern (Spart 600 Draw-Calls pro Frame!)
+    bg_surface = pygame.Surface((800, 600))
+    for i in range(600):
+        color = (15 + i//40, 23 + i//50, 42 + i//30)
+        pygame.draw.line(bg_surface, color, (0, i), (800, i))
+    
+    # Glassmorphism Box vorrendern (GPU-friendly)
+    menu_box = pygame.Surface((600, 400), pygame.SRCALPHA)
+    pygame.draw.rect(menu_box, (30, 41, 59, 180), (0, 0, 600, 400), border_radius=20)
+    pygame.draw.rect(menu_box, (51, 65, 85), (0, 0, 600, 400), 2, border_radius=20)
 
     audio = AudioManager()
     state = GameState()
@@ -210,13 +242,51 @@ def main():
                         state.time_speed = getattr(state, "last_speed", 1.0)
                         audio.speak(state.get_speed_text())
                 
-                result = current_menu.handle_input(event)
-                if result == "quit":
-                    running = False
-                elif result and result in menu_factories:
+                # --- NEUE GLOBALE HOTKEYS ---
+                elif event.key == pygame.K_f:
+                    # Finanzen abfragen
+                    audio.speak(state.get_financial_summary())
+                elif event.key == pygame.K_d and (pygame.key.get_mods() & pygame.KMOD_CTRL) and (pygame.key.get_mods() & pygame.KMOD_SHIFT):
+                    # Entwickler-Modus aktivieren/deaktivieren
+                    state.developer_mode = not state.developer_mode
+                    if state.developer_mode:
+                        audio.speak("Entwickler-Modus aktiviert. Drücke D im Hauptmenü oder Ingame-Menü für Optionen.")
+                    else:
+                        audio.speak("Entwickler-Modus deaktiviert.")
+                elif event.key == pygame.K_d and state.developer_mode:
+                    # Direkter Sprung ins Dev-Menü
+                    result = "developer_menu"
                     current_key = result
                     current_menu = menu_factories[current_key]()
                     current_menu.announce_entry()
+                    continue
+                
+                try:
+                    result = current_menu.handle_input(event)
+                    if result:
+                        if result in menu_factories:
+                            current_key = result
+                            current_menu = menu_factories[current_key]()
+                            current_menu.announce_entry()
+                        elif result == "quit":
+                            running = False
+                except Exception as e:
+                    import traceback
+                    err_msg = traceback.format_exc()
+                    with open("crash_log.txt", "a", encoding="utf-8") as f:
+                        f.write(f"\n--- CRASH AT {time.strftime('%Y-%m-%d %H:%M:%S')} ---\n")
+                        f.write(f"Menu: {current_key}\n")
+                        f.write(err_msg)
+                        f.write("-" * 40 + "\n")
+                    
+                    # Visuelle Fehlermeldung für den User
+                    ctypes.windll.user32.MessageBoxW(0, f"Ein Fehler ist aufgetreten:\n\n{str(e)}\n\nDetails wurden in crash_log.txt gespeichert.", "Audio Studio Tycoon - Fehler", 0x10)
+                    
+                    # Versuche zurück zum Hauptmenü zu gehen statt abzustürzen
+                    current_key = "main_menu"
+                    current_menu = menu_factories[current_key]()
+                    current_menu.announce_entry()
+                    audio.speak("Ein interner Fehler ist aufgetreten. Rückkehr zum Hauptmenü.")
 
                 # Automatischer Wechsel zum Ergebnis wenn Entwicklung im Hintergrund fertig ist
                 if state.is_developing and getattr(state, "dev_ready_to_finish", False) and current_key != "dev_progress_menu":
@@ -225,56 +295,65 @@ def main():
                         current_menu = menu_factories[current_key]()
                         current_menu.announce_entry()
 
-        # --- VISUAL RENDERING (WOW-FAKTOR) ---
-        screen.fill((15, 23, 42)) # Slate 900
-        
-        # Hintergrund-Gradient Simulation
-        for i in range(600):
-            color = (15 + i//40, 23 + i//50, 42 + i//30)
-            pygame.draw.line(screen, color, (0, i), (800, i))
+                # Automatischer Wechsel bei ausgelöstem Entwicklungs-Event (alle Groessen)
+                if getattr(state, "pending_dev_event", None) and current_key != "aaa_dev_event_menu":
+                    current_key = "aaa_dev_event_menu"
+                    current_menu = menu_factories[current_key]()
+                    current_menu.announce_entry()
 
-        # Menü-Box (Glassmorphism)
-        menu_rect = pygame.Rect(100, 100, 600, 400)
-        pygame.draw.rect(screen, (30, 41, 59, 180), menu_rect, border_radius=20) # Slate 800
-        pygame.draw.rect(screen, (51, 65, 85), menu_rect, 2, border_radius=20) # Border
+                # GOTY-Ergebnis anzeigen
+                if getattr(state, "pending_goty_results", None) and current_key not in ("goty_menu", "dev_progress_menu", "aaa_dev_event_menu"):
+                    current_key = "goty_menu"
+                    current_menu = menu_factories[current_key]()
+                    current_menu.announce_entry()
+
+        # --- VISUAL RENDERING (OPTIMIERT) ---
+        screen.blit(bg_surface, (0, 0))
+        
+        # Menü-Box (Blitten statt Zeichnen)
+        screen.blit(menu_box, (100, 100))
 
         # Title
-        font = pygame.font.SysFont("Arial", 32, bold=True)
-        title_surf = font.render(current_menu.title, True, (0, 242, 254))
+        title_surf = fonts['title'].render(current_menu.title, True, (0, 242, 254))
         screen.blit(title_surf, (150, 130))
 
         # Options
-        font_opt = pygame.font.SysFont("Arial", 24)
         if hasattr(current_menu, 'options'):
             for i, opt in enumerate(current_menu.options):
                 color = (255, 255, 255) if i == current_menu.current_index else (148, 163, 184)
                 if i == current_menu.current_index:
-                    # Cursor Highlight
-                    pygame.draw.rect(screen, (0, 242, 254, 50), (140, 180 + i*40, 520, 35), border_radius=5)
+                    # Cursor Highlight (pulsierend für WOW-Effekt)
+                    p_alpha = int(40 + 20 * abs(pygame.time.get_ticks() % 1000 - 500) / 500)
+                    h_rect = pygame.Surface((520, 35), pygame.SRCALPHA)
+                    pygame.draw.rect(h_rect, (0, 242, 254, p_alpha), (0, 0, 520, 35), border_radius=5)
+                    screen.blit(h_rect, (140, 180 + i*40))
                 
-                opt_surf = font_opt.render(opt['text'], True, color)
+                opt_surf = fonts['opt'].render(opt['text'], True, color)
                 screen.blit(opt_surf, (150, 185 + i*40))
 
         # Multi-Tasking Ticker (oben rechts)
         if state.is_developing:
             prog = int((state.dev_progress / max(1, state.dev_total_weeks)) * 100)
             prog = min(100, prog)
-            ticker_font = pygame.font.SysFont("Arial", 18, bold=True)
             ticker_text = f"DEV: {state.current_draft.get('name', '???')} - {prog}%"
             # Pulsierender Effekt
             alpha = int(155 + 100 * abs(pygame.time.get_ticks() % 1000 - 500) / 500)
-            pygame.draw.rect(screen, (0, 242, 254, alpha // 4), (550, 20, 230, 40), border_radius=10)
-            t_surf = ticker_font.render(ticker_text, True, (0, 242, 254))
+            t_box = pygame.Surface((230, 40), pygame.SRCALPHA)
+            pygame.draw.rect(t_box, (0, 242, 254, alpha // 4), (0, 0, 230, 40), border_radius=10)
+            screen.blit(t_box, (550, 20))
+            t_surf = fonts['ticker'].render(ticker_text, True, (0, 242, 254))
             screen.blit(t_surf, (570, 30))
 
-        # Footer Info
-        footer_font = pygame.font.SysFont("Arial", 16)
-        money_txt = f"{get_text('money_label')}: {state.money:,} EUR | KW {state.week}"
-        f_surf = footer_font.render(money_txt, True, (255, 255, 255))
+        # Footer Info - jetzt mit Monat und Jahr
+        cal_text = state.get_calendar_text() if state.company_name else ""
+        money_txt = f"{get_text('money_label')}: {state.money:,} EUR"
+        if cal_text:
+            money_txt += f" | {cal_text}"
+        f_surf = fonts['footer'].render(money_txt, True, (255, 255, 255))
         screen.blit(f_surf, (110, 510))
 
         pygame.display.flip()
-        clock.tick(30)
+        clock.tick(60)
 
     audio.cleanup()
     pygame.quit()

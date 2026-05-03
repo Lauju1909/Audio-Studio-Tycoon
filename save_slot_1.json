@@ -1,12 +1,12 @@
 {
   "company_name": "",
-  "money": 998178643,
+  "money": 1000034543,
   "fans": 0,
   "week": 6,
   "high_score": 0.0,
   "games_made": 0,
   "total_revenue": 0,
-  "office_level": 1,
+  "office_level": 0,
   "last_event_week": 0,
   "last_trend_week": 0,
   "current_trend": {},
@@ -25,29 +25,29 @@
   "active_mmos": [],
   "employees": [
     {
-      "name": "Profi 73",
+      "name": "Christian Weber",
       "role": "Grafik-Designer",
       "primary_skill": "Grafik",
       "secondary_skill": "Welt",
-      "skill_level": 1373,
+      "skill_level": 1,
       "specialization": null,
       "trait": {
-        "name": "Bescheiden",
-        "effect": "salary",
-        "value": 0.8,
-        "description": "Begnügt sich mit 20% weniger Gehalt."
+        "name": "Teamplayer",
+        "effect": "morale_loss",
+        "value": 0.5,
+        "description": "Verliert nur halb so schnell Moral."
       },
       "skills": {
-        "Gameplay": 13726,
-        "Grafik": 100,
-        "Sound": 13736,
-        "Story": 13735,
-        "KI": 13730,
-        "Welt": 100
+        "Gameplay": 20,
+        "Grafik": 45,
+        "Sound": 9,
+        "Story": 6,
+        "KI": 16,
+        "Welt": 25
       },
-      "salary": 220908,
+      "salary": 1105,
       "morale": 100,
-      "weeks_employed": 5,
+      "weeks_employed": 2,
       "last_raise_week": 0,
       "pending_raise_request": false,
       "is_training": false,
@@ -87,60 +87,22 @@
   "bought_platforms": [
     "PC (MS-DOS)"
   ],
-  "active_platforms": [
-    "Hand-Abakus"
-  ],
-  "rivals": [
-    {
-      "name": "MicroHard",
-      "target_market_share": 30,
-      "games": [],
-      "next_release_week": 19,
-      "owned_shares": 0,
-      "is_owned_by_player": false,
-      "ai_personality": "Trendchaser",
-      "ai_memory": {}
-    },
-    {
-      "name": "Electric Farts",
-      "target_market_share": 25,
-      "games": [],
-      "next_release_week": 34,
-      "owned_shares": 0,
-      "is_owned_by_player": false,
-      "ai_personality": "Aggressive",
-      "ai_memory": {}
-    },
-    {
-      "name": "Nintengo",
-      "target_market_share": 20,
-      "games": [],
-      "next_release_week": 55,
-      "owned_shares": 0,
-      "is_owned_by_player": false,
-      "ai_personality": "Perfectionist",
-      "ai_memory": {}
-    }
-  ],
+  "active_platforms": [],
+  "rivals": [],
   "last_goty_year": 0,
-  "bank_loan": null,
+  "bank_loan": {
+    "amount_borrowed": 50000,
+    "amount_remaining": 48464,
+    "weekly_payment": 1009,
+    "weeks_remaining": 48
+  },
   "accounting": {
     "income": 0,
-    "expenses": 1109540,
-    "loan_paid": 0
+    "expenses": 11420,
+    "loan_paid": 4036
   },
   "custom_consoles": [],
-  "emails": [
-    {
-      "sender": "Historiker",
-      "subject": "Willkommen in der Pionierzeit!",
-      "body": "Das Jahr ist 1930. Du bist ein Visionär mit einer großen Idee: Man kann Maschinen beibringen, Spiele zu spielen und zu entwickeln! Mit bescheidenen Mitteln in einer Garage beginnst du dein Studio. Du bist selbst der Chefentwickler und programmierst die ersten Spiele allein. Später kannst du Personal einstellen, um größere Projekte zu stemmen! Verfügbare Themen: Abakus, Mathematik, Schach und Logistik.",
-      "date_week": 1,
-      "game_name": null,
-      "is_bug": false,
-      "is_read": true
-    }
-  ],
+  "emails": [],
   "has_presswerk": false,
   "storage_capacity": 0,
   "used_storage": 0,

@@ -19,10 +19,10 @@ from .business import (
 )
 from .gameplay import (
     MainMenu, CompanyNameMenu, GameMenu, TopicMenu, GenreMenu, PlatformMenu, 
-    AudienceMenu, GameSizeMenu, MarketingMenu, EngineSelectMenu, GameNameMenu, 
+    AudienceMenu, GameSizeMenu, MarketingMenu, EngineSelectMenu, ProjectTeamSelectMenu, GameNameMenu, 
     DevelopmentSliderMenu, DevProgressMenu, ReviewResultMenu, RemasterSelectMenu, 
     PublisherMenu, ExpoMenu, GOTYMenu, DifficultyMenu, SubGenreMenu, SequelMenu, 
-    ChartMenu, AAADevEventMenu, CreditsMenu, ActiveGamesMenu
+    ChartMenu, AAADevEventMenu, CreditsMenu, ActiveGamesMenu, DeveloperMenu
 )
 
 from .phase_g import BuildMenu, TeambuildingMenu, ModPortalMenu, ModBrowserListMenu
@@ -44,7 +44,7 @@ __all__ = [
     "MMOOptionsMenu", "PublisherDealsMenu", "PublisherDealDetailsMenu",
     "MerchMenu", "MerchAmountMenu", "ESportsMenu", "AcquisitionMenu", "MainMenu",
     "CompanyNameMenu", "GameMenu", "TopicMenu", "GenreMenu", "PlatformMenu",
-    "AudienceMenu", "GameSizeMenu", "MarketingMenu", "EngineSelectMenu",
+    "AudienceMenu", "GameSizeMenu", "MarketingMenu", "EngineSelectMenu", "ProjectTeamSelectMenu",
     "GameNameMenu", "DevelopmentSliderMenu", "DevProgressMenu", "ReviewResultMenu",
     "RemasterSelectMenu", "PublisherMenu", "ExpoMenu", "GOTYMenu", "DifficultyMenu",
     "SubGenreMenu", "SequelMenu", "ChartMenu", "AAADevEventMenu", "CreditsMenu", "ActiveGamesMenu",

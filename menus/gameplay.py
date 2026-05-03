@@ -54,7 +54,12 @@ class GameMenu(Menu):
         unread_emails = len([e for e in self.game_state.emails if not getattr(e, 'is_read', True)])
         options = [
             {'text': self.game_state.get_text('menu_develop_game'), 'action': lambda: self._start_dev(False)},
-            {'text': self.game_state.get_text('menu_co_dev_start'), 'action': lambda: self._start_dev(True)},
+            {'text': self.game_state.get_text('menu_co_dev_start'), 'action': lambda: self._start_dev(True)}
+        ]
+        if self.game_state.is_developing:
+             options.insert(0, {'text': self.game_state.get_text('menu_current_dev', default="Aktuelle Entwicklungen anzeigen"), 'action': lambda: "dev_progress_menu"})
+
+        options.extend([
             {'text': self.game_state.get_text('hr_menu'), 'action': lambda: "hr_menu"},
             {'text': self.game_state.get_text('research_menu'), 'action': lambda: "research_menu"},
             {'text': self.game_state.get_text('office_menu'), 'action': lambda: "office_menu"},
@@ -65,7 +70,7 @@ class GameMenu(Menu):
             {'text': self.game_state.get_text('save_menu'), 'action': lambda: "save_menu"},
             {'text': self.game_state.get_text('menu_settings'), 'action': lambda: "settings_menu_ingame"},
             {'text': self.game_state.get_text('menu_quit'), 'action': lambda: "main_menu"}
-        ]
+        ])
         super().__init__(title, options, audio, game_state)
 
     def _start_dev(self, is_co_dev):
@@ -221,6 +226,80 @@ class MarketingMenu(Menu):
 
     def _select(self, level):
         self.game_state.current_draft['marketing'] = level
+        return "team_select_menu"
+
+class ProjectTeamSelectMenu(Menu):
+    """Menü zur Auswahl der Mitarbeiter für ein Projekt."""
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        # Standard: Alle verfügbaren Mitarbeiter sind ausgewählt
+        if "assigned_employee_ids" not in self.game_state.current_draft:
+             self.game_state.current_draft["assigned_employee_ids"] = [i for i, e in enumerate(self.game_state.employees) if not getattr(e, 'is_sick', False) and not getattr(e, 'is_training', False)]
+        
+        super().__init__(self.game_state.get_text('menu_team_select'), [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        self.options = []
+        assigned_ids = self.game_state.current_draft.get("assigned_employee_ids", [])
+        
+        # IDs der Mitarbeiter, die bereits in anderen Projekten arbeiten
+        busy_ids = []
+        for ap in self.game_state.active_projects:
+            busy_ids.extend(getattr(ap["project"], 'assigned_employee_ids', []))
+
+        for i, emp in enumerate(self.game_state.employees):
+            # Kranke/Trainierende MA können nicht gewählt werden
+            if getattr(emp, 'is_sick', False) or getattr(emp, 'is_training', False):
+                continue
+            
+            # Bereits beschäftigte MA (außer sie sind bereits diesem Projekt zugewiesen)
+            if i in busy_ids and i not in assigned_ids:
+                continue
+                
+            is_assigned = i in assigned_ids
+            status_text = self.game_state.get_text('team_status_assigned' if is_assigned else 'team_status_not_assigned')
+            text = self.game_state.get_text('team_member_status', name=emp.name, role=self.game_state.get_text(emp.role), status=status_text)
+            
+            # Spezialisierungs-Indikator
+            if emp.specialization:
+                spec = emp.specialization
+                if spec.get("bonus_type") == "Genre" and (self.game_state.current_draft['genre'] == spec.get("target") or self.game_state.current_draft.get('sub_genre') == spec.get("target")):
+                    text += " [BONUS!]"
+                elif spec.get("bonus_type") == "Topic" and self.game_state.current_draft['topic'] == spec.get("target"):
+                    text += " [BONUS!]"
+            
+            # WICHTIG: idx=i fixiert den aktuellen Wert von i für die Lambda-Funktion
+            self.options.append({'text': text, 'action': lambda idx=i: self._toggle(idx)})
+
+        # Bestätigen Option
+        count = len(assigned_ids)
+        self.options.append({'text': self.game_state.get_text('team_confirm', count=count), 'action': self._confirm})
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "marketing_menu"})
+
+    def _toggle(self, real_idx):
+        assigned_ids = self.game_state.current_draft.get("assigned_employee_ids", [])
+        
+        if real_idx in assigned_ids:
+            assigned_ids.remove(real_idx)
+        else:
+            assigned_ids.append(real_idx)
+            
+        self.game_state.current_draft["assigned_employee_ids"] = assigned_ids
+        self._update_options()
+        return None
+
+    def _confirm(self):
+        if not self.game_state.current_draft.get("assigned_employee_ids"):
+            self.audio.play_sound("error")
+            self.audio.speak(self.game_state.get_text('team_none_selected_error'))
+            return None
+        
+        # Zeitschätzung ansagen
+        weeks = self.game_state.estimate_dev_time()
+        self.audio.speak(self.game_state.get_text('dev_time_estimate', weeks=weeks))
+        
         return "game_name_input"
 
 class GameNameMenu(TextInputMenu):
@@ -261,7 +340,12 @@ class DevelopmentSliderMenu(SliderMenu):
 
     def _on_confirm(self, values):
         self.game_state.current_draft['sliders'] = values
+        est = self.game_state.estimate_dev_time()
         self.game_state.start_development()
+        self.audio.speak(
+            self.game_state.get_text('dev_time_estimate', weeks=est),
+            interrupt=False
+        )
         return "dev_progress_menu"
 
 class DevProgressMenu(Menu):
@@ -269,38 +353,120 @@ class DevProgressMenu(Menu):
         self.audio = audio
         self.game_state = game_state
         super().__init__(self.game_state.get_text('dev_progress_menu'), [], audio, game_state)
+        self.selected_project_idx = -1
         self._update_options()
 
     def _update_options(self):
-        self.options = [
-            {'text': self.game_state.get_text('finish_game'), 'action': self._finish},
-            {'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"}
-        ]
+        self.options = []
+        if self.selected_project_idx == -1:
+            for i, ap in enumerate(self.game_state.active_projects):
+                prog = int((ap["progress"] / ap["total_weeks"]) * 100)
+                name = ap["project"].name
+                # Closure für idx
+                def make_select(idx):
+                    return lambda: self._select_project(idx)
+                self.options.append({'text': f"{name} ({prog}%)", 'action': make_select(i)})
+            self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
+        else:
+            self.options = [
+                {'text': self.game_state.get_text('get_progress_label', default="Fortschritt abfragen"), 'action': self._speak_progress},
+                {'text': self.game_state.get_text('finish_game'), 'action': self._finish},
+                {'text': self.game_state.get_text('back'), 'action': self._back_to_list}
+            ]
+
+    def _select_project(self, idx):
+        self.selected_project_idx = idx
+        self._update_options()
+        self.current_index = 0
+        return None
+
+    def _back_to_list(self):
+        self.selected_project_idx = -1
+        self._update_options()
+        self.current_index = 0
+        return None
+
+    def _speak_progress(self):
+        if self.selected_project_idx < 0 or self.selected_project_idx >= len(self.game_state.active_projects):
+            return self._back_to_list()
+        ap = self.game_state.active_projects[self.selected_project_idx]
+        progress = int((ap["progress"] / ap["total_weeks"]) * 100)
+        progress = min(100, progress)
+        status = f"{progress}% {self.game_state.get_text('completed_label')}. Bugs: {ap['bugs']}"
+        self.audio.speak(status)
+        return None
 
     def _finish(self):
-        if not self.game_state.active_project:
-            return "game_menu"
-            
-        if self.game_state.dev_progress >= self.game_state.dev_total_weeks:
-            self.game_state.finalize_game(self.game_state.active_project)
-            self.game_state.dev_ready_to_finish = False
+        if self.selected_project_idx < 0 or self.selected_project_idx >= len(self.game_state.active_projects):
+            return self._back_to_list()
+        ap = self.game_state.active_projects[self.selected_project_idx]
+        if ap["progress"] >= ap["total_weeks"]:
+            self.game_state.finalize_game(ap)
             return "review_result"
         else:
             self.audio.speak(self.game_state.get_text('dev_not_finished'))
             return None
 
-    def update(self):
-        """Wird in der Hauptschleife aufgerufen."""
-        if self.game_state.dev_progress >= self.game_state.dev_total_weeks:
-            # Automatisches Sprechen wenn fertig (optional, falls Menü offen)
-            pass
-
     def speak_current(self, interrupt=True):
-        progress = int((self.game_state.dev_progress / max(1, self.game_state.dev_total_weeks)) * 100)
-        progress = min(100, progress)
         text = self.options[self.current_index]['text']
-        status = f"{progress}% {self.game_state.get_text('completed_label')}"
-        self.audio.speak(f"{status}. {text}", interrupt=interrupt)
+        self.audio.speak(text, interrupt=interrupt)
+
+class DeveloperMenu(Menu):
+    """Geheimes Menü für Tests."""
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__("Developer Mode", [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        self.options = [
+            {'text': "Geld hinzufügen (1 Mio)", 'action': self._add_money},
+            {'text': "Entwicklung sofort beenden", 'action': self._instant_dev},
+            {'text': "Forschungspunkte hinzufügen", 'action': self._add_rp},
+            {'text': "Alle Themen/Genres freischalten", 'action': self._unlock_all},
+            {'text': "Moral auf 100", 'action': self._fix_morale},
+            {'text': "Fans hinzufügen (100k)", 'action': self._add_fans},
+            {'text': "Zurück", 'action': lambda: "game_menu"}
+        ]
+
+    def _add_money(self):
+        self.game_state.money += 1000000
+        self.audio.play_sound("cash")
+        return None
+
+    def _instant_dev(self):
+        if self.game_state.is_developing:
+            self.game_state.dev_progress = self.game_state.dev_total_weeks
+            self.audio.speak("Entwicklung abgeschlossen.")
+        return None
+
+    def _add_rp(self):
+        self.game_state.research_points += 500
+        self.audio.speak("500 Forschungspunkte hinzugefügt.")
+        return None
+
+    def _unlock_all(self):
+        from game_data import HISTORICAL_TOPICS, RESEARCHABLE_GENRES
+        for t in HISTORICAL_TOPICS:
+            if t["name"] not in self.game_state.unlocked_topics:
+                self.game_state.unlocked_topics.append(t["name"])
+        for g in RESEARCHABLE_GENRES:
+            if g not in self.game_state.unlocked_genres:
+                self.game_state.unlocked_genres.append(g)
+        self.audio.speak("Alles freigeschaltet.")
+        return None
+
+    def _fix_morale(self):
+        for emp in self.game_state.employees:
+            emp.morale = 100
+        self.audio.speak("Moral wiederhergestellt.")
+        return None
+    
+    def _add_fans(self):
+        self.game_state.fans += 100000
+        self.audio.speak("100.000 Fans hinzugefügt.")
+        return None
 
 class ReviewResultMenu(Menu):
     def __init__(self, audio, game_state):
@@ -357,19 +523,43 @@ class GOTYMenu(Menu):
     def __init__(self, audio, game_state):
         self.audio = audio
         self.game_state = game_state
+        
+        # Verarbeite anstehende Ergebnisse
+        if getattr(self.game_state, "pending_goty_results", None):
+            res = self.game_state.pending_goty_results
+            winner_text = "Niemand"
+            if res["my_score"] > res["rival_score"] and res["my_score"] > 0:
+                winner_text = f"{self.game_state.company_name} ({res['my_game']})"
+            elif res["rival_score"] > 0:
+                winner_text = f"{res['rival_name']} ({res['rival_game']})"
+            
+            # In Historie speichern
+            self.game_state.goty_history[res["year"]] = winner_text
+            # WICHTIG: Ergebnis löschen, damit wir nicht im Loop hängen bleiben!
+            self.game_state.pending_goty_results = None
+            
         super().__init__(self.game_state.get_text('goty_title'), [], audio, game_state)
         self._update_options()
 
     def _update_options(self):
         self.options = []
-        # Zeige GOTY Historie
-        for year, winner in self.game_state.goty_history.items():
-             self.options.append({'text': f"Jahr {year}: {winner}", 'action': lambda: None})
+        # Zeige GOTY Historie (neueste zuerst)
+        years = sorted(self.game_state.goty_history.keys(), reverse=True)
+        for y in years:
+             winner = self.game_state.goty_history[y]
+             self.options.append({'text': f"{self.game_state.get_text('year_label', default='Jahr')} {y}: {winner}", 'action': lambda: None})
         
         if not self.options:
              self.options.append({'text': self.game_state.get_text('goty_no_awards'), 'action': lambda: "game_menu"})
              
         self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
+
+    def announce_entry(self):
+        super().announce_entry()
+        if self.game_state.goty_history:
+            latest_year = max(self.game_state.goty_history.keys())
+            winner = self.game_state.goty_history[latest_year]
+            self.audio.speak(f"{self.game_state.get_text('goty_winner_announcement', default='Der Gewinner des Jahres')} {latest_year} {self.game_state.get_text('is_label', default='ist')}: {winner}", interrupt=False)
 
 class DifficultyMenu(Menu):
     def __init__(self, audio, game_state):
@@ -486,8 +676,114 @@ class ActiveGamesMenu(Menu):
         self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
 
 class AAADevEventMenu(Menu):
+    """Zeigt Entwicklungs-Events (AAA und allgemein) mit Entscheidungsoptionen."""
     def __init__(self, audio, game_state):
-         super().__init__(game_state.get_text('aaa_event_title'), [], audio, game_state)
+        self.audio = audio
+        self.game_state = game_state
+        self.event_ctx = getattr(game_state, 'pending_dev_event', None)
+        
+        if self.event_ctx:
+            event = self.event_ctx["data"]
+            proj_name = self.event_ctx["ap"]["project"].name
+            title = f"{proj_name}: " + game_state.get_text('dev_event_' + event['id'] + '_title',
+                                         default=game_state.get_text('aaa_event_title'))
+        else:
+            title = game_state.get_text('aaa_event_title')
+            
+        super().__init__(title, [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        self.options = []
+        if not self.event_ctx:
+            self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
+            return
+            
+        event = self.event_ctx["data"]
+        for opt in event.get('options', []):
+            opt_text = self.game_state.get_text(
+                'dev_event_opt_' + event['id'] + '_' + opt['id'],
+                default=self.game_state.get_text('dev_event_opt_' + opt['id'], default=opt['id'])
+            )
+            # Konsequenz-Zusammenfassung
+            effects = []
+            if opt.get('cost', 0) > 0:
+                effects.append(f"-{opt['cost']:,} EUR")
+            if opt.get('delay', 0) > 0:
+                effects.append(f"+{opt['delay']} {self.game_state.get_text('weeks')}")
+            if opt.get('speed', 0) > 0:
+                effects.append(f"-{opt['speed']} {self.game_state.get_text('weeks')}")
+            if opt.get('hype', 0) != 0:
+                sign = '+' if opt['hype'] > 0 else ''
+                effects.append(f"{sign}{opt['hype']} Hype")
+            if opt.get('bugs', 0) > 0:
+                effects.append(f"+{opt['bugs']} Bugs")
+            if opt.get('morale', 0) != 0:
+                sign = '+' if opt['morale'] > 0 else ''
+                effects.append(f"{sign}{opt['morale']} {self.game_state.get_text('morale')}")
+            suffix = f" [{', '.join(effects)}]" if effects else ""
+            full_text = opt_text + suffix
+            self.options.append({'text': full_text, 'action': lambda o=opt: self._choose(o)})
+
+    def announce_entry(self):
+        self.current_index = 0
+        if self.event_ctx:
+            event = self.event_ctx["data"]
+            desc = self.game_state.get_text(
+                'dev_event_' + event['id'] + '_desc',
+                default=self.game_state.get_text('aaa_event_title')
+            )
+            self.audio.speak(self.title)
+            self.audio.speak(desc, interrupt=False)
+        else:
+            self.audio.speak(self.title)
+        if self.options:
+            self.speak_current(interrupt=False)
+
+    def _choose(self, opt):
+        gs = self.game_state
+        ap = self.event_ctx["ap"]
+        
+        # Kosten abziehen
+        cost = opt.get('cost', 0)
+        if cost > 0:
+            if gs.money < cost:
+                self.audio.play_sound("error")
+                self.audio.speak(gs.get_text('not_enough_money'))
+                return None
+            gs.track_expense("dev_event", cost)
+            
+        # Zeitverzögerung
+        delay = opt.get('delay', 0)
+        if delay > 0:
+            ap["total_weeks"] += delay
+            
+        # Beschleunigung
+        speed = opt.get('speed', 0)
+        if speed > 0:
+            ap["progress"] = min(ap["total_weeks"], ap["progress"] + speed)
+            
+        # Hype (global)
+        hype = opt.get('hype', 0)
+        if hype != 0:
+            gs.hype = max(0, gs.hype + hype)
+            
+        # Bugs
+        bugs = opt.get('bugs', 0)
+        if bugs > 0:
+            ap["bugs"] += bugs
+            
+        # Moral (Team des Projekts)
+        morale = opt.get('morale', 0)
+        if morale != 0:
+            active_emps = gs._active_employees(ap["project"])
+            for emp in active_emps:
+                emp.morale = max(0, min(100, emp.morale + morale))
+                
+        # Event abschliessen
+        gs.pending_dev_event = None
+        self.audio.play_sound("confirm")
+        return "game_menu"
 
 class ExpoMenu(Menu):
     def __init__(self, audio, game_state):

@@ -31,6 +31,7 @@ class GameState:
         self.high_score = 0.0
         self.games_made = 0
         self.total_revenue = 0
+        self.developer_mode = False # Versteckter Entwickler-Modus
 
         # Trends
         self.current_trend = {}  # {'topic': '...', 'genre': '...', 'week_started': X}
@@ -38,6 +39,7 @@ class GameState:
 
         # Mitarbeiter
         self.employees = []
+        self._init_ceo()
 
         # Engines
         self.engines = []
@@ -104,12 +106,8 @@ class GameState:
         self.time_speed = 1.0  # 0=Pause, 1=Normal, 2=Schnell, 4=Sehr Schnell
         self.pause_for_menu = False # Flag für Menüs (z.B. Texteingabe)
         self.week_progress = 0.0
-        self.is_developing = False
-        self.dev_progress = 0.0
-        self.dev_total_weeks = 0
-        self.active_project = None
-        self.crunch_active = False
-        self.current_bugs = 0
+        self.week_progress = 0.0
+        self.active_projects = [] # Liste von Dicts: {project, progress, total_weeks, bugs, crunch, ready_to_finish, event_count, aaa_event_done, co_dev}
         self.hype = 0.0
         self.active_expo_hype = 0
         
@@ -287,6 +285,25 @@ class GameState:
             RivalStudio("Nintengo", target_market_share=20, next_release_week=random.randint(35, 60), ai_personality="Perfectionist")
         ]
 
+    def _init_ceo(self):
+        """Erstellt den Chef als ersten permanenten Mitarbeiter."""
+        found = False
+        for e in self.employees:
+            if getattr(e, 'is_ceo', False) or e.name == "Chef":
+                e.is_ceo = True
+                e.salary = 0 # Sicherstellen
+                found = True
+                break
+        if found:
+            return
+            
+        # Der Chef hat feste Daten
+        from models import Employee
+        ceo = Employee(name="Chef", role_data={"role": "Chef", "primary": "Gameplay", "secondary": "Design"}, skill_level=3)
+        ceo.is_ceo = True
+        ceo.salary = 0
+        self.employees.insert(0, ceo)
+
     def _init_starter_engine(self):
         """Erstellt die Starter-Engine mit Basis-Features."""
         starter_features = []
@@ -316,43 +333,72 @@ class GameState:
         }
         self.aaa_event_triggered = False
 
-    def start_development(self):
-        """Startet die Entwicklung des konfigurierten Spiels."""
-        name = self.current_draft.get("name", "Untitled") or "Untitled"
-        topic = self.current_draft.get("topic", "Abakus")
-        genre = self.current_draft.get("genre", "Action")
-        platform = self.current_draft.get("platform", {"name": "PC"})
-        audience = self.current_draft.get("audience", "Jeder")
-        engine = self.current_draft.get("engine", None)
+    def estimate_dev_time(self):
+        """Schätzt die Entwicklungszeit für den aktuellen Draft (in Wochen, ca.-Angabe)."""
         size = self.current_draft.get("size", "Mittel")
-        marketing = self.current_draft.get("marketing", "Kein Marketing")
-        sliders = self.current_draft.get("sliders", {})
-        
-        plat_name = platform['name'] if isinstance(platform, dict) else platform
-        
-        from models import GameProject
-        self.active_project = GameProject(
-            name=name, topic=topic, genre=genre, sliders=sliders,
-            platform=plat_name, audience=audience, engine=engine,
-            size=size, marketing=marketing
-        )
-        
-        self.active_project.sequel_number = self.current_draft.get("sequel_number", 0)
-        self.active_project.sub_genre = self.current_draft.get("sub_genre", None)
-        self.active_project.license_bonus = 0.0
-        
-        self.is_developing = True
-        self.dev_progress = 0
-        
-        base_weeks = 10
-        if size == "Klein": base_weeks = 5
-        elif size == "Mittel": base_weeks = 15
-        elif size == "Groß": base_weeks = 30
-        elif size == "AAA": base_weeks = 60
-        self.dev_total_weeks = base_weeks
-        
-        self.current_bugs = getattr(self, "current_bugs", 0)
-        self.dev_ready_to_finish = False
+        base_weeks = {"Klein": 5, "Mittel": 15, "Groß": 30, "AAA": 60}.get(size, 15)
+        # Teamgröße und Speed-Modifier einrechnen
+        speed = self.get_team_speed_modifier()
+        if getattr(self, "co_dev_partner", None):
+            speed *= 1.8
+        # Geschätzte Kalenderwochen (ca.)
+        estimated = max(1, int(base_weeks / max(0.5, speed)))
+        return estimated
+
+    def start_development(self):
+        """Startet die Entwicklung eines neuen Spiels."""
+        try:
+            name = self.current_draft.get("name", "Untitled") or "Untitled"
+            topic = self.current_draft.get("topic", "Fantasy")
+            genre = self.current_draft.get("genre", "Action")
+            platform = self.current_draft.get("platform", {"name": "PC"})
+            audience = self.current_draft.get("audience", "Jeder")
+            engine = self.current_draft.get("engine", None)
+            size = self.current_draft.get("size", "Mittel")
+            marketing = self.current_draft.get("marketing", "Kein Marketing")
+            sliders = self.current_draft.get("sliders", {})
+            
+            plat_name = platform['name'] if isinstance(platform, dict) else platform
+            
+            from models import GameProject
+            project = GameProject(
+                name=name, topic=topic, genre=genre, sliders=sliders,
+                platform=plat_name, audience=audience, engine=engine,
+                size=size, marketing=marketing
+            )
+            
+            # Team-Zuweisung
+            if "assigned_employee_ids" in self.current_draft:
+                project.assigned_employee_ids = self.current_draft["assigned_employee_ids"]
+            else:
+                project.assigned_employee_ids = [i for i, e in enumerate(self.employees) if not getattr(e, 'is_sick', False) and not getattr(e, 'is_training', False)]
+            
+            project.sequel_number = self.current_draft.get("sequel_number", 0)
+            project.sub_genre = self.current_draft.get("sub_genre", None)
+            project.is_remaster = self.current_draft.get("is_remaster", False)
+            
+            base_weeks = {"Klein": 5, "Mittel": 15, "Groß": 30, "AAA": 60}.get(size, 15)
+            
+            new_active = {
+                "project": project,
+                "progress": 0.0,
+                "total_weeks": base_weeks,
+                "bugs": 0,
+                "crunch": False,
+                "ready_to_finish": False,
+                "event_count": 0,
+                "aaa_event_done": False,
+                "co_dev": getattr(self, "co_dev_partner", None)
+            }
+            self.active_projects.append(new_active)
+            self.reset_draft()
+            self.co_dev_partner = None # Reset für nächstes Spiel
+        except Exception as e:
+            with open("crash_log.txt", "a", encoding="utf-8") as f:
+                import traceback
+                f.write(f"\nSTART_DEV CRASH: {str(e)}\n")
+                f.write(traceback.format_exc())
+            raise e
 
     def get_text(self, text_key, **kwargs):
         """Holt einen übersetzten Text basierend auf dem aktuellen Sprach-Setting."""
@@ -370,14 +416,19 @@ class GameState:
         return START_YEAR + (self.week - 1) // WEEKS_PER_YEAR
 
     def get_calendar_text(self):
-        """Gibt Kalenderjahr und Woche zurück (48 Wochen pro Jahr, Start 1930)."""
+        """Gibt Kalenderjahr, Monat und Woche zurück (48 Wochen pro Jahr = 4 Wochen pro Monat)."""
         year = self.get_calendar_year()
         week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
+        # 12 Monate, je 4 Wochen = 48 Wochen pro Jahr
+        month_idx = (week_in_year - 1) // 4  # 0-11
         lang = self.settings.get("language", "de")
-        if lang == "de":
-            return f"{year}, KW {week_in_year}"
-        else:
-            return f"{year}, Week {week_in_year}"
+        months_de = ["Januar","Februar","März","April","Mai","Juni",
+                     "Juli","August","September","Oktober","November","Dezember"]
+        months_en = ["January","February","March","April","May","June",
+                     "July","August","September","October","November","December"]
+        month_name = (months_en if lang == "en" else months_de)[min(month_idx, 11)]
+        week_in_month = ((week_in_year - 1) % 4) + 1
+        return f"{month_name} {year}, {self.get_text('calendar_week')} {week_in_month}"
 
     def get_speed_text(self):
         """Gibt Text für aktuelle Geschwindigkeit zurück."""
@@ -409,8 +460,32 @@ class GameState:
             self.week += 1
             self._on_new_week()
 
+    @property
+    def is_developing(self):
+        return len(self.active_projects) > 0
+
     def _on_new_week(self):
         """Logik die jede Woche passiert (Gehalt, Zufallsereignisse)."""
+        # Monatsankündigung (alle 4 Wochen = 1 Spielmonat)
+        week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
+        if (week_in_year - 1) % 4 == 0 and self.week > 1:
+            cal = self.get_calendar_text()
+            from models import Email
+            self.emails.insert(0, Email(
+                sender=self.get_text('sender_calendar'),
+                subject=self.get_text('subject_new_month', date=cal),
+                body=self.get_text('body_new_month', date=cal,
+                                   money=self.money, fans=int(self.fans)),
+                date_week=self.week
+            ))
+            if hasattr(self, 'audio'):
+                self.audio.speak(self.get_text('announce_new_month', date=cal), interrupt=False)
+
+        # Monatlicher Kontoauszug (alle 4 Wochen)
+        # NEU: Auch in Woche 1 (Spielstart)
+        if (self.week == 1) or ((self.week - 1) % 4 == 0 and self.week > 4):
+            self._send_monthly_bank_statement()
+
         # Jahres-Reset für Buchhaltung und Jahresbilanz
         if (self.week - 1) % WEEKS_PER_YEAR == 0:
             if self.week > 1 and hasattr(self, "accounting"):
@@ -686,11 +761,11 @@ class GameState:
             for cc in self.custom_consoles:
                 cc.market_share = min(0.5, cc.market_share + (cc.tech_level * 0.0005))
             
-        # Projektfortschritt falls aktiv
-        if self.is_developing:
-            boost = 2 if self.crunch_active else 1
-            # Remaster-Bonus: 1.5x schneller
-            if self.current_draft.get("is_remaster"):
+        # Projektfortschritt für alle aktiven Projekte
+        for ap in self.active_projects:
+            proj = ap["project"]
+            boost = 2 if ap.get("crunch") else 1
+            if getattr(proj, 'is_remaster', False):
                 boost *= 1.5
                 
             # Burnout-Event Malus / Talent-Boom Bonus
@@ -701,48 +776,70 @@ class GameState:
                     boost *= e["multiplier"]
             
             # Team Speed Modifier durch Eigenschaften
-            boost *= self.get_team_speed_modifier()
+            boost *= self.get_team_speed_modifier(proj)
             
             # NEU Phase I: Co-Dev Boost
-            if getattr(self, "co_dev_partner", None):
+            if ap.get("co_dev"):
                 boost *= 1.8 # Fast doppelte Geschwindigkeit
             
-            self.dev_progress += boost
+            ap["progress"] += boost
             
-            if self.crunch_active:
+            if ap.get("crunch"):
                 has_break = self.has_office_bonus("morale_room")
                 break_mod = 0.5 if has_break else 1.0
-                # Moral-Malus
-                for emp in self.employees:
+                # Moral-Malus nur für das Team des Projekts
+                active_emps = self._active_employees(proj)
+                for emp in active_emps:
                     morale_loss = int(random.randint(2, 5) * break_mod)
-                    if emp.trait and emp.trait["effect"] == "morale_loss":
-                        morale_loss = int(morale_loss * emp.trait["value"])
                     emp.morale = max(0, emp.morale - morale_loss)
                     
                 # Bug-Zuwachs
                 base_bugs = random.randint(1, 3)
-                self.current_bugs += int(base_bugs * self.get_team_bug_modifier())
+                ap["bugs"] += int(base_bugs * self.get_team_bug_modifier(proj))
             
             # Zufällige Bugs auch ohne Crunch (seltener)
             if random.random() < 0.1:
-                self.current_bugs += int(1 * self.get_team_bug_modifier())
+                ap["bugs"] += int(1 * self.get_team_bug_modifier(proj))
                 
             # Supporter fixen aktiv Bugs jede Woche während der Entwicklung
-            supporter_count = sum(1 for e in self.employees if e.role == "Supporter")
-            if supporter_count > 0 and self.current_bugs > 0:
-                self.current_bugs = max(0, self.current_bugs - supporter_count)
+            active_supps = [e for e in self._active_employees(proj) if e.role == "Supporter"]
+            if active_supps and ap["bugs"] > 0:
+                ap["bugs"] = max(0, ap["bugs"] - len(active_supps))
 
             # AAA Events (Max 1x pro Projekt)
-            if self.current_draft.get("size") == "AAA" and not getattr(self, "aaa_event_triggered", False):
-                if 0.2 < (self.dev_progress / max(1, getattr(self, "dev_total_weeks", 1))) < 0.8:
-                    if random.random() < 0.05:  # 5% Chance pro Woche
-                        from game_data import AAA_DEV_EVENTS
-                        self.pending_dev_event = random.choice(AAA_DEV_EVENTS)
-                        self.aaa_event_triggered = True
-                        self.time_speed = 0 # Pause game
+            # Fertigstellung-Check
+            if ap["progress"] >= ap["total_weeks"]:
+                ap["ready_to_finish"] = True
+                
+            # AAA Events (Max 1x pro Projekt)
+            if proj.size == "AAA" and not ap.get("aaa_event_done"):
+                prog_pct = ap["progress"] / ap["total_weeks"]
+                if 0.2 < prog_pct < 0.8 and random.random() < 0.05:
+                    from game_data import AAA_DEV_EVENTS
+                    self.pending_dev_event = {
+                        "data": random.choice(AAA_DEV_EVENTS),
+                        "ap": ap
+                    }
+                    ap["aaa_event_done"] = True
+                    self.time_speed = 0
+
+            # Allgemeine Events
+            max_ev = {"Klein": 1, "Mittel": 1, "Groß": 2, "AAA": 0}.get(proj.size, 1)
+            if ap.get("event_count", 0) < max_ev:
+                prog_pct = ap["progress"] / ap["total_weeks"]
+                if 0.15 < prog_pct < 0.85:
+                    chance = {"Klein": 0.04, "Mittel": 0.05, "Groß": 0.06}.get(proj.size, 0.05)
+                    if random.random() < chance:
+                        from game_data import GENERAL_DEV_EVENTS
+                        self.pending_dev_event = {
+                            "data": random.choice(GENERAL_DEV_EVENTS),
+                            "ap": ap
+                        }
+                        ap["event_count"] = ap.get("event_count", 0) + 1
+                        self.time_speed = 0
 
         # Forschungsfortschritt
-        elif self.is_researching:
+        if self.is_researching:
             self.research_progress += 1
             if self.research_progress >= self.research_total_weeks:
                 self.complete_research()
@@ -782,6 +879,9 @@ class GameState:
                 is_bug=False
             ))
             self.emails[-1].is_expo_invite = True
+            
+        # WÖCHENTLICHE BILANZ ABSPEICHERN
+        self.finalize_weekly_balance()
             
         # NEU: Phase B - Lizenzen ablaufen lassen
         # Wird in advance_week direkt verarbeitet
@@ -831,7 +931,7 @@ class GameState:
                 sabotage_msg = ""
                 can_sabotage = (self.week - self.last_sabotage_week) >= 4
                 
-                if can_sabotage and self.is_developing and self.active_project and self.active_project.genre == r_game.genre:
+                if can_sabotage and self.is_developing and any(ap["project"].genre == r_game.genre for ap in self.active_projects):
                     # Hype-Verlust skaliert mit Schwierigkeit
                     diff_multi = {0: 0.3, 1: 0.6, 2: 1.0, 3: 1.5}.get(self.difficulty, 1.0)
                     base_loss = random.randint(10, 25)
@@ -909,9 +1009,9 @@ class GameState:
                 lines.append(f"• {t['name']} (passt zu: {t['synergy']}, Hype: {hype_str})")
             topic_list = "\n".join(lines)
             self.emails.insert(0, Email(
-                sender="Historiker",
-                subject=f"{current_year}: Neue Themen verfügbar!",
-                body=f"Das Jahr {current_year} bringt neue Themen, die der Zeitgeist inspiriert:\n\n{topic_list}\n\nNutze sie für dein nächstes Spiel!",
+                sender=self.get_text("sender_historian"),
+                subject=self.get_text("subject_new_topics_year", year=current_year),
+                body=self.get_text("body_new_topics_year", year=current_year, topics=topic_list),
                 date_week=self.week
             ))
 
@@ -931,14 +1031,18 @@ class GameState:
                 self.hype = min(250, self.hype + value)
 
             # E-Mail mit historischem Event
+            impact = ""
+            if effect == "money":
+                impact = f"+{value:,} €" if value > 0 else f"{value:,} €"
+            elif effect == "fans":
+                impact = f"+{value:,} {self.get_text('fans')}"
+            elif effect == "hype":
+                impact = f"+{value} {self.get_text('hype')}"
+
             self.emails.insert(0, Email(
-                sender="Weltgeschehen",
-                subject=f"{current_year}: Aktuelles Ereignis",
-                body=f"{event_text}\n\nAuswirkung auf dein Studio: "
-                     + (f"+{value:,} €" if effect == "money" and value > 0
-                        else f"{value:,} €" if effect == "money"
-                        else f"+{value:,} Fans" if effect == "fans"
-                        else f"+{value} Hype"),
+                sender=self.get_text("sender_world_events"),
+                subject=self.get_text("subject_historical_event", year=current_year),
+                body=f"{self.get_text(event_text)}\n\n{self.get_text('event_impact')}: {impact}",
                 date_week=self.week
             ))
 
@@ -1050,7 +1154,10 @@ class GameState:
     def fire_employee(self, index):
         """Entlässt einen Mitarbeiter."""
         if 0 <= index < len(self.employees):
-            emp = self.employees.pop(index)
+            emp = self.employees[index]
+            if getattr(emp, "is_ceo", False):
+                return None # Chef kann nicht gefeuert werden
+            self.employees.pop(index)
             # Abfindung = 4 Wochen Gehalt
             self.track_expense("salaries", emp.salary * 4)
             return emp
@@ -1350,44 +1457,113 @@ class GameState:
         self.fans += 1000
         return True
 
-    def _active_employees(self):
-        """Liefert nur Mitarbeiter, die nicht krank und nicht in Training sind."""
-        return [e for e in self.employees if not getattr(e, 'is_sick', False) and not getattr(e, 'is_training', False)]
+    def _active_employees(self, project=None):
+        """Liefert nur Mitarbeiter, die nicht krank und nicht in Training sind. Filtert nach Projekt-Team wenn angegeben."""
+        base = [e for e in self.employees if not getattr(e, 'is_sick', False) and not getattr(e, 'is_training', False)]
+        if project and hasattr(project, 'assigned_employee_ids') and project.assigned_employee_ids:
+            # Nur Mitarbeiter, deren Index in der Liste ist
+            return [e for i, e in enumerate(self.employees) if i in project.assigned_employee_ids and e in base]
+        return base
 
-    def get_team_bonus(self):
+    def get_team_bonus(self, project=None):
         """Gesamtbonus des Teams auf Spielqualität (nur aktive Mitarbeiter)."""
-        active = self._active_employees()
+        active = self._active_employees(project)
         if not active:
             return 0.0
-        base_bonus = sum(e.quality_contribution for e in active)
-        return base_bonus * self.get_team_quality_modifier()
+        
+        total_bonus = 0.0
+        for e in active:
+            eb = e.quality_contribution
+            # Spezialisierungs-Bonus einrechnen
+            if project and e.specialization:
+                spec = e.specialization
+                btype = spec.get("bonus_type")
+                target = spec.get("target")
+                val = spec.get("bonus_value", 0)
+                
+                if btype == "Genre" and (project.genre == target or project.sub_genre == target):
+                    eb *= (1.0 + val)
+                elif btype == "Topic" and project.topic == target:
+                    eb *= (1.0 + val)
+            total_bonus += eb
+            
+        return total_bonus * self.get_team_quality_modifier(project)
 
-    def get_team_slider_bonus(self, slider_name):
+    def get_team_slider_bonus(self, slider_name, project=None):
         """Durchschnittlicher Skill-Bonus des Teams für einen Slider (nur aktive Mitarbeiter)."""
-        active = self._active_employees()
+        active = self._active_employees(project)
         if not active:
             return 0.0
-        bonuses = [e.get_slider_bonus(slider_name) for e in active]
+        
+        bonuses = []
+        for e in active:
+            b = e.get_slider_bonus(slider_name)
+            # Spezialisierungen für bestimmte Kategorien (Code, Sound, Design, Story)
+            if e.specialization:
+                spec = e.specialization
+                btype = spec.get("bonus_type")
+                val = spec.get("bonus_value", 0)
+                
+                # Mapping Slider -> Spezialisierung
+                mapping = {
+                    "Sound": "Sound",
+                    "KI": "KI",
+                    "Gameplay": "KI", # Code-Maschine hilft auch bei Gameplay
+                    "Grafik": "Grafik",
+                    "Welt": "Grafik", # Design-Gott hilft auch bei Welt
+                    "Story": "Story"
+                }
+                if mapping.get(slider_name) == btype:
+                    b *= (1.0 + val)
+            bonuses.append(b)
+            
         return sum(bonuses) / len(bonuses)
 
-    def get_team_speed_modifier(self):
-        active = self._active_employees()
+    def get_team_speed_modifier(self, project=None):
+        active = self._active_employees(project)
         if not active:
             return 1.0
-        mods = [e.trait["value"] if e.trait and e.trait["effect"] == "speed" else 1.0 for e in active]
-        return sum(mods) / len(mods)
+        
+        # Durchschnittlicher Speed-Skill (50 = 1.0)
+        avg_speed = sum(e.speed for e in active) / len(active)
+        
+        # Trait-Modifikatoren (Robust gegen alte Strings oder fehlende Keys)
+        trait_mods = []
+        for e in active:
+            val = 1.0
+            if hasattr(e, 'trait') and isinstance(e.trait, dict):
+                if e.trait.get("effect") == "speed":
+                    val = e.trait.get("value", 1.0)
+            trait_mods.append(val)
+        trait_avg = sum(trait_mods) / len(trait_mods)
+        
+        return (avg_speed / 50.0) * trait_avg
 
-    def get_team_bug_modifier(self):
-        has_qa = self.has_office_bonus("qa")
-        qa_mod = 0.8 if has_qa else 1.0
-        active = self._active_employees()
+    def get_team_bug_modifier(self, project=None):
+        active = self._active_employees(project)
         if not active:
-            return 1.0 * qa_mod
-        mods = [e.trait["value"] if e.trait and e.trait["effect"] == "bugs" else 1.0 for e in active]
-        return (sum(mods) / len(mods)) * qa_mod
+            return 1.0
+            
+        # Durchschnittlicher Bug-Modifier der Mitarbeiter
+        avg_mod = sum(e.bug_modifier for e in active) / len(active)
+        
+        # Trait-Modifikatoren
+        trait_mods = []
+        for e in active:
+            val = 1.0
+            if hasattr(e, 'trait') and isinstance(e.trait, dict):
+                if e.trait.get("effect") == "bugs":
+                    val = e.trait.get("value", 1.0)
+            trait_mods.append(val)
+        trait_avg = sum(trait_mods) / len(trait_mods)
+        
+        # QA Bonus
+        qa_bonus = 0.7 if self.has_office_bonus("qa_tools") else 1.0
+        
+        return avg_mod * trait_avg * qa_bonus
 
-    def get_team_quality_modifier(self):
-        active = self._active_employees()
+    def get_team_quality_modifier(self, project=None):
+        active = self._active_employees(project)
         if not active:
             return 1.0
         mods = [e.trait["value"] if e.trait and e.trait["effect"] == "quality" else 1.0 for e in active]
@@ -1400,10 +1576,12 @@ class GameState:
         
         # Aktive Projekte prüfen
         dev_info = ""
-        if self.is_developing and self.active_project:
-            proj_name = self.active_project.name if hasattr(self.active_project, 'name') else self.get_text('current_project_short')
-            progress_pct = int((self.dev_progress / max(1, self.dev_total_weeks)) * 100)
-            dev_info = f" | {self.get_text('developing')}: {proj_name} {progress_pct}%"
+        if self.active_projects:
+            # Zeige die ersten zwei Projekte namentlich, den Rest als Anzahl
+            names = [ap["project"].name for ap in self.active_projects[:2]]
+            if len(self.active_projects) > 2:
+                names.append(f"+{len(self.active_projects)-2}")
+            dev_info = f" | {self.get_text('developing')}: {', '.join(names)}"
         elif self.is_researching and self.current_research_draft:
             r_name = self.current_research_draft['data']['name']
             progress_pct = int((self.research_progress / max(1, self.research_total_weeks)) * 100)
@@ -1450,9 +1628,21 @@ class GameState:
     # FORSCHUNG & ENGINES
     # ==========================================================
 
+    def get_research_block_reason(self):
+        """Gibt den Grund zurück, warum Forschung gerade nicht möglich ist (oder None)."""
+        if self.is_researching:
+            name = self.current_research_draft['data']['name'] if self.current_research_draft else '?'
+            return self.get_text('research_blocked_already_researching', name=name)
+        if self.is_developing:
+            proj_name = self.active_projects[0]["project"].name if self.active_projects else '?'
+            return self.get_text('research_blocked_developing', name=proj_name)
+        return None
+
     def start_research(self, res_data, res_type):
         """Startet ein neues Forschungsprojekt."""
-        if self.money < res_data["cost"] or self.is_researching or self.is_developing:
+        if self.money < res_data["cost"]:
+            return False
+        if self.is_researching or self.is_developing:
             return False
             
         self.track_expense("research", res_data["cost"])
@@ -1821,7 +2011,7 @@ class GameState:
     # BEWERTUNG
     # ==========================================================
 
-    def calculate_review(self, project):
+    def calculate_review(self, project, bugs=0):
         """
         Berechnet die Bewertung eines Spiels.
         Inklusive Trend-Bonus.
@@ -1841,14 +2031,14 @@ class GameState:
         for sname in SLIDER_NAMES:
             player_val = sliders.get(sname, 5)
             ideal_val = ideal.get(sname, 5)
-            team_bonus = self.get_team_slider_bonus(sname)
+            team_bonus = self.get_team_slider_bonus(sname, project=project)
             effective_val = player_val + team_bonus
             total_diff += abs(effective_val - ideal_val)
             max_diff += 10
         slider_match = 1.0 - (total_diff / max_diff) if max_diff > 0 else 0.5
 
         # 3. Team-Bonus (0.0 - 1.0)
-        team_quality = min(1.0, self.get_team_bonus() * 5)
+        team_quality = min(1.0, self.get_team_bonus(project) * 5)
 
         # 4. Engine-Bonus (0.0 - 1.0)
         engine_quality = 0.3
@@ -1875,6 +2065,10 @@ class GameState:
             (0.5 * 0.05)
         )
         base_score *= random_factor * trend_bonus
+
+        # Bug-Malus (Massiv wenn viele Bugs)
+        bug_penalty = (bugs * 0.02) # 50 Bugs = -1.0 (10 Punkte auf 10er Skala)
+        base_score = max(0.1, base_score - bug_penalty)
 
         # Massive Bonus for perfect synergy and slider configuration
         if synergy >= 0.8 and slider_match >= 0.8:
@@ -2022,9 +2216,11 @@ class GameState:
         size_data = next((s for s in GAME_SIZES if s["name"] == project.size), GAME_SIZES[1])
         base_cost = 10000 * size_data["cost_multi"]
 
-        # Team-Kosten
+        # Team-Kosten (nur zugewiesene MA)
         dev_weeks = sum(p["duration_weeks"] for p in DEV_PHASES) * size_data["time_multi"]
-        salary_cost = sum(e.salary for e in self.employees) * dev_weeks
+        assigned_emps = [self.employees[i] for i in getattr(project, 'assigned_employee_ids', []) if i < len(self.employees)]
+        if not assigned_emps: assigned_emps = self.employees # Fallback
+        salary_cost = sum(e.salary for e in assigned_emps) * dev_weeks
 
         # Marketing-Kosten
         from game_data import MARKETING_OPTIONS_PH5
@@ -2033,8 +2229,11 @@ class GameState:
 
         return int(base_cost + salary_cost + marketing_cost)
 
-    def finalize_game(self, project):
+    def finalize_game(self, ap_dict):
         """Schließt die Spielentwicklung ab."""
+        project = ap_dict["project"]
+        bugs = ap_dict["bugs"]
+        
         project.week_developed = self.week
 
         # Kosten und Marketing abziehen
@@ -2043,79 +2242,73 @@ class GameState:
         if hasattr(self, "accounting"):
             self.accounting["expenses"] += project.dev_cost
 
-        project.review = self.calculate_review(project)
+        project.review = self.calculate_review(project, bugs=bugs)
+        
         # Hype-Bonus für Verkäufe
         hype_multi = 1.0 + (self.hype / 100.0)
         project.sales = int(self.calculate_sales(project) * hype_multi)
-
-        # Reset Crunch & Bugs & Hype
-        self.crunch_active = False
-        self.current_bugs = 0
         self.hype = 0 # Hype wird beim Release verbraucht
 
         price = AUDIENCE_PRICE.get(project.audience, 30)
         total_revenue = project.sales * price
         
         # Publisher Royalties
-        publisher = self.current_draft.get("publisher")
+        publisher = self.current_draft.get("publisher") # Draft ist hier eigentlich irrelevant, sollte am Projekt hängen?
+        # In start_development wurde marketing übernommen, aber publisher nicht?
+        # Ich schaue nochmal start_development an.
+        
         if publisher:
             royalty_cut = int(total_revenue * publisher["royalty"])
             project.revenue = total_revenue - royalty_cut
-            # Einmaliger Bonus bei Vertragsabschluss (Advance)
             self.money += publisher["advance"]
         else:
-            # Self-Publishing -> Vertriebskosten
             if "Digitaler Vertrieb & Logistik" in self.unlocked_technologies:
-                distribution_margin = 0.15 # 15% mit Technologie
+                distribution_margin = 0.15 
             else:
-                distribution_margin = 0.30 # 30% ohne Technologie
+                distribution_margin = 0.30 
                 
             dist_cost = int(total_revenue * distribution_margin)
             project.revenue = total_revenue - dist_cost
             project.distribution_cost = dist_cost
 
-        # NEU Phase I: Co-Dev Splitting
-        if getattr(self, "co_dev_partner", None):
-            # Der Partner übernimmt 50% der Entwicklungskosten, wir bekommen sie zurück
+        # Co-Dev aus dem AP-Dict
+        if ap_dict.get("co_dev"):
+            partner = ap_dict["co_dev"]
             refund = int(project.dev_cost * 0.5)
             self.money += refund
             if hasattr(self, "accounting"):
                 self.accounting["income"] += refund
-            # Umsatz wird 50/50 geteilt
             project.revenue = int(project.revenue * 0.5)
             from models import Email
             self.emails.insert(0, Email(
-                sender=self.co_dev_partner,
+                sender=partner,
                 subject=self.get_text('subject_co_dev', name=project.name),
                 body=self.get_text('body_co_dev', refund=refund, revenue=project.revenue),
                 date_week=self.week
             ))
-            # Partner-Variable zurücksetzen für das nächste Spiel
-            self.co_dev_partner = None
+            
+        # Projekt aus Liste entfernen
+        if ap_dict in self.active_projects:
+            self.active_projects.remove(ap_dict)
+            
+        # Post-Game Logic
+        self.game_history.append(project)
+        self.co_dev_partner = None
 
         self.money += project.revenue
         if hasattr(self, "accounting"):
             self.accounting["income"] += project.revenue
-           # Fan-Gain durch Spiel und Lizenz
-        fan_base_gain = int(project.revenue * 0.005 * (project.review.average / 10)) # Base on revenue and review score
+            
+        # Fan-Gain durch Spiel und Lizenz
+        fan_base_gain = int(project.revenue * 0.005 * (project.review.average / 10))
         if getattr(project, 'license_bonus', 0) > 0:
-            # Finde die Lizenz um den Fan-Bonus zu approximieren
-            # Assuming license_bonus is the hype_bonus from the license data
-            fan_base_gain += int(project.license_bonus * 50) # Grobe Annäherung
+            fan_base_gain += int(project.license_bonus * 50)
         self.fans += fan_base_gain
         self.games_made += 1
         self.total_revenue += project.revenue
 
-        # Zeit vorrücken (simuliert jede Woche einzeln für Gehälter/Events)
-        size_data = next((s for s in GAME_SIZES if s["name"] == project.size), GAME_SIZES[1])
-        dev_weeks = int(sum(p["duration_weeks"] for p in DEV_PHASES) * size_data["time_multi"])
-        
-        for _ in range(dev_weeks):
-            self.week += 1
-            self._on_new_week()
-
+        # Moral-Anpassung nach Release
         for emp in self.employees:
-            emp.weeks_employed += dev_weeks
             if project.review and project.review.average >= 7:
                 emp.morale = min(100, emp.morale + 5)
             elif project.review and project.review.average < 4:
@@ -2263,7 +2456,20 @@ class GameState:
             "server_capacity": getattr(self, "server_capacity", 0),
             "publishing_offers": [o.to_dict() for o in getattr(self, "publishing_offers", [])],
             "published_third_party_games": [g.to_dict() for g in getattr(self, "published_third_party_games", [])],
-            "office_items": getattr(self, "office_items", [])
+            "office_items": getattr(self, "office_items", []),
+            "active_projects": [
+                {
+                    "project": ap["project"].to_dict(),
+                    "progress": ap["progress"],
+                    "total_weeks": ap["total_weeks"],
+                    "bugs": ap["bugs"],
+                    "crunch": ap.get("crunch", False),
+                    "ready_to_finish": ap.get("ready_to_finish", False),
+                    "event_count": ap.get("event_count", 0),
+                    "aaa_event_done": ap.get("aaa_event_done", False),
+                    "co_dev": ap.get("co_dev")
+                } for ap in self.active_projects
+            ]
         }
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
@@ -2417,6 +2623,33 @@ class GameState:
         self.settings = data.get("settings", {"language": "de", "music_enabled": True})
 
         # Rivalen laden
+        # Aktive Projekte laden
+        self.active_projects = []
+        for ad in data.get("active_projects", []):
+            pd = ad["project"]
+            proj = GameProject(
+                pd["name"], pd["topic"], pd["genre"],
+                pd.get("sliders"), pd.get("platform"), pd.get("audience"),
+                size=pd.get("size", "Mittel"), marketing=pd.get("marketing", "Kein Marketing")
+            )
+            # Metadaten wiederherstellen
+            proj.sales = pd.get("sales", 0)
+            proj.revenue = pd.get("revenue", 0)
+            proj.dev_cost = pd.get("dev_cost", 0)
+            proj.week_developed = pd.get("week_developed", 0)
+            proj.is_active = pd.get("is_active", True)
+            
+            self.active_projects.append({
+                "project": proj,
+                "progress": ad["progress"],
+                "total_weeks": ad["total_weeks"],
+                "bugs": ad["bugs"],
+                "crunch": ad.get("crunch", False),
+                "ready_to_finish": ad.get("ready_to_finish", False),
+                "event_count": ad.get("event_count", 0),
+                "aaa_event_done": ad.get("aaa_event_done", False),
+                "co_dev": ad.get("co_dev")
+            })
         self.rivals = []
         for r_data in data.get("rivals", []):
             games = []
@@ -3009,4 +3242,65 @@ class GameState:
             report.append(f"{self.get_text('yearly_best_game')}: {best_game.name} ({best_game.sales:,} {self.get_text('sales')})")
         
         return "\n".join(report)
+
+
+    def _send_monthly_bank_statement(self):
+        """Sendet monatlichen Kontoauszug per E-Mail (alle 4 Wochen)."""
+        if not hasattr(self, "financial_history"):
+            return
+            
+        last_4 = self.financial_history[-4:] if len(self.financial_history) >= 4 else self.financial_history
+        total_inc = sum(w["total_income"] for w in last_4) if last_4 else 0
+        total_exp = sum(w["total_expenses"] for w in last_4) if last_4 else 0
+        profit = total_inc - total_exp
+        income_detail = {}
+        expense_detail = {}
+        if last_4:
+            for w in last_4:
+                for cat, val in w["income"].items():
+                    income_detail[cat] = income_detail.get(cat, 0) + val
+                for cat, val in w["expenses"].items():
+                    expense_detail[cat] = expense_detail.get(cat, 0) + val
+        inc_lines = ["  + " + self.get_text("finance_" + c) + ": " + f"{v:,.0f}" + " EUR"
+                     for c, v in income_detail.items() if v > 0]
+        exp_lines = ["  - " + self.get_text("finance_" + c) + ": " + f"{v:,.0f}" + " EUR"
+                     for c, v in expense_detail.items() if v > 0]
+        cal = self.get_calendar_text()
+        sign = "+" if profit >= 0 else ""
+        body_lines = [
+            self.get_text("monthly_statement_period") + ": " + cal,
+            "",
+            self.get_text("finance_total_income") + ": " + f"{total_inc:,.0f}" + " EUR",
+        ] + inc_lines + [
+            "",
+            self.get_text("finance_total_expenses") + ": " + f"{total_exp:,.0f}" + " EUR",
+        ] + exp_lines + [
+            "",
+            self.get_text("finance_net_profit") + ": " + sign + f"{profit:,.0f}" + " EUR",
+            self.get_text("current_balance") + ": " + f"{self.money:,.0f}" + " EUR",
+        ]
+        from models import Email
+        self.emails.insert(0, Email(
+            sender=self.get_text("sender_bank"),
+            subject=self.get_text("subject_monthly_statement", date=cal),
+            body="\n".join(body_lines),
+            date_week=self.week
+        ))
+
+    def get_financial_summary(self):
+        """Gibt eine kurze akustische Zusammenfassung der Finanzen zurück."""
+        # Suche nach financial_history falls vorhanden
+        profit = 0
+        if hasattr(self, "financial_history") and self.financial_history:
+            # Profit der letzten 4 Wochen
+            last_4 = self.financial_history[-4:]
+            inc = sum(w["total_income"] for w in last_4)
+            exp = sum(w["total_expenses"] for w in last_4)
+            profit = inc - exp
+        
+        summary = self.get_text('finance_summary_hotkey', 
+                                money=self.money, 
+                                profit=profit, 
+                                fans=self.fans)
+        return summary
 

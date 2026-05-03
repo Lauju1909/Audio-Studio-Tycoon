@@ -1,0 +1,5 @@
+{
+    "version": "3.3.4",
+    "channel": "stable",
+    "changelog": "v3.3.4: Multi-Projekt-Entwicklung aktiviert, parallele Spiele möglich. GOTY-Menü-Loop gefixt. Bug-Malus für Reviews eingeführt. Team-Zuweisung optimiert."
+}

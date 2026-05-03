@@ -35,7 +35,7 @@ class MultiplayerRoomIdInput(TextInputMenu):
     def __init__(self, audio, game_state):
         super().__init__(
             title="multiplayer_join_room",
-            prompt="multiplayer_enter_room_id",
+            prompt="multiplayer_room_id_prompt",
             audio=audio,
             game_state=game_state,
             on_confirm=self._confirm,

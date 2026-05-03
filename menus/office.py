@@ -27,17 +27,18 @@ class HireMenu(Menu):
         import random
         from game_data import EMPLOYEE_ROLES
         
-        # Generiere 3 zufällige Kandidaten
+        # Generiere 3 zufällige Kandidaten mit echten Namen
         candidates = []
         for _ in range(3):
             role = random.choice(EMPLOYEE_ROLES)
-            name = f"{self.game_state.get_text('profi_prefix')} {random.randint(10,99)}"
-            salary = random.randint(1000, 5000)
-            candidates.append(Employee(name, role, salary))
+            # Übergebe None, damit Employee.__init__ einen echten Namen aus game_data wählt
+            candidates.append(Employee(name=None, role_data=role))
             
         self.options = []
         for c in candidates:
-             txt = f"{c.name} ({c.role}, {self.game_state.get_text('salary_suffix', salary=c.salary)})"
+             # Rolle lokalisieren
+             role_name = self.game_state.get_text(c.role)
+             txt = f"{c.name} ({role_name}, {self.game_state.get_text('salary_suffix', salary=c.salary)})"
              self.options.append({'text': txt, 'action': lambda emp=c: self._hire(emp)})
         self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "hr_menu"})
 
@@ -62,7 +63,10 @@ class FireMenu(Menu):
     def _update_options(self):
         self.options = []
         for i, emp in enumerate(self.game_state.employees):
-            self.options.append({'text': f"{emp.name} ({emp.role})", 'action': lambda idx=i: self._fire(idx)})
+            if getattr(emp, 'is_ceo', False):
+                continue
+            role_name = self.game_state.get_text(emp.role)
+            self.options.append({'text': f"{emp.name} ({role_name})", 'action': lambda idx=i: self._fire(idx)})
         self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "hr_menu"})
 
     def _fire(self, idx):
@@ -85,16 +89,17 @@ class TrainingEmployeeSelectMenu(Menu):
         self.options = []
         for i, emp in enumerate(self.game_state.employees):
             # Status-Tags: [Training] oder [Krank] anzeigen
+            role_name = self.game_state.get_text(emp.role)
             if getattr(emp, 'is_training', False):
                 weeks_left = getattr(emp, 'training_weeks_left', 0)
                 status = self.game_state.get_text('training_status_tag', weeks=weeks_left)
-                txt = f"[T] {emp.name} ({emp.role}) — {status}"
+                txt = f"[T] {emp.name} ({role_name}) — {status}"
             elif getattr(emp, 'is_sick', False):
                 weeks_left = getattr(emp, 'sick_weeks_left', 0)
                 status = self.game_state.get_text('sick_status_tag', weeks=weeks_left)
-                txt = f"[K] {emp.name} ({emp.role}) — {status}"
+                txt = f"[K] {emp.name} ({role_name}) — {status}"
             else:
-                txt = f"{emp.name} ({emp.role})"
+                txt = f"{emp.name} ({role_name})"
             self.options.append({'text': txt, 'action': lambda idx=i: self._select(idx)})
         self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "hr_menu"})
 
@@ -102,7 +107,7 @@ class TrainingEmployeeSelectMenu(Menu):
         emp = self.game_state.employees[idx]
         if getattr(emp, 'is_training', False):
             self.audio.play_sound("error")
-            self.audio.speak(self.game_state.get_text('training_already_in'))
+            self.audio.speak(self.game_state.get_text('training_already_in', name=emp.name))
             return None
         if getattr(emp, 'is_sick', False):
             self.audio.play_sound("error")
@@ -154,7 +159,7 @@ class TrainingOptionMenu(Menu):
             if result == "no_money":
                 self.audio.speak(self.game_state.get_text('not_enough_money'))
             elif result == "already_training":
-                self.audio.speak(self.game_state.get_text('training_already_in'))
+                self.audio.speak(self.game_state.get_text('training_already_in', name=emp.name))
             elif result == "is_sick":
                 self.audio.speak(self.game_state.get_text('training_sick_blocked'))
             else:
