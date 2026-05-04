@@ -148,7 +148,7 @@ def main():
     pygame.key.set_repeat(300, 50)
     # Nutze HWSURFACE, DOUBLEBUF und SCALED für maximale GPU-Beschleunigung und CPU-Effizienz
     screen = pygame.display.set_mode((800, 600), pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.SCALED | pygame.RESIZABLE)
-    pygame.display.set_caption("Audio Studio Tycoon v3.3.2-beta1 - Multi-Project Beta")
+    pygame.display.set_caption("Audio Studio Tycoon v3.3.3 - Stable")
 
     # --- PERFORMANCE & WOW CACHE ---
     # Fonts einmalig laden (Extrem CPU-schonend)
@@ -289,7 +289,8 @@ def main():
                     audio.speak("Ein interner Fehler ist aufgetreten. Rückkehr zum Hauptmenü.")
 
                 # Automatischer Wechsel zum Ergebnis wenn Entwicklung im Hintergrund fertig ist
-                if state.is_developing and getattr(state, "dev_ready_to_finish", False) and current_key != "dev_progress_menu":
+                any_ready = any(ap.get("ready_to_finish") for ap in state.active_projects)
+                if state.is_developing and any_ready and current_key != "dev_progress_menu":
                     if not state.pause_for_menu:
                         current_key = "dev_progress_menu"
                         current_menu = menu_factories[current_key]()
@@ -333,9 +334,13 @@ def main():
 
         # Multi-Tasking Ticker (oben rechts)
         if state.is_developing:
-            prog = int((state.dev_progress / max(1, state.dev_total_weeks)) * 100)
+            # BUG-FIX v3.3.9: Nutze active_projects statt der veralteten Legacy-Attribute dev_progress / dev_total_weeks
+            first_ap = state.active_projects[0]
+            prog = int((first_ap["progress"] / max(1, first_ap["total_weeks"])) * 100)
             prog = min(100, prog)
-            ticker_text = f"DEV: {state.current_draft.get('name', '???')} - {prog}%"
+            proj_name = first_ap["project"].name if hasattr(first_ap["project"], 'name') else '???'
+            count_suffix = f" (+{len(state.active_projects)-1})" if len(state.active_projects) > 1 else ""
+            ticker_text = f"DEV: {proj_name}{count_suffix} - {prog}%"
             # Pulsierender Effekt
             alpha = int(155 + 100 * abs(pygame.time.get_ticks() % 1000 - 500) / 500)
             t_box = pygame.Surface((230, 40), pygame.SRCALPHA)

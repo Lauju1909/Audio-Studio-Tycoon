@@ -864,9 +864,6 @@ class GameState:
                 self.current_console_draft = None
 
         # Zufällige Branchen-News (5% Chance pro Woche)
-        if random.random() < 0.05:
-            self._generate_industry_news()
-
         # Expo Trigger (Woche 26 jedes Jahr)
         week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
         if week_in_year == 24:  # Expo in Woche 24 jedes Spieljahres
@@ -879,12 +876,194 @@ class GameState:
                 is_bug=False
             ))
             self.emails[-1].is_expo_invite = True
-            
+
+        # --- NEU AUS ADVANCE_WEEK MERGER ---
+        # Saisonale Modifikatoren berechnen
+        week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
+        season_mod = 1.0
+        if 48 <= week_in_year <= 52:
+            season_mod = 1.5  # Weihnachtsgeschäft
+        elif 28 <= week_in_year <= 32:
+            season_mod = 0.8  # Sommerloch
+
+        # Achievements prüfen
+        if hasattr(self, "_check_achievements"):
+            self._check_achievements()
+
+        # Verkäufe für aktive Spiele
+        for g in self.game_history:
+            if g.is_active:
+                g.weeks_on_market += 1
+                # Verkäufe sinken mit der Zeit, plus saisonale Effekte
+                new_sales = int((self.calculate_sales(g) * season_mod) / (1 + g.weeks_on_market * 0.2))
+                if getattr(g, "bugs", 0) > 0:
+                    new_sales = int(new_sales * 0.5) # Bugs halbieren Verkäufe
+                    
+                # Event-Modifikatoren
+                for e in self.active_events:
+                    if e["effect"] == "sales_drop":
+                        new_sales = int(new_sales * e["multiplier"])
+                    elif e["effect"] == "sales_boost":
+                        new_sales = int(new_sales * e["multiplier"])
+                
+                price = AUDIENCE_PRICE.get(g.audience, 30)
+                
+                # Physikalischer Verkauf zuerst
+                physical_sold = 0
+                if getattr(g, "physical_copies", 0) > 0:
+                    physical_sold = min(new_sales, g.physical_copies)
+                    g.physical_copies -= physical_sold
+                    self.used_storage -= physical_sold
+                    g.lifetime_physical_sales = getattr(g, "lifetime_physical_sales", 0) + physical_sold
+                    
+                digital_sold = new_sales - physical_sold
+                
+                physical_rev = physical_sold * getattr(g, "physical_price", 45)
+                digital_rev = digital_sold * price
+                
+                g.sales += new_sales
+                total_rev = digital_rev + physical_rev
+                g.revenue += total_rev
+                
+                if hasattr(self, "track_income"):
+                    self.track_income("sales", total_rev)
+                else:
+                    self.money += total_rev
+                    self.accounting["income"] += total_rev
+
+                # Optional: Addons pushen die Verkäufe
+                for addon in self.active_addons:
+                    if addon.base_game_name == g.name:
+                        new_sales = int(new_sales * 1.5) # 50% Boost durch aktives Addon
+
+                if g.weeks_on_market > 20 or new_sales < 100:
+                    g.is_active = False
+
+        # Einnahmen durch Addons
+        for addon in self.active_addons:
+            base_game = next((g for g in self.game_history if g.name == addon.base_game_name), None)
+            if base_game and base_game.is_active:
+                sales = int(base_game.sales * 0.05 / (1 + (self.week - addon.week_developed) * 0.1))
+                if sales > 0:
+                    revenue = sales * 15
+                    addon.sales += sales
+                    addon.revenue += revenue
+                    self.money += revenue
+                    self.accounting["income"] += revenue
+
+        # Einnahmen durch Bundles
+        for bundle in self.active_bundles:
+            from game_data import BUNDLE_DATA
+            sales = max(10, int(500 * (bundle.average_score / 10) * BUNDLE_DATA["revenue_mod"]))
+            revenue = sales * bundle.base_price
+            bundle.sales += sales
+            bundle.revenue += revenue
+            self.money += revenue
+            self.accounting["income"] += revenue
+
+        # Lizenzen verwalten
+        licenses_to_remove = []
+        for lic in self.active_licenses:
+            if hasattr(lic, "duration"):
+                lic.duration -= 1
+                if lic.duration <= 0 and not getattr(lic, "used", False):
+                    licenses_to_remove.append(lic)
+        
+        for lic in licenses_to_remove:
+            self.active_licenses.remove(lic)
+            from models import Email
+            self.emails.append(Email(
+                sender=self.get_text('sender_system'),
+                subject=self.get_text('subject_license_expired'),
+                body=self.get_text('body_license_expired', name=lic.name),
+                date_week=self.week
+            ))
+
+        # MMOs verarbeiten
+        total_mmo_players = sum(m.players for m in self.active_mmos if m.game.is_active)
+        server_capacity = getattr(self, 'server_capacity', 0)
+        server_overloaded = total_mmo_players > server_capacity
+        
+        for mmo in self.active_mmos:
+            if mmo.game.is_active:
+                mmo.weeks_active += 1
+                self.money += mmo.weekly_revenue
+                self.money -= mmo.weekly_cost
+                mmo.game.revenue += mmo.weekly_revenue
+                
+                if server_overloaded:
+                    mmo.players = int(mmo.players * 0.85)
+                else:
+                    mmo.players = int(mmo.players * 0.98)
+                
+                if mmo.players < 1000:
+                    mmo.game.is_active = False
+
+        if server_overloaded and total_mmo_players > 0 and self.week % 4 == 0:
+            from models import Email
+            self.emails.append(Email(
+                sender=self.get_text('sender_system'),
+                subject=self.get_text('subject_server_overload'),
+                body=self.get_text('body_server_overload'),
+                date_week=self.week,
+                is_bug=True
+            ))
+
+        # Fan-Mails & Bugs
+        self.process_emails()
+        
+        # Lagerkosten
+        if self.used_storage > 0:
+            storage_cost = int(self.used_storage * 0.1)
+            self.money -= storage_cost
+            self.accounting["expenses"] += storage_cost
+
+        # Merchandising
+        for merch in self.active_merch:
+            if merch["stock"] > 0:
+                sales = int(random.randint(5, 40) * merch["hype_multi"] * (1 + self.hype / 100))
+                sales = min(sales, merch["stock"])
+                if sales > 0:
+                    rev = sales * merch["sell_price"]
+                    self.money += rev
+                    self.accounting["income"] += rev
+                    merch["stock"] -= sales
+                    merch["sales"] += sales
+                    merch["revenue"] += rev
+                    self.used_storage -= sales
+                    if merch["stock"] <= 0:
+                        from models import Email
+                        self.emails.append(Email(
+                            sender=self.get_text("sender_logistics"),
+                            subject=self.get_text("subject_merch_sold_out"),
+                            body=self.get_text("body_merch_sold_out", name=merch["name"]),
+                            date_week=self.week
+                        ))
+        self.active_merch = [m for m in self.active_merch if m["stock"] > 0]
+
+        # Publishing Angebote
+        if self.office_level >= 2 and random.random() < 0.05:
+            self._generate_publishing_offer()
+
+        # Third-Party Spiele
+        for published_game in self.published_third_party_games:
+            if published_game.is_active:
+                published_game.weeks_on_market += 1
+                base_sales = published_game.quality * 1000
+                sales_this_week = int(base_sales / (1 + published_game.weeks_on_market * 0.1))
+                published_game.total_sales += sales_this_week
+                gross_revenue = sales_this_week * 30
+                player_cut = int(gross_revenue * published_game.player_share)
+                our_cut = gross_revenue - player_cut
+                self.money += our_cut
+                self.accounting["income"] += our_cut
+                published_game.total_revenue += gross_revenue
+                published_game.player_profit += player_cut
+                if sales_this_week < 50 or published_game.weeks_on_market > 30:
+                    published_game.is_active = False
+
         # WÖCHENTLICHE BILANZ ABSPEICHERN
         self.finalize_weekly_balance()
-            
-        # NEU: Phase B - Lizenzen ablaufen lassen
-        # Wird in advance_week direkt verarbeitet
 
         # NEU: Phase 7 - Rivalen und GOTY evaluieren
         self._process_rivals()
@@ -1093,7 +1272,7 @@ class GameState:
             self.my_goty_wins += 1
         
         self.pending_goty_results = goty_data
-
+ 
     def _generate_industry_news(self):
         """Erzeugt zufällige Markt-Ereignisse."""
         from models import Email
@@ -1168,227 +1347,6 @@ class GameState:
         total = sum(e.salary for e in self.employees)
         self.track_expense("salaries", total)
         return total
-
-    def advance_week(self, weeks=1):
-        """Rückt die Zeit vor und verarbeitet wöchentliche Ereignisse."""
-        for _ in range(weeks):
-            self.week += 1
-            self.pay_salaries()
-            
-            # Trends und Zufallsereignisse
-            self.check_random_event()
-            
-            # Saisonale Modifikatoren berechnen
-            week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
-            
-            if week_in_year == 1 and self.week > 1:
-                # Neues Jahr beginnt! Bericht senden.
-                report = self.get_yearly_report()
-                from models import Email
-                self.emails.insert(0, Email(
-                    sender=self.get_text('sender_accounting'),
-                    subject=self.get_text('subject_yearly_report', year=self.week // WEEKS_PER_YEAR + START_YEAR - 1),
-                    body=report,
-                    date_week=self.week
-                ))
-
-            season_mod = 1.0
-            if 48 <= week_in_year <= 52:
-                season_mod = 1.5  # Weihnachtsgeschäft
-            elif 28 <= week_in_year <= 32:
-                season_mod = 0.8  # Sommerloch
-                
-            # Achievements prüfen
-            self._check_achievements()
-            
-            # Verkäufe für aktive Spiele
-            for g in self.game_history:
-                if g.is_active:
-                    g.weeks_on_market += 1
-                    # Verkäufe sinken mit der Zeit, plus saisonale Effekte
-                    new_sales = int((self.calculate_sales(g) * season_mod) / (1 + g.weeks_on_market * 0.2))
-                    if g.bugs > 0:
-                        new_sales = int(new_sales * 0.5) # Bugs halbieren Verkäufe
-                        
-                    # Hacker-Event Malus
-                    for e in self.active_events:
-                        if e["effect"] == "sales_drop":
-                            new_sales = int(new_sales * e["multiplier"])
-                        elif e["effect"] == "sales_boost":
-                            new_sales = int(new_sales * e["multiplier"])
-                    
-                    price = AUDIENCE_PRICE.get(g.audience, 30)
-                    
-                    # Physikalischer Verkauf zuerst
-                    physical_sold = 0
-                    if getattr(g, "physical_copies", 0) > 0:
-                        physical_sold = min(new_sales, g.physical_copies)
-                        g.physical_copies -= physical_sold
-                        self.used_storage -= physical_sold
-                        g.lifetime_physical_sales = getattr(g, "lifetime_physical_sales", 0) + physical_sold
-                        
-                    digital_sold = new_sales - physical_sold
-                    
-                    # Physischer Retailpreis ist fix oder via Modell (hier: default 45)
-                    physical_rev = physical_sold * getattr(g, "physical_price", 45)
-                    digital_rev = digital_sold * price
-                    
-                    g.sales += new_sales
-                    total_rev = digital_rev + physical_rev
-                    g.revenue += total_rev
-                    self.track_income("sales", total_rev)
-                    # Optional: Addons pushen die Verkäufe
-                    for addon in self.active_addons:
-                        if addon.base_game_name == g.name:
-                            new_sales = int(new_sales * 1.5) # 50% Boost durch aktives Addon
-
-                    if g.weeks_on_market > 20 or new_sales < 100:
-                        g.is_active = False
-
-            # Einnahmen durch Addons generieren
-            for addon in self.active_addons:
-                base_game = next((g for g in self.game_history if g.name == addon.base_game_name), None)
-                if base_game and base_game.is_active:
-                    # Addon Verkäufe basieren auf den Basis-Spiel-Verkäufen
-                    sales = int(base_game.sales * 0.05 / (1 + (self.week - addon.week_developed) * 0.1))
-                    if sales > 0:
-                        revenue = sales * 15 # Addons kosten fix 15
-                        addon.sales += sales
-                        addon.revenue += revenue
-                        self.track_income("sales", revenue)
-
-            # Einnahmen durch Bundles generieren
-            for bundle in self.active_bundles:
-                from game_data import BUNDLE_DATA
-                # Bundles verkaufen sich langsam aber stetig für lange Zeit.
-                sales = max(10, int(500 * (bundle.average_score / 10) * BUNDLE_DATA["revenue_mod"]))
-                revenue = sales * bundle.base_price
-                bundle.sales += sales
-                bundle.revenue += revenue
-                self.track_income("sales", revenue)
-
-            # Lizenzen verwalten (werden in Wochen heruntergezählt oder durch Kauf fixiert)
-            # Eine Nutzung wird beim Release eines Spiels markiert (used=True)
-            licenses_to_remove = []
-            
-            # WÖCHENTLICHE BILANZ ABSPEICHERN
-            self.finalize_weekly_balance()
-            for license in self.active_licenses:
-                if license.duration > 0:
-                    license.duration -= 1
-                if license.duration <= 0 and not license.used: # Only expire if not used for a game
-                    licenses_to_remove.append(license)
-            
-            from models import Email
-            for license in licenses_to_remove:
-                self.active_licenses.remove(license)
-                self.emails.append(Email(
-                    sender=self.get_text('sender_system'),
-                    subject=self.get_text('subject_license_expired'),
-                    body=self.get_text('body_license_expired', name=license.name),
-                    date_week=self.week
-                ))
-
-            # MMOs verarbeiten (Einnahmen, Kosten, Spielerschwund)
-            total_mmo_players = sum(m.players for m in self.active_mmos if m.game.is_active)
-            server_capacity = getattr(self, 'server_capacity', 0)
-            server_overloaded = total_mmo_players > server_capacity
-            
-            for mmo in self.active_mmos:
-                if mmo.game.is_active:
-                    mmo.weeks_active += 1
-                    # Einnahmen und Kosten
-                    self.money += mmo.weekly_revenue
-                    self.money -= mmo.weekly_cost
-                    mmo.game.revenue += mmo.weekly_revenue
-                    
-                    # Spielerschwund
-                    if server_overloaded:
-                        mmo.players = int(mmo.players * 0.85) # 15% Schwund bei Server-Last!
-                    else:
-                        mmo.players = int(mmo.players * 0.98) # Normaler Schwund 2%
-                    
-                    if mmo.players < 1000:
-                        mmo.game.is_active = False # Server shut down
-
-            if server_overloaded and total_mmo_players > 0:
-                if self.week % 4 == 0:
-                    from models import Email
-                    self.emails.append(Email(
-                        sender=self.get_text('sender_system'),
-                        subject=self.get_text('subject_server_overload'),
-                        body=self.get_text('body_server_overload'),
-                        date_week=self.week,
-                        is_bug=True
-                    ))
-
-            # Fan-Mails & Bugs generieren
-            self.process_emails()
-            
-            # NEU: Phase C - Lagerkosten
-            if self.used_storage > 0:
-                storage_cost = int(self.used_storage * 0.1)  # 10 Cent pro gelagerte Einheit
-                self.money -= storage_cost
-                if hasattr(self, "accounting"):
-                    self.accounting["expenses"] += storage_cost
-
-            # NEU: Phase F - Merchandising Verkäufe
-            for merch in self.active_merch:
-                if merch["stock"] > 0:
-                    import random
-                    base_sales = random.randint(5, 40)
-                    sales = int(base_sales * merch["hype_multi"] * (1 + self.hype / 100))
-                    sales = min(sales, merch["stock"])
-                    
-                    if sales > 0:
-                        revenue = sales * merch["sell_price"]
-                        self.money += revenue
-                        if hasattr(self, "accounting"):
-                            self.accounting["income"] += revenue
-                        
-                        merch["stock"] -= sales
-                        merch["sales"] += sales
-                        merch["revenue"] += revenue
-                        self.used_storage -= sales
-                        
-                    if merch["stock"] <= 0:
-                        from models import Email
-                        self.emails.append(Email(
-                            sender=self.get_text("sender_logistics"),
-                            subject=self.get_text("subject_merch_sold_out"),
-                            body=self.get_text("body_merch_sold_out", name=merch["name"]),
-                            date_week=self.week
-                        ))
-            
-            # Ausverkaufte Merch-Artikel entfernen
-            self.active_merch = [m for m in self.active_merch if m["stock"] > 0]
-
-            # NEU: Phase E - Zufällige Publishing Angebote generieren
-            if self.office_level >= 2 and random.random() < 0.05:
-                self._generate_publishing_offer()
-
-            # NEU: Phase E - Third-Party Spiele verwalten
-            for published_game in self.published_third_party_games:
-                if published_game.is_active:
-                    published_game.weeks_on_market += 1
-                    # Vereinfachte Verkaufslogik für Third-Party
-                    base_sales = published_game.quality * 1000
-                    sales_this_week = int(base_sales / (1 + published_game.weeks_on_market * 0.1))
-                    
-                    published_game.total_sales += sales_this_week
-                    
-                    # Einnahmen und Aufteilung
-                    gross_revenue = sales_this_week * 30 # Annahme: 30 Euro pro Spiel
-                    player_cut = int(gross_revenue * published_game.player_share)
-                    our_cut = gross_revenue - player_cut
-                    
-                    self.money += our_cut
-                    self.accounting["income"] += our_cut
-                    published_game.total_revenue += gross_revenue
-                    published_game.player_profit += player_cut
-                    
-                    if sales_this_week < 50 or published_game.weeks_on_market > 30:
-                        published_game.is_active = False
 
     def process_emails(self):
         """Generiert zufällige E-Mails."""

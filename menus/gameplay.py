@@ -265,9 +265,13 @@ class ProjectTeamSelectMenu(Menu):
             # Spezialisierungs-Indikator
             if emp.specialization:
                 spec = emp.specialization
-                if spec.get("bonus_type") == "Genre" and (self.game_state.current_draft['genre'] == spec.get("target") or self.game_state.current_draft.get('sub_genre') == spec.get("target")):
+                # BUG-FIX v3.3.9: Sicherer .get()-Zugriff statt [] um KeyError/TypeError bei None-Werten nach reset_draft zu vermeiden
+                draft_genre = self.game_state.current_draft.get('genre')
+                draft_topic = self.game_state.current_draft.get('topic')
+                draft_sub_genre = self.game_state.current_draft.get('sub_genre')
+                if spec.get("bonus_type") == "Genre" and (draft_genre == spec.get("target") or draft_sub_genre == spec.get("target")):
                     text += " [BONUS!]"
-                elif spec.get("bonus_type") == "Topic" and self.game_state.current_draft['topic'] == spec.get("target"):
+                elif spec.get("bonus_type") == "Topic" and draft_topic == spec.get("target"):
                     text += " [BONUS!]"
             
             # WICHTIG: idx=i fixiert den aktuellen Wert von i für die Lambda-Funktion
@@ -436,8 +440,10 @@ class DeveloperMenu(Menu):
         return None
 
     def _instant_dev(self):
+        # BUG-FIX v3.3.9: active_projects statt veralteter dev_progress/dev_total_weeks nutzen
         if self.game_state.is_developing:
-            self.game_state.dev_progress = self.game_state.dev_total_weeks
+            for ap in self.game_state.active_projects:
+                ap["progress"] = ap["total_weeks"]
             self.audio.speak("Entwicklung abgeschlossen.")
         return None
 
@@ -805,7 +811,9 @@ class ExpoMenu(Menu):
             self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "service_menu"})
         elif self.state == "demo":
             self.title = "Spiele-Messe: Demo zeigen?"
-            if self.game_state.is_developing and self.game_state.dev_progress > 10:
+            # BUG-FIX v3.3.9: active_projects statt veraltetes dev_progress-Attribut nutzen
+            first_prog = self.game_state.active_projects[0]["progress"] if self.game_state.active_projects else 0
+            if self.game_state.is_developing and first_prog > 10:
                 self.options.append({'text': self.game_state.get_text('expo_demo_current'), 'action': lambda: self._select_demo(10000, 5)})
             self.options.append({'text': self.game_state.get_text('expo_demo_none'), 'action': lambda: self._select_demo(0, 0)})
         elif self.state == "influencer":

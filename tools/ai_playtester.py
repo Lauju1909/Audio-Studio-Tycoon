@@ -307,7 +307,8 @@ def run_ai_playtest_for_lang(lang, duration_weeks=50, is_bankruptcy_test=False):
                         current_menu = factories[current_key]()
                         current_menu.announce_entry()
             
-            if state.is_developing and getattr(state, "dev_ready_to_finish", False) and current_key != "dev_progress_menu":
+            any_ready = any(ap.get("ready_to_finish") for ap in state.active_projects)
+            if state.is_developing and any_ready and current_key != "dev_progress_menu":
                 if not state.pause_for_menu:
                     current_key = "dev_progress_menu"; current_menu = factories[current_key]()
                     current_menu.announce_entry()

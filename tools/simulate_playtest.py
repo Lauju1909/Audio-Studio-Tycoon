@@ -168,7 +168,8 @@ class AIAgent:
             return self.fill_sliders()
             
         elif self.current_key == "dev_progress_menu":
-            if self.state.dev_progress >= self.state.dev_total_weeks:
+            first_ap = self.state.active_projects[0] if self.state.active_projects else None
+            if first_ap and first_ap["progress"] >= first_ap["total_weeks"]:
                 # Force finish (finish is usually option 0)
                 self.send_key(self.state.key_home)
                 return self.send_key(self.state.key_confirm)
@@ -190,7 +191,8 @@ class AIAgent:
             
             # 2. Entwicklung läuft?
             if self.state.is_developing:
-                if self.state.dev_progress >= self.state.dev_total_weeks:
+                first_ap = self.state.active_projects[0]
+                if first_ap["progress"] >= first_ap["total_weeks"]:
                     # Springe manuell in den DevScreen
                     # print(f"[Dev] Finished! State money: {self.state.money}")
                     self.current_key = "dev_progress_menu"
