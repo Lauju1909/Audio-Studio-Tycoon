@@ -8,7 +8,12 @@ Spielhistorie, Ereignisse und die Bewertungslogik.
 import random
 import json
 import os
-from models import GameProject, ReviewScore, Employee, Engine, EngineFeature, RivalStudio, RivalGame, Email
+from models import (
+    GameProject, ReviewScore, Employee, Engine, EngineFeature, 
+    RivalStudio, RivalGame, Email, AddonProject, BundleProject, 
+    ActiveMMO, BankLoan, CustomConsole, PublishingOffer, 
+    PublishedThirdPartyGame
+)
 from translations import TRANSLATIONS, get_system_language
 from game_data import (
     get_compatibility, get_ideal_sliders, SLIDER_NAMES, PLATFORMS, AUDIENCE_MULTI, AUDIENCE_PRICE,
@@ -213,7 +218,6 @@ class GameState:
 
     def add_welcome_emails(self):
         """Erstellt die Willkommens-E-Mails in der aktuell gesetzten Sprache."""
-        from models import Email
         # Willkommensnachricht: Die 1930er Ära
         self.emails.append(Email(
             sender=self.get_text('sender_historian'),
@@ -298,7 +302,6 @@ class GameState:
             return
             
         # Der Chef hat feste Daten
-        from models import Employee
         ceo = Employee(name="Chef", role_data={"role": "Chef", "primary": "Gameplay", "secondary": "Design"}, skill_level=3)
         ceo.is_ceo = True
         ceo.salary = 0
@@ -360,7 +363,6 @@ class GameState:
             
             plat_name = platform['name'] if isinstance(platform, dict) else platform
             
-            from models import GameProject
             project = GameProject(
                 name=name, topic=topic, genre=genre, sliders=sliders,
                 platform=plat_name, audience=audience, engine=engine,
@@ -597,7 +599,6 @@ class GameState:
                 # Will eine Erhöhung, wenn sein Skill 30% mehr wert ist als er verdient
                 if expected_salary > emp.salary * 1.3 and random.random() < 0.1:
                     emp.pending_raise_request = True
-                    from models import Email
                     new_salary = int(emp.salary * 1.25)
                     mail_subj = self.get_text('subject_salary_raise')
                     mail_body = self.get_text('body_salary_raise', name=emp.name, current=emp.salary, expected=new_salary)
@@ -611,8 +612,7 @@ class GameState:
         for e in quitting_employees:
             if e in self.employees:
                 self.employees.remove(e)
-            from models import Email
-            self.emails.insert(0, Email(
+                self.emails.insert(0, Email(
                 sender=e.name,
                 subject=self.get_text('subject_quit'),
                 body=self.get_text('body_quit', name=e.name),
@@ -630,7 +630,6 @@ class GameState:
             self.bank_loan.weeks_remaining -= 1
             if self.bank_loan.weeks_remaining <= 0 or self.bank_loan.amount_remaining <= 0:
                 self.bank_loan = None
-                from models import Email
                 self.emails.insert(0, Email(
                     sender=self.get_text('sender_bank'),
                     subject=self.get_text('subject_loan_paid'),
@@ -669,7 +668,6 @@ class GameState:
                 elif not getattr(target_emp, 'pending_poach_offer', False):
                     target_emp.pending_poach_offer = True
                     offer_salary = int(target_emp.salary * 1.5)
-                    from models import Email
                     mail = Email(
                         sender="Headhunter",
                         subject=self.get_text('subject_poach_offer', name=target_emp.name),
@@ -688,7 +686,6 @@ class GameState:
                 # Da wir kein Zeitstempel im Employee für das Angebot haben, nutzen wir eine Chance
                 if random.random() < 0.3: # 30% Chance pro Woche zu gehen
                     self.employees.remove(emp)
-                    from models import Email
                     self.emails.insert(0, Email(
                         sender="System",
                         subject=self.get_text('subject_employee_left', name=emp.name),
@@ -709,7 +706,6 @@ class GameState:
             if potential_targets:
                 target = random.choice(potential_targets)
                 plan = target.planned_project
-                from models import Email
                 self.emails.append(Email(
                     sender=self.get_text('sender_intel'),
                     subject=self.get_text('subject_intel_report', name=target.name),
@@ -845,7 +841,6 @@ class GameState:
             if self.console_progress >= self.console_total_weeks:
                 self.is_developing_console = False
                 c = self.current_console_draft
-                from models import CustomConsole, Email
                 new_console = CustomConsole(c['name'], c['tech_level'], c['cost'], self.week)
                 if not hasattr(self, "custom_consoles"): 
                     self.custom_consoles = []
@@ -862,7 +857,6 @@ class GameState:
         # Expo Trigger (Woche 26 jedes Jahr)
         week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
         if week_in_year == 24:  # Expo in Woche 24 jedes Spieljahres
-            from models import Email
             self.emails.append(Email(
                 sender=self.get_text('sender_assistant'),
                 subject=self.get_text('subject_expo', default="Spiele-Messe: Ausstellung!"),
@@ -966,7 +960,6 @@ class GameState:
         
         for lic in licenses_to_remove:
             self.active_licenses.remove(lic)
-            from models import Email
             self.emails.append(Email(
                 sender=self.get_text('sender_system'),
                 subject=self.get_text('subject_license_expired'),
@@ -995,8 +988,7 @@ class GameState:
                     mmo.game.is_active = False
 
         if server_overloaded and total_mmo_players > 0 and self.week % 4 == 0:
-            from models import Email
-            self.emails.append(Email(
+                self.emails.append(Email(
                 sender=self.get_text('sender_system'),
                 subject=self.get_text('subject_server_overload'),
                 body=self.get_text('body_server_overload'),
@@ -1027,8 +1019,7 @@ class GameState:
                     merch["revenue"] += rev
                     self.used_storage -= sales
                     if merch["stock"] <= 0:
-                        from models import Email
-                        self.emails.append(Email(
+                                        self.emails.append(Email(
                             sender=self.get_text("sender_logistics"),
                             subject=self.get_text("subject_merch_sold_out"),
                             body=self.get_text("body_merch_sold_out", name=merch["name"]),
@@ -1094,7 +1085,6 @@ class GameState:
 
     def _process_rivals(self):
         """Lässt Rivalen Spiele veröffentlichen und Marktanteile beeinflussen."""
-        from models import Email
         import competitor_ai
         
         for rival in self.rivals:
@@ -1164,7 +1154,6 @@ class GameState:
     def _unlock_historical_topics(self):
         """Schaltet neue historische Themen basierend auf dem aktuellen Spieljahr frei und verarbeitet Jahresevents."""
         from game_data import get_newly_unlocked_topics, get_year_event
-        from models import Email
         
         current_year = self.get_calendar_year()
         new_topics = get_newly_unlocked_topics(current_year)
@@ -1270,7 +1259,6 @@ class GameState:
  
     def _generate_industry_news(self):
         """Erzeugt zufällige Markt-Ereignisse."""
-        from models import Email
         news_types = [
             {"text": self.get_text('news_hardware_boom'), "multi": 1.2},
             {"text": self.get_text('news_recession'), "multi": 0.85},
@@ -1345,7 +1333,6 @@ class GameState:
 
     def process_emails(self):
         """Generiert zufällige E-Mails."""
-        from models import Email
         
         if not self.game_history:
             return
@@ -1629,7 +1616,6 @@ class GameState:
         elif res_type == "technology":
             self.unlocked_technologies.append(res_data["name"])
             
-        from models import Email
         self.emails.insert(0, Email(
             sender=self.get_text('sender_assistant'),
             subject=self.get_text('subject_research_done'),
@@ -1777,7 +1763,6 @@ class GameState:
             ev_copy = dict(event)
             self.active_events.append(ev_copy)
             
-        from models import Email
         body = self.get_text("event_" + event["id"], weeks=event.get("duration", 0), hype=event.get("hype_amount", 0))
         self.emails.insert(0, Email(
             sender=self.get_text('sender_industry_news'),
@@ -1889,7 +1874,6 @@ class GameState:
 
     def create_addon(self, base_game_idx):
         """Erstellt ein Addon für ein Basisspiel."""
-        from models import AddonProject
         from game_data import ADDON_DATA
         
         base_game = self.game_history[base_game_idx]
@@ -1924,7 +1908,6 @@ class GameState:
 
     def create_bundle(self, game_indices):
         """Kombiniert mehrere inaktive Spiele zu einem Bundle."""
-        from models import BundleProject
         from game_data import BUNDLE_DATA
         
         if len(game_indices) < BUNDLE_DATA["min_games"] or len(game_indices) > BUNDLE_DATA["max_games"]:
@@ -2232,7 +2215,6 @@ class GameState:
             if hasattr(self, "accounting"):
                 self.accounting["income"] += refund
             project.revenue = int(project.revenue * 0.5)
-            from models import Email
             self.emails.insert(0, Email(
                 sender=partner,
                 subject=self.get_text('subject_co_dev', name=project.name),
@@ -2269,7 +2251,6 @@ class GameState:
 
         # Wenn es ein MMO ist, erstelle ActiveMMO Objekt
         if project.size == "MMO":
-            from models import ActiveMMO
             # Initiale Spielerzahl basierend auf Hype und Review
             initial_players = int((project.review.average * 10000) * (1 + self.hype * 0.05))
             mmo = ActiveMMO(game_project=project, initial_players=initial_players)
@@ -2342,7 +2323,6 @@ class GameState:
             "text": f"{topic['text']} {genre['text']}"
         }
         # Benachrichtigung via Email
-        from models import Email
         self.emails.append(Email(
             sender=self.get_text('sender_intel'),
             subject=self.get_text('sender_intel'),
@@ -2474,7 +2454,6 @@ class GameState:
         # Publisher Rolle laden
         self.publishing_offers = []
         if "publishing_offers" in data:
-            from models import PublishingOffer
             for od in data["publishing_offers"]:
                 self.publishing_offers.append(PublishingOffer(
                     od["studio_name"], od["game_name"], od["genre"], od["quality"], od["marketing_cost"], od["player_share"]
@@ -2482,7 +2461,6 @@ class GameState:
 
         self.published_third_party_games = []
         if "published_third_party_games" in data:
-            from models import PublishedThirdPartyGame, PublishingOffer
             for gd in data["published_third_party_games"]:
                 dummy_offer = PublishingOffer(gd["studio_name"], gd["game_name"], gd["genre"], gd["quality"], 0, gd["player_share"])
                 g = PublishedThirdPartyGame(dummy_offer)
@@ -2536,7 +2514,6 @@ class GameState:
         # Aktive MMOs laden
         self.active_mmos = []
         if "active_mmos" in data:
-            from models import ActiveMMO
             for md in data["active_mmos"]:
                 match_game = next((g for g in self.game_history if g.name == md.get("game_dict", {}).get("name")), None)
                 if match_game:
@@ -2567,7 +2544,6 @@ class GameState:
 
         # E-Mails laden
         self.emails = []
-        from models import Email
         for md in data.get("emails", []):
             mail = Email(md["sender"], md["subject"], md["body"], md["date_week"], md.get("game_name"), md.get("is_bug", False))
             mail.is_read = md.get("is_read", False)
@@ -2624,7 +2600,6 @@ class GameState:
         self.accounting = data.get("accounting", {"income": 0, "expenses": 0, "loan_paid": 0})
         loan_data = data.get("bank_loan")
         if loan_data:
-            from models import BankLoan
             self.bank_loan = BankLoan(
                 loan_data["amount_borrowed"], 0, loan_data["weeks_remaining"], 
                 amount_remaining=loan_data["amount_remaining"], 
@@ -2636,7 +2611,6 @@ class GameState:
             
         self.custom_consoles = []
         if "custom_consoles" in data:
-            from models import CustomConsole
             for c_data in data["custom_consoles"]:
                 cc = CustomConsole(c_data["name"], c_data["tech_level"], c_data["dev_cost"], c_data["release_week"])
                 cc.market_share = c_data.get("market_share", 0.05)
@@ -2728,7 +2702,6 @@ class GameState:
 
     def _generate_publishing_offer(self):
         """Generiert ein zufälliges Publishing-Angebot für den Spieler."""
-        from models import PublishingOffer, Email
         from game_data import START_TOPICS, START_GENRES
         
         studios = ["Pixel Wizards", "Neon Interactive", "Bitforge Studios", "Quantum Games", "Hyperion Soft"]
@@ -2775,7 +2748,6 @@ class GameState:
         if hasattr(self, "accounting"):
              self.accounting["expenses"] += offer.marketing_cost
              
-        from models import PublishedThirdPartyGame
         game = PublishedThirdPartyGame(offer)
         
         if not hasattr(self, "published_third_party_games"):
@@ -3004,7 +2976,6 @@ class GameState:
     def _check_achievements(self):
         """Prüft ob neue Meilensteine erreicht wurden."""
         from game_data import ACHIEVEMENTS
-        from models import Email
         
         if not hasattr(self, "unlocked_achievements"):
             self.unlocked_achievements = []
@@ -3232,7 +3203,6 @@ class GameState:
             self.get_text("finance_net_profit") + ": " + sign + f"{profit:,.0f}" + " EUR",
             self.get_text("current_balance") + ": " + f"{self.money:,.0f}" + " EUR",
         ]
-        from models import Email
         self.emails.insert(0, Email(
             sender=self.get_text("sender_bank"),
             subject=self.get_text("subject_monthly_statement", date=cal),

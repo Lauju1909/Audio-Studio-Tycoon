@@ -1,5 +1,0 @@
-{
-    "version": "3.3.5",
-    "channel": "stable",
-    "changelog": "v3.3.5: Kritischer Crash-Fix beim Entwicklungsstart (fehlendes speed-Attribut). Fehlerbehandlung für neue Projekte verbessert. Übersetzungen für Fortschrittsmenü ergänzt."
-}

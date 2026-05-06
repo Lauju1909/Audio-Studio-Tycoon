@@ -100,7 +100,7 @@ class AIAgent:
                 back_idx = i
                 
         # Menüs in denen wir niemals zurückgehen sollten (um den Flow nicht zu brechen)
-        no_back_menus = ["topic_menu", "genre_menu", "platform_menu", "audience_menu", "game_size_menu", "engine_select_menu", "marketing_menu", "sub_genre_menu", "sequel_menu", "difficulty_menu", "email_inbox", "email_detail"]
+        no_back_menus = ["topic_menu", "genre_menu", "platform_menu", "audience_menu", "game_size_menu", "engine_select_menu", "marketing_menu", "sub_genre_menu", "sequel_menu", "difficulty_menu", "email_inbox", "email_detail", "team_select_menu", "game_name_input", "slider_menu"]
         
         # Filtere Optionen heraus, die das Spiel beenden würden (quit)
         valid_options = []
@@ -263,8 +263,11 @@ class AIAgent:
                 break
                 
             if res == "quit" or self.crashes >= 3 or self.state.week >= self.max_weeks:
-                print(f"[Quit] Loops: {loops}, Res: {res}, Week: {self.state.week}")
+                print(f"[Loop Exit] Loops: {loops}, Res: {res}, Week: {self.state.week}, Crashes: {self.crashes}, Money: {self.state.money}")
                 break
+            
+            if loops % 100 == 0:
+                print(f"[Status] Loop {loops}, Week {self.state.week}, Money {self.state.money}, GameHistory: {len(self.state.game_history)}")
                 
         pygame.quit()
         
