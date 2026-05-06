@@ -1,5 +1,5 @@
 {
     "version": "3.3.9",
     "channel": "stable",
-    "changelog": "v3.3.9: Kritische Bug-Fixes: (1) AttributeError dev_progress/dev_total_weeks im Ticker behoben, (2) KeyError/TypeError bei Spezialisierungsanzeige im Team-Auswahl-Menü behoben, (3) DeveloperMenu instant_dev nutzt jetzt korrekte active_projects API, (4) ExpoMenu Demo-Prüfung nutzt active_projects statt Legacy-Attribut."
+    "changelog": "v3.3.9: Kritische Bug-Fixes: (1) AttributeError dev_progress/dev_total_weeks im Ticker behoben, (2) KeyError/TypeError bei Spezialisierungsanzeige im Team-Auswahl-Menü behoben, (3) DeveloperMenu instant_dev nutzt jetzt korrekte active_projects API, (4) ExpoMenu Demo-Prüfung nutzt active_projects statt Legacy-Attribut. (5) Audio-Engine stabilisiert: Tolk DLL-Anbindung gehärtet und Worker-Thread Hänger behoben."
 }

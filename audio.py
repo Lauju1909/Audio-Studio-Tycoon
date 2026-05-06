@@ -74,12 +74,38 @@ class AudioManager:
                     
                 if dll_path:
                     print(f"[Audio] Lade Tolk von: {dll_path}")
-                    self.tolk = ctypes.windll.LoadLibrary(dll_path)
-                    self.tolk.Tolk_Load()
-                    self.tolk_active = self.tolk.Tolk_IsLoaded()
-                    if self.tolk_active:
-                        self.tolk.Tolk_TrySAPI(True)
-                        print("[Audio] Tolk Screenreader-Support aktiv.")
+                    try:
+                        self.tolk = ctypes.windll.LoadLibrary(dll_path)
+                        
+                        # Funktionen explizit definieren
+                        self.tolk.Tolk_Load.restype = ctypes.c_bool
+                        self.tolk.Tolk_IsLoaded.restype = ctypes.c_bool
+                        self.tolk.Tolk_Unload.restype = None
+                        
+                        if hasattr(self.tolk, 'Tolk_TrySAPI'):
+                            self.tolk.Tolk_TrySAPI.argtypes = [ctypes.c_bool]
+                            self.tolk.Tolk_TrySAPI.restype = ctypes.c_bool
+                            
+                        if hasattr(self.tolk, 'Tolk_PreferSAPI'):
+                            self.tolk.Tolk_PreferSAPI.argtypes = [ctypes.c_bool]
+                            self.tolk.Tolk_PreferSAPI.restype = None
+                            
+                        self.tolk.Tolk_Output.argtypes = [ctypes.c_wchar_p, ctypes.c_bool]
+                        self.tolk.Tolk_Output.restype = ctypes.c_bool
+                        
+                        self.tolk.Tolk_IsSpeaking.restype = ctypes.c_bool
+                        
+                        # Initialisieren
+                        if self.tolk.Tolk_Load():
+                            self.tolk_active = self.tolk.Tolk_IsLoaded()
+                            if self.tolk_active:
+                                if hasattr(self.tolk, 'Tolk_TrySAPI'):
+                                    self.tolk.Tolk_TrySAPI(True)
+                                print("[Audio] Tolk Screenreader-Support aktiv.")
+                        else:
+                            print("[Audio] Tolk_Load() gab False zurück.")
+                    except Exception as dll_e:
+                        print(f"[Audio Fehler] Fehler beim Setup der Tolk-Funktionen: {dll_e}")
                 else:
                     print(f"[Audio Fehler]: Tolk.dll wurde an keinem Ort gefunden.")
             except Exception as e:
@@ -132,13 +158,20 @@ class AudioManager:
                 # Windows (Tolk)
                 if self.tolk_active and self.tolk:
                     try:
-                        if not interrupt and hasattr(self.tolk, 'Tolk_IsSpeaking'):
+                        # Wenn nicht unterbrochen werden soll, warten bis fertig gesprochen wurde
+                        if not interrupt:
+                            wait_start = time.time()
+                            # Sicherheitstimeout von 5 Sekunden, um Hänger zu vermeiden
                             while self.tolk.Tolk_IsSpeaking():
-                                if self.stop_worker: break
+                                if self.stop_worker or (time.time() - wait_start > 5.0):
+                                    break
                                 time.sleep(0.01)
-                        self.tolk.Tolk_Output(ctypes.c_wchar_p(text), ctypes.c_bool(interrupt))
+                        
+                        # Ausgabe tätigen
+                        # Bei gesetzten argtypes konvertiert ctypes den String automatisch
+                        self.tolk.Tolk_Output(text, interrupt)
                     except Exception as e:
-                        print(f"Tolk Worker Fehler: {e}")
+                        print(f"[TTS Worker] Tolk Fehler bei Ausgabe: {e}")
                 
                 # Linux (speech-dispatcher)
                 elif self.linux_speech:
