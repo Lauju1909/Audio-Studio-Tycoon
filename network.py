@@ -6,10 +6,13 @@ Verantwortlich für die Kommunikation mit dem Mod-Portal und dem Backend.
 import requests
 import json
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class NetworkManager:
-    def __init__(self, api_base_url="http://localhost:8000"):
-        self.api_base_url = api_base_url
+    def __init__(self, api_base_url=None):
+        self.api_base_url = api_base_url or os.getenv("API_BASE_URL", "http://localhost:8000")
         self.token = None
         self.is_connected = False
         
@@ -59,7 +62,7 @@ class NetworkManager:
 
 # --- Top-Level Helfer-Funktionen (für direkten Import) ---
 
-def fetch_mod_list(api_base_url="http://localhost:8000"):
+def fetch_mod_list(api_base_url=None):
     """
     Hilfsfunktion: Ruft die Mod-Liste vom Server ab.
     Gibt eine leere Liste zurück, wenn keine Verbindung besteht.

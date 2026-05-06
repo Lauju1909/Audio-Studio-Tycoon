@@ -27,8 +27,11 @@ class ServerLauncher:
         
         # 1. Abhängigkeiten prüfen und installieren
         if self._install_dependencies():
-            # 2. UPnP Port-Freigabe versuchen
-            self._setup_upnp()
+            # 2. UPnP Port-Freigabe versuchen (nur wenn explizit aktiviert)
+            if os.getenv("ENABLE_UPNP", "false").lower() == "true":
+                self._setup_upnp()
+            else:
+                print("[ServerLauncher] UPnP ist deaktiviert (Standard).")
             
             self.audio.speak("Abhängigkeiten bereit. Starte den Server...")
             # 3. Server starten
@@ -91,8 +94,12 @@ class ServerLauncher:
 
         try:
             # Starte uvicorn als Subprozess
+            # Standardmäßig an localhost binden für mehr Sicherheit
+            host = os.getenv("SERVER_HOST", "127.0.0.1")
+            port = int(os.getenv("SERVER_PORT", "8000"))
+            
             self.process = subprocess.Popen(
-                [sys.executable, "-m", "uvicorn", "server.main:app", "--host", "0.0.0.0", "--port", "8000"],
+                [sys.executable, "-m", "uvicorn", "server.main:app", "--host", host, "--port", str(port)],
                 cwd=os.getcwd(),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,

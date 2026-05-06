@@ -7,8 +7,10 @@ Nutzt pygame.mixer für Sound-Effekte.
 import pygame
 import os
 import sys
-
 import ctypes
+import queue
+import threading
+import time
 
 def resource_path(relative_path):
     """ Findet den absoluten Pfad zur Ressource, kompatibel mit Dev-Umgebung und PyInstaller. """
@@ -45,6 +47,10 @@ class AudioManager:
         self.tolk = None
         self.tolk_active = False
         self.linux_speech = None
+        
+        # Audio Queue und Threading
+        self.speech_queue = queue.Queue()
+        self.stop_worker = False
         
         # Betriebssystem-Check
         self.is_windows = sys.platform.startswith('win')
@@ -110,6 +116,43 @@ class AudioManager:
         self.sfx_volume = 100
         self.speech_volume = 100
 
+        # Worker Thread starten
+        self.worker_thread = threading.Thread(target=self._speech_worker, daemon=True)
+        self.worker_thread.start()
+
+    def _speech_worker(self):
+        """Hintergrund-Thread zur sequentiellen Verarbeitung der Sprachausgabe."""
+        while not self.stop_worker:
+            try:
+                # Warte auf neue Nachrichten
+                item = self.speech_queue.get(timeout=0.1)
+                if item is None: break
+                text, interrupt = item
+                
+                # Windows (Tolk)
+                if self.tolk_active and self.tolk:
+                    try:
+                        if not interrupt and hasattr(self.tolk, 'Tolk_IsSpeaking'):
+                            while self.tolk.Tolk_IsSpeaking():
+                                if self.stop_worker: break
+                                time.sleep(0.01)
+                        self.tolk.Tolk_Output(ctypes.c_wchar_p(text), ctypes.c_bool(interrupt))
+                    except Exception as e:
+                        print(f"Tolk Worker Fehler: {e}")
+                
+                # Linux (speech-dispatcher)
+                elif self.linux_speech:
+                    try:
+                        if interrupt:
+                            self.linux_speech.cancel()
+                        self.linux_speech.speak(text)
+                    except Exception as e:
+                        print(f"Linux Worker Fehler: {e}")
+                
+                self.speech_queue.task_done()
+            except queue.Empty:
+                continue
+
     def apply_volumes(self, settings):
         """Übernimmt die Volumen-Einstellungen aus dem GameState."""
         self.music_volume = settings.get("music_volume", 50)
@@ -154,26 +197,20 @@ class AudioManager:
             self.stop_music()
 
     def speak(self, text, interrupt=True):
-        """
-        Text an Tolk (Windows) oder speechd (Linux) senden. Fallback: Konsole.
-        """
-        print(f"[SPRACHE]: {text}")
+        """Fügt Text zur Sprach-Queue hinzu."""
+        print(f"[TTS]: {text}")
         
-        # Windows (Tolk)
-        if self.tolk_active and self.tolk:
-            try:
-                self.tolk.Tolk_Output(ctypes.c_wchar_p(text), ctypes.c_bool(interrupt))
-            except Exception as e:
-                print(f"[Tolk Speak Fehler]: {e}")
+        if interrupt:
+            # Leere die aktuelle Queue für sofortige Unterbrechung
+            while not self.speech_queue.empty():
+                try:
+                    self.speech_queue.get_nowait()
+                    self.speech_queue.task_done()
+                except queue.Empty:
+                    break
         
-        # Linux (speech-dispatcher)
-        elif self.linux_speech:
-            try:
-                if interrupt:
-                    self.linux_speech.cancel()
-                self.linux_speech.speak(text)
-            except Exception as e:
-                print(f"[Linux Speak Fehler]: {e}")
+        # Zur Queue hinzufügen
+        self.speech_queue.put((text, interrupt))
 
     def play_sound(self, sound_name):
         """Spielt einen Sound-Effekt ab (wav, ogg oder mp3)."""
@@ -240,6 +277,7 @@ class AudioManager:
 
     def cleanup(self):
         """Ressourcen freigeben."""
+        self.stop_worker = True
         self.stop_loop()
         
         if self.linux_speech:
@@ -248,6 +286,12 @@ class AudioManager:
             except Exception:
                 pass
                 
+        if self.tolk_active and self.tolk:
+            try:
+                self.tolk.Tolk_Unload()
+            except Exception:
+                pass
+
         try:
             pygame.mixer.quit()
         except Exception:

@@ -8,7 +8,7 @@ Spielhistorie, Ereignisse und die Bewertungslogik.
 import random
 import json
 import os
-from models import GameProject, ReviewScore, Employee, Engine, EngineFeature, RivalStudio, RivalGame
+from models import GameProject, ReviewScore, Employee, Engine, EngineFeature, RivalStudio, RivalGame, Email
 from translations import TRANSLATIONS, get_system_language
 from game_data import (
     get_compatibility, get_ideal_sliders, SLIDER_NAMES, PLATFORMS, AUDIENCE_MULTI, AUDIENCE_PRICE,
@@ -470,7 +470,6 @@ class GameState:
         week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
         if (week_in_year - 1) % 4 == 0 and self.week > 1:
             cal = self.get_calendar_text()
-            from models import Email
             self.emails.insert(0, Email(
                 sender=self.get_text('sender_calendar'),
                 subject=self.get_text('subject_new_month', date=cal),
@@ -492,7 +491,6 @@ class GameState:
                 inc = self.accounting.get("income", 0)
                 exp = self.accounting.get("expenses", 0)
                 prof = inc - exp
-                from models import Email
                 self.emails.insert(0, Email(
                     sender=self.get_text('sender_accounting'),
                     subject=self.get_text('subject_yearly_report', year=self.get_calendar_year() - 1),
@@ -546,7 +544,6 @@ class GameState:
                     if boost > 0:
                         emp.skills[emp.primary_skill] = min(100, emp.skills[emp.primary_skill] + boost)
                     emp.training_skill_boost = 0
-                    from models import Email
                     self.emails.insert(0, Email(
                         sender=self.get_text('sender_hr'),
                         subject=self.get_text('subject_training_done', name=emp.name),
@@ -562,7 +559,6 @@ class GameState:
                 emp.sick_weeks_left -= 1
                 if emp.sick_weeks_left <= 0:
                     emp.is_sick = False
-                    from models import Email
                     self.emails.insert(0, Email(
                         sender=self.get_text('sender_hr'),
                         subject=self.get_text('subject_sick_recovered', name=emp.name),
@@ -582,7 +578,6 @@ class GameState:
                 if random.random() < sick_chance:
                     emp.is_sick = True
                     emp.sick_weeks_left = random.randint(1, 3)
-                    from models import Email
                     self.emails.insert(0, Email(
                         sender=self.get_text('sender_hr'),
                         subject=self.get_text('subject_sick', name=emp.name),

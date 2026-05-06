@@ -7,13 +7,18 @@ import asyncio
 import json
 import threading
 import websockets
+import os
+from dotenv import load_dotenv
 from typing import Optional, Callable
+
+# Umgebungsvariablen laden
+load_dotenv()
 
 class MultiplayerManager:
     def __init__(self, audio, game_state):
         self.audio = audio
         self.game_state = game_state
-        self.base_uri = "ws://localhost:8000/ws/multiplayer"
+        self.base_uri = os.getenv("WS_URL", "ws://127.0.0.1:8000/ws/multiplayer")
         self.websocket = None
         self.thread = None
         self.is_connected = False
