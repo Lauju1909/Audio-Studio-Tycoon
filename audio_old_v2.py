@@ -1,7 +1,7 @@
-﻿"""
-Audio-Manager f├╝r Audio Studio Tycoon - Audio Edition.
-Kommuniziert direkt mit NVDA ├╝ber accessible_output2.
-Nutzt pygame.mixer f├╝r Sound-Effekte.
+"""
+Audio-Manager für Audio Studio Tycoon - Audio Edition.
+Kommuniziert direkt mit NVDA über accessible_output2.
+Nutzt pygame.mixer für Sound-Effekte.
 """
 
 import pygame
@@ -57,7 +57,7 @@ class AudioManager:
         self.is_linux = sys.platform.startswith('linux')
 
         if self.is_windows:
-            # Tolk-Ausgabe f├╝r Windows initialisieren
+            # Tolk-Ausgabe für Windows initialisieren
             try:
                 # Suche Tolk.dll an verschiedenen Orten
                 possible_paths = [
@@ -74,19 +74,45 @@ class AudioManager:
                     
                 if dll_path:
                     print(f"[Audio] Lade Tolk von: {dll_path}")
-                    self.tolk = ctypes.windll.LoadLibrary(dll_path)
-                    self.tolk.Tolk_Load()
-                    self.tolk_active = self.tolk.Tolk_IsLoaded()
-                    if self.tolk_active:
-                        self.tolk.Tolk_TrySAPI(True)
-                        print("[Audio] Tolk Screenreader-Support aktiv.")
+                    try:
+                        self.tolk = ctypes.windll.LoadLibrary(dll_path)
+                        
+                        # Funktionen explizit definieren
+                        self.tolk.Tolk_Load.restype = ctypes.c_bool
+                        self.tolk.Tolk_IsLoaded.restype = ctypes.c_bool
+                        self.tolk.Tolk_Unload.restype = None
+                        
+                        if hasattr(self.tolk, 'Tolk_TrySAPI'):
+                            self.tolk.Tolk_TrySAPI.argtypes = [ctypes.c_bool]
+                            self.tolk.Tolk_TrySAPI.restype = ctypes.c_bool
+                            
+                        if hasattr(self.tolk, 'Tolk_PreferSAPI'):
+                            self.tolk.Tolk_PreferSAPI.argtypes = [ctypes.c_bool]
+                            self.tolk.Tolk_PreferSAPI.restype = None
+                            
+                        self.tolk.Tolk_Output.argtypes = [ctypes.c_wchar_p, ctypes.c_bool]
+                        self.tolk.Tolk_Output.restype = ctypes.c_bool
+                        
+                        self.tolk.Tolk_IsSpeaking.restype = ctypes.c_bool
+                        
+                        # Initialisieren
+                        if self.tolk.Tolk_Load():
+                            self.tolk_active = self.tolk.Tolk_IsLoaded()
+                            if self.tolk_active:
+                                if hasattr(self.tolk, 'Tolk_TrySAPI'):
+                                    self.tolk.Tolk_TrySAPI(True)
+                                print("[Audio] Tolk Screenreader-Support aktiv.")
+                        else:
+                            print("[Audio] Tolk_Load() gab False zurück.")
+                    except Exception as dll_e:
+                        print(f"[Audio Fehler] Fehler beim Setup der Tolk-Funktionen: {dll_e}")
                 else:
                     print(f"[Audio Fehler]: Tolk.dll wurde an keinem Ort gefunden.")
             except Exception as e:
                 print(f"[Audio Exception]: Tolk-Init fehlgeschlagen: {e}")
         
         elif self.is_linux:
-            # Linux-Ausgabe ├╝ber speech-dispatcher (speechd)
+            # Linux-Ausgabe über speech-dispatcher (speechd)
             try:
                 import speechd
                 self.linux_speech = speechd.SSIPClient('AudioStudioTycoon')
@@ -100,9 +126,9 @@ class AudioManager:
         if not self.tolk_active and not self.linux_speech:
             print("[INFO] Keine Screenreader-Bibliothek aktiv. Nutze Konsolen-Fallback.")
 
-        # Pygame Mixer f├╝r SFX
+        # Pygame Mixer für SFX
         try:
-            # Puffer und Frequenz f├╝r bessere Kompatibilit├ñt und Latenz
+            # Puffer und Frequenz für bessere Kompatibilität und Latenz
             pygame.mixer.pre_init(44100, -16, 2, 512)
             pygame.mixer.init()
         except Exception as e:
@@ -132,13 +158,20 @@ class AudioManager:
                 # Windows (Tolk)
                 if self.tolk_active and self.tolk:
                     try:
-                        if not interrupt and hasattr(self.tolk, 'Tolk_IsSpeaking'):
+                        # Wenn nicht unterbrochen werden soll, warten bis fertig gesprochen wurde
+                        if not interrupt:
+                            wait_start = time.time()
+                            # Sicherheitstimeout von 5 Sekunden, um Hänger zu vermeiden
                             while self.tolk.Tolk_IsSpeaking():
-                                if self.stop_worker: break
+                                if self.stop_worker or (time.time() - wait_start > 5.0):
+                                    break
                                 time.sleep(0.01)
-                        self.tolk.Tolk_Output(ctypes.c_wchar_p(text), ctypes.c_bool(interrupt))
+                        
+                        # Ausgabe tätigen
+                        # Bei gesetzten argtypes konvertiert ctypes den String automatisch
+                        self.tolk.Tolk_Output(text, interrupt)
                     except Exception as e:
-                        print(f"Tolk Worker Fehler: {e}")
+                        print(f"[TTS Worker] Tolk Fehler bei Ausgabe: {e}")
                 
                 # Linux (speech-dispatcher)
                 elif self.linux_speech:
@@ -154,7 +187,7 @@ class AudioManager:
                 continue
 
     def apply_volumes(self, settings):
-        """├£bernimmt die Volumen-Einstellungen aus dem GameState."""
+        """Übernimmt die Volumen-Einstellungen aus dem GameState."""
         self.music_volume = settings.get("music_volume", 50)
         self.sfx_volume = settings.get("sfx_volume", 100)
         self.speech_volume = settings.get("speech_volume", 100)
@@ -197,11 +230,11 @@ class AudioManager:
             self.stop_music()
 
     def speak(self, text, interrupt=True):
-        """F├╝gt Text zur Sprach-Queue hinzu."""
+        """Fügt Text zur Sprach-Queue hinzu."""
         print(f"[TTS]: {text}")
         
         if interrupt:
-            # Leere die aktuelle Queue f├╝r sofortige Unterbrechung
+            # Leere die aktuelle Queue für sofortige Unterbrechung
             while not self.speech_queue.empty():
                 try:
                     self.speech_queue.get_nowait()
@@ -209,7 +242,7 @@ class AudioManager:
                 except queue.Empty:
                     break
         
-        # Zur Queue hinzuf├╝gen
+        # Zur Queue hinzufügen
         self.speech_queue.put((text, interrupt))
 
     def play_sound(self, sound_name):
@@ -247,7 +280,7 @@ class AudioManager:
         self.current_loop = None
 
     def play_music(self, music_name):
-        """Startet Hintergrundmusik ├╝ber pygame.mixer.music."""
+        """Startet Hintergrundmusik über pygame.mixer.music."""
         if not self.music_enabled:
             return
         formats = ["mp3", "ogg", "wav"]
@@ -296,4 +329,3 @@ class AudioManager:
             pygame.mixer.quit()
         except Exception:
             pass
-

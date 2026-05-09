@@ -586,6 +586,20 @@ class GameState:
                 ))
             self.accounting = {"income": 0, "expenses": 0, "loan_paid": 0}
             
+        # --- Pleite-Check (Bankruptcy Check) ---
+        if self.is_bankrupt() and not getattr(self, "pending_bankrupt", False):
+            self.pending_bankrupt = True
+            self.time_speed = 0  # Pause das Spiel bei Bankrott
+            if hasattr(self, 'audio'):
+                self.audio.play_sound('warn')
+                self.audio.speak(self.get_text('bankruptcy_warning'), interrupt=True)
+            
+        # --- AUDIO FEEDBACK: Warnung bei wenig Geld ---
+        if self.money < 5000 and self.week > 10:
+            if hasattr(self, 'audio'):
+                self.audio.play_sound('warn')
+                self.audio.speak(self.get_text('low_money_warning', amount=self.money), interrupt=False)
+            
         # Gehälter berechnen (wöchentlich akkumulieren)
         weekly_salaries = sum(emp.salary for emp in self.employees)
         self.accrued_salaries += weekly_salaries
@@ -726,6 +740,9 @@ class GameState:
                     body=self.get_text('body_loan_paid'),
                     date_week=self.week
                 ))
+                if hasattr(self, 'audio'):
+                    self.audio.play_sound('success')
+                    self.audio.speak(self.get_text('subject_loan_paid'), interrupt=False)
         
         # NEU Phase I/II: Industriespionage / Headhunting
         if self.week % 8 == 0 and self.employees and self.rivals:
@@ -1298,6 +1315,10 @@ class GameState:
                 body=f"{self.get_text(event_text)}\n\n{self.get_text('event_impact')}: {impact}",
                 date_week=self.week
             ))
+            if hasattr(self, 'audio'):
+                self.audio.play_sound('blip')
+                self.audio.speak(self.get_text(event_text), interrupt=False)
+
 
 
     def _check_goty(self):
@@ -1346,6 +1367,9 @@ class GameState:
             self.my_goty_wins += 1
         
         self.pending_goty_results = goty_data
+        if hasattr(self, 'audio'):
+            self.audio.play_sound('drumroll')
+            self.audio.speak(self.get_text('goty_ceremony_start'), interrupt=True)
  
     def _generate_industry_news(self):
         """Erzeugt zufällige Markt-Ereignisse."""
@@ -1398,7 +1422,14 @@ class GameState:
         # Einstellungsgebühr = 2 Wochen Gehalt
         hire_cost = employee.salary * 2
         if self.money < hire_cost:
+            if hasattr(self, 'audio'):
+                self.audio.play_sound('error')
             return False
+            
+        self.money -= hire_cost
+        if hasattr(self, 'audio'):
+            self.audio.play_sound('buy')
+            self.audio.speak(self.get_text('employee_hired', name=employee.name), interrupt=True)
         self.track_expense("salaries", hire_cost)
         self.employees.append(employee)
         return True
@@ -3122,6 +3153,11 @@ class GameState:
                     body=self.get_text('body_achievement', desc=desc, bonus=bonus_str),
                     date_week=self.week
                 ))
+                
+                # Audio-Feedback
+                if hasattr(self, "audio") and self.audio:
+                    self.audio.play_sound("achievement.wav") # Sound falls vorhanden
+                    self.audio.speak(f"Meilenstein erreicht: {title}. {desc}", interrupt=False)
 
     def get_current_charts(self, top_n=10):
         """Gibt die aktuellen Verkaufscharts zurueck (Spieler + Rivalen)."""

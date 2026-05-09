@@ -39,7 +39,13 @@ Audio Studio Tycoon ist eine 100% Screenreader-optimierte Management-Simulation,
 ## Credits & Attribution
 - **Sound Effects & Music** provided by Eric Matyas (www.soundimage.org)
 
-## Neueste Änderungen (v3.4.0)
-- **Persistenz-Fix**: Behebt kritische Abstürze beim Laden von Spielständen mit platzierten Büromöbeln.
+## Neueste Änderungen (v3.4.1)
+- **Audio & Accessibility Overhaul**: 
+    - Integration der `Tolk`-Library für nahtlose Unterstützung aller gängigen Screenreader (NVDA, JAWS, SAPI).
+    - Neue Sound-Effekte für kritisches Budget, Kreditrückzahlungen und Mitarbeiter-Einstellungen.
+    - Dramatische "Game of the Year"-Präsentation mit Audio-Begleitung.
+    - **Bankrott-System**: Automatischer Pleite-Check bei -50.000 € mit Spielpause und akustischer Warnung.
+- **Lokale KI-Integration**: Verbesserte Unterstützung für LM Studio Modelle (z.B. Qwen) direkt in der Antigravity-Umgebung.
+- **Persistenz-Fix (v3.4.0)**: Behebt kritische Abstürze beim Laden von Spielständen mit platzierten Büromöbeln.
 - **Büro-System Refactor**: Verbesserte Synchronisation zwischen internem Raster und Speicherdaten.
-- **Migration**: Automatische Konvertierung alter Spielstände in das neue, stabilere Format.
+
