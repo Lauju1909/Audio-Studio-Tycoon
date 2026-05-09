@@ -1,4 +1,9 @@
-# Audio Studio Tycoon - Audio Edition
+# Audio Studio Tycoon
+
+> [!NOTE]
+> **Lokale KI-Integration:** Dieses Projekt unterstützt nun die Anbindung an **LM Studio** als Fallback-KI. Den Guide dazu findest du in [docs/LM_Studio_Integration.md](docs/LM_Studio_Integration.md).
+
+## Über das Spiel
 
 Audio Studio Tycoon ist eine 100% Screenreader-optimierte Management-Simulation, bei der du deine eigene Spielefirma gründest. Entwickle Spiele, stelle Mitarbeiter ein und werde zum Tycoon der Branche!
 
@@ -33,3 +38,8 @@ Audio Studio Tycoon ist eine 100% Screenreader-optimierte Management-Simulation,
 
 ## Credits & Attribution
 - **Sound Effects & Music** provided by Eric Matyas (www.soundimage.org)
+
+## Neueste Änderungen (v3.4.0)
+- **Persistenz-Fix**: Behebt kritische Abstürze beim Laden von Spielständen mit platzierten Büromöbeln.
+- **Büro-System Refactor**: Verbesserte Synchronisation zwischen internem Raster und Speicherdaten.
+- **Migration**: Automatische Konvertierung alter Spielstände in das neue, stabilere Format.

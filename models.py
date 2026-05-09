@@ -48,6 +48,9 @@ class GameProject:
         self.dev_cost = 0
         self.week_developed = 0
         
+        # NEU: Sprachen
+        self.languages = ["de"] # Startet immer mit Deutsch
+        
         # NEU: Service & Support
         self.bugs = 0
         self.dlc_count = 0
@@ -60,6 +63,8 @@ class GameProject:
         self.sub_genre = None
         self.license_bonus = 0.0  # NEU: Phase B Lizenzen
         self.assigned_employee_ids = []  # NEU: Team-Zuweisung
+        self.updates = []               # NEU: Liste von UpdateProject/DLCProject
+        self.total_bugs_fixed = 0
 
         # NEU: Phase C - Produktion & Retail
         self.physical_copies = 0
@@ -113,6 +118,78 @@ class GameProject:
             "physical_price": getattr(self, "physical_price", 45),
             "lifetime_physical_sales": getattr(self, "lifetime_physical_sales", 0),
             "assigned_employee_ids": getattr(self, "assigned_employee_ids", []),
+            "languages": getattr(self, "languages", ["de"]),
+            "updates": [u.to_dict() for u in getattr(self, "updates", [])],
+            "total_bugs_fixed": getattr(self, "total_bugs_fixed", 0),
+        }
+
+    @staticmethod
+    def from_dict(gd):
+        """Erstellt ein GameProject aus einem Dict."""
+        proj = GameProject(
+            gd["name"], gd["topic"], gd["genre"],
+            gd.get("sliders"), gd.get("platform"), gd.get("audience"),
+            size=gd.get("size", "Mittel"), marketing=gd.get("marketing", "Kein Marketing")
+        )
+        if gd.get("review_scores"):
+            proj.review = ReviewScore(gd["review_scores"])
+        proj.sales = gd.get("sales", 0)
+        proj.revenue = gd.get("revenue", 0)
+        proj.dev_cost = gd.get("dev_cost", 0)
+        proj.week_developed = gd.get("week_developed", 0)
+        proj.bugs = gd.get("bugs", 0)
+        proj.dlc_count = gd.get("dlc_count", 0)
+        proj.weeks_on_market = gd.get("weeks_on_market", 0)
+        proj.is_active = gd.get("is_active", True)
+        proj.ip_rating = gd.get("ip_rating", 0)
+        proj.sequel_number = gd.get("sequel_number", 0)
+        proj.sub_genre = gd.get("sub_genre")
+        proj.license_bonus = gd.get("license_bonus", 0.0)
+        proj.physical_copies = gd.get("physical_copies", 0)
+        proj.physical_price = gd.get("physical_price", 45)
+        proj.lifetime_physical_sales = gd.get("lifetime_physical_sales", 0)
+        proj.assigned_employee_ids = gd.get("assigned_employee_ids", [])
+        proj.languages = gd.get("languages", ["de"])
+        proj.total_bugs_fixed = gd.get("total_bugs_fixed", 0)
+        
+        # Updates laden
+        if "updates" in gd:
+            for ud in gd["updates"]:
+                u = UpdateProject(ud["base_game_name"], ud["name"], ud["update_type"], ud["dev_cost"], ud["total_weeks"])
+                u.progress = ud.get("progress", 0.0)
+                u.languages = ud.get("languages", [])
+                u.is_finished = ud.get("is_finished", False)
+                u.sales = ud.get("sales", 0)
+                u.revenue = ud.get("revenue", 0)
+                proj.updates.append(u)
+        return proj
+
+class UpdateProject:
+    """Ein Update oder DLC für ein Spiel."""
+    def __init__(self, base_game_name, name, update_type, dev_cost, total_weeks, languages=None):
+        self.base_game_name = base_game_name
+        self.name = name
+        self.update_type = update_type # "Patch", "Content", "DLC", "Language"
+        self.dev_cost = dev_cost
+        self.total_weeks = total_weeks
+        self.progress = 0.0
+        self.languages = languages or []
+        self.is_finished = False
+        self.sales = 0 # Nur für DLC
+        self.revenue = 0 # Nur für DLC
+
+    def to_dict(self):
+        return {
+            "base_game_name": self.base_game_name,
+            "name": self.name,
+            "update_type": self.update_type,
+            "dev_cost": self.dev_cost,
+            "total_weeks": self.total_weeks,
+            "progress": self.progress,
+            "languages": self.languages,
+            "is_finished": self.is_finished,
+            "sales": self.sales,
+            "revenue": self.revenue
         }
 
 class AddonProject:
@@ -223,6 +300,33 @@ class Email:
         self.is_salary_request = False
         self.employee_idx = None
         self.requested_salary = 0
+
+
+class BankStatement:
+    """Monatlicher Kontoauszug."""
+    def __init__(self, week, year, income_items, expense_items, final_balance):
+        self.week = week
+        self.year = year
+        self.income_items = income_items   # Dict {category: amount}
+        self.expense_items = expense_items # Dict {category: amount}
+        self.final_balance = final_balance
+
+    @property
+    def total_income(self):
+        return sum(self.income_items.values())
+
+    @property
+    def total_expense(self):
+        return sum(self.expense_items.values())
+
+    def to_dict(self):
+        return {
+            "week": self.week,
+            "year": self.year,
+            "income_items": self.income_items,
+            "expense_items": self.expense_items,
+            "final_balance": self.final_balance
+        }
 
 
 class EngineFeature:
@@ -406,6 +510,33 @@ class Employee:
             "sick_weeks_left": getattr(self, "sick_weeks_left", 0),
         }
 
+    @staticmethod
+    def from_dict(ed):
+        """Erstellt einen Mitarbeiter aus einem Dict (für Laden)."""
+        emp = Employee.__new__(Employee)
+        emp.name = ed["name"]
+        emp.role = ed["role"]
+        emp.primary_skill = ed["primary_skill"]
+        emp.secondary_skill = ed["secondary_skill"]
+        emp.skill_level = ed["skill_level"]
+        emp.skills = ed["skills"]
+        emp.salary = ed["salary"]
+        emp.morale = ed["morale"]
+        emp.weeks_employed = ed["weeks_employed"]
+        emp.specialization = ed.get("specialization")
+        emp.trait = ed.get("trait")
+        
+        # Sicherstellen dass alle Flags da sind (Migration/Robustheit)
+        emp.last_raise_week = ed.get("last_raise_week", 0)
+        emp.pending_raise_request = ed.get("pending_raise_request", False)
+        emp.is_ceo = ed.get("is_ceo", False)
+        emp.is_training = ed.get("is_training", False)
+        emp.training_weeks_left = ed.get("training_weeks_left", 0)
+        emp.training_skill_boost = ed.get("training_skill_boost", 0)
+        emp.is_sick = ed.get("is_sick", False)
+        emp.sick_weeks_left = ed.get("sick_weeks_left", 0)
+        return emp
+
 class RivalGame:
     """Spiel, das von der KI-Konkurrenz veröffentlicht wird."""
     
@@ -540,5 +671,69 @@ class PublishedThirdPartyGame:
             "total_sales": self.total_sales,
             "total_revenue": self.total_revenue,
             "player_profit": self.player_profit
+        }
+
+class OfficeObject:
+    """Ein Möbelstück oder technisches Gerät im Büro."""
+    def __init__(self, object_type, x, y, level=1):
+        self.object_type = object_type # "Desk", "PC", "Server", "Cabinet", "Plant"
+        self.x = x
+        self.y = y
+        self.level = level # Tech-Level (1=1930s, 2=1950s etc.)
+
+    def to_dict(self):
+        return {
+            "object_type": self.object_type,
+            "x": self.x,
+            "y": self.y,
+            "level": self.level
+        }
+
+    @staticmethod
+    def from_dict(data):
+        return OfficeObject(
+            data["object_type"], 
+            data["x"], 
+            data["y"], 
+            level=data.get("level", 1)
+        )
+
+    def get(self, key, default=None):
+        """Ermöglicht den Zugriff wie bei einem Dictionary für Abwärtskompatibilität."""
+        if key == "type": return self.object_type
+        if hasattr(self, key):
+            return getattr(self, key)
+        # Bonus-Logik: Falls wir einen Bonus suchen, schauen wir in den Daten nach
+        if key == "bonus":
+            from game_data import BUILD_OBJECTS, FURNITURE_DATA
+            obj_def = BUILD_OBJECTS.get(self.object_type)
+            if obj_def: return obj_def.get("bonus")
+            item_data = next((f for f in FURNITURE_DATA if f.get("id") == self.object_type), None)
+            if item_data: return item_data.get("bonus")
+        return default
+
+    def __getitem__(self, key):
+        """Erlaubt Zugriff via obj['key'] für Abwärtskompatibilität."""
+        return self.get(key)
+
+
+class ManufacturingJob:
+    """Ein Auftrag zur Produktion physischer Datenträger."""
+    def __init__(self, game_name, amount, cost_per_unit, weeks_to_complete):
+        self.game_name = game_name
+        self.amount = amount
+        self.cost_per_unit = cost_per_unit
+        self.weeks_to_complete = weeks_to_complete
+        self.weeks_left = weeks_to_complete
+        self.is_finished = False
+
+    def to_dict(self):
+        return {
+            "game_name": self.game_name,
+            "amount": self.amount,
+            "cost_per_unit": self.cost_per_unit,
+            "weeks_to_complete": self.weeks_to_complete,
+            "weeks_left": self.weeks_left,
+            "is_finished": self.is_finished
         }
 

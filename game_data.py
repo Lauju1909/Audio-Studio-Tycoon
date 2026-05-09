@@ -12,6 +12,19 @@ START_YEAR = 1930       # Das Spiel beginnt im Jahr 1930
 WEEKS_PER_YEAR = 48     # 48 Wochen pro Spieljahr (historische Zeitachse)
 
 # ============================================================
+# LOKALISIERUNG & DIENSTE
+# ============================================================
+SUPPORTED_LANGUAGES = [
+    {"id": "de", "name": "Deutsch", "market_multi": 1.0},
+    {"id": "en", "name": "English", "market_multi": 1.2},
+    {"id": "fr", "name": "Français", "market_multi": 0.3},
+    {"id": "es", "name": "Español", "market_multi": 0.4},
+    {"id": "it", "name": "Italiano", "market_multi": 0.2},
+    {"id": "jp", "name": "Japanese", "market_multi": 0.5},
+]
+SUBSCRIPTION_UNLOCK_YEAR = 1995
+
+# ============================================================
 # THEMEN (Topics) - 20 verschiedene
 # ============================================================
 START_TOPICS = [
@@ -1735,3 +1748,36 @@ OFFICE_UPGRADES = [
 ]
 
 
+
+# ============================================================
+# NEU: SPRACHUNTERSTÜTZUNG
+# ============================================================
+SUPPORTED_LANGUAGES = [
+    {"id": "de", "name": "Deutsch", "cost_per_size": 1000},
+    {"id": "en", "name": "Englisch", "cost_per_size": 1000},
+    {"id": "fr", "name": "Französisch", "cost_per_size": 1500},
+    {"id": "es", "name": "Spanisch", "cost_per_size": 1500},
+    {"id": "it", "name": "Italienisch", "cost_per_size": 1500},
+    {"id": "jp", "name": "Japanisch", "cost_per_size": 3000},
+    {"id": "zh", "name": "Chinesisch", "cost_per_size": 3000},
+]
+
+# ============================================================
+# NEU: BÜRO-SYSTEM (Raster & Räume)
+# ============================================================
+OFFICE_ROOM_TYPES = [
+    {"id": "dev", "name": "Entwickler-Raum", "cost_per_tile": 500, "description": "Hier arbeiten Programmierer und Designer."},
+    {"id": "sound", "name": "Tonstudio", "cost_per_tile": 1000, "description": "Erhöht die Sound-Qualität der Spiele."},
+    {"id": "research", "name": "Forschung", "cost_per_tile": 800, "description": "Beschleunigt die Forschung neuer Technologien."},
+    {"id": "break", "name": "Aufenthaltsraum", "cost_per_tile": 400, "description": "Regeneriert die Moral der Mitarbeiter."},
+]
+
+FURNITURE_DATA = [
+    {"id": "desk_wood", "name": "Holztisch", "cost": 200, "type": "workplace", "year": 1930},
+    {"id": "desk_modern", "name": "Moderner Schreibtisch", "cost": 1000, "type": "workplace", "year": 1980},
+    {"id": "pc_80s", "name": "Heimcomputer (80er)", "cost": 1500, "type": "equipment", "year": 1980, "bonus": "dev_speed"},
+    {"id": "pc_90s", "name": "Workstation (90er)", "cost": 3000, "type": "equipment", "year": 1990, "bonus": "dev_speed"},
+    {"id": "server_rack", "name": "Server-Rack", "cost": 10000, "type": "equipment", "year": 1995, "bonus": "mmo_capacity"},
+]
+
+SUBSCRIPTION_UNLOCK_YEAR = 1995

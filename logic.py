@@ -12,7 +12,7 @@ from models import (
     GameProject, ReviewScore, Employee, Engine, EngineFeature, 
     RivalStudio, RivalGame, Email, AddonProject, BundleProject, 
     ActiveMMO, BankLoan, CustomConsole, PublishingOffer, 
-    PublishedThirdPartyGame
+    PublishedThirdPartyGame, BankStatement
 )
 from translations import TRANSLATIONS, get_system_language
 from game_data import (
@@ -94,6 +94,15 @@ class GameState:
 
         # Aktive MMOs
         self.active_mmos = []
+
+        # Bankwesen & Finanzen
+        self.bank_statements = []
+        self.accrued_income = {}
+        self.accrued_expenses = {}
+        self.accrued_salaries = 0
+        self.financial_history = []
+        self.office_grid = [[None for _ in range(10)] for _ in range(10)]
+        self.office_objects = []
 
         # Einstellungen
         self.settings = {
@@ -184,6 +193,7 @@ class GameState:
         # NEU: Phase E - Publisher Rolle
         self.publishing_offers = []
         self.published_third_party_games = []
+        self.manufacturing_jobs = [] # NEU: Laufende Produktionsaufträge
 
         # Keybindings initialisieren (Standardwerte)
         import pygame
@@ -402,6 +412,81 @@ class GameState:
                 f.write(traceback.format_exc())
             raise e
 
+    def can_start_development(self, size):
+        """Prüft ob alle Voraussetzungen für den Entwicklungsstart erfüllt sind."""
+        # 1. Genug Mitarbeiter?
+        if not self.employees:
+            return False, "no_employees"
+            
+        # 2. Genug Geld? (Wird beim Start abgezogen, hier nur Vorab-Check)
+        # 3. Genug Arbeitsplätze?
+        workplaces = sum(1 for obj in self.office_objects if obj.object_type == "Desk" or obj.object_type == "workplace")
+        if workplaces < len(self.employees):
+            return False, "not_enough_workplaces"
+            
+        # 4. Spezielle Anforderungen für AAA (z.B. 1980+)
+        if size == "AAA" and self.get_calendar_year() < 1980:
+            return False, "aaa_too_early"
+            
+        return True, ""
+
+    def start_update_project(self, game_name, update_type, name="Update", selected_languages=None):
+        """Startet ein Update- oder DLC-Projekt für ein existierendes Spiel."""
+        # Suche das Basisspiel
+        game = next((g for g in self.game_history if g.name == game_name), None)
+        if not game:
+            return False
+            
+        dev_cost = 0
+        total_weeks = 0
+        
+        if update_type == "Patch":
+            # Repariert 50% der Bugs
+            dev_cost = 5000
+            total_weeks = 2
+        elif update_type == "Content":
+            # Erhöht Hype und Fans
+            dev_cost = 20000
+            total_weeks = 4
+        elif update_type == "DLC":
+            # Kostet mehr, bringt aber Einnahmen
+            dev_cost = 50000
+            total_weeks = 8
+        elif update_type == "Language":
+            # Fügt neue Sprachen hinzu
+            langs = selected_languages or []
+            dev_cost = len(langs) * 10000
+            total_weeks = len(langs) * 1
+            
+        update = UpdateProject(
+            base_game_name=game_name,
+            name=name,
+            update_type=update_type,
+            dev_cost=dev_cost,
+            total_weeks=total_weeks,
+            languages=selected_languages
+        )
+        
+        new_active = {
+            "update": update,
+            "progress": 0.0,
+            "total_weeks": total_weeks
+        }
+        self.active_projects.append(new_active)
+        return True
+
+    def start_manufacturing_job(self, game_name, amount, cost_per_unit, weeks):
+        """Startet einen Auftrag zur Produktion physischer Kopien."""
+        if self.money < amount * cost_per_unit:
+            return False
+            
+        self.money -= amount * cost_per_unit
+        self.track_expense("production", amount * cost_per_unit)
+        
+        job = ManufacturingJob(game_name, amount, cost_per_unit, weeks)
+        self.manufacturing_jobs.append(job)
+        return True
+
     def get_text(self, text_key, **kwargs):
         """Holt einen übersetzten Text basierend auf dem aktuellen Sprach-Setting."""
         lang = self.settings.get("language", "de")
@@ -501,10 +586,15 @@ class GameState:
                 ))
             self.accounting = {"income": 0, "expenses": 0, "loan_paid": 0}
             
-        # Gehälter abziehen
-        total_salary = sum(e.salary for e in self.employees)
-        self.money -= total_salary
-        self.accounting["expenses"] += total_salary
+        # Gehälter berechnen (wöchentlich akkumulieren)
+        weekly_salaries = sum(emp.salary for emp in self.employees)
+        self.accrued_salaries += weekly_salaries
+        
+        # Gehälter abziehen (jetzt monatlich)
+        if (self.week - 1) % 4 == 0 and self.week > 1:
+            total_salary = self.accrued_salaries
+            self.track_expense("salaries", total_salary)
+            self.accrued_salaries = 0 # Reset nach Zahlung
         
         # NEU Phase I: Abo-Service (Game Pass) wöchentliches Update
         if getattr(self, 'subscription_active', False):
@@ -1326,10 +1416,15 @@ class GameState:
         return None
 
     def pay_salaries(self):
-        """Bezahlt alle Gehälter (wöchentlich)."""
+        """Bezahlt alle Gehälter (monatlich aufgestaut)."""
         total = sum(e.salary for e in self.employees)
-        self.track_expense("salaries", total)
-        return total
+        # Wenn Gehälter monthly gemeint sind, aber wöchentlich aufgestaut werden
+        # dann ist das Gehalt pro Woche = Gehalt / 4.
+        # Aber der User sagte "keiner gricht so viel prowoche", also sind die Gehälter wohl monatlich.
+        # Wir stauen sie wöchentlich auf (salary / 4) und zahlen alle 4 Wochen.
+        weekly_share = total / 4.0
+        self.accrued_salaries += weekly_share
+        return weekly_share
 
     def process_emails(self):
         """Generiert zufällige E-Mails."""
@@ -2390,6 +2485,7 @@ class GameState:
             "publishing_offers": [o.to_dict() for o in getattr(self, "publishing_offers", [])],
             "published_third_party_games": [g.to_dict() for g in getattr(self, "published_third_party_games", [])],
             "office_items": getattr(self, "office_items", []),
+            "office_objects": [obj.to_dict() for obj in getattr(self, "office_objects", [])],
             "active_projects": [
                 {
                     "project": ap["project"].to_dict(),
@@ -2493,23 +2589,7 @@ class GameState:
         # Spielhistorie laden
         self.game_history = []
         for gd in data.get("game_history", []):
-            proj = GameProject(
-                gd["name"], gd["topic"], gd["genre"],
-                gd.get("sliders"), gd.get("platform"), gd.get("audience"),
-                size=gd.get("size", "Mittel"), marketing=gd.get("marketing", "Kein Marketing")
-            )
-            if gd.get("review_scores"):
-                proj.review = ReviewScore(gd["review_scores"])
-            proj.sales = gd.get("sales", 0)
-            proj.revenue = gd.get("revenue", 0)
-            proj.dev_cost = gd.get("dev_cost", 0)
-            proj.week_developed = gd.get("week_developed", 0)
-            proj.license_bonus = gd.get("license_bonus", 0.0)
-            proj.physical_copies = gd.get("physical_copies", 0)
-            proj.physical_price = gd.get("physical_price", 45)
-            proj.lifetime_physical_sales = gd.get("lifetime_physical_sales", 0)
-            proj.is_active = gd.get("is_active", True)
-            self.game_history.append(proj)
+            self.game_history.append(GameProject.from_dict(gd))
 
         # Aktive MMOs laden
         self.active_mmos = []
@@ -2526,20 +2606,12 @@ class GameState:
         # Mitarbeiter laden
         self.employees = []
         for ed in data.get("employees", []):
-            emp = Employee.__new__(Employee)
-            emp.name = ed["name"]
-            emp.role = ed["role"]
-            emp.primary_skill = ed["primary_skill"]
-            emp.secondary_skill = ed["secondary_skill"]
-            emp.skill_level = ed["skill_level"]
-            emp.skills = ed["skills"]
-            emp.salary = ed["salary"]
-            emp.morale = ed["morale"]
-            emp.weeks_employed = ed["weeks_employed"]
-            emp.specialization = ed.get("specialization")
-            import random
-            from game_data import EMPLOYEE_TRAITS
-            emp.trait = ed.get("trait") if ed.get("trait") else random.choice(EMPLOYEE_TRAITS)
+            emp = Employee.from_dict(ed)
+            # Falls Trait fehlt (Migration), zufällig zuweisen
+            if not emp.trait:
+                import random
+                from game_data import EMPLOYEE_TRAITS
+                emp.trait = random.choice(EMPLOYEE_TRAITS)
             self.employees.append(emp)
 
         # E-Mails laden
@@ -2555,18 +2627,7 @@ class GameState:
         # Aktive Projekte laden
         self.active_projects = []
         for ad in data.get("active_projects", []):
-            pd = ad["project"]
-            proj = GameProject(
-                pd["name"], pd["topic"], pd["genre"],
-                pd.get("sliders"), pd.get("platform"), pd.get("audience"),
-                size=pd.get("size", "Mittel"), marketing=pd.get("marketing", "Kein Marketing")
-            )
-            # Metadaten wiederherstellen
-            proj.sales = pd.get("sales", 0)
-            proj.revenue = pd.get("revenue", 0)
-            proj.dev_cost = pd.get("dev_cost", 0)
-            proj.week_developed = pd.get("week_developed", 0)
-            proj.is_active = pd.get("is_active", True)
+            proj = GameProject.from_dict(ad["project"])
             
             self.active_projects.append({
                 "project": proj,
@@ -2618,19 +2679,31 @@ class GameState:
 
         # Büro laden & Migrieren
         self.office_items = data.get("office_items", [])
+        self.office_objects = []
+        
+        # Versuche office_objects direkt zu laden
+        objects_data = data.get("office_objects")
+        if objects_data:
+            from models import OfficeObject
+            for od in objects_data:
+                self.office_objects.append(OfficeObject.from_dict(od))
+        
         self.office_grid = [[None for _ in range(10)] for _ in range(10)]
-        for item in self.office_items:
-            # Migration: Falls item nur ein String war (altes Format)
-            if isinstance(item, str):
-                # Wir können hier nur raten oder ignorieren, da Position fehlt.
-                # Besser: Wir ignorieren veraltete Strings in office_items.
-                continue
-            
-            # Migration: Falls item ein Dict ist, aber office_grid noch Strings hielt
-            # In unserem neuen System hält office_grid Referenzen auf das Dict.
-            y, x = item.get("y", 0), item.get("x", 0)
-            if 0 <= y < 10 and 0 <= x < 10:
-                self.office_grid[y][x] = item
+        
+        # Falls office_objects leer war aber office_items existiert (Migration)
+        if not self.office_objects and self.office_items:
+            from models import OfficeObject
+            for item in self.office_items:
+                if isinstance(item, dict):
+                    y, x = item.get("y", 0), item.get("x", 0)
+                    new_obj = OfficeObject(item.get("type", "Desk"), x, y, level=item.get("level", 1))
+                    self.office_objects.append(new_obj)
+        
+        # Grid aus office_objects aufbauen
+        for obj in self.office_objects:
+            y, x = obj.y, obj.x
+            if 0 <= y < len(self.office_grid) and 0 <= x < len(self.office_grid[0]):
+                self.office_grid[y][x] = obj
 
         self.reset_draft()
         return True
@@ -2934,7 +3007,7 @@ class GameState:
             self.accounting["expenses"] += cost
             
         # Place
-        item = {
+        item_data = {
             "type": item_type,
             "x": x,
             "y": y,
@@ -2942,8 +3015,15 @@ class GameState:
             "height": 1,
             "employees": obj_def.get("employees", 0)
         }
-        self.office_items.append(item)
-        self.office_grid[y][x] = item
+        from models import OfficeObject
+        obj = OfficeObject.from_dict({"object_type": item_type, "x": x, "y": y, "level": 1})
+        
+        if not hasattr(self, "office_items"): self.office_items = []
+        if not hasattr(self, "office_objects"): self.office_objects = []
+        
+        self.office_items.append(item_data)
+        self.office_objects.append(obj)
+        self.office_grid[y][x] = obj
                 
         return True, "success"
 
@@ -2960,12 +3040,24 @@ class GameState:
                 return False 
             
         # Remove
-        self.office_items.remove(item)
+        if item in self.office_items:
+            self.office_items.remove(item)
+        
+        # Also remove from office_objects if it's an OfficeObject or find the matching one
+        if hasattr(self, "office_objects"):
+            to_remove = None
+            for obj in self.office_objects:
+                if obj.x == x and obj.y == y:
+                    to_remove = obj
+                    break
+            if to_remove:
+                self.office_objects.remove(to_remove)
+                
         self.office_grid[y][x] = None
         
         # Refund 50%
         from game_data import BUILD_OBJECTS
-        obj_def = BUILD_OBJECTS.get(item["type"], {})
+        obj_def = BUILD_OBJECTS.get(item.get("type"), {})
         self.money += obj_def.get("cost", 0) * 0.5
         
         return True
@@ -3064,6 +3156,9 @@ class GameState:
         self.money += amount
         if hasattr(self, "accounting"):
             self.accounting["income"] += amount
+        
+        # NEU: Monatliche Verfolgung
+        self.accrued_income[category] = self.accrued_income.get(category, 0) + amount
 
     def track_expense(self, category, amount):
         """Trackt Ausgaben in einer Kategorie."""
@@ -3077,6 +3172,9 @@ class GameState:
         self.money -= amount
         if hasattr(self, "accounting"):
             self.accounting["expenses"] += amount
+
+        # NEU: Monatliche Verfolgung
+        self.accrued_expenses[category] = self.accrued_expenses.get(category, 0) + amount
 
     def finalize_weekly_balance(self):
         """Speichert die aktuelle Wochenbilanz in die Historie und setzt sie zurück."""
@@ -3169,46 +3267,154 @@ class GameState:
 
 
     def _send_monthly_bank_statement(self):
-        """Sendet monatlichen Kontoauszug per E-Mail (alle 4 Wochen)."""
-        if not hasattr(self, "financial_history"):
-            return
-            
-        last_4 = self.financial_history[-4:] if len(self.financial_history) >= 4 else self.financial_history
-        total_inc = sum(w["total_income"] for w in last_4) if last_4 else 0
-        total_exp = sum(w["total_expenses"] for w in last_4) if last_4 else 0
-        profit = total_inc - total_exp
-        income_detail = {}
-        expense_detail = {}
-        if last_4:
-            for w in last_4:
-                for cat, val in w["income"].items():
-                    income_detail[cat] = income_detail.get(cat, 0) + val
-                for cat, val in w["expenses"].items():
-                    expense_detail[cat] = expense_detail.get(cat, 0) + val
-        inc_lines = ["  + " + self.get_text("finance_" + c) + ": " + f"{v:,.0f}" + " EUR"
-                     for c, v in income_detail.items() if v > 0]
-        exp_lines = ["  - " + self.get_text("finance_" + c) + ": " + f"{v:,.0f}" + " EUR"
-                     for c, v in expense_detail.items() if v > 0]
+        """Generiert und speichert einen monatlichen Kontoauszug."""
+        import game_data
+        year = (self.week - 1) // game_data.WEEKS_PER_YEAR + game_data.START_YEAR
+        month_index = ((self.week - 1) % game_data.WEEKS_PER_YEAR) // 4 + 1
+        
+        statement = BankStatement(
+            week=self.week,
+            year=year,
+            income_items=self.accrued_income.copy(),
+            expense_items=self.accrued_expenses.copy(),
+            final_balance=self.money
+        )
+        
+        self.bank_statements.insert(0, statement)
+        
+        # Reset accrued data for next month
+        self.accrued_income = {}
+        self.accrued_expenses = {}
+        
+        # Email senden
         cal = self.get_calendar_text()
-        sign = "+" if profit >= 0 else ""
         body_lines = [
-            self.get_text("monthly_statement_period") + ": " + cal,
+            f"{self.get_text('monthly_statement_period')}: {cal}",
             "",
-            self.get_text("finance_total_income") + ": " + f"{total_inc:,.0f}" + " EUR",
-        ] + inc_lines + [
-            "",
-            self.get_text("finance_total_expenses") + ": " + f"{total_exp:,.0f}" + " EUR",
-        ] + exp_lines + [
-            "",
-            self.get_text("finance_net_profit") + ": " + sign + f"{profit:,.0f}" + " EUR",
-            self.get_text("current_balance") + ": " + f"{self.money:,.0f}" + " EUR",
+            f"{self.get_text('finance_total_income')}: {statement.total_income:,.0f} EUR",
         ]
+        for cat, val in statement.income_items.items():
+            if val > 0:
+                body_lines.append(f"  + {self.get_text('finance_' + cat)}: {val:,.0f} EUR")
+        
+        body_lines.append("")
+        body_lines.append(f"{self.get_text('finance_total_expenses')}: {statement.total_expense:,.0f} EUR")
+        for cat, val in statement.expense_items.items():
+            if val > 0:
+                body_lines.append(f"  - {self.get_text('finance_' + cat)}: {val:,.0f} EUR")
+                
+        profit = statement.total_income - statement.total_expense
+        sign = "+" if profit >= 0 else ""
+        body_lines.extend([
+            "",
+            f"{self.get_text('finance_net_profit')}: {sign}{profit:,.0f} EUR",
+            f"{self.get_text('current_balance')}: {self.money:,.0f} EUR",
+        ])
+        
         self.emails.insert(0, Email(
             sender=self.get_text("sender_bank"),
             subject=self.get_text("subject_monthly_statement", date=cal),
             body="\n".join(body_lines),
             date_week=self.week
         ))
+
+    def _finish_update_project(self, update):
+        """Wendet die Effekte eines fertigen Updates/DLCs an."""
+        game = next((g for g in self.game_history if g.name == update.base_game_name), None)
+        if not game: return
+        
+        game.updates.append(update)
+        
+        if update.update_type == "Patch":
+            bugs_to_fix = int(game.bugs * 0.5) + 1
+            game.bugs = max(0, game.bugs - bugs_to_fix)
+            game.total_bugs_fixed += bugs_to_fix
+        elif update_type == "Content":
+            self.fans += 500
+            self.hype = min(100, self.hype + 20)
+        elif update_type == "Language":
+            for l in update.languages:
+                if l not in game.languages:
+                    game.languages.append(l)
+                    
+        self.emails.insert(0, Email(
+            sender=self.get_text('sender_dev'),
+            subject=self.get_text('subject_update_finished', name=update.name),
+            body=self.get_text('body_update_finished', game=game.name, type=update.update_type),
+            date_week=self.week
+        ))
+
+    def place_office_room(self, x1, y1, x2, y2, room_type):
+        """Platziert einen Raum im Büro-Raster."""
+        from game_data import OFFICE_ROOM_TYPES
+        room_data = next((r for r in OFFICE_ROOM_TYPES if r["id"] == room_type), None)
+        if not room_data: return False
+        
+        width = x2 - x1 + 1
+        height = y2 - y1 + 1
+        cost = width * height * room_data["cost_per_tile"]
+        
+        if self.money < cost: return False
+        
+        # Check if area is within grid
+        if x1 < 0 or y1 < 0 or x2 >= len(self.office_grid) or y2 >= len(self.office_grid[0]):
+            return False
+            
+        self.money -= cost
+        self.track_expense("other", cost)
+        
+        for x in range(x1, x2 + 1):
+            for y in range(y1, y2 + 1):
+                self.office_grid[x][y] = room_type
+        return True
+
+    def buy_office_furniture(self, x, y, item_id):
+        """Kauft ein Möbelstück und platziert es."""
+        from game_data import FURNITURE_DATA
+        item_data = next((f for f in FURNITURE_DATA if f["id"] == item_id), None)
+        if not item_data: return False
+        
+        if self.money < item_data["cost"]: return False
+        
+        # Check grid
+        if x < 0 or x >= len(self.office_grid) or y < 0 or y >= len(self.office_grid[0]):
+            return False
+            
+        # Nur in Räumen platzierbar? (Optional: Desk nur in 'dev' Raum)
+        # room = self.office_grid[x][y]
+        
+        self.money -= item_data["cost"]
+        self.track_expense("other", item_data["cost"])
+        
+        new_obj = OfficeObject(item_data["type"], x, y, level=1)
+        self.office_objects.append(new_obj)
+        return True
+
+    def expand_office_grid(self):
+        """Vergrößert das Büro-Raster."""
+        cost = 50000 * (len(self.office_grid) // 10)
+        if self.money < cost: return False
+        
+        self.money -= cost
+        self.track_expense("other", cost)
+        
+        new_size = len(self.office_grid) + 5
+        new_grid = [[None for _ in range(new_size)] for _ in range(new_size)]
+        
+        # Copy old grid
+        for x in range(len(self.office_grid)):
+            for y in range(len(self.office_grid[0])):
+                new_grid[x][y] = self.office_grid[x][y]
+        
+        self.office_grid = new_grid
+        return True
+
+    def delete_bank_statement(self, idx):
+        """Löscht einen Kontoauszug aus der Liste."""
+        if 0 <= idx < len(self.bank_statements):
+            self.bank_statements.pop(idx)
+            return True
+        return False
 
     def get_financial_summary(self):
         """Gibt eine kurze akustische Zusammenfassung der Finanzen zurück."""

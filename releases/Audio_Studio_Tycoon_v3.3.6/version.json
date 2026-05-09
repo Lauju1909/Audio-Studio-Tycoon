@@ -1,5 +1,0 @@
-{
-    "version": "3.3.6",
-    "channel": "stable",
-    "changelog": "v3.3.6: Umfassender Stabilitäts-Patch. Team-Zuweisung korrigiert (Index-Bug), Speichersystem für aktive Projekte ergänzt, Trait-Handling robuster gestaltet, globales Fehler-Logging in crash_log.txt aktiviert."
-}

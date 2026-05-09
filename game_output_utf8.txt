@@ -1,0 +1,21 @@
+﻿pygame 2.6.1 (SDL 2.28.4, Python 3.13.13)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+[Audio] Lade Tolk von: C:\Users\lauri\.gemini\antigravity\scratch\game_dev_tycoon_2\Tolk.dll
+[Audio] Tolk Screenreader-Support aktiv.
+[TTS]: Willkommen bei Audio Studio Tycoon, Audio Edition! Gr³nde deine eigene Spielefirma, stelle Mitarbeiter ein, erforsche Technologien und entwickle Bestseller! Nutze die Pfeiltasten zum Navigieren und Enter zum Auswõhlen.
+[Audio] Spiele Musik: C:\Users\lauri\.gemini\antigravity\scratch\game_dev_tycoon_2\assets/music_back.mp3
+[TTS]: Audio Studio Tycoon - Audio Edition
+[TTS]: Neues Spiel
+[Audio] Spiele Sound: C:\Users\lauri\.gemini\antigravity\scratch\game_dev_tycoon_2\assets/click.wav
+[TTS]: Spiel laden
+[Audio] Spiele Sound: C:\Users\lauri\.gemini\antigravity\scratch\game_dev_tycoon_2\assets/click.wav
+[TTS]: Multiplayer-Men³
+[TTS]: Neuer Monat: Februar 1930, Kalenderwoche 1
+[Audio] Spiele Sound: C:\Users\lauri\.gemini\antigravity\scratch\game_dev_tycoon_2\assets/click.wav
+[TTS]: Lokaler Mod-Manager
+[Audio] Spiele Sound: C:\Users\lauri\.gemini\antigravity\scratch\game_dev_tycoon_2\assets/click.wav
+[TTS]: Spiel Beenden
+[Audio] Spiele Sound: C:\Users\lauri\.gemini\antigravity\scratch\game_dev_tycoon_2\assets/error.wav
+[Audio] Spiele Sound: C:\Users\lauri\.gemini\antigravity\scratch\game_dev_tycoon_2\assets/error.wav
+[Audio] Spiele Sound: C:\Users\lauri\.gemini\antigravity\scratch\game_dev_tycoon_2\assets/error.wav
+[Audio] Spiele Sound: C:\Users\lauri\.gemini\antigravity\scratch\game_dev_tycoon_2\assets/confirm.wav

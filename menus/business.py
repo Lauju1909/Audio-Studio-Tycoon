@@ -6,11 +6,13 @@ class ServiceMenu(Menu):
         self.audio = audio
         self.game_state = game_state
         title = self.game_state.get_text('service_menu')
-        options = [
-            {'text': self.game_state.get_text('service_manage_subscription'), 'action': lambda: "subscription_service_menu"},
+        options = []
+        if self.game_state.get_calendar_year() >= 2000:
+            options.append({'text': self.game_state.get_text('service_manage_subscription'), 'action': lambda: "subscription_service_menu"})
+        options.extend([
             {'text': self.game_state.get_text('game_service_options'), 'action': lambda: "game_service_options"},
             {'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"}
-        ]
+        ])
         super().__init__(title, options, audio, game_state)
 
 class SubscriptionServiceMenu(Menu):

@@ -1,5 +1,0 @@
-{
-    "version": "3.3.7",
-    "channel": "stable",
-    "changelog": "v3.3.7: Debug-Release mit visuellem Fehlermeldungs-System (MessageBox). Interne Absicherung der Spielstart-Logik."
-}
