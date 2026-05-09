@@ -10,19 +10,21 @@ Da Antigravity das **Model Context Protocol (MCP)** nutzt, kannst du LM Studio a
 
 Füge den folgenden Block zu deiner `c:\Users\lauri\.gemini\antigravity\mcp_config.json` unter `mcpServers` hinzu:
 
-```json
-"lm-studio": {
+"lm-studio-local": {
   "command": "C:\\Program Files\\nodejs\\node.exe",
   "args": [
-    "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npx-cli.js",
-    "-y",
-    "mcp-server-openai",
-    "--baseUrl", "http://localhost:1234/v1",
-    "--apiKey", "lm-studio",
-    "--model", "qwen/qwen3.6-27b"
-  ]
+    "C:\\Users\\lauri\\.gemini\\antigravity\\mcp_servers\\lm-studio\\node_modules\\@mzxrai\\mcp-openai\\dist\\index.js"
+  ],
+  "env": {
+    "OPENAI_API_KEY": "lm-studio",
+    "OPENAI_BASE_URL": "http://127.0.0.1:1234/v1",
+    "OPENAI_MODEL": "qwen/qwen3.6-27b"
+  }
 }
 ```
+
+> [!IMPORTANT]
+> Ich habe den Server von `lm-studio` in `lm-studio-local` umbenannt, um eine saubere Neuinitialisierung zu erzwingen. Außerdem nutzen wir jetzt einen direkten Pfad zur installierten Brücke, was unter Windows stabiler ist als `npx`.
 
 > [!TIP]
 > Da LM Studio eine OpenAI-kompatible API bereitstellt, nutzt dieser Befehl den `mcp-server-openai` als Brücke. Falls das Paket noch nicht installiert ist, wird es durch `-y` automatisch geladen.
