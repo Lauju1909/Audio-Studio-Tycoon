@@ -1,6 +1,6 @@
 {
     "version": "3.6.0",
     "channel": "stable",
-    "notes": "Added Gift Card support system (Google Play, Steam, Paysafecard). Integrated email submission for developer support.",
+    "notes": "v3.6.0: Renamed Main Menu entry to 'Support Developer' and removed ads from that specific view. Added dynamic back-navigation logic.",
     "min_launcher_version": "1.0.0"
 }

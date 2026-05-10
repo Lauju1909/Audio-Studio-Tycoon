@@ -194,24 +194,30 @@ class DonationMenu(Menu):
         return None
 
 class MonetizationMenu(Menu):
-    def __init__(self, audio, game_state, back_target=None):
+    def __init__(self, audio, game_state, back_target=None, show_ads=True):
         self.audio = audio
         self.game_state = game_state
+        self.show_ads = show_ads
         if back_target:
             self.game_state.monetization_back_target = back_target
         self.back_target = self.game_state.monetization_back_target
         
-        super().__init__(self.game_state.get_text('menu_monetization'), [], audio, game_state)
+        title_key = 'menu_monetization' if show_ads else 'menu_support_dev'
+        super().__init__(self.game_state.get_text(title_key), [], audio, game_state)
         self._update_options()
 
     def _update_options(self):
         gs = self.game_state
-        self.options = [
-            {'text': gs.get_text('watch_ad'), 'action': self._watch_ad},
+        self.options = []
+        
+        if self.show_ads:
+            self.options.append({'text': gs.get_text('watch_ad'), 'action': self._watch_ad})
+        
+        self.options.extend([
             {'text': gs.get_text('support_gift_card'), 'action': lambda: "support_gift_card_type_menu"},
             {'text': gs.get_text('support_dev'), 'action': self._support_dev},
             {'text': gs.get_text('back'), 'action': lambda: self.back_target}
-        ]
+        ])
 
     def _watch_ad(self):
         if self.game_state.week <= self.game_state.last_ad_week:

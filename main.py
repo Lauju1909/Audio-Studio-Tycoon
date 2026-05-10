@@ -91,7 +91,7 @@ def get_menu_factories(audio, state):
         "loan_menu": lambda: LoanMenu(audio, state),
         "donation_menu": lambda: DonationMenu(audio, state),
         "monetization_menu": lambda: MonetizationMenu(audio, state),
-        "monetization_menu_main": lambda: MonetizationMenu(audio, state, back_target="main_menu"),
+        "monetization_menu_main": lambda: MonetizationMenu(audio, state, back_target="main_menu", show_ads=False),
         "stock_market_menu": lambda: StockMarketMenu(audio, state),
         "difficulty_menu": lambda: DifficultyMenu(audio, state),
         "sub_genre_menu": lambda: SubGenreMenu(audio, state),
@@ -136,7 +136,7 @@ def get_menu_factories(audio, state):
         "multiplayer_create_id_input": lambda: MultiplayerRoomIdInput(audio, state), # Reuse for now
         "multiplayer_lobby": lambda: MultiplayerLobbyMenu(audio, state),
         "active_games_menu": lambda: ActiveGamesMenu(audio, state),
-        "current_monetization_menu": lambda: MonetizationMenu(audio, state),
+        "current_monetization_menu": lambda: MonetizationMenu(audio, state, show_ads=state.monetization_back_target != "main_menu"),
         "developer_menu": lambda: DeveloperMenu(audio, state),
     }
 

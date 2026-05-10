@@ -17,7 +17,7 @@ class MainMenu(Menu):
             {'text': self.game_state.get_text('menu_load_game'), 'action': lambda: "load_menu"},
             {'text': self.game_state.get_text('multiplayer_menu_title', default="Multiplayer"), 'action': lambda: "multiplayer_main"},
             {'text': self.game_state.get_text('menu_mod_portal'), 'action': lambda: "mod_portal"},
-            {'text': self.game_state.get_text('menu_monetization'), 'action': lambda: "monetization_menu_main"},
+            {'text': self.game_state.get_text('menu_support_dev'), 'action': lambda: "monetization_menu_main"},
             {'text': self.game_state.get_text('menu_settings'), 'action': lambda: "settings_menu"},
             {'text': self.game_state.get_text('menu_help'), 'action': lambda: "help_menu"},
             {'text': self.game_state.get_text('menu_credits'), 'action': self.show_credits},
