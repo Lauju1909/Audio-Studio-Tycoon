@@ -223,11 +223,22 @@ class AudioManager:
     def _speech_worker(self):
         """Hintergrund-Thread zur sequentiellen Verarbeitung der Sprachausgabe."""
         # COM für diesen Thread initialisieren (wichtig für SAPI)
+        # WICHTIG: SAPI-Objekt MUSS im selben Thread erstellt werden, in dem Speak() aufgerufen wird!
+        thread_sapi = None
         if self.is_windows:
             try:
                 ctypes.windll.ole32.CoInitialize(None)
             except Exception:
                 pass
+            # SAPI direkt im Worker-Thread erstellen (COM-Thread-Affinität!)
+            try:
+                import win32com.client
+                thread_sapi = win32com.client.Dispatch("SAPI.SpVoice")
+                thread_sapi.Volume = self.speech_volume
+                print("[Audio Worker] SAPI Thread-Instanz erstellt.")
+            except Exception as e:
+                print(f"[Audio Worker] SAPI Thread-Init fehlgeschlagen: {e}")
+                thread_sapi = None
 
         while not self.stop_worker:
             try:
@@ -236,34 +247,55 @@ class AudioManager:
                 if item is None:
                     break
                 text, interrupt = item
-                
-                # STUFE 1: Windows (Tolk)
-                tolk_spoke = False
+
+                spoken = False
+
+                # STUFE 1: SAPI direkt (IMMER zuerst auf Windows - zuverlässigster Weg)
+                if thread_sapi is not None and self.is_windows:
+                    try:
+                        SVSFlagsAsync = 1
+                        SVSFPurgeBeforeSpeak = 2
+                        flags = SVSFlagsAsync
+                        if interrupt:
+                            flags |= SVSFPurgeBeforeSpeak
+                        thread_sapi.Speak(text, flags)
+                        spoken = True
+                    except Exception as e:
+                        print(f"[SAPI Worker Speak Fehler]: {e}")
+                        thread_sapi = None  # SAPI kaputt, beim nächsten Mal Tolk versuchen
+
+                # STUFE 2: Tolk (für echte Screenreader wie NVDA/JAWS - zusätzlich!)
+                # Tolk gibt Text an den Screenreader weiter ZUSÄTZLICH zu SAPI
+                # (Screenreader-Nutzer hören dann Tolk statt SAPI, weil SR Priorität hat)
                 if self.tolk_active and self.tolk:
                     try:
-                        if not interrupt and hasattr(self.tolk, 'Tolk_IsSpeaking'):
-                            while self.tolk.Tolk_IsSpeaking():
-                                if self.stop_worker:
-                                    break
-                                time.sleep(0.01)
                         self.tolk.Tolk_Output(ctypes.c_wchar_p(text), ctypes.c_bool(interrupt))
-                        tolk_spoke = True
+                    except Exception:
+                        pass  # Tolk-Fehler ignorieren, SAPI hat bereits gesprochen
+
+                # STUFE 3: Fallback pyttsx3 (wenn SAPI und Tolk beide versagt haben)
+                if not spoken and self.is_windows:
+                    try:
+                        engine = getattr(self, '_pyttsx3_engine', None)
+                        if engine:
+                            if interrupt:
+                                try: engine.stop()
+                                except Exception: pass
+                            engine.say(text)
+                            engine.runAndWait()
+                            spoken = True
                     except Exception as e:
-                        print(f"Tolk Worker Fehler: {e}")
-                
-                # STUFE 2: Windows SAPI Fallback (wenn Tolk nicht gesprochen hat)
-                if not tolk_spoke and self.sapi_active and self.is_windows:
-                    self._sapi_speak(text, interrupt)
-                
-                # STUFE 3: Linux (speech-dispatcher)
-                elif self.linux_speech and not tolk_spoke:
+                        print(f"[pyttsx3 Fallback Fehler]: {e}")
+
+                # STUFE 4: Linux (speech-dispatcher)
+                if not spoken and self.linux_speech:
                     try:
                         if interrupt:
                             self.linux_speech.cancel()
                         self.linux_speech.speak(text)
                     except Exception as e:
                         print(f"Linux Worker Fehler: {e}")
-                
+
                 self.speech_queue.task_done()
             except queue.Empty:
                 continue
