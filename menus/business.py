@@ -1,5 +1,6 @@
 from .base import Menu, TextInputMenu
 import random
+import webbrowser
 
 class ServiceMenu(Menu):
     def __init__(self, audio, game_state):
@@ -140,6 +141,7 @@ class BankMenu(Menu):
             {'text': self.game_state.get_text('bank_statement_option'), 'action': self._show_report},
             {'text': self.game_state.get_text('loans'), 'action': lambda: "loan_menu"},
             {'text': self.game_state.get_text('donate_menu'), 'action': lambda: "donation_menu"},
+            {'text': self.game_state.get_text('menu_monetization'), 'action': lambda: "monetization_menu"},
             {'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"}
         ]
         super().__init__(title, options, audio, game_state)
@@ -188,6 +190,42 @@ class DonationMenu(Menu):
         else:
             self.audio.play_sound("error")
             self.audio.speak(self.game_state.get_text('donate_not_enough'))
+        return None
+
+class MonetizationMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(self.game_state.get_text('menu_monetization'), [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        gs = self.game_state
+        self.options = [
+            {'text': gs.get_text('watch_ad'), 'action': self._watch_ad},
+            {'text': gs.get_text('support_dev'), 'action': self._support_dev},
+            {'text': gs.get_text('back'), 'action': lambda: "bank_menu"}
+        ]
+
+    def _watch_ad(self):
+        if self.game_state.week <= self.game_state.last_ad_week:
+            self.audio.play_sound("error")
+            self.audio.speak(self.game_state.get_text('ad_cooldown'))
+            return None
+
+        self.audio.speak(self.game_state.get_text('ad_playing'))
+        import time
+        self.audio.play_sound("cash")
+        
+        success, amount = self.game_state.watch_ad()
+        if success:
+            self.audio.speak(self.game_state.get_text('ad_reward_received', amount=amount))
+            self.audio.play_sound("confirm")
+        return "bank_menu"
+
+    def _support_dev(self):
+        self.audio.speak(self.game_state.get_text('support_dev'))
+        webbrowser.open("https://github.com/Lauju1909") 
         return None
 
     def _take(self, amount, rate):

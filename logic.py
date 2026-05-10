@@ -91,6 +91,8 @@ class GameState:
         self.emails = []
         # NEU Phase II: Sabotage-Cooldown
         self.last_sabotage_week = -100
+        # NEU: Monetarisierungs-Cooldown
+        self.last_ad_week = -10
 
         # Aktive MMOs
         self.active_mmos = []
@@ -2445,6 +2447,18 @@ class GameState:
             
             self.fans += fans_gained
             return True, fans_gained
+        return False, 0
+
+
+    def watch_ad(self):
+        """Simuliert das Ansehen einer Werbung gegen Belohnung."""
+        # Cooldown: Nur einmal pro Woche möglich
+        if self.week > self.last_ad_week:
+            reward = 5000
+            self.money += reward
+            self.track_income("other", reward)
+            self.last_ad_week = self.week
+            return True, reward
         return False, 0
 
 

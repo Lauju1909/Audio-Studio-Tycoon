@@ -1,5 +1,9 @@
 {
-    "version": "3.4.2",
+    "version": "3.5.0",
     "channel": "stable",
-    "changelog": "v3.4.2: Münzen spenden & Stabilität: (1) Neues Spenden-System im Bank-Menü integriert (Fans gewinnen durch Wohltätigkeit), (2) Korrektur der Pleite-Check-Logik zur Vermeidung von Mehrfach-Events, (3) Validierung der Office-Objekt-Persistenz, (4) Bereinigung doppelter Variablen in der GameState-Initialisierung."
+    "changelog": [
+        "v3.5.0: Monetarisierungs-System (Marketing-Zentrum) hinzugefügt.",
+        "v3.4.2: Spenden-System und Bugfixes (Pleite-Check, Persistence).",
+        "v3.4.1: Bugfixes bei der Mitarbeiter-KI."
+    ]
 }
