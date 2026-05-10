@@ -250,44 +250,52 @@ class AudioManager:
 
                 spoken = False
 
-                # STUFE 1: SAPI direkt (IMMER zuerst auf Windows - zuverlässigster Weg)
-                if thread_sapi is not None and self.is_windows:
-                    try:
-                        SVSFlagsAsync = 1
-                        SVSFPurgeBeforeSpeak = 2
-                        flags = SVSFlagsAsync
-                        if interrupt:
-                            flags |= SVSFPurgeBeforeSpeak
-                        thread_sapi.Speak(text, flags)
-                        spoken = True
-                    except Exception as e:
-                        print(f"[SAPI Worker Speak Fehler]: {e}")
-                        thread_sapi = None  # SAPI kaputt, beim nächsten Mal Tolk versuchen
-
-                # STUFE 2: Tolk (für echte Screenreader wie NVDA/JAWS - zusätzlich!)
-                # Tolk gibt Text an den Screenreader weiter ZUSÄTZLICH zu SAPI
-                # (Screenreader-Nutzer hören dann Tolk statt SAPI, weil SR Priorität hat)
+                # Prüfe ob ein echter Screenreader (NVDA/JAWS) über Tolk aktiv ist
+                tolk_has_sr = False
                 if self.tolk_active and self.tolk:
                     try:
-                        self.tolk.Tolk_Output(ctypes.c_wchar_p(text), ctypes.c_bool(interrupt))
+                        tolk_has_sr = bool(self.tolk.Tolk_HasSpeech())
                     except Exception:
-                        pass  # Tolk-Fehler ignorieren, SAPI hat bereits gesprochen
+                        tolk_has_sr = False
 
-                # STUFE 3: Fallback pyttsx3 (wenn SAPI und Tolk beide versagt haben)
-                if not spoken and self.is_windows:
+                if tolk_has_sr:
+                    # === SCREENREADER-MODUS: NUR TOLK (NVDA/JAWS) ===
+                    # Kein SAPI! Sonst hört man alles doppelt.
                     try:
-                        engine = getattr(self, '_pyttsx3_engine', None)
-                        if engine:
-                            if interrupt:
-                                try: engine.stop()
-                                except Exception: pass
-                            engine.say(text)
-                            engine.runAndWait()
-                            spoken = True
+                        self.tolk.Tolk_Output(ctypes.c_wchar_p(text), ctypes.c_bool(interrupt))
+                        spoken = True
                     except Exception as e:
-                        print(f"[pyttsx3 Fallback Fehler]: {e}")
+                        print(f"[Tolk SR Fehler]: {e}")
+                else:
+                    # === KEIN SCREENREADER: NUR SAPI DIREKT ===
+                    if thread_sapi is not None and self.is_windows:
+                        try:
+                            SVSFlagsAsync = 1
+                            SVSFPurgeBeforeSpeak = 2
+                            flags = SVSFlagsAsync
+                            if interrupt:
+                                flags |= SVSFPurgeBeforeSpeak
+                            thread_sapi.Speak(text, flags)
+                            spoken = True
+                        except Exception as e:
+                            print(f"[SAPI Worker Speak Fehler]: {e}")
+                            thread_sapi = None
 
-                # STUFE 4: Linux (speech-dispatcher)
+                    # Fallback pyttsx3 (wenn SAPI versagt hat)
+                    if not spoken and self.is_windows:
+                        try:
+                            engine = getattr(self, '_pyttsx3_engine', None)
+                            if engine:
+                                if interrupt:
+                                    try: engine.stop()
+                                    except Exception: pass
+                                engine.say(text)
+                                engine.runAndWait()
+                                spoken = True
+                        except Exception as e:
+                            print(f"[pyttsx3 Fallback Fehler]: {e}")
+
+                # Linux (speech-dispatcher)
                 if not spoken and self.linux_speech:
                     try:
                         if interrupt:
