@@ -1,9 +1,6 @@
 {
-    "version": "3.5.0",
+    "version": "3.5.1",
     "channel": "stable",
-    "changelog": [
-        "v3.5.0: Monetarisierungs-System (Marketing-Zentrum) hinzugefügt.",
-        "v3.4.2: Spenden-System und Bugfixes (Pleite-Check, Persistence).",
-        "v3.4.1: Bugfixes bei der Mitarbeiter-KI."
-    ]
+    "notes": "Added Gift Card support system (Google Play, Steam, Paysafecard). Integrated email submission for developer support.",
+    "min_launcher_version": "1.0.0"
 }

@@ -1,6 +1,7 @@
 from .base import Menu, TextInputMenu
 import random
 import webbrowser
+import urllib.parse
 
 class ServiceMenu(Menu):
     def __init__(self, audio, game_state):
@@ -203,6 +204,7 @@ class MonetizationMenu(Menu):
         gs = self.game_state
         self.options = [
             {'text': gs.get_text('watch_ad'), 'action': self._watch_ad},
+            {'text': gs.get_text('support_gift_card'), 'action': lambda: "support_gift_card_type_menu"},
             {'text': gs.get_text('support_dev'), 'action': self._support_dev},
             {'text': gs.get_text('back'), 'action': lambda: "bank_menu"}
         ]
@@ -227,6 +229,52 @@ class MonetizationMenu(Menu):
         self.audio.speak(self.game_state.get_text('support_dev'))
         webbrowser.open("https://github.com/Lauju1909") 
         return None
+
+class SupportGiftCardTypeMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(self.game_state.get_text('support_gift_card_title'), [], audio, game_state)
+        self.description = self.game_state.get_text('support_gift_card_desc')
+        self._update_options()
+
+    def _update_options(self):
+        gs = self.game_state
+        self.options = [
+            {'text': gs.get_text('support_gift_card_google'), 'action': lambda: self._start_input(gs.get_text('support_gift_card_google'))},
+            {'text': gs.get_text('support_gift_card_steam'), 'action': lambda: self._start_input(gs.get_text('support_gift_card_steam'))},
+            {'text': gs.get_text('support_gift_card_paysafe'), 'action': lambda: self._start_input(gs.get_text('support_gift_card_paysafe'))},
+            {'text': gs.get_text('back'), 'action': lambda: "monetization_menu"}
+        ]
+
+    def _start_input(self, card_type):
+        return GiftCardCodeInput(self.audio, self.game_state, card_type)
+
+class GiftCardCodeInput(TextInputMenu):
+    def __init__(self, audio, game_state, card_type):
+        self.card_type = card_type
+        super().__init__(
+            'support_gift_card_title',
+            'support_gift_card_prompt',
+            audio, game_state,
+            on_confirm=self._on_confirm,
+            on_cancel=lambda: "support_gift_card_type_menu"
+        )
+
+    def _on_confirm(self, code):
+        self.audio.speak(self.game_state.get_text('support_gift_card_thanks'))
+        
+        subject = self.game_state.get_text('support_gift_card_mail_subject')
+        body = self.game_state.get_text('support_gift_card_mail_body', type=self.card_type, code=code)
+        
+        # URL encode for mailto
+        subject_enc = urllib.parse.quote(subject)
+        body_enc = urllib.parse.quote(body)
+        
+        mailto_url = f"mailto:lauju1909@gmail.com?subject={subject_enc}&body={body_enc}"
+        webbrowser.open(mailto_url)
+        
+        return "monetization_menu"
 
     def _take(self, amount, rate):
         from models import BankLoan

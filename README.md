@@ -39,8 +39,11 @@ Audio Studio Tycoon ist eine 100% Screenreader-optimierte Management-Simulation,
 ## Credits & Attribution
 - **Sound Effects & Music** provided by Eric Matyas (www.soundimage.org)
 
-## Neueste Änderungen (v3.5.0)
-- **Monetarisierungs-System**:
+## Neueste Änderungen (v3.5.1)
+- **Gutschein-Support-System**:
+    - Spieler können den Entwickler nun direkt unterstützen, indem sie Gutscheincodes (Google Play, Steam, Paysafecard) über das Spiel einsenden.
+    - Automatisierte E-Mail-Vorbereitung an `lauju1909@gmail.com` nach Code-Eingabe.
+- **Monetarisierungs-System (v3.5.0)**:
     - Neues Menü "Monetarisierung" unter Finanzen/Bank hinzugefügt.
     - **Werbung ansehen**: Spieler können einmal pro In-Game-Woche ein kurzes Werbevideo (simuliert) ansehen und dafür 5.000 € Belohnung erhalten.
     - **Entwickler unterstützen**: Direkter Link zur GitHub-Seite integriert, um das Projekt zu unterstützen.
