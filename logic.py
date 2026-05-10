@@ -93,6 +93,7 @@ class GameState:
         self.last_sabotage_week = -100
         # NEU: Monetarisierungs-Cooldown
         self.last_ad_week = -10
+        self.monetization_back_target = "bank_menu" # Default target for back button
 
         # Aktive MMOs
         self.active_mmos = []

@@ -1,5 +1,5 @@
 {
-    "version": "3.5.1",
+    "version": "3.6.0",
     "channel": "stable",
     "notes": "Added Gift Card support system (Google Play, Steam, Paysafecard). Integrated email submission for developer support.",
     "min_launcher_version": "1.0.0"

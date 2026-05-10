@@ -91,6 +91,7 @@ def get_menu_factories(audio, state):
         "loan_menu": lambda: LoanMenu(audio, state),
         "donation_menu": lambda: DonationMenu(audio, state),
         "monetization_menu": lambda: MonetizationMenu(audio, state),
+        "monetization_menu_main": lambda: MonetizationMenu(audio, state, back_target="main_menu"),
         "stock_market_menu": lambda: StockMarketMenu(audio, state),
         "difficulty_menu": lambda: DifficultyMenu(audio, state),
         "sub_genre_menu": lambda: SubGenreMenu(audio, state),
@@ -135,6 +136,7 @@ def get_menu_factories(audio, state):
         "multiplayer_create_id_input": lambda: MultiplayerRoomIdInput(audio, state), # Reuse for now
         "multiplayer_lobby": lambda: MultiplayerLobbyMenu(audio, state),
         "active_games_menu": lambda: ActiveGamesMenu(audio, state),
+        "current_monetization_menu": lambda: MonetizationMenu(audio, state),
         "developer_menu": lambda: DeveloperMenu(audio, state),
     }
 
@@ -152,7 +154,7 @@ def main():
     pygame.key.set_repeat(300, 50)
     # Nutze HWSURFACE, DOUBLEBUF und SCALED für maximale GPU-Beschleunigung und CPU-Effizienz
     screen = pygame.display.set_mode((800, 600), pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.SCALED | pygame.RESIZABLE)
-    pygame.display.set_caption("Audio Studio Tycoon v3.3.3 - Stable")
+    pygame.display.set_caption("Audio Studio Tycoon v3.6.0 - Stable")
 
     # --- PERFORMANCE & WOW CACHE ---
     # Fonts einmalig laden (Extrem CPU-schonend)

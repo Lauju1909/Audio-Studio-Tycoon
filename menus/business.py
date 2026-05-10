@@ -194,9 +194,13 @@ class DonationMenu(Menu):
         return None
 
 class MonetizationMenu(Menu):
-    def __init__(self, audio, game_state):
+    def __init__(self, audio, game_state, back_target=None):
         self.audio = audio
         self.game_state = game_state
+        if back_target:
+            self.game_state.monetization_back_target = back_target
+        self.back_target = self.game_state.monetization_back_target
+        
         super().__init__(self.game_state.get_text('menu_monetization'), [], audio, game_state)
         self._update_options()
 
@@ -206,7 +210,7 @@ class MonetizationMenu(Menu):
             {'text': gs.get_text('watch_ad'), 'action': self._watch_ad},
             {'text': gs.get_text('support_gift_card'), 'action': lambda: "support_gift_card_type_menu"},
             {'text': gs.get_text('support_dev'), 'action': self._support_dev},
-            {'text': gs.get_text('back'), 'action': lambda: "bank_menu"}
+            {'text': gs.get_text('back'), 'action': lambda: self.back_target}
         ]
 
     def _watch_ad(self):
@@ -223,7 +227,7 @@ class MonetizationMenu(Menu):
         if success:
             self.audio.speak(self.game_state.get_text('ad_reward_received', amount=amount))
             self.audio.play_sound("confirm")
-        return "bank_menu"
+        return self.back_target
 
     def _support_dev(self):
         self.audio.speak(self.game_state.get_text('support_dev'))
@@ -244,7 +248,7 @@ class SupportGiftCardTypeMenu(Menu):
             {'text': gs.get_text('support_gift_card_google'), 'action': lambda: self._start_input(gs.get_text('support_gift_card_google'))},
             {'text': gs.get_text('support_gift_card_steam'), 'action': lambda: self._start_input(gs.get_text('support_gift_card_steam'))},
             {'text': gs.get_text('support_gift_card_paysafe'), 'action': lambda: self._start_input(gs.get_text('support_gift_card_paysafe'))},
-            {'text': gs.get_text('back'), 'action': lambda: "monetization_menu"}
+            {'text': gs.get_text('back'), 'action': lambda: "current_monetization_menu"}
         ]
 
     def _start_input(self, card_type):
@@ -274,7 +278,7 @@ class GiftCardCodeInput(TextInputMenu):
         mailto_url = f"mailto:lauju1909@gmail.com?subject={subject_enc}&body={body_enc}"
         webbrowser.open(mailto_url)
         
-        return "monetization_menu"
+        return "current_monetization_menu"
 
     def _take(self, amount, rate):
         from models import BankLoan
