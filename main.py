@@ -88,6 +88,7 @@ def get_menu_factories(audio, state):
         "game_service_options": lambda: GameServiceOptionsMenu(audio, state),
         "bank_menu": lambda: BankMenu(audio, state),
         "loan_menu": lambda: LoanMenu(audio, state),
+        "donation_menu": lambda: DonationMenu(audio, state),
         "stock_market_menu": lambda: StockMarketMenu(audio, state),
         "difficulty_menu": lambda: DifficultyMenu(audio, state),
         "sub_genre_menu": lambda: SubGenreMenu(audio, state),

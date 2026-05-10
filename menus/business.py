@@ -139,6 +139,7 @@ class BankMenu(Menu):
         options = [
             {'text': self.game_state.get_text('bank_statement_option'), 'action': self._show_report},
             {'text': self.game_state.get_text('loans'), 'action': lambda: "loan_menu"},
+            {'text': self.game_state.get_text('donate_menu'), 'action': lambda: "donation_menu"},
             {'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"}
         ]
         super().__init__(title, options, audio, game_state)
@@ -162,6 +163,32 @@ class LoanMenu(Menu):
             {'text': self.game_state.get_text('loan_100k'), 'action': lambda: self._take(100000, 0.07)},
             {'text': self.game_state.get_text('back'), 'action': lambda: "bank_menu"}
         ]
+
+class DonationMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(self.game_state.get_text('donate_title'), [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        gs = self.game_state
+        self.options = [
+            {'text': gs.get_text('donate_option', amount=1000), 'action': lambda: self._donate(1000)},
+            {'text': gs.get_text('donate_option', amount=10000), 'action': lambda: self._donate(10000)},
+            {'text': gs.get_text('donate_option', amount=100000), 'action': lambda: self._donate(100000)},
+            {'text': gs.get_text('back'), 'action': lambda: "bank_menu"}
+        ]
+
+    def _donate(self, amount):
+        success, fans = self.game_state.donate(amount)
+        if success:
+            self.audio.play_sound("cash")
+            self.audio.speak(self.game_state.get_text('donate_success', amount=amount, fans=fans))
+        else:
+            self.audio.play_sound("error")
+            self.audio.speak(self.game_state.get_text('donate_not_enough'))
+        return None
 
     def _take(self, amount, rate):
         from models import BankLoan

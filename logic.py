@@ -120,7 +120,6 @@ class GameState:
         self.time_speed = 1.0  # 0=Pause, 1=Normal, 2=Schnell, 4=Sehr Schnell
         self.pause_for_menu = False # Flag für Menüs (z.B. Texteingabe)
         self.week_progress = 0.0
-        self.week_progress = 0.0
         self.active_projects = [] # Liste von Dicts: {project, progress, total_weeks, bugs, crunch, ready_to_finish, event_count, aaa_event_done, co_dev}
         self.hype = 0.0
         self.active_expo_hype = 0
@@ -2432,6 +2431,21 @@ class GameState:
     def is_bankrupt(self):
         """Prüft ob die Firma pleite ist."""
         return self.money < -50000  # Kreditrahmen von 50k
+
+    def donate(self, amount):
+        """Spendet einen Betrag an die Community/Wohltätigkeit."""
+        if self.money >= amount:
+            self.money -= amount
+            self.track_expense("other", amount)
+            
+            # Fan-Bonus: 1 Fan pro 100 EUR Spende, plus Bonus bei großen Beträgen
+            fans_gained = int(amount / 100)
+            if amount >= 10000: fans_gained = int(fans_gained * 1.2)
+            if amount >= 100000: fans_gained = int(fans_gained * 1.5)
+            
+            self.fans += fans_gained
+            return True, fans_gained
+        return False, 0
 
 
     # ==========================================================

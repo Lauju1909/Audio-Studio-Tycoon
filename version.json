@@ -1,5 +1,5 @@
 {
-    "version": "3.4.1",
+    "version": "3.4.2",
     "channel": "stable",
-    "changelog": "v3.4.1: Audio & Accessibility Overhaul: (1) Neuer AudioManager mit Tolk-Integration für 100% Screenreader-Kompatibilität, (2) Akustisches Feedback bei Budgetwarnungen (< 5000 EUR), (3) Sprachausgabe und Sounds für erfolgreiche Kreditrückzahlungen und Einstellungen, (4) Dramatische GOTY-Präsentation mit Trommelwirbel und Sprachankündigung, (5) Thread-sichere Speech-Queue zur Vermeidung von Spielflaz-Verzögerungen."
+    "changelog": "v3.4.2: Münzen spenden & Stabilität: (1) Neues Spenden-System im Bank-Menü integriert (Fans gewinnen durch Wohltätigkeit), (2) Korrektur der Pleite-Check-Logik zur Vermeidung von Mehrfach-Events, (3) Validierung der Office-Objekt-Persistenz, (4) Bereinigung doppelter Variablen in der GameState-Initialisierung."
 }
