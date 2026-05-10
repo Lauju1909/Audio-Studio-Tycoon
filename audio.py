@@ -1,7 +1,8 @@
-﻿"""
-Audio-Manager f├╝r Audio Studio Tycoon - Audio Edition.
-Kommuniziert direkt mit NVDA ├╝ber accessible_output2.
-Nutzt pygame.mixer f├╝r Sound-Effekte.
+"""
+Audio-Manager für Audio Studio Tycoon - Audio Edition.
+Kommuniziert direkt mit NVDA über Tolk.
+Nutzt Windows SAPI als Fallback wenn kein Screenreader aktiv ist.
+Nutzt pygame.mixer für Sound-Effekte.
 """
 
 import pygame
@@ -47,6 +48,8 @@ class AudioManager:
         self.tolk = None
         self.tolk_active = False
         self.linux_speech = None
+        self.sapi_voice = None       # Windows SAPI Fallback
+        self.sapi_active = False     # Windows SAPI Status
         
         # Audio Queue und Threading
         self.speech_queue = queue.Queue()
@@ -57,7 +60,7 @@ class AudioManager:
         self.is_linux = sys.platform.startswith('linux')
 
         if self.is_windows:
-            # Tolk-Ausgabe f├╝r Windows initialisieren
+            # --- STUFE 1: Tolk-Ausgabe für Windows (bevorzugt: NVDA/JAWS) ---
             try:
                 # Suche Tolk.dll an verschiedenen Orten
                 possible_paths = [
@@ -76,17 +79,35 @@ class AudioManager:
                     print(f"[Audio] Lade Tolk von: {dll_path}")
                     self.tolk = ctypes.windll.LoadLibrary(dll_path)
                     self.tolk.Tolk_Load()
-                    self.tolk_active = self.tolk.Tolk_IsLoaded()
+                    self.tolk_active = bool(self.tolk.Tolk_IsLoaded())
                     if self.tolk_active:
+                        # SAPI als Fallback in Tolk aktivieren
                         self.tolk.Tolk_TrySAPI(True)
-                        print("[Audio] Tolk Screenreader-Support aktiv.")
+                        
+                        # Prüfe ob wirklich ein Screenreader erkannt wurde
+                        has_sr = False
+                        try:
+                            has_sr = bool(self.tolk.Tolk_HasSpeech())
+                        except Exception:
+                            pass
+                        
+                        if has_sr:
+                            print("[Audio] Tolk: Screenreader erkannt und aktiv.")
+                        else:
+                            print("[Audio] Tolk geladen, aber kein Screenreader erkannt. Nutze SAPI über Tolk.")
                 else:
                     print(f"[Audio Fehler]: Tolk.dll wurde an keinem Ort gefunden.")
             except Exception as e:
                 print(f"[Audio Exception]: Tolk-Init fehlgeschlagen: {e}")
-        
+                self.tolk = None
+                self.tolk_active = False
+
+            # --- STUFE 2: Windows SAPI Direktfallback (wenn Tolk versagt) ---
+            # Immer SAPI initialisieren als Sicherheitsnetz
+            self._init_sapi()
+
         elif self.is_linux:
-            # Linux-Ausgabe ├╝ber speech-dispatcher (speechd)
+            # Linux-Ausgabe über speech-dispatcher (speechd)
             try:
                 import speechd
                 self.linux_speech = speechd.SSIPClient('AudioStudioTycoon')
@@ -97,12 +118,12 @@ class AudioManager:
                 print(f"[Linux Speech Fehler]: speechd konnte nicht geladen werden. ({e})")
                 print("Bitte installiere 'python3-speechd' oder 'speech-dispatcher'.")
 
-        if not self.tolk_active and not self.linux_speech:
+        if not self.tolk_active and not self.sapi_active and not self.linux_speech:
             print("[INFO] Keine Screenreader-Bibliothek aktiv. Nutze Konsolen-Fallback.")
 
-        # Pygame Mixer f├╝r SFX
+        # Pygame Mixer für SFX
         try:
-            # Puffer und Frequenz f├╝r bessere Kompatibilit├ñt und Latenz
+            # Puffer und Frequenz für bessere Kompatibilität und Latenz
             pygame.mixer.pre_init(44100, -16, 2, 512)
             pygame.mixer.init()
         except Exception as e:
@@ -120,28 +141,122 @@ class AudioManager:
         self.worker_thread = threading.Thread(target=self._speech_worker, daemon=True)
         self.worker_thread.start()
 
+    def _init_sapi(self):
+        """Initialisiert Windows SAPI als Direktfallback über win32com oder pyttsx3."""
+        # Methode 1: win32com (am zuverlässigsten)
+        try:
+            import win32com.client
+            self.sapi_voice = win32com.client.Dispatch("SAPI.SpVoice")
+            self.sapi_active = True
+            print("[Audio] Windows SAPI (win32com) erfolgreich initialisiert.")
+            return
+        except Exception as e:
+            print(f"[Audio] win32com SAPI nicht verfügbar: {e}")
+
+        # Methode 2: pyttsx3 (Fallback)
+        try:
+            import pyttsx3
+            engine = pyttsx3.init()
+            engine.setProperty('rate', 175)
+            engine.setProperty('volume', 1.0)
+            # Deutschen Voice bevorzugen
+            voices = engine.getProperty('voices')
+            for v in voices:
+                if 'de' in v.id.lower() or 'german' in v.name.lower() or 'deutsch' in v.name.lower():
+                    engine.setProperty('voice', v.id)
+                    break
+            self._pyttsx3_engine = engine
+            self.sapi_voice = "pyttsx3"
+            self.sapi_active = True
+            print("[Audio] pyttsx3 SAPI erfolgreich initialisiert.")
+            return
+        except Exception as e:
+            print(f"[Audio] pyttsx3 nicht verfügbar: {e}")
+
+        # Methode 3: Direkt über ctypes/SAPI COM (letzter Ausweg)
+        try:
+            # SpVoice über ctypes direkt ansprechen
+            from ctypes import POINTER, byref
+            import comtypes.client
+            from comtypes import CoInitialize
+            CoInitialize()
+            from comtypes.gen import SpeechLib
+            voice = comtypes.client.CreateObject("SAPI.SpVoice")
+            self.sapi_voice = voice
+            self.sapi_active = True
+            print("[Audio] comtypes SAPI erfolgreich initialisiert.")
+        except Exception as e:
+            print(f"[Audio] comtypes SAPI nicht verfügbar: {e}")
+            self.sapi_active = False
+
+    def _sapi_speak(self, text, interrupt=True):
+        """Spricht Text direkt über Windows SAPI aus."""
+        try:
+            if self.sapi_voice == "pyttsx3":
+                engine = getattr(self, '_pyttsx3_engine', None)
+                if engine:
+                    if interrupt:
+                        try:
+                            engine.stop()
+                        except Exception:
+                            pass
+                    engine.say(text)
+                    engine.runAndWait()
+            elif self.sapi_voice is not None:
+                # win32com oder comtypes SpVoice
+                SVSFlagsAsync = 1
+                SVSFPurgeBeforeSpeak = 2
+                flags = SVSFlagsAsync
+                if interrupt:
+                    flags |= SVSFPurgeBeforeSpeak
+                try:
+                    self.sapi_voice.Speak(text, flags)
+                except Exception:
+                    # Synchron versuchen falls async nicht klappt
+                    try:
+                        self.sapi_voice.Speak(text, 0)
+                    except Exception as e2:
+                        print(f"[SAPI Speak Fehler]: {e2}")
+        except Exception as e:
+            print(f"[SAPI Worker Fehler]: {e}")
+
     def _speech_worker(self):
         """Hintergrund-Thread zur sequentiellen Verarbeitung der Sprachausgabe."""
+        # COM für diesen Thread initialisieren (wichtig für SAPI)
+        if self.is_windows:
+            try:
+                ctypes.windll.ole32.CoInitialize(None)
+            except Exception:
+                pass
+
         while not self.stop_worker:
             try:
                 # Warte auf neue Nachrichten
                 item = self.speech_queue.get(timeout=0.1)
-                if item is None: break
+                if item is None:
+                    break
                 text, interrupt = item
                 
-                # Windows (Tolk)
+                # STUFE 1: Windows (Tolk)
+                tolk_spoke = False
                 if self.tolk_active and self.tolk:
                     try:
                         if not interrupt and hasattr(self.tolk, 'Tolk_IsSpeaking'):
                             while self.tolk.Tolk_IsSpeaking():
-                                if self.stop_worker: break
+                                if self.stop_worker:
+                                    break
                                 time.sleep(0.01)
                         self.tolk.Tolk_Output(ctypes.c_wchar_p(text), ctypes.c_bool(interrupt))
+                        tolk_spoke = True
                     except Exception as e:
                         print(f"Tolk Worker Fehler: {e}")
                 
-                # Linux (speech-dispatcher)
-                elif self.linux_speech:
+                # STUFE 2: Windows SAPI Fallback (wenn Tolk nicht gesprochen hat)
+                if not tolk_spoke and self.sapi_active and self.is_windows:
+                    self._sapi_speak(text, interrupt)
+                
+                # STUFE 3: Linux (speech-dispatcher)
+                elif self.linux_speech and not tolk_spoke:
                     try:
                         if interrupt:
                             self.linux_speech.cancel()
@@ -153,8 +268,15 @@ class AudioManager:
             except queue.Empty:
                 continue
 
+        # COM aufräumen
+        if self.is_windows:
+            try:
+                ctypes.windll.ole32.CoUninitialize()
+            except Exception:
+                pass
+
     def apply_volumes(self, settings):
-        """├£bernimmt die Volumen-Einstellungen aus dem GameState."""
+        """Übernimmt die Volumen-Einstellungen aus dem GameState."""
         self.music_volume = settings.get("music_volume", 50)
         self.sfx_volume = settings.get("sfx_volume", 100)
         self.speech_volume = settings.get("speech_volume", 100)
@@ -164,6 +286,13 @@ class AudioManager:
             
         if self.current_loop:
             self.current_loop.set_volume(self.sfx_volume / 100.0 * 0.6)
+        
+        # SAPI Lautstärke anpassen (win32com)
+        if self.sapi_active and self.sapi_voice and self.sapi_voice != "pyttsx3":
+            try:
+                self.sapi_voice.Volume = self.speech_volume
+            except Exception:
+                pass
         
     def update_tts_engine(self, engine_mode):
         """Wechselt den TTS-Modus: auto, nvda, sapi"""
@@ -197,11 +326,13 @@ class AudioManager:
             self.stop_music()
 
     def speak(self, text, interrupt=True):
-        """F├╝gt Text zur Sprach-Queue hinzu."""
+        """Fügt Text zur Sprach-Queue hinzu."""
+        if not text:
+            return
         print(f"[TTS]: {text}")
         
         if interrupt:
-            # Leere die aktuelle Queue f├╝r sofortige Unterbrechung
+            # Leere die aktuelle Queue für sofortige Unterbrechung
             while not self.speech_queue.empty():
                 try:
                     self.speech_queue.get_nowait()
@@ -209,7 +340,7 @@ class AudioManager:
                 except queue.Empty:
                     break
         
-        # Zur Queue hinzuf├╝gen
+        # Zur Queue hinzufügen
         self.speech_queue.put((text, interrupt))
 
     def play_sound(self, sound_name):
@@ -225,8 +356,6 @@ class AudioManager:
                     sound.play()
                     return
                 else:
-                    # Nur loggen wenn es die letzte Option war (oder gar nicht um Spam zu vermeiden)
-                    pass
                     print(f"[Audio] Sound nicht gefunden: {sound_path}")
             except Exception:
                 continue
@@ -247,7 +376,7 @@ class AudioManager:
         self.current_loop = None
 
     def play_music(self, music_name):
-        """Startet Hintergrundmusik ├╝ber pygame.mixer.music."""
+        """Startet Hintergrundmusik über pygame.mixer.music."""
         if not self.music_enabled:
             return
         formats = ["mp3", "ogg", "wav"]
@@ -278,6 +407,7 @@ class AudioManager:
     def cleanup(self):
         """Ressourcen freigeben."""
         self.stop_worker = True
+        self.speech_queue.put(None)  # Worker-Thread beenden
         self.stop_loop()
         
         if self.linux_speech:
@@ -292,8 +422,19 @@ class AudioManager:
             except Exception:
                 pass
 
+        # SAPI aufräumen
+        if self.sapi_voice == "pyttsx3":
+            try:
+                engine = getattr(self, '_pyttsx3_engine', None)
+                if engine:
+                    engine.stop()
+            except Exception:
+                pass
+        else:
+            self.sapi_voice = None
+        self.sapi_active = False
+
         try:
             pygame.mixer.quit()
         except Exception:
             pass
-
