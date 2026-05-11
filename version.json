@@ -1,6 +1,6 @@
 {
-    "version": "3.6.0",
+    "version": "3.6.1",
     "channel": "stable",
-    "notes": "v3.6.0: Renamed Main Menu entry to 'Support Developer' and removed ads from that specific view. Added dynamic back-navigation logic.",
+    "notes": "v3.6.1: Sprachausgabe-Fix. Tolk/SAPI-Logik optimiert und Fehler im COM-Threading behoben.",
     "min_launcher_version": "1.0.0"
 }

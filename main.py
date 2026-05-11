@@ -154,7 +154,7 @@ def main():
     pygame.key.set_repeat(300, 50)
     # Nutze HWSURFACE, DOUBLEBUF und SCALED für maximale GPU-Beschleunigung und CPU-Effizienz
     screen = pygame.display.set_mode((800, 600), pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.SCALED | pygame.RESIZABLE)
-    pygame.display.set_caption("Audio Studio Tycoon v3.6.0 - Stable")
+    pygame.display.set_caption("Audio Studio Tycoon v3.6.1 - Stable")
 
     # --- PERFORMANCE & WOW CACHE ---
     # Fonts einmalig laden (Extrem CPU-schonend)

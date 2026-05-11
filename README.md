@@ -39,11 +39,14 @@ Audio Studio Tycoon ist eine 100% Screenreader-optimierte Management-Simulation,
 ## Credits & Attribution
 - **Sound Effects & Music** provided by Eric Matyas (www.soundimage.org)
 
-## Neueste Änderungen (v3.6.0)
-- **Hauptmenü-Integration**:
-    - Das Monetarisierungs-Menü wurde in "Entwickler unterstützen" umbenannt und ist nun direkt über das Hauptmenü erreichbar.
-    - In dieser Ansicht wurde die Option "Werbung ansehen" entfernt, um den Fokus auf direkten Support zu legen.
-    - Dynamische Rückkehr-Logik: Das Menü erkennt nun, ob es vom Hauptmenü oder von der Bank aus geöffnet wurde, und springt korrekt zurück (Bank behält volle Funktionen).
+## Neueste Änderungen (v3.6.1)
+- **Sprachausgabe-Fix**:
+    - Überarbeitung der `Tolk`- und `SAPI`-Integration für stabilere Audio-Ausgabe.
+    - Fehler im COM-Threading behoben, der zu Abstürzen oder fehlender Sprachausgabe führen konnte.
+    - Intelligente Erkennung: Screenreader aktiv (Tolk) vs. kein Screenreader (SAPI).
+- **Hauptmenü-Integration (v3.6.0)**:
+    - Das Monetarisierungs-Menü wurde in "Entwickler unterstützen" umbenannt.
+    - Dynamische Rückkehr-Logik für das Support-Menü.
 - **Gutschein-Support-System (v3.5.1)**:
     - Spieler können den Entwickler nun direkt unterstützen, indem sie Gutscheincodes (Google Play, Steam, Paysafecard) über das Spiel einsenden.
     - Automatisierte E-Mail-Vorbereitung an `lauju1909@gmail.com` nach Code-Eingabe.
