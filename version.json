@@ -1,6 +1,6 @@
 {
-    "version": "3.6.1",
+    "version": "3.8.0",
     "channel": "stable",
-    "notes": "v3.6.1: Sprachausgabe-Fix. Tolk/SAPI-Logik optimiert und Fehler im COM-Threading behoben.",
+    "notes": "v3.8.0: Massive Content-Erweiterung. Über 100 neue Themen, Plattformen und Technologien von 1930 bis 2040+ hinzugefügt.",
     "min_launcher_version": "1.0.0"
 }

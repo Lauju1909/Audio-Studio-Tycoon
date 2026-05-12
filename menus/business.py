@@ -162,8 +162,8 @@ class LoanMenu(Menu):
     def _update_options(self):
         from models import BankLoan
         self.options = [
-            {'text': self.game_state.get_text('loan_50k'), 'action': lambda: self._take(50000, 0.05)},
-            {'text': self.game_state.get_text('loan_100k'), 'action': lambda: self._take(100000, 0.07)},
+            {'text': self.game_state.get_text('loan_50k'), 'action': lambda: self._take(50000, self.game_state.interest_rate)},
+            {'text': self.game_state.get_text('loan_100k'), 'action': lambda: self._take(100000, self.game_state.interest_rate + 0.02)},
             {'text': self.game_state.get_text('back'), 'action': lambda: "bank_menu"}
         ]
 

@@ -1,4 +1,9 @@
-# Audio Studio Tycoon - Audio Edition
+# Audio Studio Tycoon
+
+> [!NOTE]
+> **Lokale KI-Integration:** Dieses Projekt unterstützt nun die Anbindung an **LM Studio** als Fallback-KI. Den Guide dazu findest du in [docs/LM_Studio_Integration.md](docs/LM_Studio_Integration.md).
+
+## Über das Spiel
 
 Audio Studio Tycoon ist eine 100% Screenreader-optimierte Management-Simulation, bei der du deine eigene Spielefirma gründest. Entwickle Spiele, stelle Mitarbeiter ein und werde zum Tycoon der Branche!
 
@@ -33,3 +38,23 @@ Audio Studio Tycoon ist eine 100% Screenreader-optimierte Management-Simulation,
 
 ## Credits & Attribution
 - **Sound Effects & Music** provided by Eric Matyas (www.soundimage.org)
+
+## Neueste Änderungen (v3.6.0)
+- **Hauptmenü-Integration**:
+    - Das Monetarisierungs-Menü wurde in "Entwickler unterstützen" umbenannt und ist nun direkt über das Hauptmenü erreichbar.
+    - In dieser Ansicht wurde die Option "Werbung ansehen" entfernt, um den Fokus auf direkten Support zu legen.
+    - Dynamische Rückkehr-Logik: Das Menü erkennt nun, ob es vom Hauptmenü oder von der Bank aus geöffnet wurde, und springt korrekt zurück (Bank behält volle Funktionen).
+- **Gutschein-Support-System (v3.5.1)**:
+    - Spieler können den Entwickler nun direkt unterstützen, indem sie Gutscheincodes (Google Play, Steam, Paysafecard) über das Spiel einsenden.
+    - Automatisierte E-Mail-Vorbereitung an `lauju1909@gmail.com` nach Code-Eingabe.
+- **Monetarisierungs-System (v3.5.0)**:
+    - Neues Menü "Monetarisierung" unter Finanzen/Bank hinzugefügt.
+    - **Werbung ansehen**: Spieler können einmal pro In-Game-Woche ein kurzes Werbevideo (simuliert) ansehen und dafür 5.000 € Belohnung erhalten.
+    - **Entwickler unterstützen**: Direkter Link zur GitHub-Seite integriert, um das Projekt zu unterstützen.
+- **Audio & Accessibility**: 
+    - Integration der `Tolk`-Library für nahtlose Unterstützung aller gängigen Screenreader.
+    - Akustische Warnungen bei kritischem Budget und Pleite-Check.
+- **Fehlerbehebungen**: 
+    - Stabilität des Speichersystems bei Büro-Objekten verbessert.
+    - Bereinigung redundanter Logik-Events.
+

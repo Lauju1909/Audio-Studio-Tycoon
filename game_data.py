@@ -37,9 +37,13 @@ START_TOPICS = [
 
 RESEARCHABLE_TOPICS = [
     {"name": "Abakus", "cost": 5000, "week": 1, "research_weeks": 2},
+    {"name": "Radio-Drama", "cost": 4500, "week": 1, "research_weeks": 2},
+    {"name": "Stummfilm", "cost": 4500, "week": 1, "research_weeks": 2},
     {"name": "Logistik", "cost": 5000, "week": 1, "research_weeks": 2},
     {"name": "Schach", "cost": 5000, "week": 1, "research_weeks": 2},
     {"name": "Mathematik", "cost": 5000, "week": 1, "research_weeks": 2},
+    {"name": "Prohibition", "cost": 4800, "week": 48, "research_weeks": 2},
+    {"name": "Swing-Musik", "cost": 4800, "week": 48, "research_weeks": 2},
     {"name": "Astronomie", "cost": 5500, "week": 48, "research_weeks": 2},
     {"name": "Landwirtschaft", "cost": 5500, "week": 48, "research_weeks": 2},
     {"name": "Kochen", "cost": 6000, "week": 96, "research_weeks": 2},
@@ -49,12 +53,15 @@ RESEARCHABLE_TOPICS = [
     {"name": "Architektur", "cost": 7000, "week": 192, "research_weeks": 2},
     {"name": "Postwesen", "cost": 7000, "week": 192, "research_weeks": 2},
     {"name": "Zirkus", "cost": 7500, "week": 240, "research_weeks": 2},
+    {"name": "Propaganda", "cost": 5200, "week": 240, "research_weeks": 2},
+    {"name": "Widerstand", "cost": 5200, "week": 240, "research_weeks": 2},
     {"name": "Bergbau", "cost": 7500, "week": 240, "research_weeks": 2},
     {"name": "Eisenbahn", "cost": 8000, "week": 288, "research_weeks": 2},
     {"name": "Seefahrt", "cost": 8000, "week": 288, "research_weeks": 2},
     {"name": "Feuerwehr", "cost": 8500, "week": 336, "research_weeks": 2},
     {"name": "Kryptografie", "cost": 8500, "week": 336, "research_weeks": 2},
     {"name": "Mars-Invasion", "cost": 9000, "week": 384, "research_weeks": 2},
+    {"name": "Radar-Technik", "cost": 5800, "week": 432, "research_weeks": 2},
     {"name": "Zauberei", "cost": 9000, "week": 384, "research_weeks": 2},
     {"name": "Militär", "cost": 9500, "week": 432, "research_weeks": 2},
     {"name": "Chemie", "cost": 9500, "week": 432, "research_weeks": 2},
@@ -68,6 +75,9 @@ RESEARCHABLE_TOPICS = [
     {"name": "UFOs", "cost": 13500, "week": 816, "research_weeks": 2},
     {"name": "Roboter", "cost": 14000, "week": 864, "research_weeks": 2},
     {"name": "Dschungel", "cost": 14500, "week": 912, "research_weeks": 2},
+    {"name": "Rock 'n' Roll", "cost": 14800, "week": 960, "research_weeks": 2},
+    {"name": "Petticoat", "cost": 6500, "week": 960, "research_weeks": 2},
+    {"name": "UFO-Fieber", "cost": 6800, "week": 1008, "research_weeks": 2},
     {"name": "Archäologie", "cost": 15000, "week": 960, "research_weeks": 2},
     {"name": "Weltraum", "cost": 15500, "week": 1008, "research_weeks": 2},
     {"name": "Wilder Westen", "cost": 16000, "week": 1056, "research_weeks": 2},
@@ -85,17 +95,21 @@ RESEARCHABLE_TOPICS = [
     {"name": "Popstars", "cost": 22000, "week": 1632, "research_weeks": 2},
     {"name": "Dinosaurier", "cost": 22500, "week": 1680, "research_weeks": 2},
     {"name": "Ninjas", "cost": 23000, "week": 1728, "research_weeks": 2},
+    {"name": "Flower Power", "cost": 23200, "week": 1776, "research_weeks": 2},
     {"name": "Hippies", "cost": 23500, "week": 1776, "research_weeks": 2},
+    {"name": "Heavy Metal", "cost": 23800, "week": 1920, "research_weeks": 2},
     {"name": "Weltrevolution", "cost": 24000, "week": 1824, "research_weeks": 2},
     {"name": "Mondbasis", "cost": 24500, "week": 1872, "research_weeks": 2},
     {"name": "Kung-Fu", "cost": 25000, "week": 1920, "research_weeks": 2},
     {"name": "Piraten", "cost": 25500, "week": 1968, "research_weeks": 2},
+    {"name": "Hip Hop", "cost": 25800, "week": 2064, "research_weeks": 2},
     {"name": "Basketball", "cost": 26000, "week": 2016, "research_weeks": 2},
     {"name": "Motorrad", "cost": 26500, "week": 2064, "research_weeks": 2},
     {"name": "Verliese", "cost": 27000, "week": 2112, "research_weeks": 2},
     {"name": "Polizei", "cost": 27500, "week": 2160, "research_weeks": 2},
     {"name": "Alien-Jagd", "cost": 28000, "week": 2208, "research_weeks": 2},
     {"name": "Laserschwert", "cost": 28500, "week": 2256, "research_weeks": 2},
+    {"name": "Techno", "cost": 28800, "week": 2784, "research_weeks": 2},
     {"name": "Invaders", "cost": 29000, "week": 2304, "research_weeks": 2},
     {"name": "Horrorhaus", "cost": 29500, "week": 2352, "research_weeks": 2},
     {"name": "Gelbe Fresspunkte", "cost": 30000, "week": 2400, "research_weeks": 2},
@@ -106,6 +120,7 @@ RESEARCHABLE_TOPICS = [
     {"name": "Klempner", "cost": 32500, "week": 2640, "research_weeks": 2},
     {"name": "Postapokalypse", "cost": 33000, "week": 2688, "research_weeks": 2},
     {"name": "Mechs", "cost": 33500, "week": 2736, "research_weeks": 2},
+    {"name": "Grunge", "cost": 33800, "week": 2928, "research_weeks": 2},
     {"name": "Skateboarding", "cost": 34000, "week": 2784, "research_weeks": 2},
     {"name": "Taschenmonster", "cost": 34500, "week": 2832, "research_weeks": 2},
     {"name": "Krankenhaus", "cost": 35000, "week": 2880, "research_weeks": 2},
@@ -121,6 +136,7 @@ RESEARCHABLE_TOPICS = [
     {"name": "Lebens-Sim", "cost": 40000, "week": 3360, "research_weeks": 2},
     {"name": "Zombie-Hype", "cost": 40500, "week": 3408, "research_weeks": 2},
     {"name": "Parkplatz-Manager", "cost": 41000, "week": 3456, "research_weeks": 2},
+    {"name": "Cloud Computing", "cost": 41200, "week": 3648, "research_weeks": 2},
     {"name": "E-Sport", "cost": 41500, "week": 3504, "research_weeks": 2},
     {"name": "Zauberschule", "cost": 42000, "week": 3552, "research_weeks": 2},
     {"name": "Sandbox/Voxel", "cost": 42500, "week": 3600, "research_weeks": 2},
@@ -145,6 +161,13 @@ RESEARCHABLE_TOPICS = [
     {"name": "Endzeit-Bote", "cost": 52000, "week": 4512, "research_weeks": 2},
     {"name": "Gen-Labor", "cost": 52500, "week": 4560, "research_weeks": 2},
     {"name": "Neural-Link", "cost": 53000, "week": 4608, "research_weeks": 2},
+    {"name": "KI-Ethik", "cost": 54000, "week": 4704, "research_weeks": 3},
+    {"name": "Mars-Tourismus", "cost": 55000, "week": 4800, "research_weeks": 3},
+    {"name": "Deep-Sea Mining", "cost": 56000, "week": 4896, "research_weeks": 3},
+    {"name": "Quanten-Hacking", "cost": 58000, "week": 5040, "research_weeks": 4},
+    {"name": "Galaktisches Imperium", "cost": 60000, "week": 5280, "research_weeks": 5},
+    {"name": "Zeitreisen-Paradox", "cost": 65000, "week": 5520, "research_weeks": 5},
+
 ]
 
 
@@ -404,30 +427,39 @@ PLATFORMS = [
     {"name": "Magnavox Odyssey", "license_fee": 63000, "market_multi": 6.3, "available_week": 2016, "end_week": 2496, "type": "Konsole"},
     {"name": "Fairchild Ch. F", "license_fee": 69000, "market_multi": 6.9, "available_week": 2208, "end_week": 2688, "type": "Konsole"},
     {"name": "Atari 2600", "license_fee": 70000, "market_multi": 7.0, "available_week": 2256, "end_week": 2736, "type": "Konsole"},
+    {"name": "Commodore PET", "license_fee": 0, "market_multi": 6.5, "available_week": 2256, "end_week": 2736, "type": "Heimcomputer"},
+    {"name": "Apple II", "license_fee": 0, "market_multi": 6.8, "available_week": 2256, "end_week": 2736, "type": "Heimcomputer"},
     {"name": "Bally Astrocade", "license_fee": 72000, "market_multi": 7.2, "available_week": 2304, "end_week": 2784, "type": "Konsole"},
     {"name": "C64", "license_fee": 0, "market_multi": 7.5, "available_week": 2400, "end_week": 2880, "type": "Heimcomputer"},
     {"name": "Vectrex", "license_fee": 78000, "market_multi": 7.8, "available_week": 2496, "end_week": 2976, "type": "Konsole"},
+    {"name": "ZX Spectrum", "license_fee": 0, "market_multi": 7.6, "available_week": 2496, "end_week": 2976, "type": "Heimcomputer"},
     {"name": "Famicom (NES)", "license_fee": 79000, "market_multi": 7.9, "available_week": 2544, "end_week": 3024, "type": "Konsole"},
     {"name": "Famicom Disk Sys", "license_fee": 84000, "market_multi": 8.4, "available_week": 2688, "end_week": 3168, "type": "Konsole"},
     {"name": "Sega Genesis", "license_fee": 87000, "market_multi": 8.7, "available_week": 2784, "end_week": 3264, "type": "Konsole"},
     {"name": "Neo Geo AES", "license_fee": 90000, "market_multi": 9.0, "available_week": 2880, "end_week": 3360, "type": "Konsole"},
     {"name": "SNES", "license_fee": 90000, "market_multi": 9.0, "available_week": 2880, "end_week": 3360, "type": "Konsole"},
+    {"name": "Game Boy", "license_fee": 85000, "market_multi": 8.5, "available_week": 2832, "end_week": 3312, "type": "Handheld"},
     {"name": "Philips CD-i", "license_fee": 92000, "market_multi": 9.2, "available_week": 2928, "end_week": 3408, "type": "Konsole"},
     {"name": "Atari Jaguar", "license_fee": 94000, "market_multi": 9.4, "available_week": 3024, "end_week": 3504, "type": "Konsole"},
     {"name": "PlayStation 1", "license_fee": 96000, "market_multi": 9.6, "available_week": 3072, "end_week": 3552, "type": "Konsole"},
+    {"name": "Sega Saturn", "license_fee": 95000, "market_multi": 9.5, "available_week": 3072, "end_week": 3552, "type": "Konsole"},
     {"name": "Nintendo 64", "license_fee": 99000, "market_multi": 9.9, "available_week": 3168, "end_week": 3648, "type": "Konsole"},
     {"name": "Dreamcast", "license_fee": 100000, "market_multi": 10.0, "available_week": 3264, "end_week": 3744, "type": "Konsole"},
     {"name": "PlayStation 2", "license_fee": 100000, "market_multi": 10.0, "available_week": 3360, "end_week": 3840, "type": "Konsole"},
+    {"name": "PlayStation Portable", "license_fee": 98000, "market_multi": 9.8, "available_week": 3552, "end_week": 4032, "type": "Handheld"},
     {"name": "GameCube", "license_fee": 100000, "market_multi": 10.0, "available_week": 3408, "end_week": 3888, "type": "Konsole"},
     {"name": "Xbox 360", "license_fee": 100000, "market_multi": 10.0, "available_week": 3600, "end_week": 4080, "type": "Konsole"},
     {"name": "PlayStation 3", "license_fee": 100000, "market_multi": 10.0, "available_week": 3648, "end_week": 4128, "type": "Konsole"},
     {"name": "Gizmondo", "license_fee": 100000, "market_multi": 10.0, "available_week": 3744, "end_week": 4224, "type": "Handheld"},
     {"name": "PlayStation 4", "license_fee": 100000, "market_multi": 10.0, "available_week": 3984, "end_week": 4464, "type": "Konsole"},
+    {"name": "Xbox One", "license_fee": 100000, "market_multi": 10.0, "available_week": 3984, "end_week": 4464, "type": "Konsole"},
+    {"name": "PlayStation 4 Pro", "license_fee": 110000, "market_multi": 10.5, "available_week": 4128, "end_week": 4608, "type": "Konsole"},
     {"name": "Switch", "license_fee": 100000, "market_multi": 10.0, "available_week": 4176, "end_week": 4656, "type": "Handheld"},
     {"name": "Playdate", "license_fee": 100000, "market_multi": 10.0, "available_week": 4224, "end_week": 4704, "type": "Handheld"},
     {"name": "PlayStation 5", "license_fee": 100000, "market_multi": 10.0, "available_week": 4320, "end_week": 4800, "type": "Konsole"},
     {"name": "Analogue Pocket", "license_fee": 100000, "market_multi": 10.0, "available_week": 4368, "end_week": 4848, "type": "Handheld"},
     {"name": "Evercade EXP", "license_fee": 100000, "market_multi": 10.0, "available_week": 4416, "end_week": 4896, "type": "Handheld"},
+    {"name": "Steam Deck", "license_fee": 100000, "market_multi": 10.0, "available_week": 4416, "end_week": 4896, "type": "Handheld"},
     {"name": "Cloud-Console", "license_fee": 100000, "market_multi": 10.0, "available_week": 4560, "end_week": 5040, "type": "Streaming"},
     {"name": "Neural-Box 1", "license_fee": 100000, "market_multi": 10.0, "available_week": 4608, "end_week": 5088, "type": "Konsole"},
 ]
@@ -456,7 +488,14 @@ RESEARCHABLE_AUDIENCES = [
 # ENDGAME-TECHNOLOGIEN (Forschung)
 # ============================================================
 RESEARCHABLE_TECHNOLOGIES = [
+    {"name": "Radio-Werbung",                 "cost": 10000,  "week": 1,  "research_weeks": 2, "description": "Schaltet Radio-Kampagnen frei."},
+    {"name": "Fernsehen",                     "cost": 50000,  "week": 480,"research_weeks": 4, "description": "Schaltet TV-Werbung frei."},
+    {"name": "Satelliten-TV",                 "cost": 120000, "week": 1536,"research_weeks": 6, "description": "Erhöht die Reichweite von TV-Werbung massiv."},
     {"name": "Digitaler Vertrieb & Logistik", "cost": 150000, "week": 30, "research_weeks": 6, "description": "Erlaubt den Vertrieb ohne Publisher (Eigenvertrieb) und AAA-Spiele."},
+    {"name": "CD-Produktion",                 "cost": 80000,  "week": 2496,"research_weeks": 5, "description": "Schaltet die Pressmaschine für CDs frei."},
+    {"name": "Website & Forum",               "cost": 60000,  "week": 3168,"research_weeks": 4, "description": "Schaltet Online-Community-Marketing frei."},
+    {"name": "Social Media Marketing",        "cost": 100000, "week": 3648,"research_weeks": 5, "description": "Schaltet Social-Media-Kampagnen frei."},
+    {"name": "Crowdfunding",                  "cost": 200000, "week": 3792,"research_weeks": 6, "description": "Ermöglicht Finanzierung durch Fans."},
     {"name": "Live-Service Architektur",      "cost": 300000, "week": 40, "research_weeks": 8, "description": "Ermöglicht die Entwicklung und den Betrieb von MMOs und Live-Service Spielen."},
     {"name": "Investment & M&A",              "cost": 500000, "week": 50, "research_weeks": 10, "description": "Ermöglicht den Aufkauf von Konkurrenz-Studios am Aktienmarkt."},
     {"name": "Hardware Labor",                "cost": 1000000,"week": 60, "research_weeks": 15, "description": "Schaltet die Entwicklung eigener Konsolen frei."},
@@ -591,6 +630,7 @@ SUB_GENRES = {
 # ============================================================
 ENGINE_FEATURES = [
     {"category": "Engine", "name": "Papier-Logik", "cost": 1000, "tech_bonus": 10, "week": 1},
+    {"category": "Sound", "name": "Magnetband-Aufnahme", "cost": 3000, "tech_bonus": 15, "week": 240},
     {"category": "Technik", "name": "Relais-Steuerung", "cost": 5000, "tech_bonus": 5, "week": 96},
     {"category": "Technik", "name": "Lochkarten-Input", "cost": 13000, "tech_bonus": 10, "week": 288},
     {"category": "Technik", "name": "Vakuum-Röhren", "cost": 23000, "tech_bonus": 15, "week": 528},
@@ -598,15 +638,20 @@ ENGINE_FEATURES = [
     {"category": "Technik", "name": "Transistor V1", "cost": 37000, "tech_bonus": 20, "week": 864},
     {"category": "Technik", "name": "Magnetkernspeicher", "cost": 45000, "tech_bonus": 10, "week": 1056},
     {"category": "Sound", "name": "Mono-Beep V1", "cost": 53000, "tech_bonus": 5, "week": 1248},
+    {"category": "Sound", "name": "Stereo-Sound", "cost": 65000, "tech_bonus": 20, "week": 1344},
     {"category": "Grafik", "name": "Vektor-Linien", "cost": 57000, "tech_bonus": 15, "week": 1344},
     {"category": "Grafik", "name": "CRT-Standard", "cost": 65000, "tech_bonus": 10, "week": 1536},
+    {"category": "Sound", "name": "Moog Synthesizer", "cost": 75000, "tech_bonus": 35, "week": 1632},
     {"category": "Grafik", "name": "ASCII-Grafik", "cost": 75000, "tech_bonus": 5, "week": 1776},
     {"category": "Technik", "name": "Mikroprozessor", "cost": 83000, "tech_bonus": 30, "week": 1968},
+    {"category": "Sound", "name": "PCM Audio", "cost": 95000, "tech_bonus": 40, "week": 2016},
     {"category": "Grafik", "name": "Tilemaps V1", "cost": 89000, "tech_bonus": 20, "week": 2112},
     {"category": "Grafik", "name": "Parallax-Scrolling", "cost": 93000, "tech_bonus": 15, "week": 2208},
     {"category": "Grafik", "name": "Sprite-Rotation", "cost": 97000, "tech_bonus": 10, "week": 2304},
     {"category": "Sound", "name": "FM-Synthese", "cost": 101000, "tech_bonus": 20, "week": 2400},
+    {"category": "Sound", "name": "Dolby Surround", "cost": 105000, "tech_bonus": 30, "week": 2496},
     {"category": "Grafik", "name": "Vierfarb-Sprites", "cost": 105000, "tech_bonus": 10, "week": 2496},
+    {"category": "Sound", "name": "MIDI Support", "cost": 110000, "tech_bonus": 45, "week": 2544},
     {"category": "Physik", "name": "Physik V1", "cost": 109000, "tech_bonus": 10, "week": 2592},
     {"category": "Gameplay", "name": "Savegame-Batterie", "cost": 111000, "tech_bonus": 30, "week": 2640},
     {"category": "Sound", "name": "Wavetable-Sound", "cost": 115000, "tech_bonus": 25, "week": 2736},
@@ -615,18 +660,24 @@ ENGINE_FEATURES = [
     {"category": "Technik", "name": "Z-Buffer", "cost": 127000, "tech_bonus": 20, "week": 3024},
     {"category": "Grafik", "name": "Texture Mapping", "cost": 129000, "tech_bonus": 30, "week": 3072},
     {"category": "Sound", "name": "CD-Audio", "cost": 131000, "tech_bonus": 50, "week": 3120},
+    {"category": "Sound", "name": "MP3 Support", "cost": 135000, "tech_bonus": 40, "week": 3120},
     {"category": "Grafik", "name": "Echtzeit-Licht", "cost": 133000, "tech_bonus": 20, "week": 3168},
+    {"category": "Technik", "name": "VST Plugins", "cost": 140000, "tech_bonus": 60, "week": 3168},
     {"category": "KI", "name": "KI V1 (A*)", "cost": 135000, "tech_bonus": 20, "week": 3216},
     {"category": "Gameplay", "name": "Multiplayer V2", "cost": 137000, "tech_bonus": 40, "week": 3264},
     {"category": "Grafik", "name": "Vertex-Shader", "cost": 141000, "tech_bonus": 50, "week": 3360},
     {"category": "Physik", "name": "Ragdoll-Physik", "cost": 145000, "tech_bonus": 40, "week": 3456},
+    {"category": "Technik", "name": "64-bit Engine", "cost": 155000, "tech_bonus": 80, "week": 3504},
     {"category": "Grafik", "name": "Pixel-Shader", "cost": 149000, "tech_bonus": 60, "week": 3552},
+    {"category": "Physik", "name": "PhysX Support", "cost": 160000, "tech_bonus": 70, "week": 3600},
     {"category": "Technik", "name": "Blu-Ray Support", "cost": 153000, "tech_bonus": 100, "week": 3648},
     {"category": "Physik", "name": "Physische Engine V3", "cost": 157000, "tech_bonus": 60, "week": 3744},
     {"category": "Gameplay", "name": "Cloud-Saves", "cost": 161000, "tech_bonus": 20, "week": 3840},
     {"category": "Grafik", "name": "Motion Capture", "cost": 165000, "tech_bonus": 80, "week": 3936},
+    {"category": "Sound", "name": "Dolby Atmos", "cost": 180000, "tech_bonus": 100, "week": 3936},
     {"category": "KI", "name": "Prozedurale Welt", "cost": 169000, "tech_bonus": 100, "week": 4032},
     {"category": "Grafik", "name": "HDR-Support", "cost": 173000, "tech_bonus": 40, "week": 4128},
+    {"category": "Sound", "name": "VR-Audio", "cost": 190000, "tech_bonus": 110, "week": 4128},
     {"category": "Grafik", "name": "Echtzeit-Raytracing", "cost": 177000, "tech_bonus": 200, "week": 4224},
     {"category": "KI", "name": "KI-Storytelling", "cost": 181000, "tech_bonus": 150, "week": 4320},
     {"category": "Gameplay", "name": "Full-Body VR", "cost": 185000, "tech_bonus": 120, "week": 4416},
@@ -812,6 +863,76 @@ GENERAL_DEV_EVENTS = [
             {"id": "ignore_rival", "cost": 0, "delay": 0, "speed": 0, "hype": -10, "bugs": 0, "morale": 5}
         ]
     },
+    {
+        "id": "dev_pizza_party",
+        "options": [
+            {"id": "buy_pizza", "cost": 500, "delay": 0, "speed": 1, "hype": 0, "bugs": 0, "morale": 20},
+            {"id": "no_pizza", "cost": 0, "delay": 0, "speed": 0, "hype": 0, "bugs": 0, "morale": -5}
+        ]
+    },
+    {
+        "id": "dev_refactoring_needed",
+        "options": [
+            {"id": "do_refactor", "cost": 0, "delay": 3, "speed": 2, "hype": 0, "bugs": -15, "morale": 5},
+            {"id": "skip_refactor", "cost": 0, "delay": 0, "speed": 0, "hype": 0, "bugs": 10, "morale": 0}
+        ]
+    },
+    {
+        "id": "dev_art_style_debate",
+        "options": [
+            {"id": "realistic_art", "cost": 10000, "delay": 2, "speed": 0, "hype": 25, "bugs": 5, "morale": 0},
+            {"id": "stylized_art", "cost": 2000, "delay": 0, "speed": 1, "hype": 10, "bugs": 0, "morale": 5}
+        ]
+    },
+    {
+        "id": "dev_sound_engine_bug",
+        "options": [
+            {"id": "fix_sound", "cost": 0, "delay": 2, "speed": 0, "hype": 0, "bugs": -10, "morale": -5},
+            {"id": "ignore_sound", "cost": 0, "delay": 0, "speed": 0, "hype": -5, "bugs": 5, "morale": 0}
+        ]
+    },
+    {
+        "id": "dev_easter_egg",
+        "options": [
+            {"id": "add_easter_egg", "cost": 1000, "delay": 1, "speed": 0, "hype": 15, "bugs": 2, "morale": 10},
+            {"id": "no_easter_egg", "cost": 0, "delay": 0, "speed": 0, "hype": 0, "bugs": 0, "morale": 0}
+        ]
+    },
+    {
+        "id": "dev_translation_error",
+        "options": [
+            {"id": "hire_translator", "cost": 5000, "delay": 1, "speed": 0, "hype": 10, "bugs": -5, "morale": 0},
+            {"id": "auto_translate", "cost": 0, "delay": 0, "speed": 0, "hype": -10, "bugs": 10, "morale": 0}
+        ]
+    },
+    {
+        "id": "dev_dev_con_trip",
+        "options": [
+            {"id": "send_team", "cost": 12000, "delay": 2, "speed": 0, "hype": 40, "bugs": -5, "morale": 30},
+            {"id": "stay_at_work", "cost": 0, "delay": 0, "speed": 0, "hype": 0, "bugs": 0, "morale": -10}
+        ]
+    },
+    {
+        "id": "dev_middleware_update",
+        "options": [
+            {"id": "update_now", "cost": 0, "delay": 2, "speed": 1, "hype": 5, "bugs": -5, "morale": 0},
+            {"id": "wait_update", "cost": 0, "delay": 0, "speed": 0, "hype": 0, "bugs": 5, "morale": 0}
+        ]
+    },
+    {
+        "id": "dev_keyboard_fail",
+        "options": [
+            {"id": "mechanical_keys", "cost": 3000, "delay": 0, "speed": 1, "hype": 0, "bugs": 0, "morale": 15},
+            {"id": "standard_keys", "cost": 500, "delay": 0, "speed": 0, "hype": 0, "bugs": 0, "morale": 0}
+        ]
+    },
+    {
+        "id": "dev_leaked_screens",
+        "options": [
+            {"id": "use_as_promo", "cost": 0, "delay": 0, "speed": 0, "hype": 30, "bugs": 0, "morale": 10},
+            {"id": "damage_control", "cost": 5000, "delay": 1, "speed": 0, "hype": -10, "bugs": 0, "morale": -5}
+        ]
+    }
 ]
 
 
@@ -841,6 +962,7 @@ BUILD_OBJECTS = {
     "research_desk": {"name": "Forschungs-Schreibtisch", "cost": 5000,   "layer": "furniture", "employees": 0, "bonus": "research",   "desc": "Schaltet Forschung frei."},
     "server_rack":   {"name": "Server-Rack",             "cost": 15000,  "layer": "furniture", "employees": 0, "bonus": "mmo",        "desc": "Serverkapazität für MMOs."},
     "mixing_desk":   {"name": "Mischpult",               "cost": 20000,  "layer": "furniture", "employees": 1, "bonus": "sound",      "desc": "+10% auf Sound-Bewertung."},
+    "mixing_desk_v2": {"name": "Modernes Mischpult V2",   "cost": 35000,  "layer": "furniture", "employees": 1, "bonus": "sound",      "desc": "+20% auf Sound-Bewertung.", "req_tech": "Audio-Meisterschaft 2"},
     "art_station":   {"name": "Grafik-Station",          "cost": 20000,  "layer": "furniture", "employees": 1, "bonus": "graphics",   "desc": "+10% auf Grafik-Bewertung."},
     "qa_station":    {"name": "QA-Workstation",          "cost": 8000,   "layer": "furniture", "employees": 0, "bonus": "qa",         "desc": "Reduziert Bugs um 20%."},
     "marketing_board":{"name": "Marketing-Pinnwand",    "cost": 6000,   "layer": "furniture", "employees": 0, "bonus": "marketing",  "desc": "Schaltet große Marketing-Kampagnen frei."},
@@ -926,6 +1048,8 @@ BUILD_OBJECTS = {
     "legal_desk":    {"name": "Rechtsabteilung",         "cost": 65000,  "layer": "furniture", "employees": 1, "bonus": "legal_protection", "desc": "Erschwert Abwerbeversuche massiv und schützt Top-Mitarbeiter.", "req_tech": "Arbeitsrecht-Experten"},
     "intel_station": {"name": "Marktforschungs-Station", "cost": 85000,  "layer": "furniture", "employees": 1, "bonus": "competitor_intel", "desc": "Analysiert Konkurrenz-Projekte und warnt vor Genre-Sniping.", "req_tech": "Geheimdienst-Netzwerk"},
     "pr_desk":       {"name": "PR-Zentrale",             "cost": 40000,  "layer": "furniture", "employees": 1, "bonus": "pr_defense", "desc": "Reduziert Hype-Verlust durch konkurrierende Veröffentlichungen.", "req_tech": "Krisenmanagement"},
+    "gold_record":   {"name": "Goldene Schallplatte",    "cost": 0,      "layer": "structure", "employees": 0, "bonus": None,         "desc": "Deine erste Million verkaufte Exemplare! +10 Moral.", "morale_bonus": 10},
+    "master_tape":   {"name": "Master-Bandmaschine",     "cost": 5000,   "layer": "furniture", "employees": 0, "bonus": "sound",      "desc": "Klassische Analog-Technik. +5% Sound-Bonus.", "req_tech": "Audio-Meisterschaft 1"},
 }
 
 # Rückwärtskompatibilität für bestehende System-Methoden
@@ -1500,18 +1624,22 @@ RANDOM_EVENTS = [
 HISTORICAL_TOPICS = [
     # === Die Pionier-Dekade 1930–1939 ===
     {"name": "Abakus",          "unlock_year": 1930, "synergy": "Puzzle",    "hype_level": 1},
+    {"name": "Radio-Drama",     "unlock_year": 1930, "synergy": "Abenteuer", "hype_level": 4},
     {"name": "Logistik",        "unlock_year": 1930, "synergy": "Strategie", "hype_level": 3},
     {"name": "Schach",          "unlock_year": 1930, "synergy": "Puzzle",    "hype_level": 2},
     {"name": "Mathematik",      "unlock_year": 1930, "synergy": "Puzzle",    "hype_level": 3},
+    {"name": "Swing-Musik",     "unlock_year": 1931, "synergy": "Casual",    "hype_level": 4},
     {"name": "Astronomie",      "unlock_year": 1931, "synergy": "Strategie", "hype_level": 2},
     {"name": "Landwirtschaft",  "unlock_year": 1931, "synergy": "Simulation","hype_level": 2},
     {"name": "Kochen",          "unlock_year": 1932, "synergy": "Simulation","hype_level": 1},
+    {"name": "Hörspiel",        "unlock_year": 1932, "synergy": "Abenteuer", "hype_level": 5},
     {"name": "Politik",         "unlock_year": 1932, "synergy": "Strategie", "hype_level": 2},
     {"name": "Detektiv",        "unlock_year": 1933, "synergy": "Abenteuer", "hype_level": 3},
     {"name": "Kartenspiele",    "unlock_year": 1933, "synergy": "Puzzle",    "hype_level": 3},
     {"name": "Architektur",     "unlock_year": 1934, "synergy": "Simulation","hype_level": 2},
     {"name": "Postwesen",       "unlock_year": 1934, "synergy": "Simulation","hype_level": 1},
     {"name": "Zirkus",          "unlock_year": 1935, "synergy": "Casual",    "hype_level": 2},
+    {"name": "Tonbandgerät",    "unlock_year": 1935, "synergy": "Simulation","hype_level": 3},
     {"name": "Bergbau",         "unlock_year": 1935, "synergy": "Simulation","hype_level": 2},
     {"name": "Eisenbahn",       "unlock_year": 1936, "synergy": "Simulation","hype_level": 3},
     {"name": "Seefahrt",        "unlock_year": 1936, "synergy": "Abenteuer", "hype_level": 2},
@@ -1521,20 +1649,38 @@ HISTORICAL_TOPICS = [
     {"name": "Zauberei",        "unlock_year": 1938, "synergy": "Abenteuer", "hype_level": 2},
     {"name": "Militär",         "unlock_year": 1939, "synergy": "Strategie", "hype_level": 4},
     {"name": "Chemie",          "unlock_year": 1939, "synergy": "Puzzle",    "hype_level": 2},
+    {"name": "Brettspiel",      "unlock_year": 1935, "synergy": "Puzzle",    "hype_level": 3},
+    {"name": "Leichtathletik",  "unlock_year": 1936, "synergy": "Sport",     "hype_level": 3},
+    {"name": "Aliens",          "unlock_year": 1938, "synergy": "Action",    "hype_level": 4},
+    {"name": "Pazifik-Krieg",   "unlock_year": 1941, "synergy": "Strategie", "hype_level": 4},
+    {"name": "Frieden",         "unlock_year": 1945, "synergy": "Casual",    "hype_level": 5},
+    {"name": "Pioniere",        "unlock_year": 1946, "synergy": "Abenteuer", "hype_level": 3},
+    {"name": "Wissenschaft",    "unlock_year": 1953, "synergy": "Simulation","hype_level": 4},
+    {"name": "Themenpark",      "unlock_year": 1955, "synergy": "Simulation","hype_level": 4},
+    {"name": "Mode/Puppen",     "unlock_year": 1959, "synergy": "Casual",    "hype_level": 3},
+    {"name": "Freiheit",        "unlock_year": 1960, "synergy": "Simulation","hype_level": 2},
+    {"name": "Band",            "unlock_year": 1964, "synergy": "Casual",    "hype_level": 4},
+    {"name": "Chaos/Protest",   "unlock_year": 1965, "synergy": "Simulation","hype_level": 2},
+    {"name": "Natur",           "unlock_year": 1970, "synergy": "Simulation","hype_level": 3},
+    {"name": "Lernen",          "unlock_year": 1971, "synergy": "Puzzle",    "hype_level": 2},
 
     # === Die Aufbau-Jahre 1940–1959 ===
     {"name": "U-Boot",          "unlock_year": 1940, "synergy": "Simulation","hype_level": 3},
-    {"name": "Luftschlacht",    "unlock_year": 1941, "synergy": "Action",    "hype_level": 4},
+    {"name": "Magnetband",      "unlock_year": 1940, "synergy": "Simulation","hype_level": 3},
+    {"name": "Mehrspuraufnahme","unlock_year": 1941, "synergy": "Simulation","hype_level": 4},
     {"name": "Spionage",        "unlock_year": 1942, "synergy": "Abenteuer", "hype_level": 3},
     {"name": "Panzer",          "unlock_year": 1943, "synergy": "Simulation","hype_level": 3},
     {"name": "Fallschirmjäger", "unlock_year": 1944, "synergy": "Action",    "hype_level": 2},
     {"name": "Wiederaufbau",    "unlock_year": 1945, "synergy": "Simulation","hype_level": 3},
     {"name": "Journalismus",    "unlock_year": 1946, "synergy": "Strategie", "hype_level": 2},
     {"name": "UFOs",            "unlock_year": 1947, "synergy": "Abenteuer", "hype_level": 4},
+    {"name": "Vinyl-Schallplatte","unlock_year": 1948, "synergy": "Casual",  "hype_level": 5},
     {"name": "Roboter",         "unlock_year": 1948, "synergy": "Action",    "hype_level": 3},
     {"name": "Dschungel",       "unlock_year": 1949, "synergy": "Abenteuer", "hype_level": 2},
+    {"name": "Rock 'n' Roll",   "unlock_year": 1950, "synergy": "Casual",    "hype_level": 5},
     {"name": "Archäologie",     "unlock_year": 1950, "synergy": "Abenteuer", "hype_level": 3},
     {"name": "Weltraum",        "unlock_year": 1951, "synergy": "Simulation","hype_level": 4},
+    {"name": "Transistorradio", "unlock_year": 1952, "synergy": "Simulation","hype_level": 4},
     {"name": "Wilder Westen",   "unlock_year": 1952, "synergy": "Action",    "hype_level": 3},
     {"name": "Bergsteigen",     "unlock_year": 1953, "synergy": "Sport",     "hype_level": 2},
     {"name": "Fußball",         "unlock_year": 1954, "synergy": "Sport",     "hype_level": 5},
@@ -1546,8 +1692,10 @@ HISTORICAL_TOPICS = [
 
     # === Pop-Kultur Ära 1960–1979 ===
     {"name": "Tiefsee",         "unlock_year": 1960, "synergy": "Abenteuer", "hype_level": 2},
+    {"name": "Stereo-Sound",    "unlock_year": 1960, "synergy": "Simulation","hype_level": 4},
     {"name": "Mafia",           "unlock_year": 1961, "synergy": "Action",    "hype_level": 3},
     {"name": "Fantasy",         "unlock_year": 1962, "synergy": "RPG",       "hype_level": 3},
+    {"name": "Musikkassette",   "unlock_year": 1963, "synergy": "Casual",    "hype_level": 5},
     {"name": "Agenten",         "unlock_year": 1963, "synergy": "Abenteuer", "hype_level": 4},
     {"name": "Popstars",        "unlock_year": 1964, "synergy": "Casual",    "hype_level": 3},
     {"name": "Dinosaurier",     "unlock_year": 1965, "synergy": "Action",    "hype_level": 4},
@@ -1555,10 +1703,12 @@ HISTORICAL_TOPICS = [
     {"name": "Hippies",         "unlock_year": 1967, "synergy": "Simulation","hype_level": 2},
     {"name": "Weltrevolution",  "unlock_year": 1968, "synergy": "Strategie", "hype_level": 3},
     {"name": "Mondbasis",       "unlock_year": 1969, "synergy": "Simulation","hype_level": 5},
+    {"name": "Synthesizer",     "unlock_year": 1970, "synergy": "Puzzle",    "hype_level": 3},
     {"name": "Kung-Fu",         "unlock_year": 1970, "synergy": "Kampfspiel","hype_level": 3},
     {"name": "Piraten",         "unlock_year": 1971, "synergy": "Abenteuer", "hype_level": 4},
     {"name": "Basketball",      "unlock_year": 1972, "synergy": "Sport",     "hype_level": 2},
     {"name": "Motorrad",        "unlock_year": 1973, "synergy": "Rennspiel", "hype_level": 3},
+    {"name": "Elektronik-Pop",  "unlock_year": 1974, "synergy": "Puzzle",    "hype_level": 5},
     {"name": "Verliese",        "unlock_year": 1974, "synergy": "RPG",       "hype_level": 4},
     {"name": "Polizei",         "unlock_year": 1975, "synergy": "Action",    "hype_level": 2},
     {"name": "Alien-Jagd",      "unlock_year": 1976, "synergy": "Action",    "hype_level": 3},
@@ -1568,7 +1718,9 @@ HISTORICAL_TOPICS = [
 
     # === Digitale Explosion 1980–1999 ===
     {"name": "Gelbe Fresspunkte","unlock_year": 1980, "synergy": "Puzzle",   "hype_level": 5},
+    {"name": "Walkman",         "unlock_year": 1980, "synergy": "Casual",    "hype_level": 5},
     {"name": "Büro-Alltag",     "unlock_year": 1981, "synergy": "Simulation","hype_level": 1},
+    {"name": "CD-Technologie",  "unlock_year": 1982, "synergy": "Simulation","hype_level": 5},
     {"name": "Cyberpunk",       "unlock_year": 1982, "synergy": "RPG",       "hype_level": 4},
     {"name": "Vampire",         "unlock_year": 1983, "synergy": "Horror",    "hype_level": 3},
     {"name": "Breakdance",      "unlock_year": 1984, "synergy": "Casual",    "hype_level": 2},
@@ -1577,6 +1729,8 @@ HISTORICAL_TOPICS = [
     {"name": "Mechs",           "unlock_year": 1987, "synergy": "Action",    "hype_level": 4},
     {"name": "Skateboarding",   "unlock_year": 1988, "synergy": "Sport",     "hype_level": 3},
     {"name": "Taschenmonster",  "unlock_year": 1989, "synergy": "RPG",       "hype_level": 5},
+    {"name": "Digital-Audio-Workstation","unlock_year": 1991, "synergy": "Simulation","hype_level": 4},
+    {"name": "Techno-Rave",     "unlock_year": 1990, "synergy": "Action",    "hype_level": 4},
     {"name": "Krankenhaus",     "unlock_year": 1990, "synergy": "Simulation","hype_level": 3},
     {"name": "Freizeitpark",    "unlock_year": 1991, "synergy": "Simulation","hype_level": 4},
     {"name": "Mars-Shooter",    "unlock_year": 1992, "synergy": "Action",    "hype_level": 5},
@@ -1584,40 +1738,74 @@ HISTORICAL_TOPICS = [
     {"name": "Anime",           "unlock_year": 1994, "synergy": "RPG",       "hype_level": 3},
     {"name": "Hacking",         "unlock_year": 1995, "synergy": "Puzzle",    "hype_level": 4},
     {"name": "Stealth-Agent",   "unlock_year": 1996, "synergy": "Action",    "hype_level": 4},
+    {"name": "Internet-Radio",  "unlock_year": 1997, "synergy": "Simulation","hype_level": 3},
     {"name": "Elfen & Orks",    "unlock_year": 1997, "synergy": "RPG",       "hype_level": 3},
     {"name": "Survival-Insel",  "unlock_year": 1998, "synergy": "Abenteuer", "hype_level": 3},
     {"name": "Skandal-TV",      "unlock_year": 1999, "synergy": "Simulation","hype_level": 2},
 
     # === Neues Jahrtausend 2000–2015 ===
     {"name": "Lebens-Sim",      "unlock_year": 2000, "synergy": "Simulation","hype_level": 5},
+    {"name": "MP3-Player",      "unlock_year": 2000, "synergy": "Casual",    "hype_level": 5},
     {"name": "Zombie-Hype",     "unlock_year": 2001, "synergy": "Horror",    "hype_level": 4},
+    {"name": "Musik-Download",  "unlock_year": 2003, "synergy": "Casual",    "hype_level": 4},
     {"name": "Parkplatz-Manager","unlock_year": 2002, "synergy": "Simulation","hype_level": 1},
     {"name": "E-Sport",         "unlock_year": 2003, "synergy": "Action",    "hype_level": 3},
     {"name": "Zauberschule",    "unlock_year": 2004, "synergy": "RPG",       "hype_level": 4},
+    {"name": "Podcast-Boom",    "unlock_year": 2005, "synergy": "Simulation","hype_level": 3},
     {"name": "Sandbox/Voxel",   "unlock_year": 2005, "synergy": "Abenteuer", "hype_level": 5},
     {"name": "Wikinger",        "unlock_year": 2006, "synergy": "Action",    "hype_level": 4},
     {"name": "Smartphones",     "unlock_year": 2007, "synergy": "Puzzle",    "hype_level": 3},
+    {"name": "Musik-Streaming", "unlock_year": 2008, "synergy": "Simulation","hype_level": 5},
     {"name": "Freerunning",     "unlock_year": 2008, "synergy": "Action",    "hype_level": 2},
     {"name": "Block-Bauen",     "unlock_year": 2009, "synergy": "Abenteuer", "hype_level": 5},
+    {"name": "Streaming-Rev",   "unlock_year": 2010, "synergy": "Simulation","hype_level": 5},
     {"name": "Social Network",  "unlock_year": 2010, "synergy": "Simulation","hype_level": 3},
+    {"name": "Hi-Res Audio",    "unlock_year": 2012, "synergy": "Simulation","hype_level": 3},
     {"name": "Indie-Entwickler","unlock_year": 2011, "synergy": "Abenteuer", "hype_level": 2},
     {"name": "Battle-Royale",   "unlock_year": 2012, "synergy": "Action",    "hype_level": 5},
     {"name": "VR-Simulation",   "unlock_year": 2013, "synergy": "Simulation","hype_level": 3},
     {"name": "Farming-Hype",    "unlock_year": 2014, "synergy": "Simulation","hype_level": 4},
+    {"name": "ASMR",            "unlock_year": 2015, "synergy": "Simulation","hype_level": 2},
     {"name": "Cyber-Krieg",     "unlock_year": 2015, "synergy": "Strategie", "hype_level": 3},
 
     # === Die Zukunft 2016–2026 ===
+    {"name": "3D-Audio",        "unlock_year": 2017, "synergy": "Action",    "hype_level": 4},
     {"name": "AR-Jagd",         "unlock_year": 2016, "synergy": "Action",    "hype_level": 3},
     {"name": "Krypto-Mining",   "unlock_year": 2017, "synergy": "Strategie", "hype_level": 2},
     {"name": "Mars-Kolonisierung","unlock_year": 2018,"synergy": "Simulation","hype_level": 4},
     {"name": "Streaming-Star",  "unlock_year": 2019, "synergy": "Simulation","hype_level": 3},
     {"name": "KI-Dystopie",     "unlock_year": 2020, "synergy": "Abenteuer", "hype_level": 3},
+    {"name": "Spatial-Audio",   "unlock_year": 2020, "synergy": "Action",    "hype_level": 4},
     {"name": "NFT-Sammeln",     "unlock_year": 2021, "synergy": "Strategie", "hype_level": 1},
+    {"name": "KI-Komposition",  "unlock_year": 2022, "synergy": "Simulation","hype_level": 5},
     {"name": "Metaverse",       "unlock_year": 2022, "synergy": "Simulation","hype_level": 2},
     {"name": "KI-Utopie",       "unlock_year": 2023, "synergy": "Strategie", "hype_level": 4},
+    {"name": "KI-Stimmen",      "unlock_year": 2024, "synergy": "Simulation","hype_level": 5},
     {"name": "Endzeit-Bote",    "unlock_year": 2024, "synergy": "Action",    "hype_level": 3},
     {"name": "Gen-Labor",       "unlock_year": 2025, "synergy": "Simulation","hype_level": 4},
+    {"name": "Holo-Konzerte",   "unlock_year": 2025, "synergy": "Casual",    "hype_level": 4},
     {"name": "Neural-Link",     "unlock_year": 2026, "synergy": "RPG",       "hype_level": 5},
+    # === Zusätzliche Audio-Fokus Themen ===
+    {"name": "Hörbuch-Boom",    "unlock_year": 2000, "synergy": "Simulation","hype_level": 4},
+    {"name": "SoundCloud-Rap",  "unlock_year": 2012, "synergy": "Casual",    "hype_level": 3},
+    {"name": "Vinyl-Revival",   "unlock_year": 2015, "synergy": "Casual",    "hype_level": 4},
+    {"name": "Auto-Tune",       "unlock_year": 1998, "synergy": "Casual",    "hype_level": 4},
+    {"name": "Multiroom-Audio", "unlock_year": 2010, "synergy": "Simulation","hype_level": 3},
+    {"name": "Dolby Atmos",     "unlock_year": 2012, "synergy": "Action",    "hype_level": 4},
+    {"name": "Noise Cancelling","unlock_year": 2000, "synergy": "Simulation","hype_level": 3},
+    {"name": "Hörgeräte-Tech",  "unlock_year": 1950, "synergy": "Simulation","hype_level": 2},
+    {"name": "Echo-Effekt",     "unlock_year": 1960, "synergy": "Casual",    "hype_level": 3},
+    {"name": "Reverb-Kammern",  "unlock_year": 1945, "synergy": "Simulation","hype_level": 2},
+    {"name": "Film-Sync",       "unlock_year": 1930, "synergy": "Action",    "hype_level": 3},
+    {"name": "Surround-Sound",  "unlock_year": 1975, "synergy": "Action",    "hype_level": 4},
+    {"name": "Audio-Fingerprint","unlock_year": 2005, "synergy": "Puzzle",   "hype_level": 3},
+    {"name": "Algo-Playlists",  "unlock_year": 2015, "synergy": "Strategie", "hype_level": 4},
+    {"name": "Lo-Fi Beats",     "unlock_year": 2017, "synergy": "Casual",    "hype_level": 4},
+    {"name": "True Wireless",   "unlock_year": 2016, "synergy": "Simulation","hype_level": 4},
+    {"name": "Podcasting 2.0",  "unlock_year": 2020, "synergy": "Simulation","hype_level": 3},
+    {"name": "KI-Mastering",    "unlock_year": 2021, "synergy": "Simulation","hype_level": 5},
+    {"name": "Audio-Deepfakes", "unlock_year": 2023, "synergy": "Abenteuer", "hype_level": 4},
+    {"name": "Neuro-Interface", "unlock_year": 2026, "synergy": "RPG",       "hype_level": 5},
 ]
 
 
@@ -1629,6 +1817,115 @@ def get_historical_topics_for_year(calendar_year):
 def get_newly_unlocked_topics(calendar_year):
     """Gibt alle Themen zurück, die GENAU in diesem Jahr neu verfügbar werden."""
     return [t for t in HISTORICAL_TOPICS if t["unlock_year"] == calendar_year]
+
+
+# ============================================================
+# HISTORISCHE JAHRES-EREIGNISSE
+# ============================================================
+YEAR_EVENTS = {
+    1930: {"text": "event_1930", "effect": "money_multi", "value": 0.8},    # Weltwirtschaftskrise
+    1931: {"text": "event_1931", "effect": "rp", "value": 25},            # Logic-Contest
+    1932: {"text": "event_1932", "effect": "trend_topic", "value": "Sport"}, # Olympia
+    1933: {"text": "event_1933", "effect": "sales_multi", "value": 1.2},   # Ende Prohibition
+    1934: {"text": "event_1934", "effect": "hype", "value": 15},           # Radar
+    1935: {"text": "event_1935", "effect": "trend_topic", "value": "Brettspiel"}, # Monopoly
+    1936: {"text": "event_1936", "effect": "trend_topic", "value": "Leichtathletik"}, # Jesse Owens
+    1937: {"text": "event_1937", "effect": "hype_multi", "value": 0.5, "topic": "Luftfahrt"}, # Luftschiff-Unglück
+    1938: {"text": "event_1938", "effect": "trend_topic", "value": "Aliens"}, # Mars-Hörspiel
+    1939: {"text": "event_1939", "effect": "tax_increase", "value": 0.1},  # WWII Ausbruch
+    1940: {"text": "event_1940", "effect": "logic_boost", "value": 1.3},    # Enigma
+    1941: {"text": "event_1941", "effect": "trend_topic", "value": "Pazifik-Krieg"}, # Pearl Harbor
+    1942: {"text": "event_1942", "effect": "hype", "value": 200, "topic": "Mathematik"}, # Zuse Z3
+    1943: {"text": "event_1943", "effect": "trend_topic", "value": "Agenten"}, # Casablanca
+    1944: {"text": "event_1944", "effect": "trend_topic", "value": "Militär"}, # D-Day
+    1945: {"text": "event_1945", "effect": "sales_multi", "value": 2.0},   # Kriegsende
+    1946: {"text": "event_1946", "effect": "trend_topic", "value": "Pioniere"}, # Erster Linienflug
+    1947: {"text": "event_1947", "effect": "trend_topic", "value": "UFOs"},  # Roswell
+    1948: {"text": "event_1948", "effect": "money", "value": 1000},        # Marshall-Plan
+    1949: {"text": "event_1949", "effect": "unlock_tech", "value": "Sound-Forschung"}, # LP-Platte
+    1950: {"text": "event_1950", "effect": "trend_topic", "value": "Militär"}, # Koreakrieg
+    1951: {"text": "event_1951", "effect": "prestige", "value": 50},       # UNIVAC
+    1952: {"text": "event_1952", "effect": "hype", "value": 40},           # OXO (Erstes Game)
+    1953: {"text": "event_1953", "effect": "trend_topic", "value": "Wissenschaft"}, # DNA
+    1954: {"text": "event_1954", "effect": "trend_topic", "value": "Fußball"}, # Wunder von Bern
+    1955: {"text": "event_1955", "effect": "trend_topic", "value": "Vergnügungspark"}, # Disneyland
+    1956: {"text": "event_1956", "effect": "trend_topic", "value": "Rock 'n' Roll"}, # Elvis
+    1957: {"text": "event_1957", "effect": "hype", "value": 500, "topic": "Weltraum"}, # Sputnik
+    1958: {"text": "event_1958", "effect": "hype", "value": 30},           # Tennis for Two
+    1959: {"text": "event_1959", "effect": "trend_topic", "value": "Mode/Puppen"}, # Barbie
+    1960: {"text": "event_1960", "effect": "trend_topic", "value": "Freiheit"}, # Pille
+    1961: {"text": "event_1961", "effect": "money_multi", "value": 0.5},   # Mauerbau (Exportkosten)
+    1962: {"text": "event_1962", "effect": "hype", "value": 50},           # Spacewar!
+    1963: {"text": "event_1963", "effect": "sales_multi", "value": 0.7},   # Kennedy
+    1964: {"text": "event_1964", "effect": "trend_topic", "value": "Band"}, # Beatles
+    1965: {"text": "event_1965", "effect": "trend_topic", "value": "Chaos/Protest"}, # Vietnam
+    1966: {"text": "event_1966", "effect": "unlock_genre", "value": "RPG"}, # Star Trek
+    1967: {"text": "event_1967", "effect": "trend_topic", "value": "Hippies"}, # Summer of Love
+    1968: {"text": "event_1968", "effect": "salary_increase", "value": 0.15}, # Mai-Unruhen
+    1969: {"text": "event_1969", "effect": "hype", "value": 100},          # Apollo 11
+    1970: {"text": "event_1970", "effect": "trend_topic", "value": "Natur"}, # Earth Day
+    1971: {"text": "event_1971", "effect": "trend_topic", "value": "Lernen"}, # Oregon Trail
+    1972: {"text": "event_1972", "effect": "market_boom", "value": 2.0},   # Pong
+    1973: {"text": "event_1973", "effect": "cost_increase", "value": 0.5}, # Ölkrise
+    1974: {"text": "event_1974", "effect": "unlock_genre", "value": "RPG"}, # D&D
+    1975: {"text": "event_1975", "effect": "rival_boost", "value": 1.2},    # Bill Gates MS
+    1976: {"text": "event_1976", "effect": "market_boom", "value": 1.5},   # Apple I
+    1977: {"text": "event_1977", "effect": "trend_topic", "value": "Weltraum"}, # Star Wars
+    1978: {"text": "event_1978", "effect": "trend_genre", "value": "Action"}, # Space Invaders
+    1979: {"text": "event_1979", "effect": "unlock_tech", "value": "Sound-Marketing"}, # Walkman
+    1980: {"text": "event_1980", "effect": "trend_genre", "value": "Puzzle"}, # Pac-Man
+    1981: {"text": "event_1981", "effect": "hype", "value": 40},           # IBM PC
+    1982: {"text": "event_1982", "effect": "market_crash", "value": 0.1},  # Crash
+    1983: {"text": "event_1983", "effect": "quality_penalty", "value": 2.0}, # Dragon's Lair
+    1984: {"text": "event_1984", "effect": "hype", "value": 300, "topic": "Puzzle"}, # Tetris
+    1985: {"text": "event_1985", "effect": "trend_genre", "value": "Action"}, # Super Mario
+    1986: {"text": "event_1986", "effect": "complexity_boost", "value": 1.2}, # Zelda
+    1987: {"text": "event_1987", "effect": "story_boost", "value": 1.5},    # Final Fantasy
+    1988: {"text": "event_1988", "effect": "graphics_standard", "value": 2}, # Mega Drive
+    1989: {"text": "event_1989", "effect": "market_boom", "value": 1.3},   # Gameboy
+    1990: {"text": "event_1990", "effect": "sales_multi", "value": 1.15},  # Mauerfall
+    1991: {"text": "event_1991", "effect": "trend_genre", "value": "Kampfspiel"}, # Street Fighter II
+    1992: {"text": "event_1992", "effect": "unlock_genre", "value": "Action"}, # Wolfenstein 3D
+    1993: {"text": "event_1993", "effect": "censorship_risk", "value": 0.5}, # Doom
+    1994: {"text": "event_1994", "effect": "medium_upgrade", "value": "CD-ROM"}, # PlayStation
+    1995: {"text": "event_1995", "effect": "market_boom", "value": 1.4},   # Windows 95
+    1996: {"text": "event_1996", "effect": "trend_topic", "value": "Monster"}, # Pokémon
+    1997: {"text": "event_1997", "effect": "server_costs", "value": 2.0},   # Ultima Online
+    1998: {"text": "event_1998", "effect": "trend_genre", "value": "Action"}, # Metal Gear Solid
+    1999: {"text": "event_1999", "effect": "trend_topic", "value": "Simulation"}, # Matrix
+    2000: {"text": "event_2000", "effect": "market_boom", "value": 1.5},   # PS2
+    2001: {"text": "event_2001", "effect": "sales_multi", "value": 0.8},   # 9/11
+    2002: {"text": "event_2002", "effect": "multiplayer_boost", "value": 1.5}, # Xbox Live
+    2003: {"text": "event_2003", "effect": "digital_sales", "value": 1.2},  # Steam
+    2004: {"text": "event_2004", "effect": "subscription_boom", "value": 2.0}, # WoW
+    2005: {"text": "event_2005", "effect": "marketing_rev", "value": 1.5},  # YouTube
+    2006: {"text": "event_2006", "effect": "trend_genre", "value": "Casual"}, # Wii
+    2007: {"text": "event_2007", "effect": "market_shift", "value": "Casual"}, # iPhone
+    2008: {"text": "event_2008", "effect": "interest_increase", "value": 0.2}, # Finanzkrise
+    2009: {"text": "event_2009", "effect": "trend_topic", "value": "Sandbox/Voxel"}, # Minecraft
+    2010: {"text": "event_2010", "effect": "market_boom", "value": 1.4},   # iPad
+    2011: {"text": "event_2011", "effect": "streamer_impact", "value": 2.0}, # Twitch
+    2012: {"text": "event_2012", "effect": "crowdfunding", "value": 1.5},  # Crowdfunding
+    2013: {"text": "event_2013", "effect": "quality_standard", "value": 1.5}, # GTA V
+    2014: {"text": "event_2014", "effect": "prestige", "value": 30},       # VR-Fieber
+    2015: {"text": "event_2015", "effect": "story_standard", "value": 2.0}, # Witcher 3
+    2016: {"text": "event_2016", "effect": "trend_topic", "value": "AR-Jagd"}, # Switch / AR
+    2017: {"text": "event_2017", "effect": "trend_topic", "value": "Battle-Royale"}, # Battle Royale
+    2018: {"text": "event_2018", "effect": "graphics_standard", "value": 3.0}, # Raytracing
+    2019: {"text": "event_2019", "effect": "subscription_standard", "value": 1.5}, # Game Pass
+    2020: {"text": "event_2020", "effect": "sales_multi", "value": 2.5},   # Pandemie
+    2021: {"text": "event_2021", "effect": "crypto_crash", "value": 0.0},  # Krypto-Crash
+    2022: {"text": "event_2022", "effect": "trend_difficulty", "value": "Hard"}, # Elden Ring
+    2023: {"text": "event_2023", "effect": "dev_speed", "value": 1.5},     # KI-Explosion
+    2024: {"text": "event_2024", "effect": "trend_topic", "value": "Mars-Kolonisierung"}, # Mars-Mission
+    2025: {"text": "event_2025", "effect": "unlock_platform", "value": "Neural"}, # Cyber-Brain
+    2026: {"text": "event_2026", "effect": "game_end", "value": 0},        # Neural-Sync
+}
+
+
+def get_year_event(year):
+    """Gibt das historische Ereignis für ein bestimmtes Jahr zurück."""
+    return YEAR_EVENTS.get(year)
 
 # ============================================================
 # ACHIEVEMENTS (Meilensteine)

@@ -65,11 +65,6 @@ class GameState:
         self.current_research_draft = None
         
         self.unlocked_topics = list(START_TOPICS)
-        # Historische Themen für 1930 direkt beim Start hinzufügen
-        from game_data import get_historical_topics_for_year
-        for ht in get_historical_topics_for_year(START_YEAR):
-            if ht["name"] not in self.unlocked_topics:
-                self.unlocked_topics.append(ht["name"])
         self.unlocked_genres = list(START_GENRES)
         self.unlocked_audiences = list(START_AUDIENCES)
         self.unlocked_technologies = []
@@ -101,6 +96,7 @@ class GameState:
         # Bankwesen & Finanzen
         self.bank_statements = []
         self.accrued_income = {}
+        self.accounting = {"income": 0, "expenses": 0, "loan_paid": 0}
         self.accrued_expenses = {}
         self.accrued_salaries = 0
         self.financial_history = []
@@ -150,6 +146,21 @@ class GameState:
 
         # NEU: Phase A - Schwierigkeitsgrad
         self.difficulty = 1  # Index in DIFFICULTY_LEVELS (0=Einfach, 1=Normal, 2=Schwer, 3=Legendär)
+
+        # Historische Effekte / Statuswerte
+        self.research_points = 0  # rp
+        self.prestige = 0
+        self.tax_rate = 0.15 # Standard 15%
+        self.sales_multiplier = 1.0
+        self.profit_multiplier = 1.0
+        self.logic_multiplier = 1.0
+        self.hype_multiplier = 1.0
+        self.dev_speed_multiplier = 1.0
+        self.interest_rate = 0.05 # Basis-Zins 5%
+        self.marketing_efficiency = 1.0
+        self.streamer_hype_multi = 1.0
+        self.quality_standard_multi = 1.0
+        self.subscription_multi = 1.0
 
         # NEU: Phase A - Verkaufscharts
         self.chart_history = []  # [{'week': X, 'entries': [{'name':..., 'studio':..., 'sales':...}]}]
@@ -202,6 +213,10 @@ class GameState:
         self.key_up = pygame.K_UP
         self.key_down = pygame.K_DOWN
         self.key_confirm = pygame.K_RETURN
+        self.key_cancel = pygame.K_ESCAPE
+
+        # Historische Themen für das Startjahr freischalten
+        self._unlock_historical_topics(silent=True)
         self.key_back = pygame.K_BACKSPACE
         self.key_home = pygame.K_HOME
         self.key_end = pygame.K_END
@@ -321,6 +336,7 @@ class GameState:
 
     def _init_starter_engine(self):
         """Erstellt die Starter-Engine mit Basis-Features."""
+        from game_data import ENGINE_FEATURES
         starter_features = []
         for f_data in ENGINE_FEATURES:
             if f_data["cost"] == 0:
@@ -330,6 +346,103 @@ class GameState:
 
         starter = Engine("Basis-Engine", starter_features)
         self.engines.append(starter)
+
+    def _unlock_historical_topics(self, silent=False):
+        """Prüft das aktuelle Jahr und schaltet neue historische Themen und Ereignisse frei."""
+        from game_data import get_newly_unlocked_topics, YEAR_EVENTS, START_YEAR
+        
+        calendar_year = START_YEAR + (self.week - 1) // 48
+        new_topics = get_newly_unlocked_topics(calendar_year)
+        
+        # 1. Themen freischalten
+        for topic in new_topics:
+            name = topic["name"]
+            if name not in self.unlocked_topics:
+                self.unlocked_topics.append(name)
+                if not silent:
+                    # E-Mail Benachrichtigung
+                    self.emails.insert(0, Email(
+                        sender=self.get_text("sender_historian"),
+                        subject=self.get_text("subject_new_topic"),
+                        body=self.get_text("body_new_topic", topic=self.get_text(name)),
+                        date_week=self.week
+                    ))
+
+        # 2. Historisches Ereignis verarbeiten
+        if calendar_year in YEAR_EVENTS:
+            event = YEAR_EVENTS[calendar_year]
+            effect_type = event.get("effect")
+            val = event.get("value")
+            
+            if not silent:
+                # E-Mail senden
+                event_text = self.get_text(event["text"])
+                impact_desc = f"{effect_type} -> {val}"
+                self.emails.insert(0, Email(
+                    sender=self.get_text("sender_world_events"),
+                    subject=self.get_text("subject_historical_event", year=calendar_year),
+                    body=f"{event_text}\n\n{self.get_text('event_impact')}: {impact_desc}",
+                    date_week=self.week
+                ))
+
+            # Effekt anwenden
+            if effect_type == "money":
+                self.money += val
+                self.accounting["income" if val > 0 else "expenses"] += abs(val)
+            elif effect_type == "money_multi":
+                self.money *= val
+            elif effect_type == "fans":
+                self.fans += val
+            elif effect_type == "hype":
+                self.hype = min(250, self.hype + val)
+            elif effect_type == "hype_multi":
+                self.hype_multiplier *= val
+            elif effect_type == "rp":
+                self.research_points += val
+            elif effect_type == "prestige":
+                self.prestige += val
+            elif effect_type == "tax_increase":
+                self.tax_rate += val
+            elif effect_type == "sales_multi":
+                self.sales_multiplier *= val
+            elif effect_type == "logic_boost":
+                self.logic_multiplier *= val
+            elif effect_type == "dev_speed":
+                self.dev_speed_multiplier *= val
+            elif effect_type == "interest_increase":
+                self.interest_rate += val
+            elif effect_type == "marketing_rev":
+                self.marketing_efficiency *= val
+            elif effect_type == "streamer_impact":
+                self.streamer_hype_multi *= val
+            elif effect_type == "subscription_boom" or effect_type == "subscription_standard":
+                self.subscription_multi *= val
+            elif effect_type == "quality_standard" or effect_type == "story_standard" or effect_type == "graphics_standard":
+                self.quality_standard_multi *= val
+            elif effect_type == "trend_topic":
+                self.current_trend = {
+                    'topic': val,
+                    'genre': self.current_trend.get('genre', 'Action'),
+                    'week_started': self.week
+                }
+            elif effect_type == "trend_genre":
+                self.current_trend = {
+                    'topic': self.current_trend.get('topic', 'Fantasy'),
+                    'genre': val,
+                    'week_started': self.week
+                }
+            elif effect_type == "trend_difficulty":
+                # Schwierigkeit als Trend ist ein neues Konzept, wir merken es uns
+                self.difficulty_trend = val 
+            elif effect_type == "unlock_tech":
+                if val not in self.unlocked_technologies:
+                    self.unlocked_technologies.append(val)
+            elif effect_type == "unlock_platform":
+                # Hier würde man eine neue Plattform in game_data verfügbar machen
+                pass
+            elif effect_type == "game_end":
+                self.game_over = True
+                self.game_over_reason = "historical_end"
 
     def reset_draft(self):
         """Setzt den aktuellen Entwurf zurück."""
@@ -587,6 +700,8 @@ class GameState:
                     date_week=self.week
                 ))
             self.accounting = {"income": 0, "expenses": 0, "loan_paid": 0}
+            # Neue Themen freischalten
+            self._unlock_historical_topics()
             
         # --- Pleite-Check (Bankruptcy Check) ---
         if self.is_bankrupt() and not getattr(self, "pending_bankrupt", False):
@@ -627,7 +742,7 @@ class GameState:
             
             # Abonnenten schwanken basierend auf Hype und Preis
             # Bei Preis 10€ und Hype 100 -> Target: 100 * 1000 * (20/10) = 200,000 Subs
-            target_subs = (self.subscription_hype * 1000) * (20.0 / max(1.0, self.subscription_price))
+            target_subs = (self.subscription_hype * 1000) * (20.0 / max(1.0, self.subscription_price)) * self.subscription_multi
             diff = target_subs - self.subscription_subscribers
             self.subscription_subscribers += diff * 0.02
             if self.subscription_subscribers < 0:
@@ -1181,6 +1296,9 @@ class GameState:
         elif m == 'publisher_deal':
             hype += 40
             
+        # Marketing-Effizienz anwenden
+        hype *= self.marketing_efficiency
+
         # Lizenzen
         if getattr(project, 'license_bonus', 0) > 0:
             hype += project.license_bonus
@@ -1189,6 +1307,9 @@ class GameState:
         for event in self.active_events:
             if event["effect"] == "hype_boost":
                 hype += event["amount"]
+
+        # Globaler Hype-Multiplikator
+        hype *= self.hype_multiplier
 
         return min(250, int(hype))
 
@@ -1259,67 +1380,6 @@ class GameState:
                     if my_game.is_active and my_game.genre == r_game.genre:
                         # Unser Spiel verliert Hype (passiv über Zeit)
                         self.hype = max(0, self.hype - 10)
-
-    def _unlock_historical_topics(self):
-        """Schaltet neue historische Themen basierend auf dem aktuellen Spieljahr frei und verarbeitet Jahresevents."""
-        from game_data import get_newly_unlocked_topics, get_year_event
-        
-        current_year = self.get_calendar_year()
-        new_topics = get_newly_unlocked_topics(current_year)
-        
-        newly_added = []
-        for t in new_topics:
-            if t["name"] not in self.unlocked_topics:
-                self.unlocked_topics.append(t["name"])
-                newly_added.append(t)
-        
-        if newly_added:
-            hype_texts = {1: "gering", 2: "mittel", 3: "hoch", 4: "extrem", 5: "gigantisch"}
-            lines = []
-            for t in newly_added:
-                hype_str = hype_texts.get(t["hype_level"], "?")
-                lines.append(f"• {t['name']} (passt zu: {t['synergy']}, Hype: {hype_str})")
-            topic_list = "\n".join(lines)
-            self.emails.insert(0, Email(
-                sender=self.get_text("sender_historian"),
-                subject=self.get_text("subject_new_topics_year", year=current_year),
-                body=self.get_text("body_new_topics_year", year=current_year, topics=topic_list),
-                date_week=self.week
-            ))
-
-        # Historisches Jahresevent prüfen und anwenden
-        year_event = get_year_event(current_year)
-        if year_event:
-            effect = year_event["effect"]
-            value = year_event["value"]
-            event_text = year_event["text"]
-            
-            if effect == "money":
-                self.money += value
-                self.accounting["income" if value > 0 else "expenses"] += abs(value)
-            elif effect == "fans":
-                self.fans += value
-            elif effect == "hype":
-                self.hype = min(250, self.hype + value)
-
-            # E-Mail mit historischem Event
-            impact = ""
-            if effect == "money":
-                impact = f"+{value:,} €" if value > 0 else f"{value:,} €"
-            elif effect == "fans":
-                impact = f"+{value:,} {self.get_text('fans')}"
-            elif effect == "hype":
-                impact = f"+{value} {self.get_text('hype')}"
-
-            self.emails.insert(0, Email(
-                sender=self.get_text("sender_world_events"),
-                subject=self.get_text("subject_historical_event", year=current_year),
-                body=f"{self.get_text(event_text)}\n\n{self.get_text('event_impact')}: {impact}",
-                date_week=self.week
-            ))
-            if hasattr(self, 'audio'):
-                self.audio.play_sound('blip')
-                self.audio.speak(self.get_text(event_text), interrupt=False)
 
 
 
@@ -1605,7 +1665,8 @@ class GameState:
             trait_mods.append(val)
         trait_avg = sum(trait_mods) / len(trait_mods)
         
-        return (avg_speed / 50.0) * trait_avg
+        base_multi = (avg_speed / 50.0) * trait_avg
+        return base_multi * self.dev_speed_multiplier * self.logic_multiplier
 
     def get_team_bug_modifier(self, project=None):
         active = self._active_employees(project)
@@ -2181,7 +2242,8 @@ class GameState:
         # Lizenz-Bonus
         base_score += getattr(project, 'license_bonus', 0.0)
 
-        base_review = max(1.0, min(10.0, float(base_score * 10)))
+        # Qualitätsstandard-Multiplikator anwenden (macht es über die Jahre schwerer)
+        base_review = max(1.0, min(10.0, float(base_score * 10 / self.quality_standard_multi)))
 
         scores = []
         for _ in range(4):
@@ -2271,7 +2333,7 @@ class GameState:
         from game_data import DIFFICULTY_LEVELS
         diff_market = DIFFICULTY_LEVELS[self.difficulty]["market_multi"]
 
-        sales = int(base_sales * score_m * fan_bonus * plat_multi * audience_multi * rand_m * diff_market)
+        sales = int(base_sales * score_m * fan_bonus * plat_multi * audience_multi * rand_m * diff_market * self.sales_multiplier)
         return sales
 
     def calculate_dev_cost(self, project):
@@ -3337,6 +3399,16 @@ class GameState:
         year = (self.week - 1) // game_data.WEEKS_PER_YEAR + game_data.START_YEAR
         month_index = ((self.week - 1) % game_data.WEEKS_PER_YEAR) // 4 + 1
         
+        # NEU: Steuern berechnen (vom monatlichen Gewinn)
+        taxes = 0
+        total_income = sum(self.accrued_income.values())
+        total_expense = sum(self.accrued_expenses.values())
+        profit = total_income - total_expense
+        if profit > 0:
+            taxes = int(profit * self.tax_rate)
+            self.money -= taxes
+            self.accrued_expenses["taxes"] = taxes
+            
         statement = BankStatement(
             week=self.week,
             year=year,
