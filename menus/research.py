@@ -260,9 +260,9 @@ class ConsoleSpecsMenu(Menu):
     def _start(self):
         draft = self.game_state.current_console_draft
         if self.game_state.money >= draft['cost']:
-             self.game_state.money -= draft['cost']
-             self.game_state.is_developing_console = True
-             self.game_state.console_progress = 0
-             self.audio.play_sound("confirm")
-             return "game_menu"
+            self.game_state.track_expense("research", draft['cost'])
+            self.game_state.is_developing_console = True
+            self.game_state.console_progress = 0
+            self.audio.play_sound("confirm")
+            return "game_menu"
         return None

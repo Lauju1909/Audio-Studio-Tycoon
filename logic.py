@@ -98,6 +98,16 @@ class GameState:
         self.accrued_income = {}
         self.accounting = {"income": 0, "expenses": 0, "loan_paid": 0}
         self.accrued_expenses = {}
+
+        self.subscription_active = False
+        self.subscription_price = 9.99
+        self.subscription_subscribers = 0
+        self.subscription_games = [] # Liste von GameProject Objekten
+        self.subscription_hype = 0.0
+        self.subscription_multi = 1.0
+
+        # NEU: Finanzhistorie
+        self.financial_history = []    # Liste von Dicts {week, year, profit}
         self.accrued_salaries = 0
         self.financial_history = []
         self.office_grid = [[None for _ in range(10)] for _ in range(10)]
@@ -170,12 +180,6 @@ class GameState:
         # ACHIEVEMENTS
         self.unlocked_achievements = []
 
-        # NEU: Phase I - Abo-Service (Game Pass)
-        self.subscription_active = False
-        self.subscription_price = 9.99
-        self.subscription_subscribers = 0
-        self.subscription_games = [] # Liste von Game-IDs oder Objekten
-        self.subscription_hype = 0.0
 
         # NEU: Phase I - Co-Entwicklung
         self.co_dev_partner = None # Name des Partners, wenn aktiv
@@ -698,8 +702,67 @@ class GameState:
     def is_developing(self):
         return len(self.active_projects) > 0
 
+    def update_subscription_service(self):
+        """Berechnet wöchentliche Abonnentenzahlen, Einnahmen und Hype für den Abo-Dienst."""
+        if not getattr(self, 'subscription_active', False):
+            return
+
+        # 1. Bibliothek bewerten (Library Quality)
+        # Wir berechnen einen Qualitäts-Faktor basierend auf Anzahl und Qualität der Spiele
+        if not hasattr(self, 'subscription_games'):
+            self.subscription_games = []
+            
+        num_games = len(self.subscription_games)
+        if num_games == 0:
+            # Ohne Spiele verliert man schnell Abonnenten
+            self.subscription_hype = max(0.0, self.subscription_hype - 2.0)
+            avg_score = 0
+        else:
+            total_score = sum(getattr(g, 'review_score', 50.0) for g in self.subscription_games)
+            avg_score = total_score / num_games
+            
+            # Genre-Vielfalt Bonus
+            genres = set(getattr(g, 'genre', 'Unknown') for g in self.subscription_games)
+            diversity_bonus = len(genres) * 2.0
+            
+            # Hype-Zuwachs durch Bibliothek
+            # Basis: Mehr Spiele = mehr Hype, gute Spiele = mehr Hype
+            library_hype_gain = (num_games * 0.1) + (avg_score / 20.0) + (diversity_bonus / 10.0)
+            self.subscription_hype = min(100.0, self.subscription_hype + library_hype_gain)
+
+        # 2. Hype-Zerfall (Hype decay)
+        self.subscription_hype = max(0.0, self.subscription_hype - 0.3)
+
+        # 3. Finanzen
+        weekly_income = (self.subscription_subscribers * self.subscription_price) / 4.0
+        # Serverkosten steigen mit Abonnentenzahl
+        server_costs_weekly = max(500, self.subscription_subscribers * 0.05) / 4.0
+        
+        self.track_income("subscription", weekly_income)
+        self.track_expense("server_costs", server_costs_weekly)
+
+        # 4. Abonnenten-Wachstum
+        # Ziel-Abonnenten basierend auf Hype, Preis und Bibliotheksqualität
+        # Ein Preis von 10€ ist "normal". Höhere Preise schrecken ab, niedrigere locken an.
+        price_factor = 15.0 / max(1.0, self.subscription_price)
+        # Qualitätsfaktor (avg_score 70+ ist gut)
+        quality_factor = max(0.1, (avg_score - 40) / 40.0) if avg_score > 40 else 0.1
+        
+        target_subs = (self.subscription_hype * 2000) * price_factor * quality_factor * self.subscription_multi
+        
+        # Annäherung an Target
+        diff = target_subs - self.subscription_subscribers
+        growth_rate = 0.02 if diff > 0 else 0.05 # Verluste gehen schneller als Gewinne
+        self.subscription_subscribers += diff * growth_rate
+        
+        if self.subscription_subscribers < 0:
+            self.subscription_subscribers = 0
+
     def _on_new_week(self):
         """Logik die jede Woche passiert (Gehalt, Zufallsereignisse)."""
+        # Abo-Dienst aktualisieren
+        self.update_subscription_service()
+
         # Monatsankündigung (alle 4 Wochen = 1 Spielmonat)
         week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
         if (week_in_year - 1) % 4 == 0 and self.week > 1:
@@ -759,24 +822,6 @@ class GameState:
             self.track_expense("salaries", total_salary)
             self.accrued_salaries = 0 # Reset nach Zahlung
         
-        # NEU Phase I: Abo-Service (Game Pass) wöchentliches Update
-        if getattr(self, 'subscription_active', False):
-            weekly_income = (self.subscription_subscribers * self.subscription_price) / 4.0
-            server_costs_weekly = max(5000, self.subscription_subscribers * 0.1) / 4.0
-            
-            self.track_income("subscription", weekly_income)
-            self.track_expense("server_costs", server_costs_weekly)
-            
-            # Hype fällt langsam ab
-            self.subscription_hype = max(0.0, self.subscription_hype - 0.5)
-            
-            # Abonnenten schwanken basierend auf Hype und Preis
-            # Bei Preis 10€ und Hype 100 -> Target: 100 * 1000 * (20/10) = 200,000 Subs
-            target_subs = (self.subscription_hype * 1000) * (20.0 / max(1.0, self.subscription_price)) * self.subscription_multi
-            diff = target_subs - self.subscription_subscribers
-            self.subscription_subscribers += diff * 0.02
-            if self.subscription_subscribers < 0:
-                self.subscription_subscribers = 0
         
         # NEU Phase H: Erweiterte Mitarbeiter-Logik (Moral, Kündigungen, Gehalt)
         quitting_employees = []
@@ -3332,6 +3377,54 @@ class GameState:
             "income": {k: 0 for k in self.current_week_balance["income"]},
             "expenses": {k: 0 for k in self.current_week_balance["expenses"]}
         }
+
+    def update_subscription_service(self):
+        """Aktualisiert den Abo-Dienst (Abonnenten-Wachstum, Einnahmen, Kosten)."""
+        if not getattr(self, "subscription_active", False):
+            if hasattr(self, "subscription_subscribers"):
+                self.subscription_subscribers = 0
+            return
+
+        # 1. Wachstum berechnen
+        # Basis-Interesse (Hype hilft extrem)
+        growth_base = (self.hype * 50) + 100
+        
+        # Preis-Effekt: 9.99 ist Standard. 
+        price_factor = 1.0
+        if self.subscription_price > 15.0:
+            price_factor = 0.5
+        if self.subscription_price > 20.0:
+            price_factor = -0.05 # Leichter Verlust bei Wucherpreisen
+        if self.subscription_price < 7.0:
+            price_factor = 1.5
+            
+        # Bibliotheks-Effekt (Anzahl der Spiele im Abo)
+        game_count = len(getattr(self, "subscription_games", []))
+        library_factor = 0.5 + (game_count * 0.1) # 5 Spiele = 1.0 (normal)
+        
+        # Zufällige Fluktuation
+        import random
+        drift = random.uniform(0.95, 1.05)
+        
+        # Abonnenten-Änderung (Wachstum oder Schrumpfen)
+        change = int(growth_base * price_factor * library_factor * drift)
+        
+        # Falls keine Spiele im Abo sind, verliert man massiv Leute
+        if game_count == 0:
+            change = -int(self.subscription_subscribers * 0.2) - 50
+            
+        self.subscription_subscribers = max(0, self.subscription_subscribers + change)
+        
+        # 2. Finanzen
+        # Einnahmen (wöchentlich ca. 1/4 des Monatspreises)
+        income = int(self.subscription_subscribers * (self.subscription_price / 4))
+        if income > 0:
+            self.track_income("subscription", income)
+            
+        # Serverkosten (0.05€ pro Abonnent pro Woche + Grundgebühr pro Spiel)
+        server_costs = int(self.subscription_subscribers * 0.05) + (game_count * 200)
+        if server_costs > 0:
+            self.track_expense("server_costs", server_costs)
 
     def get_financial_report(self):
         """Gibt einen Bericht über die Finanzen der letzten Woche aus."""

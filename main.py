@@ -19,7 +19,7 @@ from menus import (
     EngineSelectMenu, RemasterSelectMenu, PublisherMenu, SettingsMenu,
     VolumeSettingsMenu, KeybindingMenu, ExpoMenu, GameNameMenu,
     DevelopmentSliderMenu, DevProgressMenu, ReviewResultMenu,
-    HRMenu, HireMenu, FireMenu, TrainingEmployeeSelectMenu,
+    HRMenu, HireMenu, EmployeeOverviewMenu, FireMenu, TrainingEmployeeSelectMenu,
     TrainingOptionMenu, ResearchMenu, FeatureResearchMenu,
     GenreResearchMenu, TopicResearchMenu, AudienceResearchMenu,
     TechnologyResearchMenu, EngineCreateNameMenu, EngineFeatureSelectMenu,
@@ -67,6 +67,7 @@ def get_menu_factories(audio, state):
         "review_result": lambda: ReviewResultMenu(audio, state),
         "hr_menu": lambda: HRMenu(audio, state),
         "hire_menu": lambda: HireMenu(audio, state),
+        "employee_overview_menu": lambda: EmployeeOverviewMenu(audio, state),
         "fire_menu": lambda: FireMenu(audio, state),
         "training_employee_select": lambda: TrainingEmployeeSelectMenu(audio, state),
         "training_option_select": lambda: TrainingOptionMenu(audio, state),
@@ -252,6 +253,9 @@ def main():
                 elif event.key == pygame.K_f:
                     # Finanzen abfragen
                     audio.speak(state.get_financial_summary())
+                elif event.key == pygame.K_s:
+                    # Status abfragen (RP, Mitarbeiter, Fans)
+                    audio.speak(state.get_status_summary())
                 elif event.key == pygame.K_d and (pygame.key.get_mods() & pygame.KMOD_CTRL) and (pygame.key.get_mods() & pygame.KMOD_SHIFT):
                     # Entwickler-Modus aktivieren/deaktivieren
                     state.developer_mode = not state.developer_mode

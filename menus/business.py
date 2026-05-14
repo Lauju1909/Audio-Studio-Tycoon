@@ -43,7 +43,7 @@ class SubscriptionServiceMenu(Menu):
             self.audio.play_sound("error")
         else:
             if gs.money >= 50000:
-                gs.money -= 50000
+                gs.track_expense("staff", 50000)
                 gs.subscription_active = True
                 gs.subscription_hype = 10.0
                 self.audio.play_sound("cash")
@@ -92,7 +92,7 @@ class EspionageMenu(Menu):
             self.audio.play_sound("error")
             self.audio.speak(gs.get_text('espionage_not_enough_money'))
             return None
-        gs.money -= 200000
+        gs.track_expense("other", 200000)
         if random.random() < 0.3:
             self.audio.play_sound("cheer")
             self.audio.speak(gs.get_text('espionage_steal_success'))
@@ -100,7 +100,7 @@ class EspionageMenu(Menu):
         else:
             self.audio.play_sound("error")
             self.audio.speak(gs.get_text('espionage_steal_caught', penalty=500000))
-            gs.money -= 500000
+            gs.track_expense("other", 500000)
         return "stock_market_menu"
 
     def _sabotage(self, rival_idx):
@@ -110,7 +110,7 @@ class EspionageMenu(Menu):
             self.audio.play_sound("error")
             self.audio.speak(gs.get_text('espionage_not_enough_money'))
             return None
-        gs.money -= 100000
+        gs.track_expense("other", 100000)
         if random.random() < 0.6:
             self.audio.play_sound("cheer")
             self.audio.speak(gs.get_text('espionage_smear_success', name=rival.name))
@@ -166,6 +166,17 @@ class LoanMenu(Menu):
             {'text': self.game_state.get_text('loan_100k'), 'action': lambda: self._take(100000, self.game_state.interest_rate + 0.02)},
             {'text': self.game_state.get_text('back'), 'action': lambda: "bank_menu"}
         ]
+
+    def _take(self, amount, rate):
+        from models import BankLoan
+        if self.game_state.bank_loan:
+            self.audio.play_sound("error")
+            self.audio.speak(self.game_state.get_text('loan_already_active'))
+            return None
+        self.game_state.bank_loan = BankLoan(amount, rate, 52) # 1 Jahr Laufzeit
+        self.game_state.track_income("other", amount)
+        self.audio.play_sound("confirm")
+        return "game_menu"
 
 class DonationMenu(Menu):
     def __init__(self, audio, game_state):
@@ -285,17 +296,6 @@ class GiftCardCodeInput(TextInputMenu):
         webbrowser.open(mailto_url)
         
         return "current_monetization_menu"
-
-    def _take(self, amount, rate):
-        from models import BankLoan
-        if self.game_state.bank_loan:
-            self.audio.play_sound("error")
-            self.audio.speak(self.game_state.get_text('loan_already_active'))
-            return None
-        self.game_state.bank_loan = BankLoan(amount, rate, 52) # 1 Jahr Laufzeit
-        self.game_state.money += amount
-        self.audio.play_sound("confirm")
-        return "game_menu"
 
 class StockMarketMenu(Menu):
     def __init__(self, audio, game_state):
@@ -740,7 +740,7 @@ class MerchAmountMenu(TextInputMenu):
                 self.audio.speak(self.game_state.get_text('merch_fail_storage', storage=f"{self.game_state.storage_capacity - self.game_state.used_storage:,}"))
                 return None
                  
-            self.game_state.money -= total_cost
+            self.game_state.track_expense("merch", total_cost)
             self.game_state.used_storage += amount
             
             found = False
@@ -800,7 +800,7 @@ class ESportsMenu(Menu):
              self.audio.speak(self.game_state.get_text('esports_fail_sales', sales=t['min_game_sales']))
              return None
              
-        self.game_state.money -= t['cost']
+        self.game_state.track_expense("marketing", t['cost'])
         self.game_state.hype = min(250, self.game_state.hype + t['hype_bonus'])
         self.game_state.fans += t['fan_bonus']
         
@@ -845,7 +845,7 @@ class AcquisitionMenu(Menu):
             self.audio.speak(self.game_state.get_text('acquisition_fail_money', cost=cost))
             return None
             
-        self.game_state.money -= cost
+        self.game_state.track_expense("other", cost)
         rival.is_owned_by_player = True
         rival.owned_shares = 100
         self.audio.play_sound("confirm")

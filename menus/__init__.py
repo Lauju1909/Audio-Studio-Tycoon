@@ -2,7 +2,7 @@ from .base import Menu, TextInputMenu, SliderMenu
 from .settings import SettingsMenu, KeybindingMenu, VolumeSettingsMenu
 from .system import UpdateConfirmMenu, BankruptcyMenu, SaveMenu, LoadMenu, HelpMenu
 from .office import (
-    HRMenu, HireMenu, FireMenu, TrainingEmployeeSelectMenu, 
+    HRMenu, HireMenu, EmployeeOverviewMenu, FireMenu, TrainingEmployeeSelectMenu, 
     TrainingOptionMenu, OfficeMenu, EmailInboxMenu, EmailDetailMenu
 )
 from .research import (
@@ -32,7 +32,7 @@ from .multiplayer import MultiplayerMainMenu, MultiplayerRoomIdInput, Multiplaye
 __all__ = [
     "Menu", "TextInputMenu", "SliderMenu", "SettingsMenu", "KeybindingMenu",
     "VolumeSettingsMenu", "UpdateConfirmMenu", "BankruptcyMenu", "SaveMenu",
-    "LoadMenu", "HelpMenu", "HRMenu", "HireMenu", "FireMenu",
+    "LoadMenu", "HelpMenu", "HRMenu", "HireMenu", "EmployeeOverviewMenu", "FireMenu",
     "TrainingEmployeeSelectMenu", "TrainingOptionMenu", "OfficeMenu",
     "EmailInboxMenu", "EmailDetailMenu", "ResearchMenu", "FeatureResearchMenu",
     "GenreResearchMenu", "TopicResearchMenu", "AudienceResearchMenu",

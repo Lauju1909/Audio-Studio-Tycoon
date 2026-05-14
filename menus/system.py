@@ -116,6 +116,7 @@ class HelpMenu(Menu):
         t = game_state.get_text
         title = t('help_menu')
         options = [
+            {'text': t('wiki_chapter_tutorial'),   'action': lambda: self._read('wiki_tutorial_text')},
             {'text': t('wiki_chapter_controls'),   'action': lambda: self._read('wiki_controls_text')},
             {'text': t('wiki_chapter_gameplay'),   'action': lambda: self._read('wiki_gameplay_text')},
             {'text': t('wiki_chapter_dev'),        'action': lambda: self._read('wiki_dev_text')},

@@ -98,11 +98,19 @@ class MultiplayerManager:
             "username": self.game_state.company_name
         })
 
-    def sync_game_state(self):
-        """Sendet den aktuellen Spielzustand an andere Spieler."""
+    def sync_data(self, data):
         self.send_message({
             "type": "sync_state",
-            "money": self.game_state.money,
-            "week": self.game_state.week,
-            "hype": self.game_state.hype
+            "data": data
         })
+
+    def disconnect(self):
+        """Trennt die Verbindung zum Server."""
+        if self.websocket and self.is_connected:
+            if self._loop:
+                asyncio.run_coroutine_threadsafe(self.websocket.close(), self._loop)
+            self.is_connected = False
+            self.room_id = None
+            self.players = []
+            self.audio.speak(self.game_state.get_text("online_disconnected", default="Verbindung zum Online-Dienst getrennt."))
+

@@ -450,6 +450,11 @@ class Employee:
         return self.skills.get("Programmierung", 50)
 
     @property
+    def level(self):
+        """Alias für skill_level zur Abwärtskompatibilität."""
+        return self.skill_level
+
+    @property
     def bug_modifier(self):
         """Einfluss auf die Bug-Rate (basierend auf Design)."""
         # Höheres Design = weniger Bugs

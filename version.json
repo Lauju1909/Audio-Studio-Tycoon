@@ -1,6 +1,6 @@
 {
-    "version": "3.8.0",
+    "version": "3.8.1",
     "channel": "stable",
-    "notes": "v3.8.0: Massive Content-Erweiterung. Über 100 neue Themen, Plattformen und Technologien von 1930 bis 2040+ hinzugefügt.",
+    "notes": "v3.8.1: Finanzielle Transparenz & Wirtschafts-Logik verbessert. Kredit-Bug behoben.",
     "min_launcher_version": "1.0.0"
 }

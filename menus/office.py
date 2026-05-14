@@ -8,6 +8,7 @@ class HRMenu(Menu):
         title = self.game_state.get_text('hr_menu')
         options = [
             {'text': self.game_state.get_text('hire_employee'), 'action': lambda: "hire_menu"},
+            {'text': self.game_state.get_text('menu_employee_overview'), 'action': lambda: "employee_overview_menu"},
             {'text': self.game_state.get_text('fire_employee'), 'action': lambda: "fire_menu"},
             {'text': self.game_state.get_text('training_employee'), 'action': lambda: "training_employee_select"},
             {'text': self.game_state.get_text('menu_teambuilding'), 'action': lambda: "teambuilding_menu"},
@@ -77,6 +78,35 @@ class FireMenu(Menu):
                 self.audio.play_sound("confirm")
                 self.audio.speak(self.game_state.get_text('fire_success', name=name, money=self.game_state.money))
         return "hr_menu"
+
+class EmployeeOverviewMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(self.game_state.get_text('menu_employee_overview'), [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        self.options = []
+        for emp in self.game_state.employees:
+            role_name = self.game_state.get_text(emp.role)
+            status = ""
+            if getattr(emp, 'is_training', False):
+                status = self.game_state.get_text('training_status_tag', weeks=emp.training_weeks_left)
+            elif getattr(emp, 'is_sick', False):
+                status = self.game_state.get_text('sick_status_tag', weeks=emp.sick_weeks_left)
+            else:
+                status = "OK"
+
+            txt = self.game_state.get_text('employee_detail_summary',
+                                          name=emp.name,
+                                          role=role_name,
+                                          level=emp.skill_level,
+                                          salary=emp.salary,
+                                          morale=int(emp.morale),
+                                          status=status)
+            self.options.append({'text': txt, 'action': None})
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "hr_menu"})
 
 class TrainingEmployeeSelectMenu(Menu):
     def __init__(self, audio, game_state):
@@ -182,6 +212,7 @@ class OfficeMenu(Menu):
             txt = f"{self.game_state.get_text('upgrade_office')}: {next_office['name']} ({next_office['cost']} EUR)"
             self.options.append({'text': txt, 'action': self._upgrade})
         
+        self.options.append({'text': self.game_state.get_text('hr_menu'), 'action': lambda: "hr_menu"})
         self.options.append({'text': self.game_state.get_text('office_upgrades_menu_title'), 'action': lambda: "office_upgrades_menu"})
         self.options.append({'text': self.game_state.get_text('menu_build_office'), 'action': lambda: "build_menu"})
         self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
@@ -192,7 +223,7 @@ class OfficeMenu(Menu):
             return None
         next_office = OFFICE_LEVELS[self.game_state.office_level + 1]
         if self.game_state.money >= next_office['cost']:
-            self.game_state.money -= next_office['cost']
+            self.game_state.track_expense("office", next_office['cost'])
             self.game_state.office_level += 1
             self.audio.play_sound("confirm")
             self.audio.speak(self.game_state.get_text('office_upgrade_success', name=next_office['name'], max_emp=self.game_state.get_max_employees()))
@@ -399,7 +430,7 @@ class OfficeUpgradeMenu(Menu):
 
     def _buy_upgrade(self, upgrade):
         if self.game_state.money >= upgrade['cost']:
-            self.game_state.money -= upgrade['cost']
+            self.game_state.track_expense("office", upgrade['cost'])
             if not hasattr(self.game_state, 'office_objects'):
                 self.game_state.office_objects = []
             self.game_state.office_objects.append({'bonus': upgrade['bonus']})

@@ -1,3 +1,4 @@
+import time
 from .base import Menu, TextInputMenu
 
 class MultiplayerMainMenu(Menu):
@@ -5,6 +6,10 @@ class MultiplayerMainMenu(Menu):
         if not getattr(game_state, 'multiplayer', None):
             from multiplayer import MultiplayerManager
             game_state.multiplayer = MultiplayerManager(audio, game_state)
+        # Sorge für sauberen Start
+        if hasattr(game_state.multiplayer, 'disconnect'):
+            game_state.multiplayer.disconnect()
+        
         self.audio = audio
         self.game_state = game_state
         t = game_state.get_text
@@ -77,9 +82,13 @@ class MultiplayerLobbyMenu(Menu):
         return "game_menu"
 
     def _leave(self):
-        # TODO: WebSocket schließen
+        if hasattr(self.game_state, 'multiplayer'):
+            self.game_state.multiplayer.disconnect()
         return "multiplayer_main"
 
     def update(self):
-        # Lobby-Liste regelmäßig aktualisieren (einfache Lösung für Demo)
-        pass
+        # Lobby-Liste regelmäßig aktualisieren
+        now = time.time()
+        if not hasattr(self, "_last_refresh") or now - self._last_refresh > 1.0:
+            self._update_options()
+            self._last_refresh = now

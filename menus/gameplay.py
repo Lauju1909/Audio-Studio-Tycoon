@@ -436,7 +436,7 @@ class DeveloperMenu(Menu):
         ]
 
     def _add_money(self):
-        self.game_state.money += 1000000
+        self.game_state.track_income("other", 1000000)
         self.audio.play_sound("cash")
         return None
 
@@ -894,7 +894,7 @@ class ExpoMenu(Menu):
         self.base_hype = max(0, self.base_hype - 10)
 
     def _finish_expo(self):
-        self.game_state.money -= self.cost
+        self.game_state.track_expense("marketing", self.cost)
         self.game_state.hype += self.base_hype
         self.audio.play_sound("cheer")
         self.audio.speak(self.game_state.get_text('expo_finished', cost=self.cost, hype=self.base_hype))
