@@ -32,7 +32,7 @@ class Menu:
         gs = self.game_state
         if not self.options:
             if event.key in [gs.key_up, gs.key_down, gs.key_confirm, gs.key_back, gs.key_home, gs.key_end, pygame.K_LEFT, pygame.K_RIGHT]:
-                self.audio.play_sound("error")
+                self.audio.play_sound("bump")
             return None
             
         if event.key == gs.key_up:
@@ -41,28 +41,28 @@ class Menu:
                 self.audio.play_sound("click")
                 self.speak_current()
             else:
-                self.audio.play_sound("error")
+                self.audio.play_sound("bump")
         elif event.key == gs.key_down:
             if self.current_index < len(self.options) - 1:
                 self.current_index += 1
                 self.audio.play_sound("click")
                 self.speak_current()
             else:
-                self.audio.play_sound("error")
+                self.audio.play_sound("bump")
         elif event.key == gs.key_home:
             if self.current_index > 0:
                 self.current_index = 0
                 self.audio.play_sound("click")
                 self.speak_current()
             else:
-                self.audio.play_sound("error")
+                self.audio.play_sound("bump")
         elif event.key == gs.key_end:
             if self.current_index < len(self.options) - 1:
                 self.current_index = len(self.options) - 1
                 self.audio.play_sound("click")
                 self.speak_current()
             else:
-                self.audio.play_sound("error")
+                self.audio.play_sound("bump")
         elif event.key == gs.key_back or event.key == pygame.K_LEFT:
             back_action = None
             for opt in self.options:
@@ -203,25 +203,25 @@ class SliderMenu:
                 self.current_index -= 1
                 self._speak_current()
             else:
-                self.audio.play_sound("error")
+                self.audio.play_sound("bump")
         elif event.key == gs.key_down:
             if self.current_index < len(self.slider_names) - 1:
                 self.current_index += 1
                 self._speak_current()
             else:
-                self.audio.play_sound("error")
+                self.audio.play_sound("bump")
         elif event.key == gs.key_home:
             if self.current_index > 0:
                 self.current_index = 0
                 self._speak_current()
             else:
-                self.audio.play_sound("error")
+                self.audio.play_sound("bump")
         elif event.key == gs.key_end:
             if self.current_index < len(self.slider_names) - 1:
                 self.current_index = len(self.slider_names) - 1
                 self._speak_current()
             else:
-                self.audio.play_sound("error")
+                self.audio.play_sound("bump")
         elif event.key == pygame.K_RIGHT:
             name = self.slider_names[self.current_index]
             if self.values[name] < 10 and self.remaining > 0:
@@ -229,10 +229,10 @@ class SliderMenu:
                 self.audio.play_sound("click")
                 self._speak_current()
             elif self.remaining <= 0:
-                self.audio.play_sound("error")
+                self.audio.play_sound("bump")
                 self.audio.speak(self.game_state.get_text('slider_no_points'))
             else:
-                self.audio.play_sound("error")
+                self.audio.play_sound("bump")
                 self.audio.speak(self.game_state.get_text('slider_max'))
         elif event.key == pygame.K_LEFT:
             name = self.slider_names[self.current_index]
@@ -241,7 +241,7 @@ class SliderMenu:
                 self.audio.play_sound("click")
                 self._speak_current()
             else:
-                self.audio.play_sound("error")
+                self.audio.play_sound("bump")
                 self.audio.speak(self.game_state.get_text('slider_min'))
         elif event.key == gs.key_confirm:
             if self.remaining > 0:

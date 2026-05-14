@@ -1352,18 +1352,20 @@ class GameState:
     def calculate_hype(self, project):
         """Berechnet den Hype für ein Spiel basierend auf Marketing, Lizenzen und Events."""
         hype = 0
-        # Marketing
-        m = project.marketing
-        if m == 'small':
-            hype += 10
-        elif m == 'medium':
-            hype += 25
-        elif m == 'large':
-            hype += 50
-        elif m == 'viral':
-            hype += 75
-        elif m == 'publisher_deal':
+        # Marketing - Jetzt dynamisch aus game_data.py
+        from game_data import MARKETING_OPTIONS_PH5
+        m_option = next((m for m in MARKETING_OPTIONS_PH5 if m["name"] == project.marketing), None)
+        
+        if m_option:
+            hype += m_option.get("hype", 0)
+        elif project.marketing == 'publisher_deal':
             hype += 40
+        elif project.marketing == 'small': # Legacy Support
+            hype += 10
+        elif project.marketing == 'medium':
+            hype += 25
+        elif project.marketing == 'large':
+            hype += 50
             
         # Marketing-Effizienz anwenden
         hype *= self.marketing_efficiency
@@ -2432,10 +2434,10 @@ class GameState:
 
         project.review = self.calculate_review(project, bugs=bugs)
         
-        # Hype-Bonus für Verkäufe
+        # Hype-Bonus berechnen und anwenden
+        self.hype += self.calculate_hype(project)
         hype_multi = 1.0 + (self.hype / 100.0)
         project.sales = int(self.calculate_sales(project) * hype_multi)
-        self.hype = 0 # Hype wird beim Release verbraucht
 
         price = AUDIENCE_PRICE.get(project.audience, 30)
         total_revenue = int(project.sales * price * self.profit_multiplier)
@@ -2500,6 +2502,9 @@ class GameState:
             initial_players = int((project.review.average * 10000) * (1 + self.hype * 0.05))
             mmo = ActiveMMO(game_project=project, initial_players=initial_players)
             self.active_mmos.append(mmo)
+        
+        # Hype wird erst JETZT verbraucht, damit MMOs den Bonus noch mitnehmen
+        self.hype = 0
         # IP-Rating berechnen (0-100 basierend auf Review)
         if project.review:
             avg = project.review.average
