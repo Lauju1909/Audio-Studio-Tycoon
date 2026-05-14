@@ -1,4 +1,4 @@
-# Audio Studio Tycoon (v3.8.1)
+# Audio Studio Tycoon (v3.8.1) 🚀
 
 > [!IMPORTANT]
 > **100% Screenreader-optimiert!** Dieses Spiel wurde von Grund auf für blinde und sehbehinderte Spieler entwickelt. Es nutzt modernste TTS-Technologie (Tolk) für eine nahtlose Spielerfahrung.
@@ -29,6 +29,9 @@ Das Spiel wird komplett über die Tastatur gesteuert:
 - **Verbesserte Finanzbuchhaltung**: Detaillierte Kategorisierung von Ausgaben (Anteile, Steuern, Kredite) für maximale Transparenz.
 - **Unifiziertes Tracking**: Alle Geldflüsse laufen nun über ein zentrales System, was die Fehleranfälligkeit reduziert.
 - **Vorbereitet für Cloud-Services**: Neue Kategorien für Server- und Abo-Kosten integriert.
+- **Sprach-Synchronisation**: Deutsche und Englische Übersetzungen sind nun zu 100% synchronisiert.
+- **UTF-8 Migration**: Vollständige Unterstützung von Sonderzeichen und Emojis durch Umstellung auf UTF-8 Kodierung.
+- **Mitarbeiter-Übersicht**: Neuer Menüpunkt zur detaillierten Ansicht von Gehalt, Level und Status deiner Angestellten.
 | **Leertaste / 0** | Zeit pausieren |
 | **1, 2, 3** | Spielgeschwindigkeit (Normal, Schnell, Ultra) |
 | **C** | Crunch-Modus (während der Entwicklung) |
