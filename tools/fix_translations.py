@@ -1,85 +1,34 @@
-#!/usr/bin/env python3
-"""
-Bereinige doppelte Keys in translations.py.
-Entfernt alle frueheren Vorkommen eines Keys und behaelt nur das letzte.
-"""
+"""Behebt den Zeilenumbruch-Bug in translations.py."""
 
-import re
-import os
-
-game_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-filepath = os.path.join(game_dir, "translations.py")
-
-with open(filepath, "r", encoding="utf-8") as f:
+with open("translations.py", "r", encoding="utf-8") as f:
     content = f.read()
 
-lines = content.split('\n')
+# Ersetze das fehlerhafte multiline body_new_month (de)
+bad_de = '"body_new_month": "Ein neuer Monat hat begonnen: {date}.\n\nAktuelles Kapital: {money:,.0f} EUR\nFans: {fans:,.0f}"'
+good_de = '"body_new_month": "Ein neuer Monat hat begonnen: {date}. Aktuelles Kapital: {money:,.0f} EUR. Fans: {fans:,.0f}"'
 
-# Finde den Start jedes Sprach-Blocks
-lang_blocks = {}
-current_lang = None
-current_start = None
-brace_depth = 0
-in_translations = False
+bad_en = '"body_new_month": "A new month has begun: {date}.\n\nCurrent capital: {money:,.0f} EUR\nFans: {fans:,.0f}"'
+good_en = '"body_new_month": "A new month has begun: {date}. Current capital: {money:,.0f} EUR. Fans: {fans:,.0f}"'
 
-for i, line in enumerate(lines):
-    if "TRANSLATIONS = {" in line:
-        in_translations = True
-        continue
-    
-    if in_translations:
-        # Erkenne Sprach-Start
-        m = re.match(r"\s+'(\w+)'\s*:\s*\{", line)
-        if m and brace_depth == 0:
-            current_lang = m.group(1)
-            current_start = i
-            brace_depth = 1
-            lang_blocks[current_lang] = {"start": i, "end": None, "lines": []}
-            continue
-        
-        if current_lang:
-            brace_depth += line.count('{') - line.count('}')
-            lang_blocks[current_lang]["lines"].append((i, line))
-            if brace_depth <= 0:
-                lang_blocks[current_lang]["end"] = i
-                current_lang = None
-                brace_depth = 0
+content = content.replace(bad_de, good_de)
+content = content.replace(bad_en, good_en)
 
-# Fuer jeden Sprach-Block: Finde und entferne doppelte Keys
-total_removed = 0
-lines_to_remove = set()
+# Ersetze auch das fehlerhafte "subject_monthly_statement" mit dem falschen Zeichen
+import re
+# Fix das Dash-Zeichen-Problem
+content = content.replace('"Ihr Kontoauszug \x00e2\x00 80\x00 93 {date}"', '"Ihr Kontoauszug - {date}"')
+# Allgemeiner Fix: seltsame Zeichen im subject_monthly_statement
+content = re.sub(
+    r'"subject_monthly_statement":\s*"Ihr Kontoauszug[^"]*\{date\}"',
+    '"subject_monthly_statement": "Ihr Kontoauszug - {date}"',
+    content
+)
+content = re.sub(
+    r'"subject_monthly_statement":\s*"Your Bank Statement[^"]*\{date\}"',
+    '"subject_monthly_statement": "Your Bank Statement - {date}"',
+    content
+)
 
-for lang, block in lang_blocks.items():
-    key_last_occurrence = {}  # key -> line_index
-    key_first_occurrence = {}  # key -> line_index
-    
-    for line_idx, line_content in block["lines"]:
-        # Matche Key-Definition: 'key_name': "..."  oder 'key_name': f"..." etc
-        m = re.match(r"\s+'([^']+)'\s*:", line_content)
-        if m:
-            key = m.group(1)
-            if key in key_last_occurrence:
-                # Doppelter Key! Merke die erste Zeile zum Loeschen
-                lines_to_remove.add(key_first_occurrence[key])
-                total_removed += 1
-                print(f"  [{lang}] Doppelter Key '{key}': Zeile {key_first_occurrence[key]+1} entfernt (behalte Zeile {line_idx+1})")
-            key_first_occurrence[key] = key_last_occurrence.get(key, line_idx)
-            key_last_occurrence[key] = line_idx
-
-print(f"\nInsgesamt {total_removed} doppelte Zeilen gefunden.")
-
-if total_removed > 0:
-    # Neue Datei schreiben ohne die doppelten Zeilen
-    new_lines = []
-    for i, line in enumerate(lines):
-        if i not in lines_to_remove:
-            new_lines.append(line)
-    
-    new_content = '\n'.join(new_lines)
-    
-    with open(filepath, "w", encoding="utf-8") as f:
-        f.write(new_content)
-    
-    print(f"\n{total_removed} doppelte Zeilen entfernt und Datei gespeichert!")
-else:
-    print("Keine doppelten Zeilen gefunden.")
+with open("translations.py", "w", encoding="utf-8") as f:
+    f.write(content)
+print("Done!")
