@@ -127,13 +127,14 @@ class GameState:
         self.bank_loan = None
         self.financial_history = []
         self.current_week_balance = {
-            "income": {"sales": 0, "mmo": 0, "merch": 0, "publishing": 0, "other": 0},
-            "expenses": {"salaries": 0, "rent": 0, "marketing": 0, "research": 0, "production": 0, "training": 0, "other": 0}
+            "income": {"sales": 0, "mmo": 0, "merch": 0, "publishing": 0, "shares": 0, "other": 0},
+            "expenses": {"salaries": 0, "rent": 0, "marketing": 0, "research": 0, "production": 0, "training": 0, "loan_repayment": 0, "shares": 0, "taxes": 0, "subscription": 0, "server_costs": 0, "other": 0}
         }
         self.accounting = {"income": 0, "expenses": 0, "loan_paid": 0}
         self.rivals = [] # Wird später via _init_rivals gefüllt
         self.bought_platforms = ["PC (MS-DOS)"]
         self.active_platforms = []
+        self.unlocked_platforms = [] # Manuell freigeschaltete Plattformen (via Events)
         self.last_goty_year = 0
         self.goty_history = {}
         
@@ -259,9 +260,19 @@ class GameState:
         self.active_platforms = [p['name'] for p in get_available_platforms(1)]
 
     def get_market_platforms(self):
-        from game_data import get_available_platforms
+        from game_data import get_available_platforms, PLATFORMS
         base = get_available_platforms(self.week)
         out = list(base)
+        
+        # Manuell freigeschaltete Plattformen hinzufügen (falls noch nicht drin)
+        base_names = [p['name'] for p in base]
+        for p_name in getattr(self, "unlocked_platforms", []):
+            if p_name not in base_names:
+                # Suche die Plattform-Daten in der Master-Liste
+                p_data = next((p for p in PLATFORMS if p['name'] == p_name), None)
+                if p_data:
+                    out.append(p_data)
+
         for cc in getattr(self, "custom_consoles", []):
             if self.week >= cc.release_week:
                 # Für spielereigene Konsole zahlt man 0 Lizenzgebühr
@@ -387,10 +398,14 @@ class GameState:
 
             # Effekt anwenden
             if effect_type == "money":
-                self.money += val
-                self.accounting["income" if val > 0 else "expenses"] += abs(val)
+                if val > 0: self.track_income("other", val)
+                else: self.track_expense("other", abs(val))
             elif effect_type == "money_multi":
-                self.money *= val
+                diff = self.money * (val - 1)
+                if diff > 0:
+                    self.track_income("other", diff)
+                elif diff < 0:
+                    self.track_expense("other", abs(diff))
             elif effect_type == "fans":
                 self.fans += val
             elif effect_type == "hype":
@@ -438,8 +453,24 @@ class GameState:
                 if val not in self.unlocked_technologies:
                     self.unlocked_technologies.append(val)
             elif effect_type == "unlock_platform":
-                # Hier würde man eine neue Plattform in game_data verfügbar machen
-                pass
+                from game_data import PLATFORMS
+                p_name_part = str(event.get("value", ""))
+                # Finde die Plattform, die den Namen enthält
+                for p in PLATFORMS:
+                    if p_name_part.lower() in p["name"].lower():
+                        if p["name"] not in self.unlocked_platforms:
+                            self.unlocked_platforms.append(p["name"])
+                            # Benachrichtigung via Email
+                            self.emails.insert(0, Email(
+                                sender=self.get_text('sender_historical'),
+                                subject=self.get_text('subject_platform_unlocked', name=p["name"]),
+                                body=self.get_text('body_platform_unlocked', name=p["name"]),
+                                date_week=self.week
+                            ))
+                            if hasattr(self, 'audio'):
+                                self.audio.play_sound('confirm')
+                                self.audio.speak(self.get_text('announce_platform_unlocked', name=p["name"]), interrupt=False)
+                        break
             elif effect_type == "game_end":
                 self.game_over = True
                 self.game_over_reason = "historical_end"
@@ -515,7 +546,8 @@ class GameState:
                 "ready_to_finish": False,
                 "event_count": 0,
                 "aaa_event_done": False,
-                "co_dev": getattr(self, "co_dev_partner", None)
+                "co_dev": getattr(self, "co_dev_partner", None),
+                "publisher": self.current_draft.get("publisher")
             }
             self.active_projects.append(new_active)
             self.reset_draft()
@@ -595,7 +627,7 @@ class GameState:
         if self.money < amount * cost_per_unit:
             return False
             
-        self.money -= amount * cost_per_unit
+        self.track_expense("merch", amount * cost_per_unit)
         self.track_expense("production", amount * cost_per_unit)
         
         job = ManufacturingJob(game_name, amount, cost_per_unit, weeks)
@@ -732,10 +764,8 @@ class GameState:
             weekly_income = (self.subscription_subscribers * self.subscription_price) / 4.0
             server_costs_weekly = max(5000, self.subscription_subscribers * 0.1) / 4.0
             
-            self.money += weekly_income
-            self.money -= server_costs_weekly
-            self.accounting["income"] += weekly_income
-            self.accounting["expenses"] += server_costs_weekly
+            self.track_income("subscription", weekly_income)
+            self.track_expense("server_costs", server_costs_weekly)
             
             # Hype fällt langsam ab
             self.subscription_hype = max(0.0, self.subscription_hype - 0.5)
@@ -844,12 +874,12 @@ class GameState:
         
         # Kreditabzahlung
         if getattr(self, "bank_loan", None):
-            payment = self.bank_loan.weekly_payment
-            self.money -= payment
+            payment = min(self.bank_loan.weekly_payment, self.bank_loan.amount_remaining)
+            self.track_expense("loan_repayment", payment)
             self.accounting["loan_paid"] += payment
             self.bank_loan.amount_remaining -= payment
             self.bank_loan.weeks_remaining -= 1
-            if self.bank_loan.weeks_remaining <= 0 or self.bank_loan.amount_remaining <= 0:
+            if self.bank_loan.amount_remaining <= 0 or self.bank_loan.weeks_remaining <= 0:
                 self.bank_loan = None
                 self.emails.insert(0, Email(
                     sender=self.get_text('sender_bank'),
@@ -997,6 +1027,8 @@ class GameState:
             if ap.get("co_dev"):
                 boost *= 1.8 # Fast doppelte Geschwindigkeit
             
+            boost *= self.dev_speed_multiplier
+            
             ap["progress"] += boost
             
             if ap.get("crunch"):
@@ -1135,14 +1167,10 @@ class GameState:
                 digital_rev = digital_sold * price
                 
                 g.sales += new_sales
-                total_rev = digital_rev + physical_rev
+                total_rev = int((digital_rev + physical_rev) * self.profit_multiplier)
                 g.revenue += total_rev
                 
-                if hasattr(self, "track_income"):
-                    self.track_income("sales", total_rev)
-                else:
-                    self.money += total_rev
-                    self.accounting["income"] += total_rev
+                self.track_income("sales", total_rev)
 
                 # Optional: Addons pushen die Verkäufe
                 for addon in self.active_addons:
@@ -1158,21 +1186,19 @@ class GameState:
             if base_game and base_game.is_active:
                 sales = int(base_game.sales * 0.05 / (1 + (self.week - addon.week_developed) * 0.1))
                 if sales > 0:
-                    revenue = sales * 15
+                    revenue = int(sales * 15 * self.profit_multiplier)
                     addon.sales += sales
                     addon.revenue += revenue
-                    self.money += revenue
-                    self.accounting["income"] += revenue
+                    self.track_income("sales", revenue)
 
         # Einnahmen durch Bundles
         for bundle in self.active_bundles:
             from game_data import BUNDLE_DATA
             sales = max(10, int(500 * (bundle.average_score / 10) * BUNDLE_DATA["revenue_mod"]))
-            revenue = sales * bundle.base_price
+            revenue = int(sales * bundle.base_price * self.profit_multiplier)
             bundle.sales += sales
             bundle.revenue += revenue
-            self.money += revenue
-            self.accounting["income"] += revenue
+            self.track_income("sales", revenue)
 
         # Lizenzen verwalten
         licenses_to_remove = []
@@ -1199,9 +1225,10 @@ class GameState:
         for mmo in self.active_mmos:
             if mmo.game.is_active:
                 mmo.weeks_active += 1
-                self.money += mmo.weekly_revenue
-                self.money -= mmo.weekly_cost
-                mmo.game.revenue += mmo.weekly_revenue
+                rev = int(mmo.weekly_revenue * self.profit_multiplier)
+                self.track_income("mmo", rev)
+                self.track_expense("mmo", mmo.weekly_cost)
+                mmo.game.revenue += rev
                 
                 if server_overloaded:
                     mmo.players = int(mmo.players * 0.85)
@@ -1226,8 +1253,7 @@ class GameState:
         # Lagerkosten
         if self.used_storage > 0:
             storage_cost = int(self.used_storage * 0.1)
-            self.money -= storage_cost
-            self.accounting["expenses"] += storage_cost
+            self.track_expense("other", storage_cost)
 
         # Merchandising
         for merch in self.active_merch:
@@ -1235,9 +1261,8 @@ class GameState:
                 sales = int(random.randint(5, 40) * merch["hype_multi"] * (1 + self.hype / 100))
                 sales = min(sales, merch["stock"])
                 if sales > 0:
-                    rev = sales * merch["sell_price"]
-                    self.money += rev
-                    self.accounting["income"] += rev
+                    rev = int(sales * merch["sell_price"] * self.profit_multiplier)
+                    self.track_income("merch", rev)
                     merch["stock"] -= sales
                     merch["sales"] += sales
                     merch["revenue"] += rev
@@ -1262,11 +1287,10 @@ class GameState:
                 base_sales = published_game.quality * 1000
                 sales_this_week = int(base_sales / (1 + published_game.weeks_on_market * 0.1))
                 published_game.total_sales += sales_this_week
-                gross_revenue = sales_this_week * 30
+                gross_revenue = int(sales_this_week * 30 * self.profit_multiplier)
                 player_cut = int(gross_revenue * published_game.player_share)
                 our_cut = gross_revenue - player_cut
-                self.money += our_cut
-                self.accounting["income"] += our_cut
+                self.track_income("sales", our_cut)
                 published_game.total_revenue += gross_revenue
                 published_game.player_profit += player_cut
                 if sales_this_week < 50 or published_game.weeks_on_market > 30:
@@ -1356,8 +1380,7 @@ class GameState:
                 if getattr(rival, 'is_owned_by_player', False):
                     # 100% Einnahmen!
                     income = int(r_game.score * 100000)
-                    self.money += income
-                    self.accounting["income"] += income
+                    self.track_income("other", income)
                     self.emails.append(Email(
                         sender=self.get_text('sender_bank'),
                         subject=self.get_text('subject_studio_income'),
@@ -1366,8 +1389,7 @@ class GameState:
                     ))
                 elif getattr(rival, 'owned_shares', 0) > 0:
                     dividend = int((r_game.score * 10000) * (rival.owned_shares / 100))
-                    self.money += dividend
-                    self.accounting["income"] += dividend
+                    self.track_income("other", dividend)
                     self.emails.append(Email(
                         sender=self.get_text('sender_bank'),
                         subject=self.get_text('subject_dividend'),
@@ -1488,7 +1510,7 @@ class GameState:
                 self.audio.play_sound('error')
             return False
             
-        self.money -= hire_cost
+        self.track_expense("staff", hire_cost)
         if hasattr(self, 'audio'):
             self.audio.play_sound('buy')
             self.audio.speak(self.get_text('employee_hired', name=employee.name), interrupt=True)
@@ -1565,7 +1587,7 @@ class GameState:
         cost = 20000
         if self.money < cost:
             return False
-        self.money -= cost
+        self.track_expense("production", cost)
         game.dlc_count += 1
         game.is_active = True # Bringt Spiel zurück in die Charts
         game.weeks_on_market = max(0, game.weeks_on_market - 5)
@@ -1578,7 +1600,7 @@ class GameState:
         cost = 50000
         if self.money < cost:
             return False
-        self.money -= cost
+        self.track_expense("mmo", cost)
         # Füge Spieler hinzu basierend auf Basis-Spielerzahl (z.B. +10% max)
         new_players = int(mmo.game.sales * 0.05)
         mmo.players += new_players
@@ -1864,8 +1886,7 @@ class GameState:
         price = self.get_share_price(rival)
         if self.money < price:
             return False, "no_money"
-        self.money -= price
-        self.accounting["expenses"] += price
+        self.track_expense("shares", price)
         rival.owned_shares += 10
         return True, rival.owned_shares
 
@@ -1878,8 +1899,7 @@ class GameState:
             return False, "no_shares"
         # Verkaufspreis = 80% des aktuellen Kaufpreises
         sell_price = int(self.get_share_price(rival) * 0.8)
-        self.money += sell_price
-        self.accounting["income"] += sell_price
+        self.track_income("shares", sell_price)
         rival.owned_shares -= 10
         return True, rival.owned_shares
 
@@ -1942,7 +1962,7 @@ class GameState:
     def apply_event(self, event):
         """Wendet ein Ereignis an."""
         if event["effect"] == "money":
-            self.money += event["value"]
+            self.track_income("other", event["value"])
         elif event["effect"] == "fans":
             self.fans = max(0, self.fans + event["value"])
         elif event["effect"] == "hype_boost":
@@ -1997,7 +2017,7 @@ class GameState:
             
         cost = license_data["base_cost"]
         if self.money >= cost:
-            self.money -= cost
+            self.track_expense("other", cost)
             self.owned_licenses.append({
                 "name": license_data["name"],
                 "purchased_week": self.week,
@@ -2077,7 +2097,7 @@ class GameState:
         if self.money < cost:
             return None
             
-        self.money -= cost
+        self.track_expense("production", cost)
         addon = AddonProject(
             base_game_name=base_game.name,
             name=f"{base_game.name}: Expansion",
@@ -2122,9 +2142,7 @@ class GameState:
         
         bundle.sales += initial_sales
         bundle.revenue += initial_revenue
-        self.money += initial_revenue
-        if hasattr(self, "accounting"):
-            self.accounting["income"] += initial_revenue
+        self.track_income("sales", initial_revenue)
         
         return {
             'name': bundle.name,
@@ -2189,6 +2207,7 @@ class GameState:
             (engine_quality * 0.10) +
             (0.5 * 0.05)
         )
+        # Schwierigkeits-Standard (steigt über die Jahre)
         base_score *= random_factor * trend_bonus
 
         # Bug-Malus (Massiv wenn viele Bugs)
@@ -2197,7 +2216,7 @@ class GameState:
 
         # Massive Bonus for perfect synergy and slider configuration
         if synergy >= 0.8 and slider_match >= 0.8:
-            base_score += 1.5
+            base_score += 0.15
 
         # Sequel Bonus/Malus (IP-Rating basiert)
         sequel_num = getattr(project, 'sequel_number', 0)
@@ -2364,9 +2383,7 @@ class GameState:
 
         # Kosten und Marketing abziehen
         project.dev_cost = self.calculate_dev_cost(project)
-        self.money -= project.dev_cost
-        if hasattr(self, "accounting"):
-            self.accounting["expenses"] += project.dev_cost
+        self.track_expense("production", project.dev_cost)
 
         project.review = self.calculate_review(project, bugs=bugs)
         
@@ -2376,17 +2393,15 @@ class GameState:
         self.hype = 0 # Hype wird beim Release verbraucht
 
         price = AUDIENCE_PRICE.get(project.audience, 30)
-        total_revenue = project.sales * price
+        total_revenue = int(project.sales * price * self.profit_multiplier)
         
         # Publisher Royalties
-        publisher = self.current_draft.get("publisher") # Draft ist hier eigentlich irrelevant, sollte am Projekt hängen?
-        # In start_development wurde marketing übernommen, aber publisher nicht?
-        # Ich schaue nochmal start_development an.
+        publisher = ap_dict.get("publisher")
         
         if publisher:
             royalty_cut = int(total_revenue * publisher["royalty"])
             project.revenue = total_revenue - royalty_cut
-            self.money += publisher["advance"]
+            self.track_income("publishing", publisher["advance"])
         else:
             if "Digitaler Vertrieb & Logistik" in self.unlocked_technologies:
                 distribution_margin = 0.15 
@@ -2401,9 +2416,7 @@ class GameState:
         if ap_dict.get("co_dev"):
             partner = ap_dict["co_dev"]
             refund = int(project.dev_cost * 0.5)
-            self.money += refund
-            if hasattr(self, "accounting"):
-                self.accounting["income"] += refund
+            self.track_income("other", refund)
             project.revenue = int(project.revenue * 0.5)
             self.emails.insert(0, Email(
                 sender=partner,
@@ -2417,12 +2430,9 @@ class GameState:
             self.active_projects.remove(ap_dict)
             
         # Post-Game Logic
-        self.game_history.append(project)
         self.co_dev_partner = None
 
-        self.money += project.revenue
-        if hasattr(self, "accounting"):
-            self.accounting["income"] += project.revenue
+        self.track_income("sales", project.revenue)
             
         # Fan-Gain durch Spiel und Lizenz
         fan_base_gain = int(project.revenue * 0.005 * (project.review.average / 10))
@@ -2466,7 +2476,7 @@ class GameState:
             return False
         
         emp = self.employees[emp_index]
-        self.money -= train_data["cost"]
+        self.track_expense("staff", train_data["cost"])
         
         if train_data.get("is_specialization"):
             import random
@@ -2500,7 +2510,6 @@ class GameState:
     def donate(self, amount):
         """Spendet einen Betrag an die Community/Wohltätigkeit."""
         if self.money >= amount:
-            self.money -= amount
             self.track_expense("other", amount)
             
             # Fan-Bonus: 1 Fan pro 100 EUR Spende, plus Bonus bei großen Beträgen
@@ -2518,7 +2527,7 @@ class GameState:
         # Cooldown: Nur einmal pro Woche möglich
         if self.week > self.last_ad_week:
             reward = 5000
-            self.money += reward
+            self.track_income("other", reward)
             self.track_income("other", reward)
             self.last_ad_week = self.week
             return True, reward
@@ -2587,6 +2596,7 @@ class GameState:
             "unlocked_technologies": self.unlocked_technologies,
             "bought_platforms": getattr(self, "bought_platforms", []),
             "active_platforms": getattr(self, "active_platforms", []),
+            "unlocked_platforms": getattr(self, "unlocked_platforms", []),
             "rivals": [r.to_dict() for r in getattr(self, "rivals", [])],
             "last_goty_year": getattr(self, "last_goty_year", 0),
             "bank_loan": self.bank_loan.to_dict() if getattr(self, "bank_loan", None) else None,
@@ -2607,7 +2617,7 @@ class GameState:
             "publishing_offers": [o.to_dict() for o in getattr(self, "publishing_offers", [])],
             "published_third_party_games": [g.to_dict() for g in getattr(self, "published_third_party_games", [])],
             "office_items": getattr(self, "office_items", []),
-            "office_objects": [obj.to_dict() for obj in getattr(self, "office_objects", [])],
+            "office_objects": [(obj.to_dict() if hasattr(obj, 'to_dict') else obj) for obj in getattr(self, "office_objects", [])],
             "active_projects": [
                 {
                     "project": ap["project"].to_dict(),
@@ -2778,6 +2788,7 @@ class GameState:
         self.last_goty_year = data.get("last_goty_year", 0)
         self.bought_platforms = data.get("bought_platforms", ["PC (MS-DOS)"])
         self.active_platforms = data.get("active_platforms", [p['name'] for p in get_available_platforms(self.week)])
+        self.unlocked_platforms = data.get("unlocked_platforms", [])
         
         # Finanzen laden
         self.accounting = data.get("accounting", {"income": 0, "expenses": 0, "loan_paid": 0})
@@ -2808,7 +2819,10 @@ class GameState:
         if objects_data:
             from models import OfficeObject
             for od in objects_data:
-                self.office_objects.append(OfficeObject.from_dict(od))
+                if isinstance(od, dict) and "object_type" in od:
+                    self.office_objects.append(OfficeObject.from_dict(od))
+                else:
+                    self.office_objects.append(od)
         
         self.office_grid = [[None for _ in range(10)] for _ in range(10)]
         
@@ -2823,6 +2837,8 @@ class GameState:
         
         # Grid aus office_objects aufbauen
         for obj in self.office_objects:
+            if not hasattr(obj, 'y') or not hasattr(obj, 'x'):
+                continue
             y, x = obj.y, obj.x
             if 0 <= y < len(self.office_grid) and 0 <= x < len(self.office_grid[0]):
                 self.office_grid[y][x] = obj
@@ -2849,7 +2865,7 @@ class GameState:
             if amount > available_storage:
                 return False, "storage_full"
 
-            self.money -= total_cost
+            self.track_expense("production", total_cost)
             self.used_storage += amount
             g.physical_copies = getattr(g, "physical_copies", 0) + amount
             return True, total_cost
@@ -2864,7 +2880,7 @@ class GameState:
         """Baut den ersten Serverraum."""
         cost = 1000000
         if self.money >= cost and getattr(self, "office_level", 0) >= 3 and not getattr(self, "has_server_room", False):
-            self.money -= cost
+            self.track_expense("mmo", cost)
             self.has_server_room = True
             self.server_capacity = 50000
             return True
@@ -2874,7 +2890,7 @@ class GameState:
         """Erweitert Serverkapazität um 50.000 Spieler."""
         cost = 250000
         if self.money >= cost and getattr(self, "has_server_room", False):
-            self.money -= cost
+            self.track_expense("mmo", cost)
             self.server_capacity += 50000
             return True
         return False
@@ -2883,7 +2899,7 @@ class GameState:
         """Veröffentlicht ein Content-Update für ein aktives MMO."""
         if 0 <= active_mmo_idx < len(getattr(self, "active_mmos", [])):
             if self.money >= cost:
-                self.money -= cost
+                self.track_expense("mmo", cost)
                 mmo = self.active_mmos[active_mmo_idx]
                 mmo.players = int(mmo.players * (1 + player_boost))
                 mmo.game.hype = min(100, getattr(mmo.game, "hype", 0) + 20)
@@ -2939,9 +2955,7 @@ class GameState:
         if self.money < offer.marketing_cost:
             return False, "not_enough_money"
             
-        self.money -= offer.marketing_cost
-        if hasattr(self, "accounting"):
-             self.accounting["expenses"] += offer.marketing_cost
+        self.track_expense("marketing", offer.marketing_cost)
              
         game = PublishedThirdPartyGame(offer)
         
@@ -2973,11 +2987,9 @@ class GameState:
         if self.money < cost:
             return False, "no_money"
             
-        self.money -= cost
+        self.track_expense("production", cost)
         self.has_presswerk = True
         self.storage_capacity = 50000 # Startkapazität
-        if hasattr(self, "accounting"):
-            self.accounting["expenses"] += cost
         return True, "success"
 
     def expand_storage(self):
@@ -2988,10 +3000,8 @@ class GameState:
         if self.money < cost:
             return False, "no_money"
             
-        self.money -= cost
+        self.track_expense("production", cost)
         self.storage_capacity += 100000
-        if hasattr(self, "accounting"):
-            self.accounting["expenses"] += cost
         return True, "success"
 
     def produce_copies(self, game_index, amount):
@@ -3014,15 +3024,14 @@ class GameState:
         if self.used_storage + amount > self.storage_capacity:
             return False, "no_storage"
             
-        self.money -= total_cost
+        self.track_expense("production", total_cost)
         game.physical_copies = getattr(game, "physical_copies", 0) + amount
         # Wir setzen den Retail-Preis auf 45 Euro, falls nicht vorhanden
         if not hasattr(game, "physical_price"):
             game.physical_price = 45
             
         self.used_storage += amount
-        if hasattr(self, "accounting"):
-            self.accounting["expenses"] += total_cost
+        return True, "success"
             
         return True, "success"
 
@@ -3033,8 +3042,7 @@ class GameState:
         
         cost = costs.get(action_type, 1000)
         if self.money >= cost:
-            self.money -= cost
-            self.accounting["expenses"] += cost
+            self.track_expense("staff", cost)
             boost = morale_boost.get(action_type, 10)
             for emp in self.employees:
                 emp.morale = min(100, emp.morale + boost)
@@ -3057,8 +3065,7 @@ class GameState:
         if self.money < cost:
             return False, "no_money"
         
-        self.money -= cost
-        self.accounting["expenses"] += cost
+        self.track_expense("staff", cost)
         
         lock_weeks = training_option.get("lock_weeks", 1)
         skill_boost = training_option.get("skill_boost", 0)
@@ -3124,9 +3131,7 @@ class GameState:
             return False, "collision"
             
         # Pay
-        self.money -= cost
-        if hasattr(self, "accounting"):
-            self.accounting["expenses"] += cost
+        self.track_expense("other", cost)
             
         # Place
         item_data = {
@@ -3180,7 +3185,7 @@ class GameState:
         # Refund 50%
         from game_data import BUILD_OBJECTS
         obj_def = BUILD_OBJECTS.get(item.get("type"), {})
-        self.money += obj_def.get("cost", 0) * 0.5
+        self.track_income("other", obj_def.get("cost", 0) * 0.5)
         
         return True
 
@@ -3227,9 +3232,7 @@ class GameState:
                     self.fans += ach["bonus_value"]
                     bonus_str = f"+{ach['bonus_value']:,} Fans"
                 elif ach["bonus_type"] == "money":
-                    self.money += ach["bonus_value"]
-                    if hasattr(self, "accounting"):
-                        self.accounting["income"] += ach["bonus_value"]
+                    self.track_income("other", ach["bonus_value"])
                     bonus_str = f"+{ach['bonus_value']:,} €"
                 elif ach["bonus_type"] == "hype":
                     self.hype = min(250, self.hype + ach["bonus_value"])
@@ -3406,8 +3409,7 @@ class GameState:
         profit = total_income - total_expense
         if profit > 0:
             taxes = int(profit * self.tax_rate)
-            self.money -= taxes
-            self.accrued_expenses["taxes"] = taxes
+            self.track_expense("taxes", taxes)
             
         statement = BankStatement(
             week=self.week,
@@ -3497,7 +3499,6 @@ class GameState:
         if x1 < 0 or y1 < 0 or x2 >= len(self.office_grid) or y2 >= len(self.office_grid[0]):
             return False
             
-        self.money -= cost
         self.track_expense("other", cost)
         
         for x in range(x1, x2 + 1):
@@ -3520,7 +3521,6 @@ class GameState:
         # Nur in Räumen platzierbar? (Optional: Desk nur in 'dev' Raum)
         # room = self.office_grid[x][y]
         
-        self.money -= item_data["cost"]
         self.track_expense("other", item_data["cost"])
         
         new_obj = OfficeObject(item_data["type"], x, y, level=1)
@@ -3532,7 +3532,6 @@ class GameState:
         cost = 50000 * (len(self.office_grid) // 10)
         if self.money < cost: return False
         
-        self.money -= cost
         self.track_expense("other", cost)
         
         new_size = len(self.office_grid) + 5
@@ -3568,5 +3567,21 @@ class GameState:
                                 money=self.money, 
                                 profit=profit, 
                                 fans=self.fans)
+        return summary
+
+    def get_status_summary(self):
+        """Gibt eine Zusammenfassung der Statuswerte (Datum, Geld, Forschungspunkte, Mitarbeiter, Fans) zurück."""
+        # Skill-Punkte der Mitarbeiter summieren (Level)
+        total_level = sum(emp.level for emp in self.employees)
+        cal = self.get_calendar_text()
+        
+        summary = self.get_text('status_summary_hotkey',
+                                date=cal,
+                                money=self.money,
+                                rp=self.research_points,
+                                employees=len(self.employees),
+                                total_level=total_level,
+                                fans=self.fans,
+                                prestige=self.prestige)
         return summary
 
