@@ -92,7 +92,14 @@ class Menu:
         return None
 
     def update(self):
-        pass
+        import translations
+        if getattr(translations, 'TRANSLATIONS_UPDATED', False):
+            translations.TRANSLATIONS_UPDATED = False
+            if hasattr(self, '_update_options'):
+                self._update_options()
+            if getattr(translations, 'PENDING_TRANSLATIONS', 0) == 0:
+                if hasattr(self, 'speak_current'):
+                    self.speak_current(interrupt=True)
 
 class TextInputMenu:
     def __init__(self, title, prompt, audio, game_state, on_confirm, on_cancel):

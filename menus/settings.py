@@ -9,7 +9,6 @@ class SettingsMenu(Menu):
 
     def _update_options(self):
         s = self.game_state.settings
-        lang_name = "Deutsch" if s.get('language', 'de') == 'de' else "English"
         music_status = self.game_state.get_text('on') if s.get('music_enabled', True) else self.game_state.get_text('off')
 
         tts_mode = s.get('tts_engine', 'auto')
@@ -26,10 +25,25 @@ class SettingsMenu(Menu):
         channel = s.get('update_channel', 'stable')
         channel_name = "Stable" if channel == 'stable' else "Beta"
 
+        LANG_NAMES = {
+            'de': 'Deutsch',
+            'en': 'English',
+            'fr': 'Français',
+            'es': 'Español',
+            'tr': 'Türkçe',
+            'zh-CN': '中文',
+            'ru': 'Русский',
+            'pl': 'Polski',
+            'ja': '日本語',
+            'it': 'Italiano'
+        }
+        current_lang = s.get('language', 'de')
+        lang_display = LANG_NAMES.get(current_lang, current_lang)
+
         self.options = [
             {'text': self.game_state.get_text('volume_settings'), 'action': self._goto_volume_settings},
             {'text': f"{self.game_state.get_text('music')}: {music_status}", 'action': self._toggle_music},
-            {'text': f"{self.game_state.get_text('language')}: {self.game_state.get_text('lang_de' if s.get('language', 'de') == 'de' else 'lang_en')}", 'action': self._toggle_language},
+            {'text': f"{self.game_state.get_text('language')}: {lang_display}", 'action': self._toggle_language},
             {'text': f"{self.game_state.get_text('tts_mode')}: {tts_name}", 'action': self._toggle_tts},
             {'text': self.game_state.get_text('auto_update_toggle', status=auto_update_st), 'action': self._toggle_auto_update},
             {'text': f"{self.game_state.get_text('release_channel')}: {channel_name}", 'action': self._toggle_channel},
@@ -137,16 +151,41 @@ class SettingsMenu(Menu):
 
     def _toggle_language(self):
         import translations
+        LANGUAGES = ['de', 'en', 'fr', 'es', 'tr', 'zh-CN', 'ru', 'pl', 'ja', 'it']
+        LANG_NAMES = {
+            'de': 'Deutsch',
+            'en': 'English',
+            'fr': 'Français',
+            'es': 'Español',
+            'tr': 'Türkçe',
+            'zh-CN': '中文',
+            'ru': 'Русский',
+            'pl': 'Polski',
+            'ja': '日本語',
+            'it': 'Italiano'
+        }
+        
         current_lang = self.game_state.settings.get('language', 'de')
-        new_lang = 'en' if current_lang == 'de' else 'de'
+        try:
+            idx = LANGUAGES.index(current_lang)
+        except ValueError:
+            idx = 0
+            
+        new_lang = LANGUAGES[(idx + 1) % len(LANGUAGES)]
         self.game_state.settings['language'] = new_lang
         self.game_state.save_global_settings()
+        
+        lang_display = LANG_NAMES.get(new_lang, new_lang)
+        if new_lang != 'de':
+            self.audio.speak(f"Lade Übersetzungen für {lang_display}...", interrupt=True)
+        else:
+            self.audio.speak(self.game_state.get_text('language') + " " + lang_display, interrupt=True)
+            
         translations.set_language(new_lang)
         
-        lang_display = self.game_state.get_text('lang_de' if new_lang == 'de' else 'lang_en')
-        self.audio.speak(self.game_state.get_text('language') + " " + lang_display)
         self._update_options()
-        self.speak_current(interrupt=False)
+        if new_lang == 'de':
+            self.speak_current(interrupt=False)
 
     def announce_entry(self):
         self.current_index = 0

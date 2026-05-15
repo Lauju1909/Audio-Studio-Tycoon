@@ -29,7 +29,7 @@ Das Spiel wird komplett über die Tastatur gesteuert:
 - **Verbesserte Finanzbuchhaltung**: Detaillierte Kategorisierung von Ausgaben (Anteile, Steuern, Kredite) für maximale Transparenz.
 - **Unifiziertes Tracking**: Alle Geldflüsse laufen nun über ein zentrales System, was die Fehleranfälligkeit reduziert.
 - **Vorbereitet für Cloud-Services**: Neue Kategorien für Server- und Abo-Kosten integriert.
-- **Sprach-Synchronisation**: Deutsche und Englische Übersetzungen sind nun zu 100% synchronisiert.
+- **Sprach-Synchronisation**: Deutsche und Englische Übersetzungen sind nun zu 100% synchronisiert und durch automatisierte Audits verifiziert.
 - **UTF-8 Migration**: Vollständige Unterstützung von Sonderzeichen und Emojis durch Umstellung auf UTF-8 Kodierung.
 - **Mitarbeiter-Übersicht**: Neuer Menüpunkt zur detaillierten Ansicht von Gehalt, Level und Status deiner Angestellten.
 | **Leertaste / 0** | Zeit pausieren |
