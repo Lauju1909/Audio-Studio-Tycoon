@@ -17,7 +17,7 @@ from menus import (
     MainMenu, UpdateConfirmMenu, CompanyNameMenu, GameMenu, TopicMenu,
     GenreMenu, PlatformMenu, AudienceMenu, GameSizeMenu, MarketingMenu,
     EngineSelectMenu, RemasterSelectMenu, PublisherMenu, SettingsMenu,
-    VolumeSettingsMenu, KeybindingMenu, ExpoMenu, GameNameMenu,
+    VolumeSettingsMenu, KeybindingMenu, LanguageMenu, ExpoMenu, GameNameMenu,
     DevelopmentSliderMenu, DevProgressMenu, ReviewResultMenu,
     HRMenu, HireMenu, EmployeeOverviewMenu, FireMenu, TrainingEmployeeSelectMenu,
     TrainingOptionMenu, ResearchMenu, FeatureResearchMenu,
@@ -58,6 +58,7 @@ def get_menu_factories(audio, state):
         "remaster_select": lambda: RemasterSelectMenu(audio, state),
         "publisher_menu": lambda: PublisherMenu(audio, state),
         "settings_menu": lambda: SettingsMenu(audio, state, lambda: "main_menu"),
+        "language_menu": lambda: LanguageMenu(audio, state),
         "volume_settings_menu": lambda: VolumeSettingsMenu(audio, state),
         "keybinding_menu": lambda: KeybindingMenu(audio, state),
         "expo_menu": lambda: ExpoMenu(audio, state),
@@ -155,7 +156,17 @@ def main():
     pygame.key.set_repeat(300, 50)
     # Nutze HWSURFACE, DOUBLEBUF und SCALED für maximale GPU-Beschleunigung und CPU-Effizienz
     screen = pygame.display.set_mode((800, 600), pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.SCALED | pygame.RESIZABLE)
-    pygame.display.set_caption("Audio Studio Tycoon v3.6.1 - Stable")
+    # --- VERSION LADEN ---
+    curr_v_path = "version.json"
+    current_v = "3.8.1"
+    if os.path.exists(curr_v_path):
+        try:
+            with open(curr_v_path, "r", encoding="utf-8") as f_v:
+                current_v = json.load(f_v).get("version", "3.8.1")
+        except:
+            pass
+
+    pygame.display.set_caption(f"Audio Studio Tycoon v{current_v} - Stable")
 
     # --- PERFORMANCE & WOW CACHE ---
     # Fonts einmalig laden (Extrem CPU-schonend)

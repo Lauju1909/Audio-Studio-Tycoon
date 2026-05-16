@@ -84,22 +84,43 @@ def set_language(lang):
 def get_text(text_key, **kwargs):
     """
     Retrieves the translated text for a given key.
-    Prioritizes: CURRENT_LANGUAGE -> English (en) -> German (de) -> Key itself.
+    Prioritizes: CURRENT_LANGUAGE -> Cache -> English (en) -> German (de) -> Key itself.
+    Triggers background translation for missing strings.
     """
+    global PENDING_TRANSLATIONS
+    
     # 1. Try current language static translation
     text = TRANSLATIONS.get(CURRENT_LANGUAGE, {}).get(text_key)
     
-    # 2. If not found and not in English, try English static translation
-    if text is None and CURRENT_LANGUAGE != "en":
-        text = TRANSLATIONS.get("en", {}).get(text_key)
-        
-    # 3. If still not found and not in German, try German static translation
-    if text is None and CURRENT_LANGUAGE != "de":
-        text = TRANSLATIONS.get("de", {}).get(text_key)
-        
-    # 4. If still not found, use the key itself as a base
+    # 2. Try cache
+    cache_key = f"{CURRENT_LANGUAGE}_{text_key}"
+    if text is None and cache_key in _TRANSLATION_CACHE:
+        text = _TRANSLATION_CACHE[cache_key]
+
+    # 3. If still not found, we need a base text to fall back to and translate from
     if text is None:
-        text = text_key
+        base_text = text_key
+        source_lang = "en"
+        
+        if text_key in TRANSLATIONS.get("en", {}):
+            base_text = TRANSLATIONS["en"][text_key]
+            source_lang = "en"
+        elif text_key in TRANSLATIONS.get("de", {}):
+            base_text = TRANSLATIONS["de"][text_key]
+            source_lang = "de"
+            
+        text = base_text
+        
+        # Trigger background translation
+        if cache_key not in _TRANSLATION_CACHE:
+            # Set temporary value to prevent spamming requests
+            _TRANSLATION_CACHE[cache_key] = base_text
+            PENDING_TRANSLATIONS += 1
+            threading.Thread(
+                target=background_translate, 
+                args=(base_text, CURRENT_LANGUAGE, cache_key, source_lang), 
+                daemon=True
+            ).start()
 
     if kwargs:
         try:
@@ -355,7 +376,7 @@ TRANSLATIONS = {
         "body_new_topic": "The world has evolved. The topic '{topic}' is now available for the development of your projects!",
         "body_new_topics_year": "The year {year} brings new topics inspired by the zeitgeist:\n\n{topics}\n\nUse them for your next game!",
         "body_pioneer_times": "The year is 1930. You are a visionary with a big idea: You can teach machines to play and develop games! With modest means in a garage, you start your studio. You are the lead developer and program the first games alone. Later, you can hire staff to handle larger projects! Available topics: Abacus, Mathematics, Chess, and Logistics.",
-        "body_poach_offer": "Hello! {name} was contacted by {rival}. They are offering a salary of {salary:,} EUR/week. If we don't act soon, {name} will leave our studio.",
+        "body_poach_offer": "Hello! {name} was contacted by {rival}. They are offering a salary of {salary:,} EUR/month. If we don't act soon, {name} will leave our studio.",
         "body_quit": "That's it! {name} is leaving the studio with immediate effect due to terrible working conditions and poor morale.",
         "body_research_done": "The research project '{name}' is complete and now available.",
         "body_rival_hit": "The competitor '{name}' has published '{game}'. A masterpiece with {score}/10! The market for {genre} is highly competitive.",
@@ -554,11 +575,11 @@ TRANSLATIONS = {
         "email_inbox_status": "Inbox. {total} emails, {unread} unread.",
         "email_status_new": "[NEW] ",
         "email_title": "Email",
-        "employee_detail": "{name}, {role}, Level {level}. Salary: {salary} EUR per week. Skills: {skills}. Morale: {morale} percent.",
+        "employee_detail": "{name}, {role}, Level {level}. Salary: {salary} EUR per month. Skills: {skills}. Morale: {morale} percent.",
         "employee_detail_summary": "{name} ({role}): Level {level}, Salary {salary:,} EUR, Morale {morale}%. Status: {status}",
         "employee_left_poach": "{name} has left our studio and joined a competitor!",
         "employee_spec": " Specialization: {spec}.",
-        "employee_summary": "{name}, {role}. Level {level}. Salary: {salary} EUR per week. Morale: {morale} percent.",
+        "employee_summary": "{name}, {role}. Level {level}. Salary: {salary} EUR per month. Morale: {morale} percent.",
         "employee_trait": " Trait: {trait}.",
         "employee_trait_desc": " Trait: {trait} - {desc}",
         "empty": "Empty",
@@ -837,7 +858,7 @@ TRANSLATIONS = {
         "hardware_start_dev": "Development of {name} started! Duration: 50 weeks.",
         "hardware_welcome": "Welcome to the Hardware Lab. Develop your own console!",
         "help_menu": "Wiki & Help",
-        "hire_candidate_desc": "{name}, {role}, Level {level}. Salary: {salary} per week.{spec} Hire: {cost:,} EUR",
+        "hire_candidate_desc": "{name}, {role}, Level {level}. Salary: {salary} per month.{spec} Hire: {cost:,} EUR",
         "hire_candidates_available": "3 candidates available.",
         "hire_employee": "Hire employee",
         "hire_fail": "Hiring failed.",
@@ -1732,7 +1753,7 @@ TRANSLATIONS = {
         "body_new_topic": "Die Welt hat sich weiterentwickelt. Das Thema '{topic}' ist nun für die Entwicklung deiner Projekte verfügbar!",
         "body_new_topics_year": "Das Jahr {year} bringt neue Themen, die der Zeitgeist inspiriert:\n\n{topics}\n\nNutze sie für dein nächstes Spiel!",
         "body_pioneer_times": "Das Jahr ist 1930. Du bist ein Visionär mit einer großen Idee: Man kann Maschinen beibringen, Spiele zu spielen und zu entwickeln! Mit bescheidenen Mitteln in einer Garage beginnst du dein Studio. Du bist selbst der Chefentwickler und programmierst die ersten Spiele allein. Später kannst du Personal einstellen, um größere Projekte zu stemmen! Verfügbare Themen: Abakus, Mathematik, Schach und Logistik.",
-        "body_poach_offer": "Hallo! {name} wurde von {rival} kontaktiert. Sie bieten ein Gehalt von {salary:,} EUR/Woche. Wenn wir nicht bald gegensteuern, wird {name} unser Studio verlassen.",
+        "body_poach_offer": "Hallo! {name} wurde von {rival} kontaktiert. Sie bieten ein Gehalt von {salary:,} EUR/Monat. Wenn wir nicht bald gegensteuern, wird {name} unser Studio verlassen.",
         "body_quit": "Das war's! {name} verlässt das Studio mit sofortiger Wirkung aufgrund furchtbarer Arbeitsbedingungen und mangelnder Moral.",
         "body_research_done": "Das Forschungs-Projekt '{name}' ist abgeschlossen und steht nun zur Verfügung.",
         "body_rival_hit": "Die Konkurrenz '{name}' hat '{game}' veröffentlicht. Ein Meisterwerk mit {score}/10! Der Markt für {genre} ist hart umkämpft.",
@@ -1931,11 +1952,11 @@ TRANSLATIONS = {
         "email_inbox_status": "Posteingang. {total} E-Mails, {unread} ungelesen.",
         "email_status_new": "[NEU] ",
         "email_title": "E-Mail",
-        "employee_detail": "{name}, {role}, Level {level}. Gehalt: {salary} Euro pro Woche. Fähigkeiten: {skills}. Moral: {morale} Prozent.",
+        "employee_detail": "{name}, {role}, Level {level}. Gehalt: {salary} Euro pro Monat. Fähigkeiten: {skills}. Moral: {morale} Prozent.",
         "employee_detail_summary": "{name} ({role}): Level {level}, Gehalt {salary:,} EUR, Moral {morale}%. Status: {status}",
         "employee_left_poach": "{name} hat unser Studio verlassen und ist zur Konkurrenz gewechselt!",
         "employee_spec": " Spezialisierung: {spec}.",
-        "employee_summary": "{name}, {role}. Level {level}. Gehalt: {salary} Euro pro Woche. Moral: {morale} Prozent.",
+        "employee_summary": "{name}, {role}. Level {level}. Gehalt: {salary} Euro pro Monat. Moral: {morale} Prozent.",
         "employee_trait": " Eigenschaft: {trait}.",
         "employee_trait_desc": " Eigenschaft: {trait} - {desc}",
         "empty": "Leer",
@@ -2214,7 +2235,7 @@ TRANSLATIONS = {
         "hardware_start_dev": "Entwicklung von {name} gestartet! Dauer: 50 Wochen.",
         "hardware_welcome": "Willkommen im Hardware-Labor. Entwickle deine eigene Konsole!",
         "help_menu": "Wiki & Hilfe",
-        "hire_candidate_desc": "{name}, {role}, Level {level}. Gehalt: {salary} pro Woche.{spec} Einstellung: {cost:,} Euro",
+        "hire_candidate_desc": "{name}, {role}, Level {level}. Gehalt: {salary} pro Monat.{spec} Einstellung: {cost:,} Euro",
         "hire_candidates_available": "3 Bewerber verfügbar.",
         "hire_employee": "Mitarbeiter einstellen",
         "hire_fail": "Einstellung fehlgeschlagen.",

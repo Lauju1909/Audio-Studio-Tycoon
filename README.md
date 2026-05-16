@@ -31,6 +31,7 @@ Das Spiel wird komplett über die Tastatur gesteuert:
 - **Vorbereitet für Cloud-Services**: Neue Kategorien für Server- und Abo-Kosten integriert.
 - **Sprach-Synchronisation**: Deutsche und Englische Übersetzungen sind nun zu 100% synchronisiert und durch automatisierte Audits verifiziert.
 - **UTF-8 Migration**: Vollständige Unterstützung von Sonderzeichen und Emojis durch Umstellung auf UTF-8 Kodierung.
+- **Dynamisches Zeitsystem**: Alle Zeitberechnungen (Kalender, Saisons, Gehälter, Kredite) basieren nun auf einer zentralen Konstante, was zukünftige Anpassungen der Spiellänge vereinfacht.
 - **Mitarbeiter-Übersicht**: Neuer Menüpunkt zur detaillierten Ansicht von Gehalt, Level und Status deiner Angestellten.
 | **Leertaste / 0** | Zeit pausieren |
 | **1, 2, 3** | Spielgeschwindigkeit (Normal, Schnell, Ultra) |

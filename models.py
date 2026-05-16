@@ -425,7 +425,7 @@ class Employee:
         return skills
 
     def _calculate_salary(self):
-        """Wöchentliches Gehalt basierend auf Gesamtskills und Eigenschaft."""
+        """Monatliches Gehalt basierend auf Gesamtskills und Eigenschaft."""
         total_skill = sum(self.skills.values())
         base_salary = total_skill * 5 + 500
         if self.trait and self.trait["effect"] == "salary":

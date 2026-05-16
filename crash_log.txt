@@ -1,0 +1,23 @@
+
+--- CRASH AT 2026-05-15 13:38:49 ---
+Menu: language_menu
+Traceback (most recent call last):
+  File "C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon\main.py", line 286, in main
+    result = current_menu.handle_input(event)
+  File "C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon\menus\settings.py", line 356, in handle_input
+    return super().handle_input(event)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon\menus\base.py", line 49, in handle_input
+    self.speak_current()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon\menus\base.py", line 21, in speak_current
+    self.audio.speak(f"{text}. {pos}", interrupt=interrupt)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon\audio.py", line 372, in speak
+    print(f"[TTS]: {text}")
+    ~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\lauri\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 11-12: character maps to <undefined>
+----------------------------------------

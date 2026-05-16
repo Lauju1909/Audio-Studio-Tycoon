@@ -1,5 +1,5 @@
 from .base import Menu, TextInputMenu, SliderMenu
-from .settings import SettingsMenu, KeybindingMenu, VolumeSettingsMenu
+from .settings import SettingsMenu, KeybindingMenu, VolumeSettingsMenu, LanguageMenu
 from .system import UpdateConfirmMenu, BankruptcyMenu, SaveMenu, LoadMenu, HelpMenu
 from .office import (
     HRMenu, HireMenu, EmployeeOverviewMenu, FireMenu, TrainingEmployeeSelectMenu, 
@@ -31,7 +31,7 @@ from .multiplayer import MultiplayerMainMenu, MultiplayerRoomIdInput, Multiplaye
 
 __all__ = [
     "Menu", "TextInputMenu", "SliderMenu", "SettingsMenu", "KeybindingMenu",
-    "VolumeSettingsMenu", "UpdateConfirmMenu", "BankruptcyMenu", "SaveMenu",
+    "LanguageMenu", "VolumeSettingsMenu", "UpdateConfirmMenu", "BankruptcyMenu", "SaveMenu",
     "LoadMenu", "HelpMenu", "HRMenu", "HireMenu", "EmployeeOverviewMenu", "FireMenu",
     "TrainingEmployeeSelectMenu", "TrainingOptionMenu", "OfficeMenu",
     "EmailInboxMenu", "EmailDetailMenu", "ResearchMenu", "FeatureResearchMenu",

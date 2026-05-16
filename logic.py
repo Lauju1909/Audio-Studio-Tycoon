@@ -152,7 +152,7 @@ class GameState:
         self.custom_consoles = []
         self.is_developing_console = False
         self.console_progress = 0
-        self.console_total_weeks = 50
+        self.console_total_weeks = WEEKS_PER_YEAR
         self.current_console_draft = None
 
         # NEU: Phase A - Schwierigkeitsgrad
@@ -366,7 +366,7 @@ class GameState:
         """Prüft das aktuelle Jahr und schaltet neue historische Themen und Ereignisse frei."""
         from game_data import get_newly_unlocked_topics, YEAR_EVENTS, START_YEAR
         
-        calendar_year = START_YEAR + (self.week - 1) // 48
+        calendar_year = START_YEAR + (self.week - 1) // WEEKS_PER_YEAR
         new_topics = get_newly_unlocked_topics(calendar_year)
         
         # 1. Themen freischalten
@@ -640,32 +640,38 @@ class GameState:
 
     def get_text(self, text_key, **kwargs):
         """Holt einen übersetzten Text basierend auf dem aktuellen Sprach-Setting."""
+        from translations import get_text as t_get_text, set_language
+        
+        # Synchronisiere Sprache in translations.py
         lang = self.settings.get("language", "de")
-        text = TRANSLATIONS.get(lang, TRANSLATIONS['de']).get(text_key, text_key)
-        if kwargs:
-            try:
-                return text.format(**kwargs)
-            except Exception:
-                return text
-        return text
+        set_language(lang)
+        
+        return t_get_text(text_key, **kwargs)
 
     def get_calendar_year(self):
         """Gibt das aktuelle Kalenderjahr zurück (Start: START_YEAR)."""
         return START_YEAR + (self.week - 1) // WEEKS_PER_YEAR
 
     def get_calendar_text(self):
-        """Gibt Kalenderjahr, Monat und Woche zurück (48 Wochen pro Jahr = 4 Wochen pro Monat)."""
+        """Gibt Kalenderjahr, Monat und Woche zurück (dynamisch basierend auf WEEKS_PER_YEAR)."""
         year = self.get_calendar_year()
         week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
-        # 12 Monate, je 4 Wochen = 48 Wochen pro Jahr
-        month_idx = (week_in_year - 1) // 4  # 0-11
+        
+        # Dynamische Monatsberechnung (12 Monate pro Jahr)
+        month_idx = int((week_in_year - 1) * 12 / WEEKS_PER_YEAR)
+        
         lang = self.settings.get("language", "de")
-        months_de = ["Januar","Februar","März","April","Mai","Juni",
-                     "Juli","August","September","Oktober","November","Dezember"]
-        months_en = ["January","February","March","April","May","June",
-                     "July","August","September","October","November","December"]
-        month_name = (months_en if lang == "en" else months_de)[min(month_idx, 11)]
-        week_in_month = ((week_in_year - 1) % 4) + 1
+        month_key = [
+            "month_jan", "month_feb", "month_mar", "month_apr", "month_may", "month_jun",
+            "month_jul", "month_aug", "month_sep", "month_oct", "month_nov", "month_dec"
+        ][min(month_idx, 11)]
+        
+        month_name = self.get_text(month_key)
+        
+        # Wochen innerhalb des Monats (angenähert)
+        weeks_per_month = WEEKS_PER_YEAR / 12
+        week_in_month = int(((week_in_year - 1) % weeks_per_month) + 1)
+        
         return f"{month_name} {year}, {self.get_text('calendar_week')} {week_in_month}"
 
     def get_speed_text(self):
@@ -734,9 +740,10 @@ class GameState:
         self.subscription_hype = max(0.0, self.subscription_hype - 0.3)
 
         # 3. Finanzen
-        weekly_income = (self.subscription_subscribers * self.subscription_price) / 4.0
+        weeks_per_month = WEEKS_PER_YEAR / 12.0
+        weekly_income = (self.subscription_subscribers * self.subscription_price) / weeks_per_month
         # Serverkosten steigen mit Abonnentenzahl
-        server_costs_weekly = max(500, self.subscription_subscribers * 0.05) / 4.0
+        server_costs_weekly = max(500, self.subscription_subscribers * 0.05) / weeks_per_month
         
         self.track_income("subscription", weekly_income)
         self.track_expense("server_costs", server_costs_weekly)
@@ -763,9 +770,16 @@ class GameState:
         # Abo-Dienst aktualisieren
         self.update_subscription_service()
 
-        # Monatsankündigung (alle 4 Wochen = 1 Spielmonat)
+        # Monatsankündigung (dynamisch basierend auf WEEKS_PER_YEAR)
         week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
-        if (week_in_year - 1) % 4 == 0 and self.week > 1:
+        prev_week_in_year = (self.week - 2) % WEEKS_PER_YEAR + 1 if self.week > 1 else 0
+        
+        current_month = int((week_in_year - 1) * 12 / WEEKS_PER_YEAR)
+        prev_month = int((prev_week_in_year - 1) * 12 / WEEKS_PER_YEAR) if self.week > 1 else -1
+        
+        is_new_month = (current_month != prev_month)
+
+        if is_new_month and self.week > 1:
             cal = self.get_calendar_text()
             self.emails.insert(0, Email(
                 sender=self.get_text('sender_calendar'),
@@ -777,9 +791,8 @@ class GameState:
             if hasattr(self, 'audio'):
                 self.audio.speak(self.get_text('announce_new_month', date=cal), interrupt=False)
 
-        # Monatlicher Kontoauszug (alle 4 Wochen)
-        # NEU: Auch in Woche 1 (Spielstart)
-        if (self.week == 1) or ((self.week - 1) % 4 == 0 and self.week > 4):
+        # Monatlicher Kontoauszug
+        if (self.week == 1) or (is_new_month and self.week > 4):
             self._send_monthly_bank_statement()
 
         # Jahres-Reset für Buchhaltung und Jahresbilanz
@@ -812,12 +825,11 @@ class GameState:
                 self.audio.play_sound('warn')
                 self.audio.speak(self.get_text('low_money_warning', amount=self.money), interrupt=False)
             
-        # Gehälter berechnen (wöchentlich akkumulieren)
-        weekly_salaries = sum(emp.salary for emp in self.employees)
-        self.accrued_salaries += weekly_salaries
+        # Gehälter berechnen (monatlich aufgeteilt auf Wochen)
+        self.pay_salaries()
         
-        # Gehälter abziehen (jetzt monatlich)
-        if (self.week - 1) % 4 == 0 and self.week > 1:
+        # Gehälter abziehen (jetzt monatlich bei Monatswechsel)
+        if is_new_month and self.week > 1:
             total_salary = self.accrued_salaries
             self.track_expense("salaries", total_salary)
             self.accrued_salaries = 0 # Reset nach Zahlung
@@ -1000,7 +1012,7 @@ class GameState:
                 has_intel = True
                 break
         
-        if has_intel and self.week % 4 == 0:
+        if has_intel and is_new_month:
             potential_targets = [r for r in self.rivals if getattr(r, 'planned_project', None)]
             if potential_targets:
                 target = random.choice(potential_targets)
@@ -1012,8 +1024,9 @@ class GameState:
                     date_week=self.week
                 ))
 
-        # Trend check (alle 20-40 Wochen)
-        if self.week - self.last_trend_week >= random.randint(20, 40):
+        # Trend check (ca. alle 4-8 Monate)
+        trend_interval = random.randint(int(WEEKS_PER_YEAR * 0.4), int(WEEKS_PER_YEAR * 0.8))
+        if self.week - self.last_trend_week >= trend_interval:
             if self.week % 8 == 0:
                 self.generate_trend()
                 
@@ -1155,9 +1168,9 @@ class GameState:
                 self.current_console_draft = None
 
         # Zufällige Branchen-News (5% Chance pro Woche)
-        # Expo Trigger (Woche 26 jedes Jahr)
+        # Expo Trigger (Mitte des Jahres)
         week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
-        if week_in_year == 24:  # Expo in Woche 24 jedes Spieljahres
+        if week_in_year == (WEEKS_PER_YEAR // 2): 
             self.emails.append(Email(
                 sender=self.get_text('sender_assistant'),
                 subject=self.get_text('subject_expo', default="Spiele-Messe: Ausstellung!"),
@@ -1167,14 +1180,17 @@ class GameState:
             ))
             self.emails[-1].is_expo_invite = True
 
-        # --- NEU AUS ADVANCE_WEEK MERGER ---
-        # Saisonale Modifikatoren berechnen
-        week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
+        # --- Saisonale Modifikatoren (dynamisch) ---
         season_mod = 1.0
-        if 48 <= week_in_year <= 52:
-            season_mod = 1.5  # Weihnachtsgeschäft
-        elif 28 <= week_in_year <= 32:
-            season_mod = 0.8  # Sommerloch
+        # Weihnachtsgeschäft (letzte 4 Wochen des Jahres)
+        winter_start = WEEKS_PER_YEAR - 3
+        if winter_start <= week_in_year <= WEEKS_PER_YEAR:
+            season_mod = 1.5
+        # Sommerloch (ca. 60% bis 75% des Jahres)
+        summer_start = int(WEEKS_PER_YEAR * 0.6)
+        summer_end = int(WEEKS_PER_YEAR * 0.75)
+        if summer_start <= week_in_year <= summer_end:
+            season_mod = 0.8
 
         # Achievements prüfen
         if hasattr(self, "_check_achievements"):
@@ -1222,7 +1238,7 @@ class GameState:
                     if addon.base_game_name == g.name:
                         new_sales = int(new_sales * 1.5) # 50% Boost durch aktives Addon
 
-                if g.weeks_on_market > 20 or new_sales < 100:
+                if g.weeks_on_market > int(WEEKS_PER_YEAR * 0.4) or new_sales < 100:
                     g.is_active = False
 
         # Einnahmen durch Addons
@@ -1283,7 +1299,7 @@ class GameState:
                 if mmo.players < 1000:
                     mmo.game.is_active = False
 
-        if server_overloaded and total_mmo_players > 0 and self.week % 4 == 0:
+        if server_overloaded and total_mmo_players > 0 and is_new_month:
                 self.emails.append(Email(
                 sender=self.get_text('sender_system'),
                 subject=self.get_text('subject_server_overload'),
@@ -1338,7 +1354,7 @@ class GameState:
                 self.track_income("sales", our_cut)
                 published_game.total_revenue += gross_revenue
                 published_game.player_profit += player_cut
-                if sales_this_week < 50 or published_game.weeks_on_market > 30:
+                if sales_this_week < 50 or published_game.weeks_on_market > int(WEEKS_PER_YEAR * 0.6):
                     published_game.is_active = False
 
         # WÖCHENTLICHE BILANZ ABSPEICHERN
@@ -1572,19 +1588,17 @@ class GameState:
             if getattr(emp, "is_ceo", False):
                 return None # Chef kann nicht gefeuert werden
             self.employees.pop(index)
-            # Abfindung = 4 Wochen Gehalt
-            self.track_expense("salaries", emp.salary * 4)
+            # Abfindung = 1 Monat Gehalt (entspricht ca. 4 Wochen)
+            self.track_expense("salaries", emp.salary)
             return emp
         return None
 
     def pay_salaries(self):
         """Bezahlt alle Gehälter (monatlich aufgestaut)."""
         total = sum(e.salary for e in self.employees)
-        # Wenn Gehälter monthly gemeint sind, aber wöchentlich aufgestaut werden
-        # dann ist das Gehalt pro Woche = Gehalt / 4.
-        # Aber der User sagte "keiner gricht so viel prowoche", also sind die Gehälter wohl monatlich.
-        # Wir stauen sie wöchentlich auf (salary / 4) und zahlen alle 4 Wochen.
-        weekly_share = total / 4.0
+        # Wir stauen sie wöchentlich auf (salary / weeks_per_month) und zahlen bei Monatswechsel.
+        weeks_per_month = WEEKS_PER_YEAR / 12.0
+        weekly_share = total / weeks_per_month
         self.accrued_salaries += weekly_share
         return weekly_share
 
@@ -1637,7 +1651,9 @@ class GameState:
         self.track_expense("production", cost)
         game.dlc_count += 1
         game.is_active = True # Bringt Spiel zurück in die Charts
-        game.weeks_on_market = max(0, game.weeks_on_market - 5)
+        # Markt-Reset: Ca. 1 Monat (dynamisch)
+        reset_weeks = max(4, int(WEEKS_PER_YEAR / 10))
+        game.weeks_on_market = max(0, game.weeks_on_market - reset_weeks)
         self.fans += 500
         return True
 
@@ -1969,8 +1985,10 @@ class GameState:
     # ==========================================================
 
     def update_trends(self):
-        """Aktualisiert Markttrends alle 12-20 Wochen."""
-        if self.week - self.last_trend_week < random.randint(12, 20):
+        # Aktualisiert Markttrends alle 1/4 bis fast 1/2 Jahr
+        min_w = WEEKS_PER_YEAR // 4
+        max_w = int(WEEKS_PER_YEAR * 0.4) + 1
+        if self.week - self.last_trend_week < random.randint(min_w, max_w):
             return None
         
         # Trend auswählen
@@ -2068,7 +2086,7 @@ class GameState:
             self.owned_licenses.append({
                 "name": license_data["name"],
                 "purchased_week": self.week,
-                "expires_week": self.week + 52, # Verfällt nach 1 Jahr
+                "expires_week": self.week + WEEKS_PER_YEAR, # Verfällt nach 1 Jahr
                 "used": False,
                 "hype_bonus": license_data["hype_bonus"]
             })
@@ -3498,7 +3516,8 @@ class GameState:
         """Generiert und speichert einen monatlichen Kontoauszug."""
         import game_data
         year = (self.week - 1) // game_data.WEEKS_PER_YEAR + game_data.START_YEAR
-        month_index = ((self.week - 1) % game_data.WEEKS_PER_YEAR) // 4 + 1
+        # Dynamische Monatsberechnung (1 bis 12)
+        month_index = int(((self.week - 1) % game_data.WEEKS_PER_YEAR) * 12 / game_data.WEEKS_PER_YEAR) + 1
         
         # NEU: Steuern berechnen (vom monatlichen Gewinn)
         taxes = 0

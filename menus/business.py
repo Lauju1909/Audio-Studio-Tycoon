@@ -173,7 +173,8 @@ class LoanMenu(Menu):
             self.audio.play_sound("error")
             self.audio.speak(self.game_state.get_text('loan_already_active'))
             return None
-        self.game_state.bank_loan = BankLoan(amount, rate, 52) # 1 Jahr Laufzeit
+        from game_data import WEEKS_PER_YEAR
+        self.game_state.bank_loan = BankLoan(amount, rate, WEEKS_PER_YEAR) # 1 Jahr Laufzeit
         self.game_state.track_income("other", amount)
         self.audio.play_sound("confirm")
         return "game_menu"
