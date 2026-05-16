@@ -708,13 +708,18 @@ class OfficeObject:
         if key == "type": return self.object_type
         if hasattr(self, key):
             return getattr(self, key)
-        # Bonus-Logik: Falls wir einen Bonus suchen, schauen wir in den Daten nach
-        if key == "bonus":
-            from game_data import BUILD_OBJECTS, FURNITURE_DATA
-            obj_def = BUILD_OBJECTS.get(self.object_type)
-            if obj_def: return obj_def.get("bonus")
-            item_data = next((f for f in FURNITURE_DATA if f.get("id") == self.object_type), None)
-            if item_data: return item_data.get("bonus")
+        
+        # Zugriff auf Spieldaten (BUILD_OBJECTS oder FURNITURE_DATA)
+        from game_data import BUILD_OBJECTS, FURNITURE_DATA
+        obj_def = BUILD_OBJECTS.get(self.object_type)
+        if obj_def and key in obj_def:
+            return obj_def.get(key)
+        
+        # Fallback auf FURNITURE_DATA
+        item_data = next((f for f in FURNITURE_DATA if f.get("id") == self.object_type), None)
+        if item_data and key in item_data:
+            return item_data.get(key)
+            
         return default
 
     def __getitem__(self, key):

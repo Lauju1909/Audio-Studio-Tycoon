@@ -836,11 +836,27 @@ class GameState:
         
         
         # NEU Phase H: Erweiterte Mitarbeiter-Logik (Moral, Kündigungen, Gehalt)
+        
+        # Büro-Moralbonus berechnen (Summe aller morale_bonus der platzierten Objekte)
+        office_morale_bonus = 0
+        for obj in getattr(self, 'office_objects', []):
+            m_bonus = 0
+            if hasattr(obj, 'get'):
+                m_bonus = obj.get("morale_bonus", 0)
+            elif isinstance(obj, dict):
+                from game_data import BUILD_OBJECTS
+                obj_type = obj.get("type", obj.get("object_type"))
+                obj_def = BUILD_OBJECTS.get(obj_type)
+                if obj_def:
+                    m_bonus = obj_def.get("morale_bonus", 0)
+            office_morale_bonus += m_bonus
+
         quitting_employees = []
         for i, emp in enumerate(self.employees):
             emp.weeks_employed += 1
             if not getattr(self, 'crunch_active', False):
-                emp.morale = min(100, emp.morale + 2)
+                # Standard-Basis (2) + Büro-Bonus
+                emp.morale = min(100, emp.morale + 2 + office_morale_bonus)
 
             # -----------------------------------------------
             # NEU Phase 2: Training-Countdown

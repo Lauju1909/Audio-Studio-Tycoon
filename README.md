@@ -26,6 +26,7 @@ Das Spiel wird komplett über die Tastatur gesteuert:
 | **F** | **Finanz-Check** (Kontostand, Gewinnberichte) |
 
 ## 🚀 Neue Features
+- **Dynamische Moral-Boni**: Platziere Möbel wie Kaffeemaschinen oder Arcade-Automaten, um die Moral deiner Mitarbeiter wöchentlich zu steigern.
 - **Verbesserte Finanzbuchhaltung**: Detaillierte Kategorisierung von Ausgaben (Anteile, Steuern, Kredite) für maximale Transparenz.
 - **Unifiziertes Tracking**: Alle Geldflüsse laufen nun über ein zentrales System, was die Fehleranfälligkeit reduziert.
 - **Vorbereitet für Cloud-Services**: Neue Kategorien für Server- und Abo-Kosten integriert.
