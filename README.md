@@ -1,4 +1,4 @@
-# Audio Studio Tycoon (v3.8.1) 🚀
+# Audio Studio Tycoon (v3.9.0) 🚀
 
 > [!IMPORTANT]
 > **100% Screenreader-optimiert!** Dieses Spiel wurde von Grund auf für blinde und sehbehinderte Spieler entwickelt. Es nutzt modernste TTS-Technologie (Tolk) für eine nahtlose Spielerfahrung.
