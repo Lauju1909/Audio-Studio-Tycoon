@@ -501,10 +501,17 @@ class ReviewResultMenu(Menu):
             return
         game = self.game_state.game_history[-1]
         score = game.review.average if game.review else 0
-        self.options = [
-            {'text': self.game_state.get_text('score_label', score=score), 'action': lambda: "game_menu"},
-            {'text': self.game_state.get_text('review_listen_again'), 'action': self._repeat_review}
-        ]
+        
+        self.options = []
+        # Show full review text as a menu option for readability
+        if self.review_text:
+            # We split the long text into chunks if it's too long, but for screen readers, one long string is usually fine.
+            self.options.append({'text': self.review_text, 'action': lambda: None})
+            
+        self.options.append({'text': self.game_state.get_text('score_label', score=score), 'action': lambda: None})
+        self.options.append({'text': self.game_state.get_text('review_listen_again'), 'action': self._repeat_review})
+        self.options.append({'text': self.game_state.get_text('continue'), 'action': lambda: "game_menu"})
+
 
     def _repeat_review(self):
         self.audio.speak(self.review_text)

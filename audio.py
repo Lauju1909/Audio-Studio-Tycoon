@@ -369,7 +369,15 @@ class AudioManager:
         """Fügt Text zur Sprach-Queue hinzu."""
         if not text:
             return
-        print(f"[TTS]: {text}")
+        try:
+            print(f"[TTS]: {text}")
+        except Exception:
+            # Fallback for encoding issues
+            try:
+                safe_text = str(text).encode('ascii', errors='replace').decode('ascii')
+                print(f"[TTS (Safe)]: {safe_text}")
+            except Exception:
+                pass
         
         if interrupt:
             # Leere die aktuelle Queue für sofortige Unterbrechung

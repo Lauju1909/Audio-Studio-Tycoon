@@ -248,6 +248,11 @@ class GameState:
         # NEU: Multiplayer
         self.multiplayer = None
 
+        # NEU: Tutorial-System
+        self.completed_tutorials = [] # Liste der abgeschlossenen Tutorial-IDs
+        self.active_tutorial = None # Aktuelles Tutorial-Objekt
+        self.tutorial_step_index = 0
+
     def add_welcome_emails(self):
         """Erstellt die Willkommens-E-Mails in der aktuell gesetzten Sprache."""
         # Willkommensnachricht: Die 1930er Ära
@@ -299,6 +304,7 @@ class GameState:
                 
         # Bestehende Settings aktualisieren statt komplett zu ersetzen (erhält Defaults)
         self.settings.update(sets)
+        self.completed_tutorials = self.settings.get("completed_tutorials", [])
         
         # Tasten auslesen (falls vorhanden), ansonsten Standard lassen
         import pygame
@@ -319,6 +325,7 @@ class GameState:
         self.settings["key_back"] = self.key_back
         self.settings["key_home"] = self.key_home
         self.settings["key_end"] = self.key_end
+        self.settings["completed_tutorials"] = self.completed_tutorials
         
         with open("settings.json", "w", encoding="utf-8") as f:
             json.dump(self.settings, f, indent=4)
@@ -2355,9 +2362,10 @@ class GameState:
         comments = []
         
         # Intro
-        intro_key = random.choice(['review_intro_1', 'review_intro_2', 'review_intro_3'])
+        intro_key = random.choice(['review_intro_1', 'review_intro_2', 'review_intro_3', 'review_intro_4', 'review_intro_5'])
+        prefix = self.get_text('review_prefix')
         intro = self.get_text(intro_key, company=self.company_name, game=project.name)
-        comments.append(intro)
+        comments.append(f"{prefix}{intro}")
         
         # Story Text
         story_key = f"story_{project.topic}"

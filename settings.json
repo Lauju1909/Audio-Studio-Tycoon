@@ -12,5 +12,10 @@
     "key_confirm": 13,
     "key_back": 8,
     "key_home": 1073741898,
-    "key_end": 1073741901
+    "key_end": 1073741901,
+    "completed_tutorials": [
+        "welcome",
+        "office",
+        "game_dev"
+    ]
 }

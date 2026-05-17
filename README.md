@@ -31,10 +31,32 @@ Das Spiel wird komplett über die Tastatur gesteuert:
 - **Unifiziertes Tracking**: Alle Geldflüsse laufen nun über ein zentrales System, was die Fehleranfälligkeit reduziert.
 - **Vorbereitet für Cloud-Services**: Neue Kategorien für Server- und Abo-Kosten integriert.
 - **Sprach-Synchronisation**: Deutsche und Englische Übersetzungen sind nun zu 100% synchronisiert und durch automatisierte Audits verifiziert.
-- **UTF-8 Migration**: Vollständige Unterstützung von Sonderzeichen und Emojis durch Umstellung auf UTF-8 Kodierung.
+- **Utf-8 Migration**: Vollständige Unterstützung von Sonderzeichen und Emojis durch Umstellung auf UTF-8 Kodierung.
 - **Dynamisches Zeitsystem**: Alle Zeitberechnungen (Kalender, Saisons, Gehälter, Kredite) basieren nun auf einer zentralen Konstante, was zukünftige Anpassungen der Spiellänge vereinfacht.
 - **Mitarbeiter-Übersicht**: Neuer Menüpunkt zur detaillierten Ansicht von Gehalt, Level und Status deiner Angestellten.
-| **Leertaste / 0** | Zeit pausieren |
+- **Interaktive, sprachgeführte Tutorials**: Einsteigerfreundliche, vollständig blindengerechte Einführungen für alle wichtigen Spielbereiche:
+  - 🎬 **Willkommen & Steuerung** (Grundlagen der Navigation)
+  - 🏢 **Büro & Zeitverlauf** (Wie die Zeit vergeht und Hotkeys)
+  - 💻 **Spielentwicklung** (Themenwahl, Platformen, Slider)
+  - 🔬 **Forschung** (Technologien, Genres, Engines)
+  - 👥 **Personalmanagement (HR)** (Einstellen, Fortbilden, Moral)
+  - 📢 **Marketing & Hype** (Kampagnen planen)
+  - 💰 **Finanzen & Bank** (Kredite, Aktienmarkt)
+  - 🌐 **Mehrspielermodus** (Lobbys beitreten/erstellen)
+- **Automatisierte Test-Suite**: Ständige Qualitätskontrolle durch das Testskript `test_tutorials.py` zur Validierung aller Sprachschlüssel und Eingabe-Simulationen.
+
+## 🎓 Interaktives Tutorial-System
+Das Spiel bietet ein brandneues, interaktives Tutorial-System. Beim ersten Betreten eines Kernbereichs (Forschung, HR, Finanzen etc.) startet automatisch eine sprachgeführte Einführung. Diese erklärt die Mechaniken spielerisch Schritt für Schritt. Tutorials können jederzeit über Tastendrücke fortgeschritten oder pausiert werden. Der Fortschritt wird automatisch global gespeichert.
+
+| Taste | Funktion |
+| :--- | :--- |
+| **Pfeil Auf/Ab** | Navigation in Menüs und Listen |
+| **Pfeil Links/Rechts** | Werte anpassen (Slider, Lautstärke) |
+| **Enter** | Auswahl bestätigen |
+| **Backspace / Esc** | Zurück zum vorherigen Menü |
+| **S** | **Status-Übersicht** (Forschungspunkte, Fans, Mitarbeiter) |
+| **F** | **Finanz-Check** (Kontostand, Gewinnberichte) |
+| **Leertaste / 0** | Zeit pausieren / Tutorial fortsetzen |
 | **1, 2, 3** | Spielgeschwindigkeit (Normal, Schnell, Ultra) |
 | **C** | Crunch-Modus (während der Entwicklung) |
 

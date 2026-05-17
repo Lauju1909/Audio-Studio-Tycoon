@@ -161,11 +161,37 @@ class LoanMenu(Menu):
 
     def _update_options(self):
         from models import BankLoan
-        self.options = [
-            {'text': self.game_state.get_text('loan_50k'), 'action': lambda: self._take(50000, self.game_state.interest_rate)},
-            {'text': self.game_state.get_text('loan_100k'), 'action': lambda: self._take(100000, self.game_state.interest_rate + 0.02)},
-            {'text': self.game_state.get_text('back'), 'action': lambda: "bank_menu"}
-        ]
+        if self.game_state.bank_loan:
+            loan = self.game_state.bank_loan
+            self.options = [
+                {
+                    'text': self.game_state.get_text(
+                        'active_loan_info',
+                        amount_remaining=loan.amount_remaining,
+                        weeks_remaining=loan.weeks_remaining,
+                        weekly_payment=loan.weekly_payment
+                    ),
+                    'action': lambda: self.audio.speak(
+                        self.game_state.get_text(
+                            'active_loan_info',
+                            amount_remaining=self.game_state.bank_loan.amount_remaining,
+                            weeks_remaining=self.game_state.bank_loan.weeks_remaining,
+                            weekly_payment=self.game_state.bank_loan.weekly_payment
+                        )
+                    )
+                },
+                {
+                    'text': self.game_state.get_text('pay_loan_option', amount=loan.amount_remaining),
+                    'action': self._repay_loan
+                },
+                {'text': self.game_state.get_text('back'), 'action': lambda: "bank_menu"}
+            ]
+        else:
+            self.options = [
+                {'text': self.game_state.get_text('loan_50k'), 'action': lambda: self._take(50000, self.game_state.interest_rate)},
+                {'text': self.game_state.get_text('loan_100k'), 'action': lambda: self._take(100000, self.game_state.interest_rate + 0.02)},
+                {'text': self.game_state.get_text('back'), 'action': lambda: "bank_menu"}
+            ]
 
     def _take(self, amount, rate):
         from models import BankLoan
@@ -177,7 +203,30 @@ class LoanMenu(Menu):
         self.game_state.bank_loan = BankLoan(amount, rate, WEEKS_PER_YEAR) # 1 Jahr Laufzeit
         self.game_state.track_income("other", amount)
         self.audio.play_sound("confirm")
+        self._update_options()
+        self.current_index = 0
         return "game_menu"
+
+    def _repay_loan(self):
+        loan = self.game_state.bank_loan
+        if not loan:
+            self.audio.play_sound("error")
+            return None
+        amount_to_pay = loan.amount_remaining
+        if self.game_state.money >= amount_to_pay:
+            self.game_state.money -= amount_to_pay
+            self.game_state.track_expense("loan_repayment", amount_to_pay)
+            self.game_state.accounting["loan_paid"] += amount_to_pay
+            self.game_state.bank_loan = None
+            self.audio.play_sound("confirm")
+            self.audio.speak(self.game_state.get_text('loan_paid_off'))
+            self._update_options()
+            self.current_index = 0
+            return None
+        else:
+            self.audio.play_sound("error")
+            self.audio.speak(self.game_state.get_text('not_enough_money_loan', amount=amount_to_pay))
+            return None
 
 class DonationMenu(Menu):
     def __init__(self, audio, game_state):

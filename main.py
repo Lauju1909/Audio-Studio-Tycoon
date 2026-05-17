@@ -9,9 +9,21 @@ Steuerung: Pfeiltasten + Enter + Buchstaben für Texteingabe.
 import pygame
 import time
 import os
+import sys
+import io
 import ctypes
+
+# Fix for Windows console encoding issues
+if sys.platform == 'win32':
+    try:
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+
 from audio import AudioManager
 from logic import GameState
+from tutorial import TutorialManager
 from translations import get_text, set_language
 from menus import (
     MainMenu, UpdateConfirmMenu, CompanyNameMenu, GameMenu, TopicMenu,
@@ -192,6 +204,7 @@ def main():
     state = GameState()
     state.audio = audio
     state.load_global_settings()
+    tutorial_manager = TutorialManager(audio, state)
     set_language(state.settings.get('language', 'de'))
     state.add_welcome_emails()
     audio.apply_volumes(state.settings)
@@ -224,6 +237,9 @@ def main():
     audio.speak(get_text("main_welcome"))
     audio.play_music("music_back")
     current_menu.announce_entry()
+    
+    # Trigger Welcome Tutorial if needed
+    tutorial_manager.start_tutorial("welcome")
 
     running = True
     clock = pygame.time.Clock()
@@ -240,6 +256,11 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            
+            # --- TUTORIAL INPUT HANDLING ---
+            if tutorial_manager.handle_input(event):
+                continue
+
             elif event.type == pygame.KEYDOWN:
                 # Globale Geschwindigkeitssteuerung
                 if event.key == pygame.K_1:
@@ -289,6 +310,22 @@ def main():
                             current_key = result
                             current_menu = menu_factories[current_key]()
                             current_menu.announce_entry()
+                            
+                            # Trigger Contextual Tutorials
+                            if result == "game_menu":
+                                tutorial_manager.start_tutorial("office")
+                            elif result == "topic_menu":
+                                tutorial_manager.start_tutorial("game_dev")
+                            elif result == "research_menu":
+                                tutorial_manager.start_tutorial("research")
+                            elif result == "hr_menu":
+                                tutorial_manager.start_tutorial("hr")
+                            elif result == "marketing_menu":
+                                tutorial_manager.start_tutorial("marketing")
+                            elif result == "bank_menu":
+                                tutorial_manager.start_tutorial("finance")
+                            elif result == "multiplayer_main":
+                                tutorial_manager.start_tutorial("multiplayer")
                         elif result == "quit":
                             running = False
                 except Exception as e:
