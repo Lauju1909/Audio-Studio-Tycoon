@@ -1,6 +1,0 @@
-{
-    "version": "3.8.1",
-    "channel": "stable",
-    "notes": "v3.8.1: Finanzielle Transparenz & Wirtschafts-Logik verbessert. Kredit-Bug behoben. Übersetzungssynchronisation vervollständigt.",
-    "min_launcher_version": "1.0.0"
-}

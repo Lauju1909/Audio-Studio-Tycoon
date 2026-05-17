@@ -638,22 +638,126 @@ class ProductionAmountMenu(TextInputMenu):
             return None
 
 class MMOPaymentMenu(Menu):
+    """Wahl des Zahlungsmodells für ein MMO/Live-Service-Spiel."""
     def __init__(self, audio, game_state):
         self.audio = audio
         self.game_state = game_state
-        super().__init__(self.game_state.get_text('mmo_payment_menu'), [], audio, game_state)
+        options = [
+            {'text': game_state.get_text('mmo_model_abo'),  'action': lambda: self._select('Abo')},
+            {'text': game_state.get_text('mmo_model_f2p'),  'action': lambda: self._select('F2P')},
+            {'text': game_state.get_text('mmo_model_loot'), 'action': lambda: self._select('Lootboxen')},
+            {'text': game_state.get_text('back'),            'action': lambda: 'game_menu'},
+        ]
+        super().__init__(self.game_state.get_text('mmo_payment_menu'), options, audio, game_state)
+
+    def _select(self, model):
+        from models import ActiveMMO
+        gs = self.game_state
+        proj = getattr(gs, '_pending_mmo_game', None)
+        if proj is None:
+            self.audio.speak(gs.get_text('mmo_no_game'))
+            return 'game_menu'
+        initial = max(10000, int(gs.fans * 0.05))
+        mmo = ActiveMMO(proj, initial_players=initial, payment_model=model)
+        if not hasattr(gs, 'active_mmos'):
+            gs.active_mmos = []
+        gs.active_mmos.append(mmo)
+        gs._pending_mmo_game = None
+        self.audio.play_sound('confirm')
+        self.audio.speak(gs.get_text('mmo_launched', name=proj.name, model=model, players=initial))
+        return 'mmo_management_menu'
+
 
 class MMOManagementMenu(Menu):
+    """Übersicht und Verwaltung aktiver MMOs."""
     def __init__(self, audio, game_state):
         self.audio = audio
         self.game_state = game_state
         super().__init__(self.game_state.get_text('mmo_management_menu'), [], audio, game_state)
 
+    def announce_entry(self):
+        self.current_index = 0
+        self.options = []
+        gs = self.game_state
+        mmos = getattr(gs, 'active_mmos', [])
+        if not mmos:
+            self.options.append({'text': gs.get_text('mmo_none_active'), 'action': lambda: 'game_menu'})
+        else:
+            for idx, mmo in enumerate(mmos):
+                label = gs.get_text(
+                    'mmo_status_entry',
+                    name=mmo.game.name,
+                    players=f"{mmo.players:,}",
+                    profit=f"{mmo.weekly_profit:,}",
+                    model=mmo.payment_model,
+                )
+                self.options.append({'text': label, 'action': lambda i=idx: self._select(i)})
+        self.options.append({'text': gs.get_text('back'), 'action': lambda: 'game_menu'})
+        super().announce_entry()
+
+    def _select(self, idx):
+        self.game_state._pending_mmo_idx = idx
+        return 'mmo_options_menu'
+
+
 class MMOOptionsMenu(Menu):
+    """Optionen für ein einzelnes aktives MMO (Preisanpassung, Abschalten)."""
     def __init__(self, audio, game_state):
         self.audio = audio
         self.game_state = game_state
         super().__init__(self.game_state.get_text('mmo_options_menu'), [], audio, game_state)
+
+    def announce_entry(self):
+        self.current_index = 0
+        self.options = []
+        gs = self.game_state
+        idx = getattr(gs, '_pending_mmo_idx', -1)
+        mmos = getattr(gs, 'active_mmos', [])
+        if 0 <= idx < len(mmos):
+            mmo = mmos[idx]
+            self.title = mmo.game.name + " - Optionen"
+            status_txt = gs.get_text(
+                'mmo_detail_status',
+                players=f"{mmo.players:,}",
+                weekly_profit=f"{mmo.weekly_profit:,}",
+                weeks=mmo.weeks_active,
+            )
+            self.options = [
+                {'text': status_txt,                    'action': lambda: None},
+                {'text': gs.get_text('mmo_raise_price'),  'action': lambda i=idx: self._price(i, +1)},
+                {'text': gs.get_text('mmo_lower_price'),  'action': lambda i=idx: self._price(i, -1)},
+                {'text': gs.get_text('mmo_shutdown'),     'action': lambda i=idx: self._shutdown(i)},
+                {'text': gs.get_text('back'),             'action': lambda: 'mmo_management_menu'},
+            ]
+        else:
+            self.options = [{'text': gs.get_text('back'), 'action': lambda: 'mmo_management_menu'}]
+        super().announce_entry()
+
+    def _price(self, idx, direction):
+        gs = self.game_state
+        mmos = getattr(gs, 'active_mmos', [])
+        if 0 <= idx < len(mmos):
+            mmo = mmos[idx]
+            change = 1 * direction
+            mmo.subscription_fee = max(1, mmo.subscription_fee + change)
+            # Preisänderung beeinflusst Spieler-Zahl
+            if direction > 0:
+                mmo.players = int(mmo.players * 0.95)
+                gs.audio.speak(gs.get_text('mmo_price_raised', fee=mmo.subscription_fee))
+            else:
+                mmo.players = int(mmo.players * 1.05)
+                gs.audio.speak(gs.get_text('mmo_price_lowered', fee=mmo.subscription_fee))
+            gs.audio.play_sound('click')
+        return 'mmo_options_menu'
+
+    def _shutdown(self, idx):
+        gs = self.game_state
+        mmos = getattr(gs, 'active_mmos', [])
+        if 0 <= idx < len(mmos):
+            mmo = mmos.pop(idx)
+            gs.audio.play_sound('error')
+            gs.audio.speak(gs.get_text('mmo_shutdown_done', name=mmo.game.name))
+        return 'mmo_management_menu'
 
 class PublisherDealsMenu(Menu):
     def __init__(self, audio, game_state):
@@ -680,7 +784,7 @@ class PublisherDealsMenu(Menu):
 
     def select_deal(self, idx):
         self.game_state._pending_deal_idx = idx
-        return "publisher_deal_details"
+        return "publisher_deal_details_menu"
 
 class PublisherDealDetailsMenu(Menu):
     def __init__(self, audio, game_state):
@@ -833,11 +937,11 @@ class ESportsMenu(Menu):
     def host_tournament(self, idx):
         from game_data import ESPORTS_TOURNAMENTS
         t = ESPORTS_TOURNAMENTS[idx]
-        
+
         if self.game_state.money < t['cost']:
             self.audio.speak(self.game_state.get_text('esports_fail_money', cost=t['cost']))
             return None
-            
+
         best_sales = 0
         for g in self.game_state.game_history:
             if getattr(g, 'sales', 0) > best_sales:
@@ -845,17 +949,23 @@ class ESportsMenu(Menu):
         for m in getattr(self.game_state, 'active_mmos', []):
             if m.game.sales > best_sales:
                 best_sales = m.game.sales
-                
+
         if best_sales < t['min_game_sales']:
-             self.audio.speak(self.game_state.get_text('esports_fail_sales', sales=t['min_game_sales']))
-             return None
-             
+            self.audio.speak(self.game_state.get_text('esports_fail_sales', sales=t['min_game_sales']))
+            return None
+
         self.game_state.track_expense("marketing", t['cost'])
-        self.game_state.hype = min(250, self.game_state.hype + t['hype_bonus'])
-        self.game_state.fans += t['fan_bonus']
-        
+
+        # Turnier in active_tournaments eintragen → _process_tournaments() kümmert sich um Abschluss
+        if not hasattr(self.game_state, 'active_tournaments'):
+            self.game_state.active_tournaments = []
+        tournament_entry = dict(t)
+        tournament_entry["weeks_left"] = 4   # Turnier dauert 4 Wochen
+        tournament_entry["prize_pool"] = t.get("prize_pool", t["cost"] * 2)
+        self.game_state.active_tournaments.append(tournament_entry)
+
         self.audio.play_sound("confirm")
-        self.audio.speak(self.game_state.get_text('esports_success', name=t['name'], hype=t['hype_bonus'], fans=t['fan_bonus']))
+        self.audio.speak(self.game_state.get_text('esports_started', name=t['name']))
         return "esports_menu"
 
 class AcquisitionMenu(Menu):

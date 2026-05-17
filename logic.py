@@ -955,21 +955,30 @@ class GameState:
         # Kreditabzahlung
         if getattr(self, "bank_loan", None):
             payment = min(self.bank_loan.weekly_payment, self.bank_loan.amount_remaining)
-            self.track_expense("loan_repayment", payment)
-            self.accounting["loan_paid"] += payment
-            self.bank_loan.amount_remaining -= payment
-            self.bank_loan.weeks_remaining -= 1
-            if self.bank_loan.amount_remaining <= 0 or self.bank_loan.weeks_remaining <= 0:
-                self.bank_loan = None
-                self.emails.insert(0, Email(
-                    sender=self.get_text('sender_bank'),
-                    subject=self.get_text('subject_loan_paid'),
-                    body=self.get_text('body_loan_paid'),
-                    date_week=self.week
-                ))
-                if hasattr(self, 'audio'):
-                    self.audio.play_sound('success')
-                    self.audio.speak(self.get_text('subject_loan_paid'), interrupt=False)
+            # NEU: Wenn nicht genug Geld für die Rate → Bankrott-Warnung
+            if self.money < payment:
+                if not getattr(self, "pending_bankrupt", False):
+                    self.pending_bankrupt = True
+                    self.time_speed = 0
+                    if hasattr(self, 'audio'):
+                        self.audio.play_sound('warn')
+                        self.audio.speak(self.get_text('loan_default_warning'), interrupt=True)
+            else:
+                self.track_expense("loan_repayment", payment)
+                self.accounting["loan_paid"] += payment
+                self.bank_loan.amount_remaining -= payment
+                self.bank_loan.weeks_remaining -= 1
+                if self.bank_loan.amount_remaining <= 0 or self.bank_loan.weeks_remaining <= 0:
+                    self.bank_loan = None
+                    self.emails.insert(0, Email(
+                        sender=self.get_text('sender_bank'),
+                        subject=self.get_text('subject_loan_paid'),
+                        body=self.get_text('body_loan_paid'),
+                        date_week=self.week
+                    ))
+                    if hasattr(self, 'audio'):
+                        self.audio.play_sound('success')
+                        self.audio.speak(self.get_text('subject_loan_paid'), interrupt=False)
         
         # NEU Phase I/II: Industriespionage / Headhunting
         if self.week % 8 == 0 and self.employees and self.rivals:
@@ -1385,6 +1394,7 @@ class GameState:
 
         # NEU: Phase 7 - Rivalen und GOTY evaluieren
         self._process_rivals()
+        self._process_tournaments()
         if week_in_year == WEEKS_PER_YEAR:
             self._check_goty()
 
@@ -1490,6 +1500,42 @@ class GameState:
                         self.hype = max(0, self.hype - 10)
 
 
+
+    def _process_tournaments(self):
+        """Verarbeitet aktive E-Sport-Turniere: liefert Einnahmen, Hype und Fans."""
+        if not getattr(self, "active_tournaments", []):
+            return
+        finished = []
+        for tournament in self.active_tournaments:
+            tournament["weeks_left"] = tournament.get("weeks_left", 4) - 1
+            if tournament["weeks_left"] <= 0:
+                finished.append(tournament)
+        for t in finished:
+            self.active_tournaments.remove(t)
+            prize = t.get("prize_pool", 50000)
+            hype_gain = t.get("hype_bonus", 20)
+            fan_gain = t.get("fan_bonus", 10000)
+            self.track_income("other", prize)
+            self.hype = min(250, self.hype + hype_gain)
+            self.fans += fan_gain
+            self.emails.insert(0, Email(
+                sender=self.get_text('sender_industry_news'),
+                subject=self.get_text('esports_result_subject', name=t.get("name", "Turnier")),
+                body=self.get_text(
+                    'esports_result_body',
+                    name=t.get("name", "Turnier"),
+                    prize=prize,
+                    fans=fan_gain,
+                    hype=hype_gain
+                ),
+                date_week=self.week
+            ))
+            if hasattr(self, 'audio'):
+                self.audio.play_sound('cheer')
+                self.audio.speak(self.get_text(
+                    'esports_result_subject',
+                    name=t.get("name", "Turnier")
+                ), interrupt=False)
 
     def _check_goty(self):
         """Ermittelt das Spiel des Jahres."""

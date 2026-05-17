@@ -11,6 +11,7 @@ import time
 import os
 import sys
 import io
+import json
 import ctypes
 
 # Fix for Windows console encoding issues
