@@ -51,7 +51,11 @@ Das Spiel wird komplett über die Tastatur gesteuert:
   - 📢 **Marketing & Hype** (Kampagnen planen)
   - 💰 **Finanzen & Bank** (Kredite, Aktienmarkt)
   - 🌐 **Mehrspielermodus** (Lobbys beitreten/erstellen)
-- **Automatisierte Test-Suite**: Ständige Qualitätskontrolle durch das Testskript `test_tutorials.py` zur Validierung aller Sprachschlüssel und Eingabe-Simulationen.
+- **Automatisierte Test-Suite**: Ständige Qualitätskontrolle durch Testskripte (`test_tutorials.py`, `test_event_hype_fix.py`, etc.) zur Validierung aller Sprachschlüssel, Eingabe-Simulationen, Event-Berechnungen und Savegame-Sicherheit.
+- **Stabilitäts- und Logik-Optimierungen (v3.10.0-beta.1)**:
+  - Behebung eines kritischen `KeyError`-Absturzes bei Hype-Boost-Zufallsereignissen (wie `viral_post`).
+  - Behebung eines Speicher-Leaks bei historischen Jahresereignissen, wodurch die Spielleistung gesteigert und Savegame-Dateien signifikant verkleinert wurden.
+  - Entfernung von redundantem E-Mail-Spam bei historischen Ereignissen zum Jahreswechsel.
 
 ## 🎓 Interaktives Tutorial-System
 Das Spiel bietet ein brandneues, interaktives Tutorial-System. Beim ersten Betreten eines Kernbereichs (Forschung, HR, Finanzen etc.) startet automatisch eine sprachgeführte Einführung. Diese erklärt die Mechaniken spielerisch Schritt für Schritt. Tutorials können jederzeit über Tastendrücke fortgeschritten oder pausiert werden. Der Fortschritt wird automatisch global gespeichert.

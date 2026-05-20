@@ -1297,21 +1297,6 @@ class GameState:
                 new_active.append(e) # Wenn keine Dauer, bleibt es aktiv (oder sollte gelöscht werden? Sicherer: Wir setzen default duration auf 0 beim Event erstellen)
         self.active_events = new_active
         
-        # Neu: Historische Themen und Events ab neuem Spieljahr
-        if (self.week - 1) % WEEKS_PER_YEAR == 0 and self.week > 1:
-            self._unlock_historical_topics()
-            from game_data import get_year_event
-            year = self.get_calendar_year()
-            y_event = get_year_event(year)
-            if y_event:
-                self.apply_event({
-                    "id": f"hist_{year}",
-                    "effect": y_event.get("effect"),
-                    "value": y_event.get("value", 0),
-                    "text": y_event["text"],
-                    "title": f"Historisches Ereignis {year}"
-                })
-                
         # Marktanteil der eigenen Konsole erhöhen
         if hasattr(self, "custom_consoles"):
             for cc in self.custom_consoles:
@@ -1647,7 +1632,7 @@ class GameState:
         # Zufallsereignis Bonus
         for event in self.active_events:
             if event["effect"] == "hype_boost":
-                hype += event["amount"]
+                hype += event.get("hype_amount", event.get("amount", 0))
 
         # Globaler Hype-Multiplikator
         hype *= self.hype_multiplier
@@ -2316,16 +2301,16 @@ class GameState:
 
     def apply_event(self, event):
         """Wendet ein Ereignis an."""
-        if event["effect"] == "money":
+        if "duration" in event:
+            # Dauerhafte Events zur Liste hinzufügen (Kopie)
+            ev_copy = dict(event)
+            self.active_events.append(ev_copy)
+        elif event["effect"] == "money":
             self.track_income("other", event["value"])
         elif event["effect"] == "fans":
             self.fans = max(0, self.fans + event["value"])
         elif event["effect"] == "hype_boost":
             self.hype += event["hype_amount"]
-        else:
-            # Dauerhafte Events zur Liste hinzufügen (Kopie)
-            ev_copy = dict(event)
-            self.active_events.append(ev_copy)
             
         body = self.get_text("event_" + event["id"], weeks=event.get("duration", 0), hype=event.get("hype_amount", 0))
         self.emails.insert(0, Email(
