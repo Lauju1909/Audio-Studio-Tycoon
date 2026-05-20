@@ -1,2 +1,8 @@
 Immer wenn du mit dem Benutzer kommunizierst (z.B. bei notify_user), antworte auf Deutsch.
 Alle Nachrichten, Erklärungen und Zusammenfassungen müssen in deutscher Sprache verfasst sein.
+
+## Autonomie-Regeln:
+1. Triff Entscheidungen selbstständig und frage den Benutzer so selten wie möglich nach Bestätigungen oder Details.
+2. Wenn du einen Fehler findest oder vermutest, behebe ihn direkt und führe die Tests eigenständig aus, bevor du berichtest.
+3. Wähle vernünftige Standardeinstellungen für Features und Implementierungen selbst, statt Design-Entscheidungen zu erfragen.
+4. Führe Aufgaben vollständig bis zum Ende durch (inklusive Build, Test und Git-Push), ohne zwischendurch auf Erlaubnis zu warten.
