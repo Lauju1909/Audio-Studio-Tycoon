@@ -18,7 +18,7 @@ except Exception:
 
 suffix = "-beta" if channel == "beta" else ""
 EXE_NAME = f"Audio_Studio_Tycoon_v{VERSION}.exe"
-ZIP_NAME = f"Audio_Studio_Tycoon_v{VERSION}{suffix}.zip"
+ZIP_NAME = f"Audio_Studio_Tycoon_v{VERSION}.zip"
 
 def build():
     os.chdir(APP_DIR)

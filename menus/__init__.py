@@ -29,6 +29,13 @@ from .gameplay import (
 from .phase_g import BuildMenu, TeambuildingMenu, ModPortalMenu, ModBrowserListMenu
 from .multiplayer import MultiplayerMainMenu, MultiplayerRoomIdInput, MultiplayerLobbyMenu
 
+# NEU: SoundCon & Soundtrack-Label
+from .events import (
+    SoundConMenu, SoundConFinishMenu, SoundConResultMenu, SoundConHistoryMenu,
+    SoundtrackLabelMenu, LabelNameInputMenu, LabelStatusMenu,
+    LabelRadioMenu, LabelAddGameMenu
+)
+
 __all__ = [
     "Menu", "TextInputMenu", "SliderMenu", "SettingsMenu", "KeybindingMenu",
     "LanguageMenu", "VolumeSettingsMenu", "UpdateConfirmMenu", "BankruptcyMenu", "SaveMenu",
@@ -51,5 +58,9 @@ __all__ = [
     "RemasterSelectMenu", "PublisherMenu", "ExpoMenu", "GOTYMenu", "DifficultyMenu",
     "SubGenreMenu", "SequelMenu", "ChartMenu", "AAADevEventMenu", "CreditsMenu", "ActiveGamesMenu",
     "BuildMenu", "TeambuildingMenu", "ModPortalMenu", "ModBrowserListMenu",
-    "MultiplayerMainMenu", "MultiplayerRoomIdInput", "MultiplayerLobbyMenu"
+    "MultiplayerMainMenu", "MultiplayerRoomIdInput", "MultiplayerLobbyMenu",
+    # NEU: Events
+    "SoundConMenu", "SoundConFinishMenu", "SoundConResultMenu", "SoundConHistoryMenu",
+    "SoundtrackLabelMenu", "LabelNameInputMenu", "LabelStatusMenu",
+    "LabelRadioMenu", "LabelAddGameMenu",
 ]

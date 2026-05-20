@@ -49,8 +49,10 @@ from menus import (
     ESportsMenu, AcquisitionMenu, StockRivalDetailMenu,
     SaveMenu, LoadMenu, HelpMenu, GOTYMenu, AAADevEventMenu, CreditsMenu,
     BuildMenu, TeambuildingMenu, ModPortalMenu, ModBrowserListMenu,
-    MultiplayerMainMenu, MultiplayerRoomIdInput, MultiplayerLobbyMenu,
-    ProjectTeamSelectMenu, DeveloperMenu
+    ProjectTeamSelectMenu, DeveloperMenu,
+    SoundConMenu, SoundConFinishMenu, SoundConResultMenu, SoundConHistoryMenu,
+    SoundtrackLabelMenu, LabelNameInputMenu, LabelStatusMenu,
+    LabelRadioMenu, LabelAddGameMenu
 )
 
 def get_menu_factories(audio, state):
@@ -153,6 +155,16 @@ def get_menu_factories(audio, state):
         "active_games_menu": lambda: ActiveGamesMenu(audio, state),
         "current_monetization_menu": lambda: MonetizationMenu(audio, state, show_ads=state.monetization_back_target != "main_menu"),
         "developer_menu": lambda: DeveloperMenu(audio, state),
+        # NEU: SoundCon & Soundtrack-Label
+        "soundcon_menu": lambda: SoundConMenu(audio, state),
+        "soundcon_finish_confirm": lambda: SoundConFinishMenu(audio, state),
+        "soundcon_result_menu": lambda: SoundConResultMenu(audio, state),
+        "soundcon_history_menu": lambda: SoundConHistoryMenu(audio, state),
+        "label_menu": lambda: SoundtrackLabelMenu(audio, state),
+        "label_name_input": lambda: LabelNameInputMenu(audio, state),
+        "label_status_menu": lambda: LabelStatusMenu(audio, state),
+        "label_radio_menu": lambda: LabelRadioMenu(audio, state),
+        "label_add_game_menu": lambda: LabelAddGameMenu(audio, state),
     }
 
 def main():

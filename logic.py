@@ -12,7 +12,8 @@ from models import (
     GameProject, ReviewScore, Employee, Engine, EngineFeature, 
     RivalStudio, RivalGame, Email, AddonProject, BundleProject, 
     ActiveMMO, BankLoan, CustomConsole, PublishingOffer, 
-    PublishedThirdPartyGame, BankStatement
+    PublishedThirdPartyGame, BankStatement,
+    SoundConEvent, SoundtrackLabel, RadioContract
 )
 from translations import TRANSLATIONS, get_system_language
 from game_data import (
@@ -252,6 +253,15 @@ class GameState:
         self.completed_tutorials = [] # Liste der abgeschlossenen Tutorial-IDs
         self.active_tutorial = None # Aktuelles Tutorial-Objekt
         self.tutorial_step_index = 0
+
+        # NEU: SoundCon – Spielemesse
+        self.soundcon_history = []         # Liste aller SoundConEvent-Objekte
+        self.active_soundcon = None        # Aktuelles SoundConEvent (während der Messe)
+        self.soundcon_last_year = 0        # Letztes Jahr mit Messe-Teilnahme
+        self.pending_soundcon_result = None # Messe-Ergebnisse warten auf Anzeige
+
+        # NEU: Soundtrack-Label
+        self.soundtrack_label = None       # SoundtrackLabel oder None (wenn nicht gegründet)
 
     def add_welcome_emails(self):
         """Erstellt die Willkommens-E-Mails in der aktuell gesetzten Sprache."""
@@ -569,6 +579,193 @@ class GameState:
                 f.write(f"\nSTART_DEV CRASH: {str(e)}\n")
                 f.write(traceback.format_exc())
             raise e
+
+    # ------------------------------------------------------------------ #
+    #  SoundCon – Spielemesse                                              #
+    # ------------------------------------------------------------------ #
+
+    def can_attend_soundcon(self) -> tuple:
+        """Prüft ob der Spieler an der aktuellen SoundCon teilnehmen kann.
+
+        Returns:
+            (bool, str): True/False und Grund bei Ablehnung.
+        """
+        current_year = self.get_calendar_year()
+        if self.soundcon_last_year >= current_year:
+            return False, "soundcon_already_attended"
+        if self.active_soundcon is not None:
+            return False, "soundcon_already_booked"
+        return True, ""
+
+    def book_soundcon_booth(self, booth_tier: str) -> bool:
+        """Bucht einen Messestand für die SoundCon.
+
+        Args:
+            booth_tier: Standgröße ('klein', 'mittel', 'groß', 'keynote').
+
+        Returns:
+            True bei Erfolg, False bei zu wenig Geld.
+        """
+        can, _ = self.can_attend_soundcon()
+        if not can:
+            return False
+
+        tier_data = SoundConEvent.BOOTH_TIERS.get(booth_tier)
+        if not tier_data:
+            return False
+
+        cost = tier_data["cost"]
+        if self.money < cost:
+            return False
+
+        self.track_expense("other", cost)
+        event = SoundConEvent(year=self.get_calendar_year(), booth_tier=booth_tier)
+        self.active_soundcon = event
+        return True
+
+    def conduct_soundcon_qa(self) -> dict:
+        """Führt eine Q&A-Runde auf der SoundCon durch (max. 3 Runden).
+
+        Returns:
+            Dict mit 'success', 'qa_round', 'message'.
+        """
+        if not self.active_soundcon:
+            return {"success": False, "message": "soundcon_not_booked"}
+        if self.active_soundcon.qa_rounds >= 3:
+            return {"success": False, "message": "soundcon_qa_max"}
+
+        self.active_soundcon.qa_rounds += 1
+        qa_num = self.active_soundcon.qa_rounds
+        if hasattr(self, 'audio'):
+            self.audio.play_sound('confirm')
+            self.audio.speak(
+                self.get_text('soundcon_qa_done', round=qa_num), interrupt=False
+            )
+        return {"success": True, "qa_round": qa_num, "message": "soundcon_qa_success"}
+
+    def finish_soundcon(self) -> dict:
+        """Schließt die SoundCon ab und berechnet die Ergebnisse.
+
+        Returns:
+            Ergebnis-Dict mit hype, fans, prestige, qa, tier.
+        """
+        if not self.active_soundcon:
+            return {}
+
+        result = self.active_soundcon.calculate_results(self)
+
+        # Effekte anwenden
+        self.hype   = min(250, self.hype + result["hype"])
+        self.fans  += result["fans"]
+        self.prestige += result["prestige"]
+
+        # Archivieren
+        self.soundcon_history.append(self.active_soundcon)
+        self.soundcon_last_year = self.active_soundcon.year
+        self.pending_soundcon_result = result
+        self.active_soundcon = None
+
+        # E-Mail mit Zusammenfassung
+        self.emails.insert(0, Email(
+            sender=self.get_text('soundcon_sender'),
+            subject=self.get_text('soundcon_result_subject', year=self.get_calendar_year()),
+            body=self.get_text(
+                'soundcon_result_body',
+                hype=result["hype"], fans=result["fans"],
+                prestige=result["prestige"], qa=result["qa"],
+                tier=self.get_text(f'soundcon_tier_{result["tier"]}')
+            ),
+            date_week=self.week
+        ))
+        if hasattr(self, 'audio'):
+            self.audio.play_sound('success')
+            self.audio.speak(
+                self.get_text('soundcon_result_announce', fans=result["fans"]), interrupt=False
+            )
+        return result
+
+    # ------------------------------------------------------------------ #
+    #  Soundtrack-Label                                                    #
+    # ------------------------------------------------------------------ #
+
+    def found_soundtrack_label(self, label_name: str) -> bool:
+        """Gründet ein Soundtrack-Label.
+
+        Kostet 30.000 €. Scheitert wenn Label bereits existiert oder kein Geld.
+
+        Args:
+            label_name: Name des neuen Labels.
+
+        Returns:
+            True bei Erfolg, False bei Misserfolg.
+        """
+        FOUNDING_COST = 30_000
+        if self.soundtrack_label is not None:
+            return False  # Bereits gegründet
+        if self.money < FOUNDING_COST:
+            return False
+
+        self.track_expense("other", FOUNDING_COST)
+        label = SoundtrackLabel(label_name)
+        label.founding_week = self.week
+        self.soundtrack_label = label
+
+        # Alle bisherigen Spiele retroaktiv hinzufügen
+        for g in self.game_history:
+            label.add_game(g.name)
+
+        self.emails.insert(0, Email(
+            sender=self.get_text('label_sender'),
+            subject=self.get_text('label_founded_subject', name=label_name),
+            body=self.get_text('label_founded_body', name=label_name, cost=FOUNDING_COST,
+                               games=len(label.catalogued_games)),
+            date_week=self.week
+        ))
+        if hasattr(self, 'audio'):
+            self.audio.play_sound('success')
+            self.audio.speak(self.get_text('label_founded_announce', name=label_name), interrupt=False)
+        return True
+
+    def sign_radio_contract(self, station_data: dict) -> bool:
+        """Unterzeichnet einen Radiovertrag für das Soundtrack-Label.
+
+        Args:
+            station_data: Dict aus SoundtrackLabel.RADIO_STATIONS.
+
+        Returns:
+            True bei Erfolg.
+        """
+        if not self.soundtrack_label:
+            return False
+        cost = station_data.get("cost", 0)
+        if self.money < cost:
+            return False
+
+        self.track_expense("other", cost)
+        contract = RadioContract(
+            station_name=station_data["name"],
+            weekly_royalties=station_data["royalties"],
+            duration_weeks=station_data["weeks"],
+            hype_per_week=station_data["hype"]
+        )
+        self.soundtrack_label.radio_contracts.append(contract)
+
+        self.emails.insert(0, Email(
+            sender=self.get_text('label_sender'),
+            subject=self.get_text('label_radio_subject', station=station_data["name"]),
+            body=self.get_text('label_radio_body',
+                               station=station_data["name"],
+                               royalties=station_data["royalties"],
+                               weeks=station_data["weeks"]),
+            date_week=self.week
+        ))
+        if hasattr(self, 'audio'):
+            self.audio.play_sound('confirm')
+            self.audio.speak(
+                self.get_text('label_radio_announce', station=station_data["name"]), interrupt=False
+            )
+        return True
+
 
     def can_start_development(self, size):
         """Prüft ob alle Voraussetzungen für den Entwicklungsstart erfüllt sind."""
@@ -1061,7 +1258,31 @@ class GameState:
         if self.week - self.last_trend_week >= trend_interval:
             if self.week % 8 == 0:
                 self.generate_trend()
-                
+
+        # --- SoundCon: Jahresereignis (jedes Jahr Woche 2 = Messe-Zeit) ---
+        week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
+        current_year = self.get_calendar_year()
+        if week_in_year == 2 and current_year > self.soundcon_last_year:
+            # Messe steht an – Spieler via E-Mail informieren
+            self.emails.insert(0, Email(
+                sender=self.get_text('soundcon_sender'),
+                subject=self.get_text('soundcon_email_subject', year=current_year),
+                body=self.get_text('soundcon_email_body'),
+                date_week=self.week
+            ))
+            if hasattr(self, 'audio'):
+                self.audio.play_sound('confirm')
+                self.audio.speak(self.get_text('soundcon_announcement', year=current_year), interrupt=False)
+
+        # --- Soundtrack-Label: Wöchentliche Tantiemen ---
+        if getattr(self, 'soundtrack_label', None):
+            label_income = self.soundtrack_label.tick_week()
+            label_hype   = self.soundtrack_label.tick_hype()
+            if label_income > 0:
+                self.track_income('other', label_income)
+            if label_hype > 0:
+                self.hype = min(250, self.hype + label_hype)
+
         # Zufallsereignisse prüfen
         self.check_random_event()
         
@@ -2768,7 +2989,12 @@ class GameState:
                     "aaa_event_done": ap.get("aaa_event_done", False),
                     "co_dev": ap.get("co_dev")
                 } for ap in self.active_projects
-            ]
+            ],
+            "soundcon_history": [s.to_dict() for s in getattr(self, "soundcon_history", [])],
+            "soundcon_last_year": getattr(self, "soundcon_last_year", 0),
+            "active_soundcon": self.active_soundcon.to_dict() if getattr(self, "active_soundcon", None) else None,
+            "pending_soundcon_result": getattr(self, "pending_soundcon_result", None),
+            "soundtrack_label": self.soundtrack_label.to_dict() if getattr(self, "soundtrack_label", None) else None
         }
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
@@ -2980,6 +3206,20 @@ class GameState:
             y, x = obj.y, obj.x
             if 0 <= y < len(self.office_grid) and 0 <= x < len(self.office_grid[0]):
                 self.office_grid[y][x] = obj
+
+        # NEU: SoundCon & Soundtrack-Label laden
+        self.soundcon_history = []
+        if "soundcon_history" in data:
+            for sd in data["soundcon_history"]:
+                self.soundcon_history.append(SoundConEvent.from_dict(sd))
+        self.soundcon_last_year = data.get("soundcon_last_year", 0)
+        
+        active_sc = data.get("active_soundcon")
+        self.active_soundcon = SoundConEvent.from_dict(active_sc) if active_sc else None
+        self.pending_soundcon_result = data.get("pending_soundcon_result")
+
+        label_data = data.get("soundtrack_label")
+        self.soundtrack_label = SoundtrackLabel.from_dict(label_data) if label_data else None
 
         self.reset_draft()
         return True

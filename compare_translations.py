@@ -1,6 +1,14 @@
 import sys
 import os
 
+# Force utf-8 stdout/stderr on Windows
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    except AttributeError:
+        pass
+
 # Add the scratch directory to sys.path to import translations
 sys.path.append(r'C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon')
 

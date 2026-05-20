@@ -747,3 +747,227 @@ class ManufacturingJob:
             "is_finished": self.is_finished
         }
 
+
+# ============================================================
+# NEU: SoundCon – Spielemesse
+# ============================================================
+
+class SoundConEvent:
+    """Repräsentiert eine jährliche SoundCon-Messe-Teilnahme.
+
+    Attribute:
+        year (int):           Kalenderjahr der Messe.
+        booth_tier (str):     Standgröße: 'klein', 'mittel', 'groß', 'keynote'.
+        booth_cost (int):     Kosten für den Messestand.
+        hype_gained (float):  Am Ende erzielte Hype-Punkte.
+        fans_gained (int):    Am Ende gewonnene Fans.
+        qa_rounds (int):      Anzahl absolvierter Q&A-Runden (0-3).
+        prestige_gained (int):Prestige-Bonus durch die Teilnahme.
+        is_active (bool):     True, solange die Messe läuft.
+        result_pending (bool):True, wenn Ergebnisse noch verarbeitet werden.
+    """
+
+    # Kosten und Basis-Hype je Standgröße
+    BOOTH_TIERS = {
+        "klein":   {"cost": 5_000,  "base_hype": 8,  "base_fans": 200,  "prestige": 1},
+        "mittel":  {"cost": 20_000, "base_hype": 20, "base_fans": 800,  "prestige": 3},
+        "groß":    {"cost": 50_000, "base_hype": 45, "base_fans": 2000, "prestige": 7},
+        "keynote": {"cost": 100_000,"base_hype": 90, "base_fans": 5000, "prestige": 15},
+    }
+
+    def __init__(self, year: int, booth_tier: str = "klein"):
+        self.year = year
+        self.booth_tier = booth_tier
+        tier_data = self.BOOTH_TIERS.get(booth_tier, self.BOOTH_TIERS["klein"])
+        self.booth_cost = tier_data["cost"]
+        self.base_hype = tier_data["base_hype"]
+        self.base_fans = tier_data["base_fans"]
+        self.base_prestige = tier_data["prestige"]
+        # Wird nach Abschluss befüllt:
+        self.hype_gained = 0.0
+        self.fans_gained = 0
+        self.prestige_gained = 0
+        self.qa_rounds = 0          # Anzahl abgehaltener Q&A-Runden
+        self.is_active = True
+        self.result_pending = False
+
+    def calculate_results(self, game_state) -> dict:
+        """Berechnet den Enderfolg der Messe.
+
+        Faktoren: Firmenprestige, aktueller Hype, abgehaltene Q&A-Runden.
+        Gibt ein Ergebnis-Dict zurück.
+        """
+        prestige_bonus = 1.0 + (game_state.prestige / 200.0)
+        qa_bonus       = 1.0 + (self.qa_rounds * 0.15)
+        hype_multi     = getattr(game_state, "hype_multiplier", 1.0)
+
+        self.hype_gained    = round(self.base_hype * prestige_bonus * qa_bonus * hype_multi, 1)
+        self.fans_gained    = int(self.base_fans  * prestige_bonus * qa_bonus)
+        self.prestige_gained = int(self.base_prestige * qa_bonus)
+        self.is_active      = False
+        self.result_pending = True
+
+        return {
+            "hype":     self.hype_gained,
+            "fans":     self.fans_gained,
+            "prestige": self.prestige_gained,
+            "qa":       self.qa_rounds,
+            "tier":     self.booth_tier,
+        }
+
+    def to_dict(self) -> dict:
+        return {
+            "year": self.year, "booth_tier": self.booth_tier,
+            "booth_cost": self.booth_cost, "hype_gained": self.hype_gained,
+            "fans_gained": self.fans_gained, "prestige_gained": self.prestige_gained,
+            "qa_rounds": self.qa_rounds, "is_active": self.is_active,
+            "result_pending": self.result_pending,
+        }
+
+    @staticmethod
+    def from_dict(data: dict) -> "SoundConEvent":
+        ev = SoundConEvent(data["year"], data.get("booth_tier", "klein"))
+        ev.booth_cost       = data.get("booth_cost", ev.booth_cost)
+        ev.hype_gained      = data.get("hype_gained", 0.0)
+        ev.fans_gained      = data.get("fans_gained", 0)
+        ev.prestige_gained  = data.get("prestige_gained", 0)
+        ev.qa_rounds        = data.get("qa_rounds", 0)
+        ev.is_active        = data.get("is_active", False)
+        ev.result_pending   = data.get("result_pending", False)
+        return ev
+
+
+# ============================================================
+# NEU: Soundtrack-Label & Radioverträge
+# ============================================================
+
+class RadioContract:
+    """Ein Radiovertrag für ein Soundtrack-Label.
+
+    Attribute:
+        station_name (str):   Name des Radiosenders.
+        weekly_royalties (float): Wöchentliche Tantiemen in €.
+        weeks_remaining (int): Noch verbleibende Laufzeit in Wochen.
+        hype_per_week (float): Wöchentlicher Hype-Bonus durch Airplay.
+    """
+
+    def __init__(self, station_name: str, weekly_royalties: float,
+                 duration_weeks: int, hype_per_week: float = 0.5):
+        self.station_name     = station_name
+        self.weekly_royalties = weekly_royalties
+        self.weeks_remaining  = duration_weeks
+        self.hype_per_week    = hype_per_week
+
+    @property
+    def is_active(self) -> bool:
+        return self.weeks_remaining > 0
+
+    def tick(self) -> float:
+        """Zählt eine Woche herunter. Gibt die Tantiemen zurück (0 wenn abgelaufen)."""
+        if self.weeks_remaining <= 0:
+            return 0.0
+        self.weeks_remaining -= 1
+        return self.weekly_royalties
+
+    def to_dict(self) -> dict:
+        return {
+            "station_name": self.station_name,
+            "weekly_royalties": self.weekly_royalties,
+            "weeks_remaining": self.weeks_remaining,
+            "hype_per_week": self.hype_per_week,
+        }
+
+    @staticmethod
+    def from_dict(data: dict) -> "RadioContract":
+        return RadioContract(
+            station_name=data["station_name"],
+            weekly_royalties=data["weekly_royalties"],
+            duration_weeks=data["weeks_remaining"],
+            hype_per_week=data.get("hype_per_week", 0.5),
+        )
+
+
+class SoundtrackLabel:
+    """Ein eigenes Musik-Label für Spielesoundtracks.
+
+    Ein Label koppelt die Spielemusik auf ein eigenes Label aus und
+    verdient wöchentliche Tantiemen durch Streaming und Radioverträge.
+    """
+
+    # Verfügbare Radiosender mit Basisdaten
+    RADIO_STATIONS = [
+        {"name": "GameFM",        "cost": 10_000, "royalties": 800,  "hype": 1.0,  "weeks": 26},
+        {"name": "RetroWave FM",  "cost": 20_000, "royalties": 1500, "hype": 1.5,  "weeks": 52},
+        {"name": "SynthAir",      "cost": 35_000, "royalties": 2500, "hype": 2.0,  "weeks": 52},
+        {"name": "ChipTune Radio","cost": 15_000, "royalties": 1000, "hype": 1.2,  "weeks": 26},
+        {"name": "NationBeat",    "cost": 60_000, "royalties": 4000, "hype": 3.5,  "weeks": 104},
+    ]
+
+    def __init__(self, label_name: str):
+        self.label_name          = label_name
+        self.founding_week       = 0          # Wird bei Gründung gesetzt
+        self.catalogued_games    = []         # Liste von GameProject-Namen
+        self.radio_contracts     = []         # Liste von RadioContract-Objekten
+        self.total_royalties     = 0.0        # Kumulierte Einnahmen
+        self.streaming_fans      = 0          # Fans durch Streaming-Plattformen
+        self.prestige_bonus      = 0          # Label-Prestige
+
+    @property
+    def active_radio_contracts(self) -> list:
+        return [c for c in self.radio_contracts if c.is_active]
+
+    def add_game(self, game_name: str):
+        """Fügt ein Spiel zum Katalog hinzu (einmalig)."""
+        if game_name not in self.catalogued_games:
+            self.catalogued_games.append(game_name)
+
+    def tick_week(self) -> float:
+        """Verarbeitet eine Woche: Tantiemen einsammeln, abgelaufene Verträge entfernen.
+
+        Gibt die Gesamteinnahmen dieser Woche zurück.
+        """
+        week_income = 0.0
+        expired = []
+        for contract in self.radio_contracts:
+            income = contract.tick()
+            week_income += income
+            if not contract.is_active:
+                expired.append(contract)
+        for c in expired:
+            self.radio_contracts.remove(c)
+
+        # Streaming-Einnahmen basierend auf Katalog-Größe
+        streaming = len(self.catalogued_games) * 50.0
+        week_income += streaming
+
+        self.total_royalties += week_income
+        return week_income
+
+    def tick_hype(self) -> float:
+        """Gibt den Gesamt-Hype-Bonus dieser Woche durch Radio zurück."""
+        return sum(c.hype_per_week for c in self.active_radio_contracts)
+
+    def to_dict(self) -> dict:
+        return {
+            "label_name": self.label_name,
+            "founding_week": self.founding_week,
+            "catalogued_games": self.catalogued_games,
+            "radio_contracts": [c.to_dict() for c in self.radio_contracts],
+            "total_royalties": self.total_royalties,
+            "streaming_fans": self.streaming_fans,
+            "prestige_bonus": self.prestige_bonus,
+        }
+
+    @staticmethod
+    def from_dict(data: dict) -> "SoundtrackLabel":
+        label = SoundtrackLabel(data["label_name"])
+        label.founding_week    = data.get("founding_week", 0)
+        label.catalogued_games = data.get("catalogued_games", [])
+        label.radio_contracts  = [
+            RadioContract.from_dict(c) for c in data.get("radio_contracts", [])
+        ]
+        label.total_royalties  = data.get("total_royalties", 0.0)
+        label.streaming_fans   = data.get("streaming_fans", 0)
+        label.prestige_bonus   = data.get("prestige_bonus", 0)
+        return label
+
