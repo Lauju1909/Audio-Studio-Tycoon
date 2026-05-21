@@ -1,6 +1,6 @@
 {
-    "version": "3.10.0-beta.1",
+    "version": "3.10.0-beta.2",
     "channel": "beta",
-    "notes": "v3.10.0-beta.1: Major-Update mit neuen Kern-Features: SoundCon (jährliche Spielemesse) mit Stand-Buchungen, Q&A-Bühnenshows und Hype-Effekten, sowie Soundtrack-Labels zur Musikkatalogisierung, Radio-Verträgen und passiven Tantiemen-Einnahmen. Vollständige Save/Load-Persistenz inklusive robuster Abwärtskompatibilität. 100%ige Übersetzungsparität (DE/EN) und Barrierefreiheit mit TTS/Tolk-Unterstützung.",
+    "notes": "v3.10.0-beta.2: Major-Update mit neuen Kern-Features: SoundCon (Spielemesse) mit Stand-Buchungen, Q&A-Bühnenshows und Hype-Effekten, Soundtrack-Labels, Radio-Verträgen und passiven Tantiemen-Einnahmen. Barrierefreies asynchrones Update-System ohne Einfrieren, inklusive kontinuierlichem akustischem Ticker-Feedback, Tastatur-Blockierung („Bump“) und automatischer Fokus-Erzwingung nach dem Neustart.",
     "min_launcher_version": "1.0.0"
 }

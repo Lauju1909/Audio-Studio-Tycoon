@@ -52,6 +52,11 @@ Das Spiel wird komplett über die Tastatur gesteuert:
   - 💰 **Finanzen & Bank** (Kredite, Aktienmarkt)
   - 🌐 **Mehrspielermodus** (Lobbys beitreten/erstellen)
 - **Automatisierte Test-Suite**: Ständige Qualitätskontrolle durch Testskripte (`test_tutorials.py`, `test_event_hype_fix.py`, etc.) zur Validierung aller Sprachschlüssel, Eingabe-Simulationen, Event-Berechnungen und Savegame-Sicherheit.
+- **Robustes, barrierefreies Update-System**:
+  - Vollautomatischer Update-Prozess über GitHub-Releases (sowohl Stable- als auch Beta-Kanäle).
+  - Sicherheitsprüfung via SHA-256 Checksummen-Validierung zum Schutz vor unvollständigen Downloads.
+  - Fehlerfreies Windows-CMD-Installationsskript: Erkennt versionierte Dateien (`Audio_Studio_Tycoon_v*.exe`) und bereinigt ältere Exe-Dateien vollautomatisch vor der Installation, um Konflikte zu vermeiden.
+  - Volles akustisches und barrierefreies Feedback: Präzise Sprachausgabe und Fehlersounds bei eventuellen Update-Problemen, statt stummem Zurückkehren ins Hauptmenü.
 - **Stabilitäts- und Logik-Optimierungen (v3.10.0-beta.1)**:
   - Behebung eines kritischen `KeyError`-Absturzes bei Hype-Boost-Zufallsereignissen (wie `viral_post`).
   - Behebung eines Speicher-Leaks bei historischen Jahresereignissen, wodurch die Spielleistung gesteigert und Savegame-Dateien signifikant verkleinert wurden.
