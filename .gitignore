@@ -28,3 +28,4 @@ tools/upload_v1_6_3.py
 *.zip
 dist/
 build/
+Audio_Studio_Tycoon_v*/

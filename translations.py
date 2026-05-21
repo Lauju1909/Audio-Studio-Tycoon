@@ -3178,5 +3178,15 @@ TRANSLATIONS = {
         "label_add_game_option":         "{name} ({genre})",
         "label_game_added":              "{name} wurde dem Label-Katalog hinzugefügt.",
         "label_all_games_added":         "Alle veröffentlichten Spiele sind bereits im Katalog.",
+        "auto_update_toggle":            "Automatisches Update beim Start: {status}",
+        "check_update":                  "Nach Updates suchen",
+        "checking_update":               "Suche nach Updates läuft, bitte warten...",
+        "no_update":                     "Du hast bereits die neueste Version.",
+        "update_options":                "Update-Optionen",
+        "downloading_update":            "Update wird heruntergeladen. Das Spiel wird in Kürze beendet.",
+        "update_error":                  "Fehler beim Herunterladen oder Anwenden des Updates.",
+        "update_available":              "Update verfügbar! Version {version}. Herunterladen und installieren? (Achtung: Das Spiel startet neu)",
+        "yes_update":                    "Ja, Update installieren",
+        "no_update_cancel":              "Nein, abbrechen",
     }
 }

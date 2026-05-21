@@ -33,7 +33,10 @@ class UpdateConfirmMenu(Menu):
         from updater import download_and_apply_update
         if self.download_url:
             self.audio.speak(self.game_state.get_text('downloading_update'))
-            download_and_apply_update(self.download_url, self.expected_hash)
+            success = download_and_apply_update(self.download_url, self.expected_hash)
+            if not success:
+                self.audio.play_sound("error")
+                self.audio.speak(self.game_state.get_text('update_error'))
         return "main_menu"
 
     def _cancel(self):

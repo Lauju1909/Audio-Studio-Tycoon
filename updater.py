@@ -129,7 +129,7 @@ def check_for_updates(current_version: str, channel: str = "stable") -> dict:
         v_current = _parse_version("0.0.0" if current_version == "TEST" else current_version)
         v_remote = _parse_version(remote_v)
 
-        if v_remote > v_current:
+        if v_remote > v_current and d_url is not None:
             return {
                 "update_available": True,
                 "version": remote_v,
@@ -260,7 +260,12 @@ echo Installiere Dateien...
 set "SOURCE_DIR=temp_update"
 for /d %%D in ("temp_update\*") do (
     if exist "%%D\main.py" set "SOURCE_DIR=%%D"
-    if exist "%%D\Audio_Studio_Tycoon.exe" set "SOURCE_DIR=%%D"
+    if exist "%%D\Audio_Studio_Tycoon*.exe" set "SOURCE_DIR=%%D"
+)
+
+:: Bereinige alte Versionen im Hauptverzeichnis, um Namenskonflikte zu vermeiden
+if not "!SOURCE_DIR!" == "temp_update" (
+    del /q "Audio_Studio_Tycoon_v*.exe" 2>nul
 )
 
 xcopy /s /e /y /c "!SOURCE_DIR!\*" "."
