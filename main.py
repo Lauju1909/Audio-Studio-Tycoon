@@ -27,7 +27,7 @@ from logic import GameState
 from tutorial import TutorialManager
 from translations import get_text, set_language
 from menus import (
-    MainMenu, UpdateConfirmMenu, CompanyNameMenu, GameMenu, TopicMenu,
+    MainMenu, UpdateConfirmMenu, UpdateProgressMenu, CompanyNameMenu, GameMenu, TopicMenu,
     GenreMenu, PlatformMenu, AudienceMenu, GameSizeMenu, MarketingMenu,
     EngineSelectMenu, RemasterSelectMenu, PublisherMenu, SettingsMenu,
     VolumeSettingsMenu, KeybindingMenu, LanguageMenu, ExpoMenu, GameNameMenu,
@@ -60,6 +60,7 @@ def get_menu_factories(audio, state):
     return {
         "main_menu": lambda: MainMenu(audio, state),
         "update_confirm_menu": lambda: UpdateConfirmMenu(audio, state),
+        "update_progress_menu": lambda: UpdateProgressMenu(audio, state),
         "company_name_input": lambda: CompanyNameMenu(audio, state),
         "game_menu": lambda: GameMenu(audio, state),
         "topic_menu": lambda: TopicMenu(audio, state),
@@ -264,7 +265,12 @@ def main():
         state.update_tick(dt)
 
         if hasattr(current_menu, 'update'):
-            current_menu.update()
+            result = current_menu.update()
+            if result:
+                if result in menu_factories:
+                    current_key = result
+                    current_menu = menu_factories[current_key]()
+                    current_menu.announce_entry()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

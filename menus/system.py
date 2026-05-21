@@ -30,18 +30,90 @@ class UpdateConfirmMenu(Menu):
             self.audio.speak("Changelog: " + self.changelog, interrupt=False)
 
     def _apply_update(self):
-        from updater import download_and_apply_update
         if self.download_url:
-            self.audio.speak(self.game_state.get_text('downloading_update'))
-            success = download_and_apply_update(self.download_url, self.expected_hash)
-            if not success:
-                self.audio.play_sound("error")
-                self.audio.speak(self.game_state.get_text('update_error'))
+            return "update_progress_menu"
         return "main_menu"
 
     def _cancel(self):
         self.game_state.pending_update = None
         return "main_menu"
+
+class UpdateProgressMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        self.download_percent = 0
+        self.download_error = None
+        self.download_finished = False
+        self.last_announced_percent = -20
+        self.last_ticker_time = 0
+        self.ticker_interval = 1000
+        self._announced_verifying = False
+
+        update_info = self.game_state.pending_update
+        self.download_url = update_info.get("download_url") if update_info else None
+        self.expected_hash = update_info.get("hash") if update_info else None
+
+        title = self.game_state.get_text('update_title')
+        super().__init__(title, [], audio, game_state)
+
+        import threading
+        self.download_thread = threading.Thread(target=self._run_download, daemon=True)
+        self.download_thread.start()
+
+    def _run_download(self):
+        from updater import download_and_apply_update
+        try:
+            if not self.download_url:
+                self.download_error = "no_url"
+                self.download_finished = True
+                return
+
+            success = download_and_apply_update(
+                self.download_url,
+                self.expected_hash,
+                progress_callback=self._on_progress
+            )
+            if not success:
+                self.download_error = "download_failed"
+                self.download_finished = True
+        except Exception as e:
+            self.download_error = str(e)
+            self.download_finished = True
+
+    def _on_progress(self, downloaded, total):
+        if total > 0:
+            percent = int((downloaded / total) * 100)
+            self.download_percent = percent
+
+    def update(self):
+        import pygame
+        super().update()
+
+        if self.download_finished:
+            self.audio.play_sound("error")
+            err_text = self.game_state.get_text('update_failed')
+            self.audio.speak(err_text, interrupt=True)
+            self.game_state.pending_update = None
+            return "main_menu"
+
+        now = pygame.time.get_ticks()
+        if now - self.last_ticker_time >= self.ticker_interval:
+            self.audio.play_sound("click")
+            self.last_ticker_time = now
+
+        percent = self.download_percent
+        rounded_percent = (percent // 20) * 20
+        if rounded_percent > self.last_announced_percent:
+            self.last_announced_percent = rounded_percent
+            progress_text = self.game_state.get_text('update_progress', percent=rounded_percent)
+            self.audio.speak(progress_text, interrupt=True)
+
+        if percent == 100 and not self._announced_verifying:
+            self._announced_verifying = True
+            self.audio.speak(self.game_state.get_text('update_verifying'), interrupt=True)
+
+        return None
 
 class BankruptcyMenu(Menu):
     def __init__(self, audio, game_state):
