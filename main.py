@@ -182,6 +182,18 @@ def main():
     pygame.key.set_repeat(300, 50)
     # Nutze HWSURFACE, DOUBLEBUF und SCALED für maximale GPU-Beschleunigung und CPU-Effizienz
     screen = pygame.display.set_mode((800, 600), pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.SCALED | pygame.RESIZABLE)
+    
+    # Fenster in den Vordergrund bringen (wichtig für Fokus bei automatischem Update-Neustart)
+    if sys.platform == 'win32':
+        try:
+            hwnd = pygame.display.get_wm_info().get('window')
+            if hwnd:
+                ctypes.windll.user32.ShowWindow(hwnd, 5)  # SW_SHOW
+                ctypes.windll.user32.SetForegroundWindow(hwnd)
+                ctypes.windll.user32.SetActiveWindow(hwnd)
+        except Exception:
+            pass
+
     # --- VERSION LADEN ---
     curr_v_path = "version.json"
     current_v = "3.8.1"

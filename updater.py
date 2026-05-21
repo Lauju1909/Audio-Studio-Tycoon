@@ -236,6 +236,7 @@ def download_and_apply_update(
     # Batch-Skript schreiben und starten
     bat_content = r"""@echo off
 setlocal enabledelayedexpansion
+cd /d "%~dp0"
 title Audio Studio Tycoon - Update
 echo =============================================
 echo   Audio Studio Tycoon - Automatisches Update
@@ -279,9 +280,9 @@ for /f "delims=" %%I in ('dir /b Audio_Studio_Tycoon_v*.exe 2^>nul') do (
 )
 
 if "!NEW_EXE!" == "main.py" (
-    start "" python main.py
+    start "" /d "%~dp0" python main.py
 ) else (
-    start "" "!NEW_EXE!"
+    start "" /d "%~dp0" "!NEW_EXE!"
 )
 del "%~f0"
 """
