@@ -1,4 +1,4 @@
-# Audio Studio Tycoon (v3.10.0-beta.1) 🚀
+# Audio Studio Tycoon (v3.11.0-beta.1) 🚀
 
 > [!IMPORTANT]
 > **100% Screenreader-optimiert!** Dieses Spiel wurde von Grund auf für blinde und sehbehinderte Spieler entwickelt. Es nutzt modernste TTS-Technologie (Tolk) für eine nahtlose Spielerfahrung.
@@ -25,42 +25,24 @@ Das Spiel wird komplett über die Tastatur gesteuert:
 | **S** | **Status-Übersicht** (Forschungspunkte, Fans, Mitarbeiter) |
 | **F** | **Finanz-Check** (Kontostand, Gewinnberichte) |
 
-## 🚀 Neue Features (v3.10.0-beta.1)
-- **SoundCon (Jährliche Spielemesse)**:
-  - Anmeldung in Woche 2 jedes Kalenderjahres.
-  - Wähle zwischen vier Standgrößen (*Klein*, *Mittel*, *Groß* und *Keynote-Bühne*).
-  - Halte interaktive Q&A-Runden auf der Bühne ab und beantworte Fan-Fragen.
-  - Gewinne massiven Hype, neue Fans und Prestige-Punkte durch eine spektakuläre Show.
-  - Komplette SoundCon-Historie zur Nachverfolgung vergangener Messeerfolge.
-- **Soundtrack-Labels (Dein eigenes Musiklabel)**:
-  - Gründe dein eigenes Plattenlabel, um die Soundtracks deiner Spiele zu vermarkten.
-  - Katalogisiere deine Spiele und erhalte wöchentlich passive Streaming-Tantiemen.
-  - Schließe exklusive Radio-Verträge für deine Top-Soundtracks ab, um wöchentlich Hype und zusätzliche Einnahmen zu generieren.
-- **Save/Load-Persistenz & Abwärtskompatibilität**:
-  - Volle Datensicherung aller SoundCon- und Soundtrack-Label-Daten.
-  - 100% abwärtskompatibel mit Spielständen aus Version 3.9.0 durch robuste Standardwert-Fallbacks.
-- **Übersetzungsparität & Barrierefreiheit**:
-  - Alle neuen Menüs (SoundCon und Soundtrack-Label) sind vollständig in Deutsch und Englisch übersetzt (100% Parität).
-  - Volle lineare Keyboard-Navigation und akustische Grenzen-Feedback (Bump-Sound) für blinde Spieler.
-- **Interaktive, sprachgeführte Tutorials**: Einsteigerfreundliche, vollständig blindengerechte Einführungen für alle wichtigen Spielbereiche:
-  - 🎬 **Willkommen & Steuerung** (Grundlagen der Navigation)
-  - 🏢 **Büro & Zeitverlauf** (Wie die Zeit vergeht und Hotkeys)
-  - 💻 **Spielentwicklung** (Themenwahl, Platformen, Slider)
-  - 🔬 **Forschung** (Technologien, Genres, Engines)
-  - 👥 **Personalmanagement (HR)** (Einstellen, Fortbilden, Moral)
-  - 📢 **Marketing & Hype** (Kampagnen planen)
-  - 💰 **Finanzen & Bank** (Kredite, Aktienmarkt)
-  - 🌐 **Mehrspielermodus** (Lobbys beitreten/erstellen)
-- **Automatisierte Test-Suite**: Ständige Qualitätskontrolle durch Testskripte (`test_tutorials.py`, `test_event_hype_fix.py`, etc.) zur Validierung aller Sprachschlüssel, Eingabe-Simulationen, Event-Berechnungen und Savegame-Sicherheit.
-- **Robustes, barrierefreies Update-System**:
-  - Vollautomatischer Update-Prozess über GitHub-Releases (sowohl Stable- als auch Beta-Kanäle).
-  - Sicherheitsprüfung via SHA-256 Checksummen-Validierung zum Schutz vor unvollständigen Downloads.
-  - Fehlerfreies Windows-CMD-Installationsskript: Erkennt versionierte Dateien (`Audio_Studio_Tycoon_v*.exe`) und bereinigt ältere Exe-Dateien vollautomatisch vor der Installation, um Konflikte zu vermeiden.
-  - Volles akustisches und barrierefreies Feedback: Präzise Sprachausgabe und Fehlersounds bei eventuellen Update-Problemen, statt stummem Zurückkehren ins Hauptmenü.
-- **Stabilitäts- und Logik-Optimierungen (v3.10.0-beta.1)**:
-  - Behebung eines kritischen `KeyError`-Absturzes bei Hype-Boost-Zufallsereignissen (wie `viral_post`).
-  - Behebung eines Speicher-Leaks bei historischen Jahresereignissen, wodurch die Spielleistung gesteigert und Savegame-Dateien signifikant verkleinert wurden.
-  - Entfernung von redundantem E-Mail-Spam bei historischen Ereignissen zum Jahreswechsel.
+## 🚀 Das ultimative Audio- & Community-Update (v3.11.0-beta.1)
+- **Eigene Soundkarten-Herstellung & Hardware-Labor**:
+  - Verfügbar ab dem Jahr 1980.
+  - Erforsche zukunftsweisende Audio-Technologien wie *FM-Synthese*, *Wavetable* oder *3D-Binaural*.
+  - Entwickle deine eigenen Soundkarten und lizenziere sie auf dem Weltmarkt.
+  - Generiere wöchentlich wachsende, passive Tantiemen basierend auf deinem aktuellen Marktanteil (mit realistischem Decay).
+- **Fan-Post & Community-Center**:
+  - Empfange wöchentlich Briefe deiner Fans und reagiere interaktiv im Community-Center darauf.
+  - Triff weise Entscheidungen in Brief-Antworten und sichere dir Hype-Boosts, Spenden oder neue Fans.
+- **Mitarbeiter-Persönlichkeiten & Büro-Events**:
+  - Jeder Mitarbeiter besitzt jetzt einen einzigartigen Charakterzug (*Perfektionist*, *Chaot*, *Showmaster*, *Workaholic* oder *Gelassen*) mit individuellen Boni und Nachteilen auf die Spielqualität, Moral oder Entwicklungszeit.
+  - Wöchentliche Büro-Ereignisse zwingen dich dazu, barrierefreie Teamentscheidungen bei Konflikten oder Synergien zu treffen.
+- **Marketing-Jingle-Generator mit akustischer Vorschau**:
+  - Kombiniere Musikspuren, Sprecher-Stile und Soundeffekte, um Radio-Jingles zur Bewerbung deiner aktuellen Spiele zu produzieren.
+  - **Akustische Vorschau (Sound-Previews)**: Beim Navigieren und Fokussieren der Spuren wird sofort ein prägnantes Audio-Feedback über den Screenreader oder Pygame-Mixer abgespielt (z.B. Chiptune -> Retro-Blips, Kassenklingeln bei Cash, Laser-FX, etc.), um blinden Spielern eine intuitive Kompositions-Erfahrung zu bieten.
+- **Savegame-Abwärtskompatibilität**:
+  - 100%ige Abwärtskompatibilität alter Spielstände (aus v3.10.0 und älter). Neue Strukturen wie Fanpost, Jingles und Soundkarten-Projekte werden beim Laden automatisch mit robusten Default-Werten initialisiert, ohne Spielstände unbrauchbar zu machen.
+- **Automatisierte Test-Suite**: Ständige Qualitätskontrolle durch Testskripte (`test_audio_expansion.py`, `test_tutorials.py`, etc.) zur Validierung aller Sprachschlüssel, Eingabe-Simulationen, Event-Berechnungen und Savegame-Sicherheit.
 
 ## 🎓 Interaktives Tutorial-System
 Das Spiel bietet ein brandneues, interaktives Tutorial-System. Beim ersten Betreten eines Kernbereichs (Forschung, HR, Finanzen etc.) startet automatisch eine sprachgeführte Einführung. Diese erklärt die Mechaniken spielerisch Schritt für Schritt. Tutorials können jederzeit über Tastendrücke fortgeschritten oder pausiert werden. Der Fortschritt wird automatisch global gespeichert.
@@ -86,7 +68,7 @@ Das Spiel bietet ein brandneues, interaktives Tutorial-System. Beim ersten Betre
 
 ## 🔧 Installation
 ### Windows
-- Entpacke die `.zip` und starte `Audio_Studio_Tycoon_v3.8.1.exe`.
+- Entpacke die `.zip` und starte `Audio_Studio_Tycoon_v3.11.0-beta.1.exe`.
 - Dein Screenreader (NVDA, Jaws, SAPI) wird automatisch erkannt.
 
 ### Linux

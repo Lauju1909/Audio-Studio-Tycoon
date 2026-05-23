@@ -373,7 +373,7 @@ class Engine:
 class Employee:
     """Ein Mitarbeiter des Studios."""
 
-    def __init__(self, name=None, role_data=None, skill_level=1, specialization=None, trait=None):
+    def __init__(self, name=None, role_data=None, skill_level=1, specialization=None, trait=None, personality=None):
         """
         role_data: Dict aus EMPLOYEE_ROLES (role, primary, secondary)
         skill_level: 1-5, beeinflusst Skills und Gehalt
@@ -390,6 +390,9 @@ class Employee:
         self.skill_level = skill_level
         self.specialization = specialization  # Dict aus EMPLOYEE_SPECIALIZATIONS oder None
         self.trait = trait if trait else random.choice(EMPLOYEE_TRAITS)
+        
+        # NEU: Mitarbeiter-Persönlichkeiten
+        self.personality = personality or random.choice(["perfectionist", "chaotic", "showman", "workaholic", "easygoing"])
 
         # Skills basierend auf Rolle und Level generieren
         self.skills = self._generate_skills()
@@ -430,6 +433,8 @@ class Employee:
         base_salary = total_skill * 5 + 500
         if self.trait and self.trait["effect"] == "salary":
             base_salary *= self.trait["value"]
+        if getattr(self, "personality", None) == "showman":
+            base_salary *= 1.05
         return int(base_salary)
 
     @property
@@ -513,6 +518,7 @@ class Employee:
             "training_skill_boost": getattr(self, "training_skill_boost", 0),
             "is_sick": getattr(self, "is_sick", False),
             "sick_weeks_left": getattr(self, "sick_weeks_left", 0),
+            "personality": getattr(self, "personality", "easygoing"),
         }
 
     @staticmethod
@@ -540,6 +546,7 @@ class Employee:
         emp.training_skill_boost = ed.get("training_skill_boost", 0)
         emp.is_sick = ed.get("is_sick", False)
         emp.sick_weeks_left = ed.get("sick_weeks_left", 0)
+        emp.personality = ed.get("personality", "easygoing")
         return emp
 
 class RivalGame:
@@ -803,6 +810,8 @@ class SoundConEvent:
 
         self.hype_gained    = round(self.base_hype * prestige_bonus * qa_bonus * hype_multi, 1)
         self.fans_gained    = int(self.base_fans  * prestige_bonus * qa_bonus)
+        if any(getattr(e, "personality", None) == "showman" for e in game_state.employees):
+            self.fans_gained = int(self.fans_gained * 1.15)
         self.prestige_gained = int(self.base_prestige * qa_bonus)
         self.is_active      = False
         self.result_pending = True
@@ -970,4 +979,119 @@ class SoundtrackLabel:
         label.streaming_fans   = data.get("streaming_fans", 0)
         label.prestige_bonus   = data.get("prestige_bonus", 0)
         return label
+
+
+# ============================================================
+# NEU: v3.11.0-beta.1 Expansion Classes
+# ============================================================
+
+class FanMail:
+    """Repräsentiert eine Fanpost-Nachricht mit interaktiven Antwortoptionen."""
+    def __init__(self, mail_id: str, sender: str, subject_key: str, text_key: str, options: list, is_read: bool = False, is_answered: bool = False, selected_option: int = None):
+        self.mail_id = mail_id
+        self.sender = sender
+        self.subject_key = subject_key
+        self.text_key = text_key
+        self.options = options  # Liste von Dicts: [{"text_key": "...", "fans": 100, "hype": 5.0, "money": -500}]
+        self.is_read = is_read
+        self.is_answered = is_answered
+        self.selected_option = selected_option
+
+    def to_dict(self) -> dict:
+        return {
+            "mail_id": self.mail_id,
+            "sender": self.sender,
+            "subject_key": self.subject_key,
+            "text_key": self.text_key,
+            "options": self.options,
+            "is_read": self.is_read,
+            "is_answered": self.is_answered,
+            "selected_option": self.selected_option,
+        }
+
+    @staticmethod
+    def from_dict(data: dict) -> "FanMail":
+        return FanMail(
+            mail_id=data["mail_id"],
+            sender=data["sender"],
+            subject_key=data["subject_key"],
+            text_key=data["text_key"],
+            options=data["options"],
+            is_read=data.get("is_read", False),
+            is_answered=data.get("is_answered", False),
+            selected_option=data.get("selected_option"),
+        )
+
+
+class SoundCardProject:
+    """Repräsentiert ein Soundkarten-Entwicklungsprojekt im Hardware-Labor."""
+    def __init__(self, name: str, features: list, dev_cost: int, progress: float = 0.0, is_released: bool = False, weeks_on_market: int = 0, royalties_gained: float = 0.0, market_share: float = 0.0, lifetime_royalties: float = 0.0):
+        self.name = name
+        self.features = features  # Liste von Tech-IDs
+        self.dev_cost = dev_cost
+        self.progress = progress
+        self.is_released = is_released
+        self.weeks_on_market = weeks_on_market
+        self.royalties_gained = royalties_gained
+        self.market_share = market_share
+        self.lifetime_royalties = lifetime_royalties
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "features": self.features,
+            "dev_cost": self.dev_cost,
+            "progress": self.progress,
+            "is_released": self.is_released,
+            "weeks_on_market": self.weeks_on_market,
+            "royalties_gained": self.royalties_gained,
+            "market_share": self.market_share,
+            "lifetime_royalties": self.lifetime_royalties,
+        }
+
+    @staticmethod
+    def from_dict(data: dict) -> "SoundCardProject":
+        return SoundCardProject(
+            name=data["name"],
+            features=data["features"],
+            dev_cost=data["dev_cost"],
+            progress=data.get("progress", 0.0),
+            is_released=data.get("is_released", False),
+            weeks_on_market=data.get("weeks_on_market", 0),
+            royalties_gained=data.get("royalties_gained", 0.0),
+            market_share=data.get("market_share", 0.0),
+            lifetime_royalties=data.get("lifetime_royalties", 0.0),
+        )
+
+
+class RadioJingle:
+    """Repräsentiert ein produziertes Radio-Jingle für Marketing-Zwecke."""
+    def __init__(self, name: str, music_track: str, voice_style: str, sfx: str, hype_bonus: float, cost: int):
+        self.name = name
+        self.music_track = music_track
+        self.voice_style = voice_style
+        self.sfx = sfx
+        self.hype_bonus = hype_bonus
+        self.cost = cost
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "music_track": self.music_track,
+            "voice_style": self.voice_style,
+            "sfx": self.sfx,
+            "hype_bonus": self.hype_bonus,
+            "cost": self.cost,
+        }
+
+    @staticmethod
+    def from_dict(data: dict) -> "RadioJingle":
+        return RadioJingle(
+            name=data["name"],
+            music_track=data["music_track"],
+            voice_style=data["voice_style"],
+            sfx=data["sfx"],
+            hype_bonus=data.get("hype_bonus", 0.0),
+            cost=data.get("cost", 0),
+        )
 

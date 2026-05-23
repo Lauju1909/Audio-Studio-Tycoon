@@ -52,7 +52,10 @@ from menus import (
     ProjectTeamSelectMenu, DeveloperMenu,
     SoundConMenu, SoundConFinishMenu, SoundConResultMenu, SoundConHistoryMenu,
     SoundtrackLabelMenu, LabelNameInputMenu, LabelStatusMenu,
-    LabelRadioMenu, LabelAddGameMenu
+    LabelRadioMenu, LabelAddGameMenu,
+    CommunityMenu, FanMailInboxMenu, FanMailDetailMenu, OfficeEventMenu,
+    HardwareLabMenu, HardwareLicensingMenu, SoundCardCreateMenu, SoundCardFeaturesMenu, SoundCardOverviewMenu,
+    JingleNameInputMenu, JingleGeneratorMenu, JingleMusicMenu, JingleVoiceMenu, JingleSFXMenu
 )
 
 def get_menu_factories(audio, state):
@@ -164,8 +167,24 @@ def get_menu_factories(audio, state):
         "label_menu": lambda: SoundtrackLabelMenu(audio, state),
         "label_name_input": lambda: LabelNameInputMenu(audio, state),
         "label_status_menu": lambda: LabelStatusMenu(audio, state),
+        "soundcon_radio_menu": lambda: LabelRadioMenu(audio, state), # alias if needed
         "label_radio_menu": lambda: LabelRadioMenu(audio, state),
         "label_add_game_menu": lambda: LabelAddGameMenu(audio, state),
+        # NEU: Expansion v3.11.0 Menüs
+        "community_menu": lambda: CommunityMenu(audio, state),
+        "fan_mail_inbox": lambda: FanMailInboxMenu(audio, state),
+        "fan_mail_detail": lambda: FanMailDetailMenu(audio, state),
+        "office_event_menu": lambda: OfficeEventMenu(audio, state),
+        "hardware_menu": lambda: HardwareLabMenu(audio, state),
+        "hardware_licensing": lambda: HardwareLicensingMenu(audio, state),
+        "hardware_create_name": lambda: SoundCardCreateMenu(audio, state),
+        "hardware_project_features": lambda: SoundCardFeaturesMenu(audio, state),
+        "hardware_overview": lambda: SoundCardOverviewMenu(audio, state),
+        "jingle_name_input": lambda: JingleNameInputMenu(audio, state),
+        "jingle_generator": lambda: JingleGeneratorMenu(audio, state),
+        "jingle_select_music": lambda: JingleMusicMenu(audio, state),
+        "jingle_select_voice": lambda: JingleVoiceMenu(audio, state),
+        "jingle_select_sfx": lambda: JingleSFXMenu(audio, state),
     }
 
 def main():

@@ -263,6 +263,20 @@ class GameState:
         # NEU: Soundtrack-Label
         self.soundtrack_label = None       # SoundtrackLabel oder None (wenn nicht gegründet)
 
+        # ============================================================
+        # NEU: v3.11.0-beta.1 Expansion Variables (Community & Hardware)
+        # ============================================================
+        self.fan_mail_inbox = []
+        self.sound_card_projects = []
+        self.active_jingles = []
+        self.unlocked_hardware_tech = []
+        self.active_personality_event = None
+        self.active_personality_employee = None
+        self.temp_dev_speed_penalty = 1.0
+        self.temp_dev_speed_weeks = 0
+        self.temp_quality_boost = 0.0
+        self.temp_quality_weeks = 0
+
     def add_welcome_emails(self):
         """Erstellt die Willkommens-E-Mails in der aktuell gesetzten Sprache."""
         # Willkommensnachricht: Die 1930er Ära
@@ -1055,12 +1069,20 @@ class GameState:
                     m_bonus = obj_def.get("morale_bonus", 0)
             office_morale_bonus += m_bonus
 
+        # NEU: Team-Persönlichkeit easygoing
+        has_easygoing = any(getattr(e, "personality", None) == "easygoing" for e in self.employees)
+
         quitting_employees = []
         for i, emp in enumerate(self.employees):
             emp.weeks_employed += 1
             if not getattr(self, 'crunch_active', False):
                 # Standard-Basis (2) + Büro-Bonus
-                emp.morale = min(100, emp.morale + 2 + office_morale_bonus)
+                reg_bonus = 2 + office_morale_bonus
+                if has_easygoing:
+                    reg_bonus *= 1.10
+                if getattr(emp, "personality", None) == "perfectionist":
+                    reg_bonus *= 0.90
+                emp.morale = min(100, emp.morale + max(1, int(reg_bonus)))
 
             # -----------------------------------------------
             # NEU Phase 2: Training-Countdown
@@ -1334,7 +1356,15 @@ class GameState:
                 active_emps = self._active_employees(proj)
                 for emp in active_emps:
                     morale_loss = int(random.randint(2, 5) * break_mod)
+                    if getattr(emp, "personality", None) == "workaholic":
+                        morale_loss = int(morale_loss * 1.5)
                     emp.morale = max(0, emp.morale - morale_loss)
+            else:
+                # Kein Crunch: Workaholics verlieren wöchentlich 1 Moralpunkt durch harte Arbeit
+                active_emps = self._active_employees(proj)
+                for emp in active_emps:
+                    if getattr(emp, "personality", None) == "workaholic":
+                        emp.morale = max(0, emp.morale - 1)
                     
                 # Bug-Zuwachs
                 base_bugs = random.randint(1, 3)
@@ -1594,6 +1624,59 @@ class GameState:
                 published_game.player_profit += player_cut
                 if sales_this_week < 50 or published_game.weeks_on_market > int(WEEKS_PER_YEAR * 0.6):
                     published_game.is_active = False
+
+        # ============================================================
+        # NEU: v3.11.0-beta.1 Expansion Weekly Updates
+        # ============================================================
+        
+        # 1. Temporäre Modifikatoren abbauen
+        if getattr(self, "temp_dev_speed_weeks", 0) > 0:
+            self.temp_dev_speed_weeks -= 1
+            if self.temp_dev_speed_weeks <= 0:
+                self.temp_dev_speed_penalty = 1.0
+                
+        if getattr(self, "temp_quality_weeks", 0) > 0:
+            self.temp_quality_weeks -= 1
+            if self.temp_quality_weeks <= 0:
+                self.temp_quality_boost = 0.0
+
+        # 2. Jingles aktualisieren
+        active_jingles = []
+        for jingle in getattr(self, "active_jingles", []):
+            if hasattr(jingle, "weeks_left"):
+                jingle.weeks_left -= 1
+                if jingle.weeks_left > 0:
+                    active_jingles.append(jingle)
+            else:
+                jingle.weeks_left = 3
+                active_jingles.append(jingle)
+        self.active_jingles = active_jingles
+
+        # 3. Soundkarten wöchentliche Updates
+        self.update_hardware_development()
+        
+        for card in getattr(self, "sound_card_projects", []):
+            if card.is_released:
+                card.weeks_on_market += 1
+                
+                # Marktanteil-Berechnung mit Decay
+                from game_data import HARDWARE_TECH_LIST
+                features_bonus = sum(f["sound_bonus"] for f in HARDWARE_TECH_LIST if f["id"] in card.features)
+                base_market_share = 0.05 + features_bonus
+                card.market_share = max(0.005, base_market_share / (1.0 + card.weeks_on_market * 0.04))
+                
+                # Passive wöchentliche Tantiemen generieren
+                royalties = int(card.market_share * random.randint(4000, 12000))
+                card.royalties_gained = royalties
+                card.lifetime_royalties += royalties
+                self.money += royalties
+                self.track_income("hardware", royalties)
+
+        # 4. Fanpost wöchentlich generieren
+        self.receive_fan_mail()
+
+        # 5. Büro-Events wöchentlich prüfen & triggern
+        self.trigger_personality_event()
 
         # WÖCHENTLICHE BILANZ ABSPEICHERN
         self.finalize_weekly_balance()
@@ -2025,8 +2108,15 @@ class GameState:
             trait_mods.append(val)
         trait_avg = sum(trait_mods) / len(trait_mods)
         
-        base_multi = (avg_speed / 50.0) * trait_avg
-        return base_multi * self.dev_speed_multiplier * self.logic_multiplier
+        # NEU: Persönlichkeits-Modifikatoren (workaholic: +20% Speed)
+        pers_mods = [1.20 if getattr(e, 'personality', None) == 'workaholic' else 1.0 for e in active]
+        pers_avg = sum(pers_mods) / len(pers_mods)
+        
+        # NEU: Temporäre Event-Mali
+        temp_penalty = getattr(self, "temp_dev_speed_penalty", 1.0)
+        
+        base_multi = (avg_speed / 50.0) * trait_avg * pers_avg
+        return base_multi * self.dev_speed_multiplier * self.logic_multiplier * temp_penalty
 
     def get_team_bug_modifier(self, project=None):
         active = self._active_employees(project)
@@ -2046,17 +2136,29 @@ class GameState:
             trait_mods.append(val)
         trait_avg = sum(trait_mods) / len(trait_mods)
         
+        # NEU: Persönlichkeits-Modifikatoren (chaotic: +15% Bugs)
+        pers_mods = [1.15 if getattr(e, 'personality', None) == 'chaotic' else 1.0 for e in active]
+        pers_avg = sum(pers_mods) / len(pers_mods)
+        
         # QA Bonus
         qa_bonus = 0.7 if self.has_office_bonus("qa_tools") else 1.0
         
-        return avg_mod * trait_avg * qa_bonus
+        return avg_mod * trait_avg * qa_bonus * pers_avg
 
     def get_team_quality_modifier(self, project=None):
         active = self._active_employees(project)
         if not active:
             return 1.0
         mods = [e.trait["value"] if e.trait and e.trait["effect"] == "quality" else 1.0 for e in active]
-        return sum(mods) / len(mods)
+        
+        # NEU: Persönlichkeits-Modifikatoren (perfectionist: +15% Qualität)
+        pers_mods = [1.15 if getattr(e, 'personality', None) == 'perfectionist' else 1.0 for e in active]
+        pers_avg = sum(pers_mods) / len(pers_mods)
+        
+        # NEU: Temporärer Event-Bonus
+        temp_boost = getattr(self, "temp_quality_boost", 0.0)
+        
+        return (sum(mods) / len(mods)) * pers_avg * (1.0 + temp_boost)
 
     def get_status_text(self):
         """Gibt einen vollständigen Statustext für den Screenreader aus."""
@@ -2901,6 +3003,322 @@ class GameState:
         ))
 
     # ==========================================================
+    # NEU: v3.11.0-beta.1 Expansion Methods (Community & Hardware)
+    # ==========================================================
+
+    def receive_fan_mail(self):
+        """Generiert eine neue Fanpost mit Antwortoptionen."""
+        import random
+        from models import FanMail
+        from game_data import FAN_MAIL_TEMPLATES
+        
+        # Chance basierend auf Fans und Hype
+        chance = 0.10 + min(0.30, self.fans / 200000.0)
+        if random.random() > chance:
+            return False
+            
+        template = random.choice(FAN_MAIL_TEMPLATES)
+        
+        # Eindeutige ID vergeben
+        mail_id = f"fanmail_{self.week}_{random.randint(1000, 9999)}"
+        
+        # Zufälliger Fan-Name
+        fan_firstnames = ["Thomas", "Michael", "Andreas", "Christian", "Stefan", "Lukas", "Julia", "Sarah", "Laura", "Katharina"]
+        fan_lastnames = ["Müller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer", "Wagner", "Becker", "Schulz", "Hoffmann"]
+        sender_name = f"{random.choice(fan_firstnames)} {random.choice(fan_lastnames)}"
+        
+        # FanMail erstellen
+        mail = FanMail(
+            mail_id=mail_id,
+            sender=sender_name,
+            subject_key=template["subject_key"],
+            text_key=template["text_key"],
+            options=template["options"]
+        )
+        self.fan_mail_inbox.append(mail)
+        
+        # E-Mail-Benachrichtigung an den Spieler
+        self.emails.insert(0, Email(
+            sender=sender_name,
+            subject=self.get_text(template["subject_key"]),
+            body=self.get_text(template["text_key"]),
+            date_week=self.week
+        ))
+        
+        # Audio-Feedback
+        if hasattr(self, 'audio'):
+            self.audio.play_sound('click')
+            
+        return True
+
+    def answer_fan_mail(self, mail_id: str, option_idx: int) -> bool:
+        """Beantwortet eine Fanpost und wendet die entsprechenden Effekte an."""
+        mail = next((m for m in self.fan_mail_inbox if m.mail_id == mail_id), None)
+        if not mail or mail.is_answered:
+            return False
+            
+        if option_idx < 0 or option_idx >= len(mail.options):
+            return False
+            
+        mail.is_answered = True
+        mail.selected_option = option_idx
+        mail.is_read = True
+        
+        option = mail.options[option_idx]
+        effects = option.get("effects", option.get("value", {}))
+        
+        # Effekte anwenden
+        # 1. Fans
+        fans_diff = effects.get("fans", 0)
+        self.fans = max(0, self.fans + fans_diff)
+        
+        # 2. Hype (auf alle aktiven Projekte addieren)
+        hype_diff = effects.get("hype", 0.0)
+        for ap in self.active_projects:
+            proj = ap["project"]
+            proj.hype = max(0.0, proj.hype + hype_diff)
+            
+        # 3. Geld
+        money_diff = effects.get("money", 0)
+        if money_diff != 0:
+            self.money += money_diff
+            if money_diff > 0:
+                self.track_income("Sonstiges", money_diff)
+            else:
+                self.track_expense("Sonstiges", abs(money_diff))
+                
+        return True
+
+    def start_sound_card_project(self, name: str, features: list) -> bool:
+        """Startet ein neues Soundkarten-Entwicklungsprojekt."""
+        if self.get_calendar_year() < 1980:
+            return False
+            
+        # Entwicklungskosten berechnen
+        from game_data import HARDWARE_TECH_LIST
+        dev_cost = 20000 # Grundkosten
+        for tech_id in features:
+            tech = next((t for t in HARDWARE_TECH_LIST if t["id"] == tech_id), None)
+            if tech:
+                dev_cost += tech["cost"]
+                
+        if self.money < dev_cost:
+            return False
+            
+        self.money -= dev_cost
+        self.track_expense("hardware", dev_cost)
+        
+        from models import SoundCardProject
+        project = SoundCardProject(
+            name=name,
+            features=features,
+            dev_cost=dev_cost,
+            progress=0.0
+        )
+        self.sound_card_projects.append(project)
+        return True
+
+    def unlock_hardware_technology(self, tech_id: str) -> bool:
+        """Schaltet eine Soundkarten-Technologie frei (Lizenzkauf)."""
+        from game_data import HARDWARE_TECH_LIST
+        tech = next((t for t in HARDWARE_TECH_LIST if t["id"] == tech_id), None)
+        if not tech:
+            return False
+            
+        if tech_id in self.unlocked_hardware_tech:
+            return False
+            
+        # Jahr prüfen
+        if self.get_calendar_year() < tech["year"]:
+            return False
+            
+        if self.money < tech["cost"]:
+            return False
+            
+        self.money -= tech["cost"]
+        self.track_expense("hardware", tech["cost"])
+        self.unlocked_hardware_tech.append(tech_id)
+        return True
+
+    def update_hardware_development(self):
+        """Aktualisiert wöchentlich den Entwicklungsfortschritt von Soundkarten."""
+        # Nur ein unfertiges Projekt kann gleichzeitig entwickelt werden
+        active_proj = next((p for p in self.sound_card_projects if not p.is_released), None)
+        if not active_proj:
+            return
+            
+        # Fortschrittsgeschwindigkeit
+        active_emps = self._active_employees()
+        if active_emps:
+            avg_speed = sum(e.speed for e in active_emps) / len(active_emps)
+        else:
+            avg_speed = 30.0 # Standard
+            
+        # Jede Woche ca. 8% bis 15% Fortschritt basierend auf Mitarbeitern
+        prog_inc = 5.0 + (avg_speed / 10.0)
+        active_proj.progress = min(100.0, active_proj.progress + prog_inc)
+
+    def release_sound_card(self, card_name: str) -> bool:
+        """Veröffentlicht eine fertig entwickelte Soundkarte."""
+        card = next((p for p in self.sound_card_projects if p.name == card_name and not p.is_released), None)
+        if not card or card.progress < 100.0:
+            return False
+            
+        card.is_released = True
+        card.weeks_on_market = 0
+        
+        # Vorherige Karten verlieren an Marktanteil, wenn eine neue veröffentlicht wird
+        for other_card in self.sound_card_projects:
+            if other_card.is_released and other_card.name != card_name:
+                other_card.market_share *= 0.5
+                
+        return True
+
+    def create_radio_jingle(self, name: str, music_track: str, voice_style: str, sfx: str) -> bool:
+        """Produziert ein neues Radio-Jingle zur Marketing-Unterstützung."""
+        # Kosten berechnen
+        cost = 5000 # Basiskosten
+        if music_track != "none": cost += 2000
+        if voice_style != "none": cost += 1500
+        if sfx != "none": cost += 1000
+        
+        if self.money < cost:
+            return False
+            
+        self.money -= cost
+        self.track_expense("marketing", cost)
+        
+        # Hype Bonus berechnen
+        hype_bonus = 5.0
+        if music_track != "none": hype_bonus += 3.0
+        if voice_style != "none": hype_bonus += 2.0
+        if sfx != "none": hype_bonus += 2.0
+        
+        from models import RadioJingle
+        jingle = RadioJingle(
+            name=name,
+            music_track=music_track,
+            voice_style=voice_style,
+            sfx=sfx,
+            hype_bonus=hype_bonus,
+            cost=cost
+        )
+        jingle.weeks_left = 4
+        self.active_jingles.append(jingle)
+        
+        # Hype auf alle aktiven Spiele anwenden
+        for ap in self.active_projects:
+            proj = ap["project"]
+            proj.hype = max(0.0, proj.hype + hype_bonus)
+            
+        return True
+
+    def trigger_personality_event(self) -> bool:
+        """Prüft und triggert wöchentlich Büro-Events basierend auf Mitarbeiter-Persönlichkeiten."""
+        if getattr(self, "active_personality_event", None) is not None:
+            return False
+            
+        # 10% Chance pro Woche
+        import random
+        if random.random() > 0.10:
+            return False
+            
+        if not self.employees:
+            return False
+            
+        # Vorhandene Persönlichkeiten im Team ermitteln
+        team_personalities = [e.personality for e in self.employees if getattr(e, "personality", None)]
+        if not team_personalities:
+            return False
+            
+        from game_data import OFFICE_PERSONALITY_EVENTS
+        eligible_events = []
+        for event in OFFICE_PERSONALITY_EVENTS:
+            req = event["personality_required"]
+            if req in team_personalities:
+                eligible_events.append(event)
+                
+        if not eligible_events:
+            return False
+            
+        chosen_event = random.choice(eligible_events)
+        
+        # Finde einen passenden Mitarbeiter als Hauptakteur des Events
+        protagonist = next((e for e in self.employees if getattr(e, "personality", None) == chosen_event["personality_required"]), self.employees[0])
+        
+        self.active_personality_event = chosen_event
+        self.active_personality_employee = protagonist
+        
+        # Benachrichtigungs-Email senden
+        self.emails.insert(0, Email(
+            sender=protagonist.name,
+            subject=self.get_text("subject_office_event"),
+            body=self.get_text("body_office_event", name=protagonist.name),
+            date_week=self.week
+        ))
+        
+        if hasattr(self, 'audio'):
+            self.audio.play_sound('warn')
+            
+        return True
+
+    def answer_personality_event(self, option_idx: int) -> bool:
+        """Beantwortet das aktive Büro-Event und wendet Effekte an."""
+        event = getattr(self, "active_personality_event", None)
+        if not event:
+            return False
+            
+        if option_idx < 0 or option_idx >= len(event["options"]):
+            return False
+            
+        option = event["options"][option_idx]
+        effects = option.get("effects", {})
+        
+        # 1. Moral der Mitarbeiter
+        morale_diff = effects.get("morale", 0)
+        if morale_diff != 0:
+            protagonist = getattr(self, "active_personality_employee", None)
+            if protagonist:
+                protagonist.morale = max(0, min(100, protagonist.morale + morale_diff))
+            else:
+                for emp in self.employees:
+                    emp.morale = max(0, min(100, emp.morale + morale_diff))
+                    
+        # 2. Geld
+        money_diff = effects.get("money", 0)
+        if money_diff != 0:
+            self.money += money_diff
+            if money_diff > 0:
+                self.track_income("Sonstiges", money_diff)
+            else:
+                self.track_expense("Sonstiges", abs(money_diff))
+                
+        # 3. Hype
+        hype_diff = effects.get("hype", 0.0)
+        if hype_diff != 0.0:
+            for ap in self.active_projects:
+                ap["project"].hype = max(0.0, ap["project"].hype + hype_diff)
+                
+        # 4. Fans
+        fans_diff = effects.get("fans", 0)
+        if fans_diff != 0:
+            self.fans = max(0, self.fans + fans_diff)
+            
+        # 5. Spezielle temporäre Modifikatoren
+        if "dev_speed_penalty" in effects:
+            self.temp_dev_speed_penalty = effects["dev_speed_penalty"]
+            self.temp_dev_speed_weeks = 4
+            
+        if "quality_boost" in effects:
+            self.temp_quality_boost = effects["quality_boost"]
+            self.temp_quality_weeks = 4
+            
+        # Event zurücksetzen
+        self.active_personality_event = None
+        self.active_personality_employee = None
+        return True
+
+    # ==========================================================
     # SPEICHERN / LADEN
     # ==========================================================
 
@@ -2979,7 +3397,17 @@ class GameState:
             "soundcon_last_year": getattr(self, "soundcon_last_year", 0),
             "active_soundcon": self.active_soundcon.to_dict() if getattr(self, "active_soundcon", None) else None,
             "pending_soundcon_result": getattr(self, "pending_soundcon_result", None),
-            "soundtrack_label": self.soundtrack_label.to_dict() if getattr(self, "soundtrack_label", None) else None
+            "soundtrack_label": self.soundtrack_label.to_dict() if getattr(self, "soundtrack_label", None) else None,
+            "fan_mail_inbox": [m.to_dict() for m in getattr(self, "fan_mail_inbox", [])],
+            "sound_card_projects": [p.to_dict() for p in getattr(self, "sound_card_projects", [])],
+            "active_jingles": [{"jingle": j.to_dict(), "weeks_left": getattr(j, "weeks_left", 4)} for j in getattr(self, "active_jingles", [])],
+            "unlocked_hardware_tech": getattr(self, "unlocked_hardware_tech", []),
+            "active_personality_event": getattr(self, "active_personality_event", None),
+            "active_personality_employee_name": self.active_personality_employee.name if getattr(self, "active_personality_employee", None) else None,
+            "temp_dev_speed_penalty": getattr(self, "temp_dev_speed_penalty", 1.0),
+            "temp_dev_speed_weeks": getattr(self, "temp_dev_speed_weeks", 0),
+            "temp_quality_boost": getattr(self, "temp_quality_boost", 0.0),
+            "temp_quality_weeks": getattr(self, "temp_quality_weeks", 0)
         }
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
@@ -3205,6 +3633,39 @@ class GameState:
 
         label_data = data.get("soundtrack_label")
         self.soundtrack_label = SoundtrackLabel.from_dict(label_data) if label_data else None
+
+        # NEU: v3.11.0-beta.1 Expansion Variables laden
+        from models import FanMail, SoundCardProject, RadioJingle
+        
+        self.fan_mail_inbox = []
+        for md in data.get("fan_mail_inbox", []):
+            self.fan_mail_inbox.append(FanMail.from_dict(md))
+            
+        self.sound_card_projects = []
+        for pd in data.get("sound_card_projects", []):
+            self.sound_card_projects.append(SoundCardProject.from_dict(pd))
+            
+        self.active_jingles = []
+        for jd in data.get("active_jingles", []):
+            j = RadioJingle.from_dict(jd["jingle"])
+            j.weeks_left = jd.get("weeks_left", 4)
+            self.active_jingles.append(j)
+            
+        self.unlocked_hardware_tech = data.get("unlocked_hardware_tech", [])
+        self.active_personality_event = data.get("active_personality_event", None)
+        
+        emp_name = data.get("active_personality_employee_name")
+        if emp_name:
+            self.active_personality_employee = next((e for e in self.employees if e.name == emp_name), None)
+            if not self.active_personality_employee and self.employees:
+                self.active_personality_employee = self.employees[0]
+        else:
+            self.active_personality_employee = None
+            
+        self.temp_dev_speed_penalty = data.get("temp_dev_speed_penalty", 1.0)
+        self.temp_dev_speed_weeks = data.get("temp_dev_speed_weeks", 0)
+        self.temp_quality_boost = data.get("temp_quality_boost", 0.0)
+        self.temp_quality_weeks = data.get("temp_quality_weeks", 0)
 
         self.reset_draft()
         return True

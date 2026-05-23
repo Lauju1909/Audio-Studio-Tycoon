@@ -1972,3 +1972,82 @@ FURNITURE_DATA = [
 ]
 
 SUBSCRIPTION_UNLOCK_YEAR = 1995
+
+
+# ============================================================
+# NEU: v3.11.0-beta.1 Expansion Constants
+# ============================================================
+
+HARDWARE_TECH_LIST = [
+    {"id": "synthesizer_8bit", "name_key": "hw_tech_8bit", "cost": 15000, "year": 1980, "sound_bonus": 0.05},
+    {"id": "fm_synthesis", "name_key": "hw_tech_fm", "cost": 25000, "year": 1980, "sound_bonus": 0.10},
+    {"id": "midi_support", "name_key": "hw_tech_midi", "cost": 35000, "year": 1984, "sound_bonus": 0.15},
+    {"id": "wavetable", "name_key": "hw_tech_wavetable", "cost": 50000, "year": 1988, "sound_bonus": 0.20},
+    {"id": "binaural_3d", "name_key": "hw_tech_3d", "cost": 120000, "year": 2000, "sound_bonus": 0.35},
+]
+
+FAN_MAIL_TEMPLATES = [
+    {
+        "id": "fan_mail_retro",
+        "subject_key": "fan_mail_retro_sub",
+        "text_key": "fan_mail_retro_text",
+        "options": [
+            {"text_key": "fan_mail_retro_opt1", "effects": {"fans": 300, "hype": 5.0, "money": 0}},
+            {"text_key": "fan_mail_retro_opt2", "effects": {"fans": -100, "hype": -2.0, "money": 500}},
+            {"text_key": "fan_mail_retro_opt3", "effects": {"fans": 100, "hype": 1.0, "money": 0}},
+        ]
+    },
+    {
+        "id": "fan_mail_soundcard",
+        "subject_key": "fan_mail_sc_sub",
+        "text_key": "fan_mail_sc_text",
+        "options": [
+            {"text_key": "fan_mail_sc_opt1", "effects": {"fans": 500, "hype": 10.0, "money": -1000}},
+            {"text_key": "fan_mail_sc_opt2", "effects": {"fans": 200, "hype": 3.0, "money": 0}},
+            {"text_key": "fan_mail_sc_opt3", "effects": {"fans": -200, "hype": -5.0, "money": 0}},
+        ]
+    },
+    {
+        "id": "fan_mail_bug",
+        "subject_key": "fan_mail_bug_sub",
+        "text_key": "fan_mail_bug_text",
+        "options": [
+            {"text_key": "fan_mail_bug_opt1", "effects": {"fans": 400, "hype": 4.0, "money": 0}},
+            {"text_key": "fan_mail_bug_opt2", "effects": {"fans": -300, "hype": -8.0, "money": 0}},
+        ]
+    }
+]
+
+OFFICE_PERSONALITY_EVENTS = [
+    {
+        "id": "event_perfectionist_delay",
+        "personality_required": "perfectionist",
+        "title_key": "event_perf_title",
+        "text_key": "event_perf_text",
+        "options": [
+            {"text_key": "event_perf_opt1", "effects": {"morale": 15, "dev_speed_penalty": 0.5, "money": 0}},
+            {"text_key": "event_perf_opt2", "effects": {"morale": -20, "quality_boost": 0.05, "money": 0}},
+        ]
+    },
+    {
+        "id": "event_chaotic_idea",
+        "personality_required": "chaotic",
+        "title_key": "event_ch_title",
+        "text_key": "event_ch_text",
+        "options": [
+            {"text_key": "event_ch_opt1", "effects": {"money": -2000, "hype": 15.0, "morale": 10}},
+            {"text_key": "event_ch_opt2", "effects": {"morale": -15, "hype": 0, "money": 0}},
+        ]
+    },
+    {
+        "id": "event_showman_con",
+        "personality_required": "showman",
+        "title_key": "event_sh_title",
+        "text_key": "event_sh_text",
+        "options": [
+            {"text_key": "event_sh_opt1", "effects": {"money": -5000, "fans": 1000, "hype": 20.0}},
+            {"text_key": "event_sh_opt2", "effects": {"morale": -15, "fans": 0, "hype": 0}},
+        ]
+    }
+]
+
