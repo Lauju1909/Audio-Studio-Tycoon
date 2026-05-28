@@ -457,8 +457,133 @@ class LicenseSelectMenu(Menu):
     def _select(self, name):
         if self.game_state.use_license(name):
              self.audio.play_sound("confirm")
-             return "genre_menu"
-        return None
+             return "main_menu"
+        return "main_menu"
+
+class EngineLicensingMenu(Menu):
+    """Menü zur Lizenzierung der eigenen Engines."""
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(game_state.get_text('engine_licensing_title'), [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        self.options = []
+        for i, eng in enumerate(self.game_state.engines):
+            status = "Lizenziert" if getattr(eng, "is_licensed", False) else "Nicht Lizenziert"
+            fee = getattr(eng, "license_fee", 0)
+            self.options.append(f"{eng.name} - Status: {status} - Gebühr: {fee}")
+        self.options.append(self.game_state.get_text('back'))
+
+    def handle_input(self, action):
+        if action == "back" or self.selected_idx == len(self.options) - 1:
+            return "business_menu"
+        if action == "confirm":
+            self.game_state.ui_context['selected_engine_idx'] = self.selected_idx
+            return "engine_license_fee_menu"
+        return super().handle_input(action)
+
+class EngineLicenseFeeMenu(TextInputMenu):
+    def __init__(self, audio, game_state):
+        super().__init__('engine_licensing_title', 'engine_license_fee_prompt', audio, game_state,
+                         on_confirm=self._on_confirm, on_cancel=lambda: "engine_licensing_menu")
+
+    def _on_confirm(self, text):
+        try:
+            fee = int(text)
+            if fee < 0: raise ValueError
+        except ValueError:
+            if hasattr(self.audio, "speak"):
+                self.audio.speak(self.game_state.get_text('invalid_number'))
+            return None
+        idx = self.game_state.ui_context.get('selected_engine_idx', -1)
+        if 0 <= idx < len(self.game_state.engines):
+            eng = self.game_state.engines[idx]
+            eng.license_fee = fee
+            eng.is_licensed = fee > 0
+            if hasattr(self.audio, "speak"):
+                if fee > 0:
+                    self.audio.speak(self.game_state.get_text('engine_licensed', name=eng.name, fee=fee))
+                else:
+                    self.audio.speak(self.game_state.get_text('engine_unlicensed', name=eng.name))
+        return "engine_licensing_menu"
+
+class GamePortingMenu(Menu):
+    """Menü zur Portierung eines Spiels."""
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(game_state.get_text('game_porting_title'), [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        self.options = []
+        self.valid_games = [g for g in self.game_state.game_history if getattr(g, "is_active", False) or getattr(g, "weeks_on_market", 0) > 0]
+        for g in self.valid_games:
+            self.options.append(f"{g.name} (Plattform: {self.game_state.get_text(g.platform)})")
+        if not self.valid_games:
+            self.options.append(self.game_state.get_text('no_games_available'))
+        self.options.append(self.game_state.get_text('back'))
+
+    def handle_input(self, action):
+        if action == "back" or (self.options and self.selected_idx == len(self.options) - 1) or not self.valid_games:
+            return "business_menu"
+        if action == "confirm":
+            self.game_state.ui_context['port_game_name'] = self.valid_games[self.selected_idx].name
+            return "port_platform_menu"
+        return super().handle_input(action)
+
+class PortPlatformMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(game_state.get_text('port_platform_title'), [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        self.options = []
+        orig_name = self.game_state.ui_context.get('port_game_name')
+        orig_game = next((g for g in self.game_state.game_history if g.name == orig_name), None)
+        
+        self.available_platforms = []
+        if orig_game:
+            for p in self.game_state.active_platforms:
+                if p != orig_game.platform:
+                    self.available_platforms.append(p)
+            for c in getattr(self.game_state, "custom_consoles", []):
+                if c.name != orig_game.platform:
+                    self.available_platforms.append(c.name)
+        
+        for p in self.available_platforms:
+            self.options.append(self.game_state.get_text(p))
+            
+        if not self.available_platforms:
+            self.options.append(self.game_state.get_text('no_platforms_available'))
+        self.options.append(self.game_state.get_text('back'))
+
+    def handle_input(self, action):
+        if action == "back" or (self.options and self.selected_idx == len(self.options) - 1) or not self.available_platforms:
+            return "game_porting_menu"
+        if action == "confirm":
+            orig_name = self.game_state.ui_context.get('port_game_name')
+            platform = self.available_platforms[self.selected_idx]
+            
+            # Start Port Project
+            from models import PortProject
+            dev_cost = 50000  # basis
+            total_weeks = 4
+            
+            if not hasattr(self.game_state, "port_projects"):
+                self.game_state.port_projects = []
+            self.game_state.port_projects.append(PortProject(orig_name, platform, dev_cost, total_weeks))
+            self.game_state.money -= dev_cost
+            self.game_state.track_income("game_development", -dev_cost)
+            
+            if hasattr(self.audio, "speak"):
+                self.audio.speak(self.game_state.get_text('port_project_started', name=orig_name, platform=self.game_state.get_text(platform)))
+            return "main_menu"
+        return super().handle_input(action)
 
 class AddonMenu(Menu):
     def __init__(self, audio, game_state):

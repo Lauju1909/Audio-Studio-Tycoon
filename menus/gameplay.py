@@ -67,6 +67,7 @@ class GameMenu(Menu):
             {'text': self.game_state.get_text('email_inbox_status', total=total_emails, unread=unread_emails), 'action': lambda: "email_inbox"},
             {'text': self.game_state.get_text('bank_menu'), 'action': lambda: "bank_menu"},
             {'text': self.game_state.get_text('service_menu'), 'action': lambda: "service_menu"},
+            {'text': self.game_state.get_text('game_porting_title', default='Spiel Portieren'), 'action': lambda: "game_porting_menu"},
             {'text': self.game_state.get_text('active_games_menu_title', default="Aktive Spiele & Einnahmen"), 'action': lambda: "active_games_menu"},
             {'text': self.game_state.get_text('save_menu'), 'action': lambda: "save_menu"},
             {'text': self.game_state.get_text('menu_settings'), 'action': lambda: "settings_menu_ingame"},

@@ -26,6 +26,8 @@ Das Spiel wird komplett über die Tastatur gesteuert:
 | **F** | **Finanz-Check** (Kontostand, Gewinnberichte) |
 
 ## 🚀 Neue Features (v3.10.0-beta.1)
+- **Engine-Lizenzierung**: Du kannst deine selbst entwickelten Engines an andere Studios lizenzieren und wöchentliche Einnahmen generieren!
+- **Spiele-Portierungen**: Portiere deine erfolgreichen Spiele auf neue Plattformen, um neue Käuferschichten zu erschließen.
 - **SoundCon (Jährliche Spielemesse)**:
   - Anmeldung in Woche 2 jedes Kalenderjahres.
   - Wähle zwischen vier Standgrößen (*Klein*, *Mittel*, *Groß* und *Keynote-Bühne*).

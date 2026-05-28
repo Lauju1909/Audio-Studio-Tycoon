@@ -16,6 +16,7 @@ class ResearchMenu(Menu):
             {'text': self.game_state.get_text('research_feature'), 'action': lambda: "feature_research_menu"},
             {'text': self.game_state.get_text('research_technology'), 'action': lambda: "technology_research_menu"},
             {'text': self.game_state.get_text('create_engine'), 'action': lambda: "engine_create_name"},
+            {'text': self.game_state.get_text('engine_licensing_title', default='Engine-Lizenzierung'), 'action': lambda: "engine_licensing_menu"},
             {'text': self.game_state.get_text('hardware_dev'), 'action': lambda: "hardware_dev_menu"},
             {'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"}
         ]

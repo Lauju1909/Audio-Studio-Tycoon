@@ -973,6 +973,8 @@ class GameState:
         """Logik die jede Woche passiert (Gehalt, Zufallsereignisse)."""
         # Abo-Dienst aktualisieren
         self.update_subscription_service()
+        self._process_engine_licensing()
+        self._process_port_projects()
 
         # Monatsankündigung (dynamisch basierend auf WEEKS_PER_YEAR)
         week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
@@ -2923,9 +2925,10 @@ class GameState:
             "settings": self.settings,
             "game_history": [g.to_dict() for g in self.game_history],
             "active_mmos": [m.to_dict() for m in getattr(self, "active_mmos", [])],
+            "port_projects": [p.to_dict() for p in getattr(self, "port_projects", [])],
             "employees": [e.to_dict() for e in self.employees],
             "engines": [
-                {"name": eng.name, "features": [
+                {"name": eng.name, "is_licensed": eng.is_licensed, "license_fee": eng.license_fee, "features": [
                     {"category": f.category, "name": f.name, "tech_bonus": f.tech_bonus}
                     for f in eng.features
                 ]} for eng in self.engines
@@ -3065,7 +3068,10 @@ class GameState:
                 EngineFeature(fd["category"], fd["name"], fd["tech_bonus"])
                 for fd in ed["features"]
             ]
-            self.engines.append(Engine(ed["name"], features))
+            eng = Engine(ed["name"], features)
+            eng.is_licensed = ed.get("is_licensed", False)
+            eng.license_fee = ed.get("license_fee", 0)
+            self.engines.append(eng)
 
         # Spielhistorie laden
         self.game_history = []
@@ -3083,6 +3089,15 @@ class GameState:
                     m.server_cost_per_10k = md.get("server_cost_per_10k", 5000)
                     m.weeks_active = md.get("weeks_active", 0)
                     self.active_mmos.append(m)
+
+        self.port_projects = []
+        if "port_projects" in data:
+            from models import PortProject
+            for pd in data["port_projects"]:
+                port = PortProject(pd["original_game_name"], pd["new_platform"], pd["dev_cost"], pd["total_weeks"])
+                port.progress = pd.get("progress", 0.0)
+                port.is_finished = pd.get("is_finished", False)
+                self.port_projects.append(port)
 
         # Mitarbeiter laden
         self.employees = []
@@ -3695,6 +3710,58 @@ class GameState:
             "income": {k: 0 for k in self.current_week_balance["income"]},
             "expenses": {k: 0 for k in self.current_week_balance["expenses"]}
         }
+
+    def _process_engine_licensing(self):
+        """Berechnet wöchentliche Lizenzeinnahmen aus lizenzierten Engines."""
+        for eng in getattr(self, "engines", []):
+            if getattr(eng, "is_licensed", False):
+                fee = getattr(eng, "license_fee", 0)
+                if fee > 0:
+                    optimal_fee = max(1, eng.tech_level * 10)
+                    demand = max(0, 100 - ((fee / optimal_fee) * 50))
+                    income = int(demand * fee)
+                    if income > 0:
+                        self.track_income("engine_license", income)
+
+    def _process_port_projects(self):
+        """Verarbeitet aktive Portierungs-Projekte."""
+        if not hasattr(self, "port_projects"):
+            self.port_projects = []
+            
+        for port in list(self.port_projects):
+            if not port.is_finished:
+                # Calculate progress based on employees
+                progress_gain = 0.0
+                for emp in self.employees:
+                    if emp.morale > 0 and not getattr(emp, "is_training", False) and not getattr(emp, "is_sick", False):
+                        progress_gain += emp.speed / 1000.0  # arbitrary scale
+                
+                port.progress += progress_gain
+                
+                if port.progress >= 1.0:
+                    port.progress = 1.0
+                    port.is_finished = True
+                    self.port_projects.remove(port)
+                    # Create new game project based on original game
+                    orig = next((g for g in self.game_history if g.name == port.original_game_name), None)
+                    if orig:
+                        from models import GameProject, ReviewScore
+                        new_name = f"{orig.name} ({port.new_platform})"
+                        new_game = GameProject(new_name, orig.topic, orig.genre, orig.sliders, port.new_platform, orig.audience, orig.engine, orig.size, orig.marketing)
+                        new_game.review = ReviewScore([min(10, s + random.randint(-1, 1)) for s in orig.review.scores])
+                        new_game.sales = 0
+                        new_game.revenue = 0
+                        new_game.dev_cost = port.dev_cost
+                        new_game.week_developed = self.week
+                        self.game_history.append(new_game)
+                        self.emails.insert(0, Email(
+                            sender="System",
+                            subject="Portierung abgeschlossen",
+                            body=f"Das Spiel {port.original_game_name} wurde erfolgreich auf {port.new_platform} portiert und veröffentlicht!",
+                            date_week=self.week
+                        ))
+                        if hasattr(self, "audio"):
+                            self.audio.speak(f"Portierung von {port.original_game_name} auf {port.new_platform} abgeschlossen.")
 
     def update_subscription_service(self):
         """Aktualisiert den Abo-Dienst (Abonnenten-Wachstum, Einnahmen, Kosten)."""

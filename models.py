@@ -192,6 +192,26 @@ class UpdateProject:
             "revenue": self.revenue
         }
 
+class PortProject:
+    """Ein Projekt zur Portierung eines Spiels auf eine neue Plattform."""
+    def __init__(self, original_game_name, new_platform, dev_cost, total_weeks):
+        self.original_game_name = original_game_name
+        self.new_platform = new_platform
+        self.dev_cost = dev_cost
+        self.total_weeks = total_weeks
+        self.progress = 0.0
+        self.is_finished = False
+
+    def to_dict(self):
+        return {
+            "original_game_name": self.original_game_name,
+            "new_platform": self.new_platform,
+            "dev_cost": self.dev_cost,
+            "total_weeks": self.total_weeks,
+            "progress": self.progress,
+            "is_finished": self.is_finished
+        }
+
 class AddonProject:
     """Ein Addon für ein existierendes Spiel."""
     def __init__(self, base_game_name, name, topic, genre, dev_cost):
@@ -347,6 +367,8 @@ class Engine:
     def __init__(self, name, features=None):
         self.name = name
         self.features = features or []  # Liste von EngineFeature
+        self.is_licensed = False
+        self.license_fee = 0
 
     @property
     def tech_level(self):
@@ -364,7 +386,8 @@ class Engine:
     def summary(self):
         """Zusammenfassung für NVDA."""
         feat_names = ", ".join(get_text(f.name) for f in self.features) if self.features else get_text('none')
-        return get_text('engine_summary', name=self.name, tech_level=self.tech_level, features=feat_names)
+        lic_str = " (Lizenziert)" if self.is_licensed else ""
+        return get_text('engine_summary', name=self.name, tech_level=self.tech_level, features=feat_names) + lic_str
 
     def __str__(self):
         return f"{self.name} (Tech: {self.tech_level})"
