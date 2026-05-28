@@ -1,4 +1,4 @@
-# 🚀 Entwickler-Onboarding & Projekt-Briefing: Audio Studio Tycoon (v3.9.0)
+# 🚀 Entwickler-Onboarding & Projekt-Briefing: Audio Studio Tycoon (v3.11.0-beta.1)
 
 > [!IMPORTANT]
 > **DIESES DOKUMENT IST DER ALLES-ENTSCHEIDENDE EINSTIEG FÜR DEN NÄCHSTEN KI-AGENTEN.**
@@ -9,13 +9,13 @@
 ## 🇩🇪 STARTER-PROMPT FÜR DEN NÄCHSTEN AGENTEN (Bitte kopieren!)
 
 ```text
-Hallo! Ich bin ein KI-Entwickler und möchte an dem Projekt "Audio Studio Tycoon" weiterarbeiten. Ich habe den gesamten Kontext aus der Datei `NEXT_AGENT_ONBOARDING.md` im Projektverzeichnis gelesen. Ich weiß, dass es sich um ein 100 % barrierefreies, screenreader-optimiertes Studio-Management-Tycoon-Spiel (Python) in Deutsch und Englisch handelt.
+Hallo! Ich bin ein KI-Entwickler und möchte an dem Projekt "Audio Studio Tycoon" weiterarbeiten. Ich habe den gesamten Kontext aus der Datei `NEXT_AGENT_ONBOARDING.md` im Projektverzeichnis gelesen. Ich weiß, dass es sich um ein 100 % barrierefreie, screenreader-optimiertes Studio-Management-Tycoon-Spiel (Python) in Deutsch und Englisch handelt.
 
-Aktueller Stand ist v3.9.0-beta.1 (vollständig stabil, Übersetzungsparität bei 100 %, 8 sprachgeführte Tutorials erfolgreich getestet). Alle meine Antworten und Interaktionen müssen streng auf DEUTSCH erfolgen (gemäß RULE[user_global]). 
+Aktueller Stand ist v3.11.0-beta.1 (vollständig stabil, Übersetzungsparität bei 100 %, alle vier neuen Major-Features: Hardware-Labor & Soundkarten, Fanpost-Community-Center, Mitarbeiter-Persönlichkeiten, Marketing-Jingle-Generator mit Bumper-Sounds voll implementiert und erfolgreich getestet). Alle meine Antworten und Interaktionen müssen streng auf DEUTSCH erfolgen (gemäß RULE[user_global]). 
 
 Ich bin bereit für die nächsten Schritte! Bitte analysiere den Projektordner und lass uns besprechen, wie wir fortfahren möchten:
-Option A: Offizielles Release von Version 3.9.0 (Stable) mit PyInstaller-Kompilierung, ZIP-Archivierung und GitHub-Tagging.
-Option B: Entwicklung eines neuen Major-Features für v3.10.0-beta.1 (z. B. B1: Dynamische Spielemessen "SoundCon" oder B2: Soundtrack-Labels & Musikvertrieb).
+Option A: Offizielles Release von Version 3.11.0 (Stable) mit PyInstaller-Kompilierung, ZIP-Archivierung und GitHub-Tagging.
+Option B: Entwicklung eines neuen Major-Features für v3.12.0-beta.1.
 
 Welche Option oder welches Feature möchtest du als erstes angehen?
 ```
@@ -122,27 +122,17 @@ Das Spiel wird als eigenständige Windows-Anwendung kompiliert.
 
 ## 🔮 Roadmap & Zukünftige Optionen
 
-Das System läuft absolut fehlerfrei auf Version `3.9.0-beta.1`. Folgende Optionen stehen bereit:
+Das System läuft absolut fehlerfrei auf Version `3.11.0-beta.1`. Folgende Optionen stehen bereit:
 
-### 🌟 Option A: Veröffentlichung von Version 3.9.0 (Stable Release)
+### 🌟 Option A: Veröffentlichung von Version 3.11.0 (Stable Release)
 Schließe den aktuellen Beta-Zyklus ab:
-1. Benenne alle Versionsreferenzen von `3.9.0-beta.1` auf `3.9.0` um.
+1. Benenne alle Versionsreferenzen von `3.11.0-beta.1` auf `3.11.0` um.
 2. Führe den Build-Prozess aus (`build_game.bat` & `create_release.py`).
-3. Verpacke das finale ZIP als `Audio_Studio_Tycoon_v3.9.0.zip`.
-4. Mache einen Git-Commit, erstelle den Git-Tag `v3.9.0` und pushe es auf GitHub.
+3. Verpacke das finale ZIP als `Audio_Studio_Tycoon_v3.11.0.zip`.
+4. Mache einen Git-Commit, erstelle den Git-Tag `v3.11.0` und pushe es auf GitHub.
 
-### 🎪 Option B: Ein neues Major-Feature implementieren (für v3.10.0-beta.1)
-
-#### **Vorschlag B1: Dynamische Spielemessen (SoundCon / Audio-Convention)**
-* Einmal im Jahr findet die "SoundCon" statt.
-* Der Spieler bucht Messestände (Klein, Mittel, Groß) für Credits, um massiven Hype für Spiele in der Entwicklung zu erzeugen.
-* Enthält eine interaktive Q&A-Bühnen-Runde mit Pressevertretern. Die Antworten beeinflussen den Hype-Wert direkt.
-* 100% barrierefrei durch Ton-Indikatoren und Sprach-Q&A.
-
-#### **Vorschlag B2: Soundtrack-Labels & Musikvertrieb (Audio Publishing Hub)**
-* Die Soundtracks erfolgreicher Spiele können auf einem eigenen Musiklabel ausgekoppelt und gepresst werden.
-* Verträge mit Radiosendern, Chart-Platzierungen und In-Game-Konzerte generieren wöchentliche Tantiemen.
-* Barrierefrei durch Chart-Jingles und optimierte Vertriebsmenüs.
+### 🎪 Option B: Ein neues Major-Feature implementieren (für v3.12.0-beta.1)
+* z.B. B1: Fortgeschrittenes Publisher-System, B2: E-Sports Sponsoring, B3: Erweiterte Multiplayer-Charts.
 
 ---
 

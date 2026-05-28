@@ -412,14 +412,16 @@ class LabelNameInputMenu(TextInputMenu):
         gs = game_state
         super().__init__(
             title=gs.get_text('label_name_prompt'),
+            prompt='label_name_prompt',
             audio=audio,
             game_state=gs,
-            max_length=40
+            on_confirm=self._on_confirm,
+            on_cancel=self._on_cancel
         )
 
-    def on_confirm(self, text: str):
+    def _on_confirm(self, text: str):
         gs = self.game_state
-        name = text.strip()
+        name = text.strip()[:40]
         if not name:
             self.audio.play_sound('error')
             self.audio.speak(gs.get_text('label_name_empty'))
@@ -438,7 +440,7 @@ class LabelNameInputMenu(TextInputMenu):
                 self.audio.speak(gs.get_text('label_not_enough_money', cost=30_000))
             return 'label_menu'
 
-    def on_cancel(self):
+    def _on_cancel(self):
         return 'label_menu'
 
 

@@ -13,7 +13,7 @@ from models import (
     RivalStudio, RivalGame, Email, AddonProject, BundleProject, 
     ActiveMMO, BankLoan, CustomConsole, PublishingOffer, 
     PublishedThirdPartyGame, BankStatement,
-    SoundConEvent, SoundtrackLabel, RadioContract
+    SoundConEvent, SoundtrackLabel, RadioContract, ManufacturingJob
 )
 from translations import TRANSLATIONS, get_system_language
 from game_data import (
@@ -38,6 +38,7 @@ class GameState:
         self.games_made = 0
         self.total_revenue = 0
         self.developer_mode = False # Versteckter Entwickler-Modus
+        self.pending_update = None
 
         # Trends
         self.current_trend = {}  # {'topic': '...', 'genre': '...', 'week_started': X}
@@ -50,6 +51,7 @@ class GameState:
         # Engines
         self.engines = []
         self.unlocked_features = []  # Liste von EngineFeature (freigeschaltet)
+        self.current_engine_draft = None
         self._init_starter_engine()
 
         # Büro
@@ -143,6 +145,7 @@ class GameState:
         }
         self.accounting = {"income": 0, "expenses": 0, "loan_paid": 0}
         self.rivals = [] # Wird später via _init_rivals gefüllt
+        self._pending_rival_idx = None
         self.bought_platforms = ["PC (MS-DOS)"]
         self.active_platforms = []
         self.unlocked_platforms = [] # Manuell freigeschaltete Plattformen (via Events)
@@ -262,6 +265,23 @@ class GameState:
 
         # NEU: Soundtrack-Label
         self.soundtrack_label = None       # SoundtrackLabel oder None (wenn nicht gegründet)
+
+        # ============================================================
+        # NEU: v3.11.0-beta.1 Expansion Variables (Community & Hardware)
+        # ============================================================
+        self.fan_mail_inbox = []
+        self.sound_card_projects = []
+        self.active_jingles = []
+        self.unlocked_hardware_tech = []
+        self.active_personality_event = None
+        self.active_personality_employee = None
+        self.temp_dev_speed_penalty = 1.0
+        self.temp_dev_speed_weeks = 0
+        self.temp_quality_boost = 0.0
+        self.temp_quality_weeks = 0
+        self.accessibility_reputation = 0
+        self.accessibility_lab_history = []
+        self.last_accessibility_grant_year = 0
 
     def add_welcome_emails(self):
         """Erstellt die Willkommens-E-Mails in der aktuell gesetzten Sprache."""
@@ -835,7 +855,6 @@ class GameState:
         if self.money < amount * cost_per_unit:
             return False
             
-        self.track_expense("merch", amount * cost_per_unit)
         self.track_expense("production", amount * cost_per_unit)
         
         job = ManufacturingJob(game_name, amount, cost_per_unit, weeks)
@@ -1057,12 +1076,20 @@ class GameState:
                     m_bonus = obj_def.get("morale_bonus", 0)
             office_morale_bonus += m_bonus
 
+        # NEU: Team-Persönlichkeit easygoing
+        has_easygoing = any(getattr(e, "personality", None) == "easygoing" for e in self.employees)
+
         quitting_employees = []
         for i, emp in enumerate(self.employees):
             emp.weeks_employed += 1
             if not getattr(self, 'crunch_active', False):
                 # Standard-Basis (2) + Büro-Bonus
-                emp.morale = min(100, emp.morale + 2 + office_morale_bonus)
+                reg_bonus = 2 + office_morale_bonus
+                if has_easygoing:
+                    reg_bonus *= 1.10
+                if getattr(emp, "personality", None) == "perfectionist":
+                    reg_bonus *= 0.90
+                emp.morale = min(100, emp.morale + max(1, int(reg_bonus)))
 
             # -----------------------------------------------
             # NEU Phase 2: Training-Countdown
@@ -1307,6 +1334,42 @@ class GameState:
         # Projektfortschritt für alle aktiven Projekte
         for ap in self.active_projects:
             proj = ap["project"]
+            
+            # NEU: Auftragsarbeiten
+            if getattr(proj, "target_points", None) is not None:
+                points_added = 0.0
+                skill_map = {"Code": "Programmierung", "Audio": "Sound", "Grafik": "Grafik", "Design": "Design"}
+                skill_name = skill_map.get(proj.type, "Programmierung")
+                
+                active_emps = self._active_employees(proj)
+                for emp in active_emps:
+                    points_added += emp.skills.get(skill_name, 50) / 10.0
+                
+                if not active_emps:
+                    points_added = 5.0
+                    
+                points_added *= getattr(self, "dev_speed_multiplier", 1.0)
+                proj.current_points = min(proj.target_points, proj.current_points + points_added)
+                
+                if proj.current_points >= proj.target_points:
+                    ap["ready_to_finish"] = True
+                
+                # Moral-Malus
+                if ap.get("crunch"):
+                    has_break = self.has_office_bonus("morale_room")
+                    break_mod = 0.5 if has_break else 1.0
+                    for emp in active_emps:
+                        morale_loss = int(random.randint(2, 5) * break_mod)
+                        if getattr(emp, "personality", None) == "workaholic":
+                            morale_loss = int(morale_loss * 1.5)
+                        emp.morale = max(0, emp.morale - morale_loss)
+                else:
+                    for emp in active_emps:
+                        if getattr(emp, "personality", None) == "workaholic":
+                            emp.morale = max(0, emp.morale - 1)
+                            
+                continue
+
             boost = 2 if ap.get("crunch") else 1
             if getattr(proj, 'is_remaster', False):
                 boost *= 1.5
@@ -1336,7 +1399,15 @@ class GameState:
                 active_emps = self._active_employees(proj)
                 for emp in active_emps:
                     morale_loss = int(random.randint(2, 5) * break_mod)
+                    if getattr(emp, "personality", None) == "workaholic":
+                        morale_loss = int(morale_loss * 1.5)
                     emp.morale = max(0, emp.morale - morale_loss)
+            else:
+                # Kein Crunch: Workaholics verlieren wöchentlich 1 Moralpunkt durch harte Arbeit
+                active_emps = self._active_employees(proj)
+                for emp in active_emps:
+                    if getattr(emp, "personality", None) == "workaholic":
+                        emp.morale = max(0, emp.morale - 1)
                     
                 # Bug-Zuwachs
                 base_bugs = random.randint(1, 3)
@@ -1597,6 +1668,61 @@ class GameState:
                 if sales_this_week < 50 or published_game.weeks_on_market > int(WEEKS_PER_YEAR * 0.6):
                     published_game.is_active = False
 
+        # ============================================================
+        # NEU: v3.11.0-beta.1 Expansion Weekly Updates
+        # ============================================================
+        
+        # 1. Temporäre Modifikatoren abbauen
+        if getattr(self, "temp_dev_speed_weeks", 0) > 0:
+            self.temp_dev_speed_weeks -= 1
+            if self.temp_dev_speed_weeks <= 0:
+                self.temp_dev_speed_penalty = 1.0
+                
+        if getattr(self, "temp_quality_weeks", 0) > 0:
+            self.temp_quality_weeks -= 1
+            if self.temp_quality_weeks <= 0:
+                self.temp_quality_boost = 0.0
+
+        # 2. Jingles aktualisieren
+        active_jingles = []
+        for jingle in getattr(self, "active_jingles", []):
+            if hasattr(jingle, "weeks_left"):
+                jingle.weeks_left -= 1
+                if jingle.weeks_left > 0:
+                    active_jingles.append(jingle)
+            else:
+                jingle.weeks_left = 3
+                active_jingles.append(jingle)
+        self.active_jingles = active_jingles
+
+        # 3. Soundkarten wöchentliche Updates
+        self.update_hardware_development()
+        
+        for card in getattr(self, "sound_card_projects", []):
+            if card.is_released:
+                card.weeks_on_market += 1
+                
+                # Marktanteil-Berechnung mit Decay
+                from game_data import HARDWARE_TECH_LIST
+                features_bonus = sum(f["sound_bonus"] for f in HARDWARE_TECH_LIST if f["id"] in card.features)
+                base_market_share = 0.05 + features_bonus
+                card.market_share = max(0.005, base_market_share / (1.0 + card.weeks_on_market * 0.04))
+                
+                # Passive wöchentliche Tantiemen generieren
+                royalties = int(card.market_share * random.randint(4000, 12000))
+                card.royalties_gained = royalties
+                card.lifetime_royalties += royalties
+                self.track_income("hardware", royalties)
+
+        # 4. Fanpost wöchentlich generieren
+        self.receive_fan_mail()
+
+        # 4b. Barrierefreiheits-Reputation sorgt fuer langsames Community-Wachstum
+        self.update_accessibility_reputation()
+
+        # 5. Büro-Events wöchentlich prüfen & triggern
+        self.trigger_personality_event()
+
         # WÖCHENTLICHE BILANZ ABSPEICHERN
         self.finalize_weekly_balance()
 
@@ -1630,6 +1756,9 @@ class GameState:
         # Lizenzen
         if getattr(project, 'license_bonus', 0) > 0:
             hype += project.license_bonus
+
+        # Projektbezogener Hype aus Fanpost, Jingles und Community-Aktionen
+        hype += getattr(project, 'hype', 0.0)
 
         # Zufallsereignis Bonus
         for event in self.active_events:
@@ -1854,7 +1983,6 @@ class GameState:
         if hasattr(self, 'audio'):
             self.audio.play_sound('buy')
             self.audio.speak(self.get_text('employee_hired', name=employee.name), interrupt=True)
-        self.track_expense("salaries", hire_cost)
         self.employees.append(employee)
         return True
 
@@ -2027,8 +2155,15 @@ class GameState:
             trait_mods.append(val)
         trait_avg = sum(trait_mods) / len(trait_mods)
         
-        base_multi = (avg_speed / 50.0) * trait_avg
-        return base_multi * self.dev_speed_multiplier * self.logic_multiplier
+        # NEU: Persönlichkeits-Modifikatoren (workaholic: +20% Speed)
+        pers_mods = [1.20 if getattr(e, 'personality', None) == 'workaholic' else 1.0 for e in active]
+        pers_avg = sum(pers_mods) / len(pers_mods)
+        
+        # NEU: Temporäre Event-Mali
+        temp_penalty = getattr(self, "temp_dev_speed_penalty", 1.0)
+        
+        base_multi = (avg_speed / 50.0) * trait_avg * pers_avg
+        return base_multi * self.dev_speed_multiplier * self.logic_multiplier * temp_penalty
 
     def get_team_bug_modifier(self, project=None):
         active = self._active_employees(project)
@@ -2048,17 +2183,29 @@ class GameState:
             trait_mods.append(val)
         trait_avg = sum(trait_mods) / len(trait_mods)
         
+        # NEU: Persönlichkeits-Modifikatoren (chaotic: +15% Bugs)
+        pers_mods = [1.15 if getattr(e, 'personality', None) == 'chaotic' else 1.0 for e in active]
+        pers_avg = sum(pers_mods) / len(pers_mods)
+        
         # QA Bonus
         qa_bonus = 0.7 if self.has_office_bonus("qa_tools") else 1.0
         
-        return avg_mod * trait_avg * qa_bonus
+        return avg_mod * trait_avg * qa_bonus * pers_avg
 
     def get_team_quality_modifier(self, project=None):
         active = self._active_employees(project)
         if not active:
             return 1.0
         mods = [e.trait["value"] if e.trait and e.trait["effect"] == "quality" else 1.0 for e in active]
-        return sum(mods) / len(mods)
+        
+        # NEU: Persönlichkeits-Modifikatoren (perfectionist: +15% Qualität)
+        pers_mods = [1.15 if getattr(e, 'personality', None) == 'perfectionist' else 1.0 for e in active]
+        pers_avg = sum(pers_mods) / len(pers_mods)
+        
+        # NEU: Temporärer Event-Bonus
+        temp_boost = getattr(self, "temp_quality_boost", 0.0)
+        
+        return (sum(mods) / len(mods)) * pers_avg * (1.0 + temp_boost)
 
     def get_status_text(self):
         """Gibt einen vollständigen Statustext für den Screenreader aus."""
@@ -2603,6 +2750,10 @@ class GameState:
         # Lizenz-Bonus
         base_score += getattr(project, 'license_bonus', 0.0)
 
+        # Barrierefreiheits-Reputation: saubere Screenreader-UX hilft Reviews leicht.
+        accessibility_bonus = min(0.05, getattr(self, "accessibility_reputation", 0) / 2000.0)
+        base_score += accessibility_bonus
+
         # Qualitätsstandard-Multiplikator anwenden (macht es über die Jahre schwerer)
         base_review = max(1.0, min(10.0, float(base_score * 10 / self.quality_standard_multi)))
 
@@ -2639,6 +2790,9 @@ class GameState:
             comments.append(self.get_text('review_bad_gameplay'))
         elif slider_match >= 0.9:
             comments.append(self.get_text('review_good_gameplay'))
+
+        if getattr(self, "accessibility_reputation", 0) >= 50:
+            comments.append(self.get_text('review_accessibility_praise'))
 
         # Fazit
         if base_review >= 8.0:
@@ -2874,7 +3028,6 @@ class GameState:
         if self.week > self.last_ad_week:
             reward = 5000
             self.track_income("other", reward)
-            self.track_income("other", reward)
             self.last_ad_week = self.week
             return True, reward
         return False, 0
@@ -2901,6 +3054,425 @@ class GameState:
             body=f"{self.get_text('main_trend')} {self.current_trend['text']}",
             date_week=self.week
         ))
+
+    # ==========================================================
+    # NEU: v3.11.0-beta.1 Expansion Methods (Community & Hardware)
+    # ==========================================================
+
+    def get_accessibility_lab_actions(self):
+        """Liefert die verfuegbaren Aktionen fuer das Barrierefreiheits-Labor."""
+        return [
+            {
+                "id": "screenreader_test",
+                "name_key": "access_lab_action_screenreader",
+                "cost": 4000,
+                "reputation": 5,
+                "fans": 120,
+                "hype": 1.0,
+                "bug_reduction": 2,
+                "quality_boost": 0.0,
+                "quality_weeks": 0,
+            },
+            {
+                "id": "audio_description",
+                "name_key": "access_lab_action_audio_description",
+                "cost": 9000,
+                "reputation": 8,
+                "fans": 260,
+                "hype": 2.0,
+                "bug_reduction": 1,
+                "quality_boost": 0.03,
+                "quality_weeks": 6,
+            },
+            {
+                "id": "community_beta",
+                "name_key": "access_lab_action_community_beta",
+                "cost": 15000,
+                "reputation": 12,
+                "fans": 500,
+                "hype": 4.0,
+                "bug_reduction": 5,
+                "quality_boost": 0.04,
+                "quality_weeks": 4,
+            },
+        ]
+
+    def get_accessibility_weekly_fans(self):
+        """Berechnet den passiven woechentlichen Fan-Zuwachs."""
+        rep = getattr(self, "accessibility_reputation", 0)
+        if rep <= 0:
+            return 0
+        return min(800, max(1, int(rep * 1.5)))
+
+    def update_accessibility_reputation(self):
+        """Wendet den passiven Community-Effekt des Barrierefreiheits-Labors an."""
+        weekly_fans = self.get_accessibility_weekly_fans()
+        if weekly_fans > 0:
+            self.fans += weekly_fans
+        if self.active_projects and getattr(self, "accessibility_reputation", 0) >= 50:
+            self.hype = min(250, self.hype + 0.1)
+
+        rep = getattr(self, "accessibility_reputation", 0)
+        current_year = self.get_calendar_year()
+        if rep >= 40 and current_year > getattr(self, "last_accessibility_grant_year", 0):
+            grant_amount = int(10000 + rep * 500)
+            self.track_income("other", grant_amount)
+            self.last_accessibility_grant_year = current_year
+            self.emails.insert(0, Email(
+                sender=self.get_text('sender_system'),
+                subject=self.get_text('subject_access_grant'),
+                body=self.get_text('body_access_grant', amount=grant_amount, score=rep),
+                date_week=self.week
+            ))
+        return weekly_fans
+
+    def run_accessibility_lab_action(self, action_id):
+        """Fuehrt eine Aktion im Barrierefreiheits-Labor aus."""
+        action = next((a for a in self.get_accessibility_lab_actions() if a["id"] == action_id), None)
+        if not action:
+            return False, "invalid"
+        if self.money < action["cost"]:
+            return False, "no_money"
+
+        self.track_expense("research", action["cost"])
+        self.accessibility_reputation = min(
+            100,
+            getattr(self, "accessibility_reputation", 0) + action["reputation"]
+        )
+        self.fans = max(0, self.fans + action["fans"])
+        self.hype = min(250, self.hype + action["hype"])
+
+        bug_reduction = action.get("bug_reduction", 0)
+        if bug_reduction:
+            for ap in self.active_projects:
+                ap["bugs"] = max(0, ap.get("bugs", 0) - bug_reduction)
+
+        if action.get("quality_boost", 0) > 0:
+            self.temp_quality_boost = max(
+                getattr(self, "temp_quality_boost", 0.0),
+                action["quality_boost"]
+            )
+            self.temp_quality_weeks = max(
+                getattr(self, "temp_quality_weeks", 0),
+                action["quality_weeks"]
+            )
+
+        self.accessibility_lab_history.append({
+            "week": self.week,
+            "action_id": action["id"],
+            "cost": action["cost"],
+            "reputation": action["reputation"],
+        })
+        if hasattr(self, "_check_achievements"):
+            self._check_achievements()
+        return True, action
+
+    def receive_fan_mail(self):
+        """Generiert eine neue Fanpost mit Antwortoptionen."""
+        import random
+        from models import FanMail
+        from game_data import FAN_MAIL_TEMPLATES
+        
+        # Chance basierend auf Fans und Hype
+        chance = 0.10 + min(0.30, self.fans / 200000.0)
+        if random.random() > chance:
+            return False
+            
+        template = random.choice(FAN_MAIL_TEMPLATES)
+        
+        # Eindeutige ID vergeben
+        mail_id = f"fanmail_{self.week}_{random.randint(1000, 9999)}"
+        
+        # Zufälliger Fan-Name
+        fan_firstnames = ["Thomas", "Michael", "Andreas", "Christian", "Stefan", "Lukas", "Julia", "Sarah", "Laura", "Katharina"]
+        fan_lastnames = ["Müller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer", "Wagner", "Becker", "Schulz", "Hoffmann"]
+        sender_name = f"{random.choice(fan_firstnames)} {random.choice(fan_lastnames)}"
+        
+        # FanMail erstellen
+        mail = FanMail(
+            mail_id=mail_id,
+            sender=sender_name,
+            subject_key=template["subject_key"],
+            text_key=template["text_key"],
+            options=template["options"]
+        )
+        self.fan_mail_inbox.append(mail)
+        
+        # E-Mail-Benachrichtigung an den Spieler
+        self.emails.insert(0, Email(
+            sender=sender_name,
+            subject=self.get_text(template["subject_key"]),
+            body=self.get_text(template["text_key"]),
+            date_week=self.week
+        ))
+        
+        # Audio-Feedback
+        if hasattr(self, 'audio'):
+            self.audio.play_sound('click')
+            
+        return True
+
+    def answer_fan_mail(self, mail_id: str, option_idx: int) -> bool:
+        """Beantwortet eine Fanpost und wendet die entsprechenden Effekte an."""
+        mail = next((m for m in self.fan_mail_inbox if m.mail_id == mail_id), None)
+        if not mail or mail.is_answered:
+            return False
+            
+        if option_idx < 0 or option_idx >= len(mail.options):
+            return False
+            
+        mail.is_answered = True
+        mail.selected_option = option_idx
+        mail.is_read = True
+        
+        option = mail.options[option_idx]
+        effects = option.get("effects", option.get("value", {}))
+        
+        # Effekte anwenden
+        # 1. Fans
+        fans_diff = effects.get("fans", 0)
+        self.fans = max(0, self.fans + fans_diff)
+        
+        # 2. Hype (auf alle aktiven Projekte addieren)
+        hype_diff = effects.get("hype", 0.0)
+        for ap in self.active_projects:
+            proj = ap["project"]
+            proj.hype = max(0.0, proj.hype + hype_diff)
+            
+        # 3. Geld
+        money_diff = effects.get("money", 0)
+        if money_diff != 0:
+            if money_diff > 0:
+                self.track_income("other", money_diff)
+            else:
+                self.track_expense("other", abs(money_diff))
+                
+        return True
+
+    def start_sound_card_project(self, name: str, features: list) -> bool:
+        """Startet ein neues Soundkarten-Entwicklungsprojekt."""
+        if self.get_calendar_year() < 1980:
+            return False
+            
+        # Entwicklungskosten berechnen
+        from game_data import HARDWARE_TECH_LIST
+        dev_cost = 20000 # Grundkosten
+        for tech_id in features:
+            tech = next((t for t in HARDWARE_TECH_LIST if t["id"] == tech_id), None)
+            if tech:
+                dev_cost += tech["cost"]
+                
+        if self.money < dev_cost:
+            return False
+            
+        self.track_expense("hardware", dev_cost)
+        
+        from models import SoundCardProject
+        project = SoundCardProject(
+            name=name,
+            features=features,
+            dev_cost=dev_cost,
+            progress=0.0
+        )
+        self.sound_card_projects.append(project)
+        return True
+
+    def unlock_hardware_technology(self, tech_id: str) -> bool:
+        """Schaltet eine Soundkarten-Technologie frei (Lizenzkauf)."""
+        from game_data import HARDWARE_TECH_LIST
+        tech = next((t for t in HARDWARE_TECH_LIST if t["id"] == tech_id), None)
+        if not tech:
+            return False
+            
+        if tech_id in self.unlocked_hardware_tech:
+            return False
+            
+        # Jahr prüfen
+        if self.get_calendar_year() < tech["year"]:
+            return False
+            
+        if self.money < tech["cost"]:
+            return False
+            
+        self.track_expense("hardware", tech["cost"])
+        self.unlocked_hardware_tech.append(tech_id)
+        return True
+
+    def update_hardware_development(self):
+        """Aktualisiert wöchentlich den Entwicklungsfortschritt von Soundkarten."""
+        # Nur ein unfertiges Projekt kann gleichzeitig entwickelt werden
+        active_proj = next((p for p in self.sound_card_projects if not p.is_released), None)
+        if not active_proj:
+            return
+            
+        # Fortschrittsgeschwindigkeit
+        active_emps = self._active_employees()
+        if active_emps:
+            avg_speed = sum(e.speed for e in active_emps) / len(active_emps)
+        else:
+            avg_speed = 30.0 # Standard
+            
+        # Jede Woche ca. 8% bis 15% Fortschritt basierend auf Mitarbeitern
+        prog_inc = 5.0 + (avg_speed / 10.0)
+        active_proj.progress = min(100.0, active_proj.progress + prog_inc)
+
+    def release_sound_card(self, card_name: str) -> bool:
+        """Veröffentlicht eine fertig entwickelte Soundkarte."""
+        card = next((p for p in self.sound_card_projects if p.name == card_name and not p.is_released), None)
+        if not card or card.progress < 100.0:
+            return False
+            
+        card.is_released = True
+        card.weeks_on_market = 0
+        
+        # Vorherige Karten verlieren an Marktanteil, wenn eine neue veröffentlicht wird
+        for other_card in self.sound_card_projects:
+            if other_card.is_released and other_card.name != card_name:
+                other_card.market_share *= 0.5
+                
+        return True
+
+    def create_radio_jingle(self, name: str, music_track: str, voice_style: str, sfx: str) -> bool:
+        """Produziert ein neues Radio-Jingle zur Marketing-Unterstützung."""
+        # Kosten berechnen
+        cost = 5000 # Basiskosten
+        if music_track != "none": cost += 2000
+        if voice_style != "none": cost += 1500
+        if sfx != "none": cost += 1000
+        
+        if self.money < cost:
+            return False
+            
+        self.track_expense("marketing", cost)
+        
+        # Hype Bonus berechnen
+        hype_bonus = 5.0
+        if music_track != "none": hype_bonus += 3.0
+        if voice_style != "none": hype_bonus += 2.0
+        if sfx != "none": hype_bonus += 2.0
+        
+        from models import RadioJingle
+        jingle = RadioJingle(
+            name=name,
+            music_track=music_track,
+            voice_style=voice_style,
+            sfx=sfx,
+            hype_bonus=hype_bonus,
+            cost=cost
+        )
+        jingle.weeks_left = 4
+        self.active_jingles.append(jingle)
+        
+        # Hype auf alle aktiven Spiele anwenden
+        for ap in self.active_projects:
+            proj = ap["project"]
+            proj.hype = max(0.0, proj.hype + hype_bonus)
+            
+        return True
+
+    def trigger_personality_event(self) -> bool:
+        """Prüft und triggert wöchentlich Büro-Events basierend auf Mitarbeiter-Persönlichkeiten."""
+        if getattr(self, "active_personality_event", None) is not None:
+            return False
+            
+        # 10% Chance pro Woche
+        import random
+        if random.random() > 0.10:
+            return False
+            
+        if not self.employees:
+            return False
+            
+        # Vorhandene Persönlichkeiten im Team ermitteln
+        team_personalities = [e.personality for e in self.employees if getattr(e, "personality", None)]
+        if not team_personalities:
+            return False
+            
+        from game_data import OFFICE_PERSONALITY_EVENTS
+        eligible_events = []
+        for event in OFFICE_PERSONALITY_EVENTS:
+            req = event["personality_required"]
+            if req in team_personalities:
+                eligible_events.append(event)
+                
+        if not eligible_events:
+            return False
+            
+        chosen_event = random.choice(eligible_events)
+        
+        # Finde einen passenden Mitarbeiter als Hauptakteur des Events
+        protagonist = next((e for e in self.employees if getattr(e, "personality", None) == chosen_event["personality_required"]), self.employees[0])
+        
+        self.active_personality_event = chosen_event
+        self.active_personality_employee = protagonist
+        
+        # Benachrichtigungs-Email senden
+        self.emails.insert(0, Email(
+            sender=protagonist.name,
+            subject=self.get_text("subject_office_event"),
+            body=self.get_text("body_office_event", name=protagonist.name),
+            date_week=self.week
+        ))
+        
+        if hasattr(self, 'audio'):
+            self.audio.play_sound('warn')
+            
+        return True
+
+    def answer_personality_event(self, option_idx: int) -> bool:
+        """Beantwortet das aktive Büro-Event und wendet Effekte an."""
+        event = getattr(self, "active_personality_event", None)
+        if not event:
+            return False
+            
+        if option_idx < 0 or option_idx >= len(event["options"]):
+            return False
+            
+        option = event["options"][option_idx]
+        effects = option.get("effects", {})
+        
+        # 1. Moral der Mitarbeiter
+        morale_diff = effects.get("morale", 0)
+        if morale_diff != 0:
+            protagonist = getattr(self, "active_personality_employee", None)
+            if protagonist:
+                protagonist.morale = max(0, min(100, protagonist.morale + morale_diff))
+            else:
+                for emp in self.employees:
+                    emp.morale = max(0, min(100, emp.morale + morale_diff))
+                    
+        # 2. Geld
+        money_diff = effects.get("money", 0)
+        if money_diff != 0:
+            if money_diff > 0:
+                self.track_income("other", money_diff)
+            else:
+                self.track_expense("other", abs(money_diff))
+                
+        # 3. Hype
+        hype_diff = effects.get("hype", 0.0)
+        if hype_diff != 0.0:
+            for ap in self.active_projects:
+                ap["project"].hype = max(0.0, ap["project"].hype + hype_diff)
+                
+        # 4. Fans
+        fans_diff = effects.get("fans", 0)
+        if fans_diff != 0:
+            self.fans = max(0, self.fans + fans_diff)
+            
+        # 5. Spezielle temporäre Modifikatoren
+        if "dev_speed_penalty" in effects:
+            self.temp_dev_speed_penalty = effects["dev_speed_penalty"]
+            self.temp_dev_speed_weeks = 4
+            
+        if "quality_boost" in effects:
+            self.temp_quality_boost = effects["quality_boost"]
+            self.temp_quality_weeks = 4
+            
+        # Event zurücksetzen
+        self.active_personality_event = None
+        self.active_personality_employee = None
+        return True
 
     # ==========================================================
     # SPEICHERN / LADEN
@@ -2982,7 +3554,22 @@ class GameState:
             "soundcon_last_year": getattr(self, "soundcon_last_year", 0),
             "active_soundcon": self.active_soundcon.to_dict() if getattr(self, "active_soundcon", None) else None,
             "pending_soundcon_result": getattr(self, "pending_soundcon_result", None),
-            "soundtrack_label": self.soundtrack_label.to_dict() if getattr(self, "soundtrack_label", None) else None
+            "soundtrack_label": self.soundtrack_label.to_dict() if getattr(self, "soundtrack_label", None) else None,
+            "fan_mail_inbox": [m.to_dict() for m in getattr(self, "fan_mail_inbox", [])],
+            "sound_card_projects": [p.to_dict() for p in getattr(self, "sound_card_projects", [])],
+            "active_jingles": [{"jingle": j.to_dict(), "weeks_left": getattr(j, "weeks_left", 4)} for j in getattr(self, "active_jingles", [])],
+            "unlocked_hardware_tech": getattr(self, "unlocked_hardware_tech", []),
+            "active_personality_event": getattr(self, "active_personality_event", None),
+            "active_personality_employee_name": self.active_personality_employee.name if getattr(self, "active_personality_employee", None) else None,
+            "temp_dev_speed_penalty": getattr(self, "temp_dev_speed_penalty", 1.0),
+            "temp_dev_speed_weeks": getattr(self, "temp_dev_speed_weeks", 0),
+            "temp_quality_boost": getattr(self, "temp_quality_boost", 0.0),
+            "temp_quality_weeks": getattr(self, "temp_quality_weeks", 0),
+            "accessibility_reputation": getattr(self, "accessibility_reputation", 0),
+            "accessibility_lab_history": getattr(self, "accessibility_lab_history", []),
+            "last_accessibility_grant_year": getattr(self, "last_accessibility_grant_year", 0),
+            "unlocked_achievements": getattr(self, "unlocked_achievements", []),
+            "my_goty_wins": getattr(self, "my_goty_wins", 0)
         }
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
@@ -3123,13 +3710,18 @@ class GameState:
         # Aktive Projekte laden
         self.active_projects = []
         for ad in data.get("active_projects", []):
-            proj = GameProject.from_dict(ad["project"])
+            if ad.get("is_contract"):
+                from models import ContractWorkProject
+                proj = ContractWorkProject.from_dict(ad["project"])
+            else:
+                from models import GameProject
+                proj = GameProject.from_dict(ad["project"])
             
             self.active_projects.append({
                 "project": proj,
                 "progress": ad["progress"],
                 "total_weeks": ad["total_weeks"],
-                "bugs": ad["bugs"],
+                "bugs": ad.get("bugs", 0),
                 "crunch": ad.get("crunch", False),
                 "ready_to_finish": ad.get("ready_to_finish", False),
                 "event_count": ad.get("event_count", 0),
@@ -3220,6 +3812,44 @@ class GameState:
 
         label_data = data.get("soundtrack_label")
         self.soundtrack_label = SoundtrackLabel.from_dict(label_data) if label_data else None
+
+        # NEU: v3.11.0-beta.1 Expansion Variables laden
+        from models import FanMail, SoundCardProject, RadioJingle
+        
+        self.fan_mail_inbox = []
+        for md in data.get("fan_mail_inbox", []):
+            self.fan_mail_inbox.append(FanMail.from_dict(md))
+            
+        self.sound_card_projects = []
+        for pd in data.get("sound_card_projects", []):
+            self.sound_card_projects.append(SoundCardProject.from_dict(pd))
+            
+        self.active_jingles = []
+        for jd in data.get("active_jingles", []):
+            j = RadioJingle.from_dict(jd["jingle"])
+            j.weeks_left = jd.get("weeks_left", 4)
+            self.active_jingles.append(j)
+            
+        self.unlocked_hardware_tech = data.get("unlocked_hardware_tech", [])
+        self.active_personality_event = data.get("active_personality_event", None)
+        
+        emp_name = data.get("active_personality_employee_name")
+        if emp_name:
+            self.active_personality_employee = next((e for e in self.employees if e.name == emp_name), None)
+            if not self.active_personality_employee and self.employees:
+                self.active_personality_employee = self.employees[0]
+        else:
+            self.active_personality_employee = None
+            
+        self.temp_dev_speed_penalty = data.get("temp_dev_speed_penalty", 1.0)
+        self.temp_dev_speed_weeks = data.get("temp_dev_speed_weeks", 0)
+        self.temp_quality_boost = data.get("temp_quality_boost", 0.0)
+        self.temp_quality_weeks = data.get("temp_quality_weeks", 0)
+        self.accessibility_reputation = data.get("accessibility_reputation", 0)
+        self.accessibility_lab_history = data.get("accessibility_lab_history", [])
+        self.last_accessibility_grant_year = data.get("last_accessibility_grant_year", 0)
+        self.unlocked_achievements = data.get("unlocked_achievements", [])
+        self.my_goty_wins = data.get("my_goty_wins", 0)
 
         self.reset_draft()
         return True
@@ -3599,6 +4229,9 @@ class GameState:
                     unlocked = True
             elif ach["type"] == "goty":
                 if self.my_goty_wins >= ach["threshold"]:
+                    unlocked = True
+            elif ach["type"] == "accessibility":
+                if getattr(self, "accessibility_reputation", 0) >= ach["threshold"]:
                     unlocked = True
                     
             if unlocked:
@@ -4048,6 +4681,74 @@ class GameState:
                                 fans=self.fans)
         return summary
 
+
+
+    def generate_contract_work_options(self):
+        """Generiert 3 zufaellige Auftragsarbeiten."""
+        import random
+        from models import ContractWorkProject
+        options = []
+        types = ["Code", "Audio", "Grafik", "Design"]
+        
+        base_points = 50 + (self.prestige * 5)
+        base_payout = 2000 + (self.prestige * 200)
+        
+        for i in range(3):
+            ctype = random.choice(types)
+            diff = random.randint(1, 3)
+            
+            target_points = base_points * diff * random.uniform(0.8, 1.2)
+            payout = base_payout * diff * random.uniform(0.9, 1.3)
+            
+            titles = []
+            if ctype == "Code":
+                titles = ["Datenbank-Optimierung", "Netzwerk-Code", "KI-Routinen", "Bugfixing extern"]
+            elif ctype == "Audio":
+                titles = ["Soundeffekte", "Podcast-Jingle", "Hintergrundmusik", "Voice-Over"]
+            elif ctype == "Grafik":
+                titles = ["Logo-Design", "3D-Modellierung", "Sprite-Animationen", "UI-Mockups"]
+            else:
+                titles = ["Level-Design", "Gamedesign-Dokument", "Balancing-Tabelle", "Quest-Schreiben"]
+                
+            name = f"{random.choice(titles)} ({ctype})"
+            
+            options.append({
+                "name": name,
+                "type": ctype,
+                "target_points": int(target_points),
+                "payout": int(payout)
+            })
+            
+        return options
+
+    def start_contract_work(self, option_data):
+        """Startet einen ausgewaehlten Auftrag."""
+        from models import ContractWorkProject
+        cw = ContractWorkProject(
+            name=option_data["name"],
+            work_type=option_data["type"],
+            target_points=option_data["target_points"],
+            payout=option_data["payout"]
+        )
+        self.active_projects.append({
+            "project": cw,
+            "progress": 0.0,
+            "total_weeks": 9999,
+            "bugs": 0,
+            "crunch": False,
+            "ready_to_finish": False,
+            "assigned_employee_ids": []
+        })
+        return True
+
+    def finish_contract_work(self, ap_dict):
+        """Schliesst eine Auftragsarbeit ab und zahlt aus."""
+        proj = ap_dict["project"]
+        self.track_income("other", proj.payout)
+        if ap_dict in self.active_projects:
+            self.active_projects.remove(ap_dict)
+        return True
+
     def get_status_summary(self):
         """Gibt eine Zusammenfassung der Statuswerte (Datum, Geld, Forschungspunkte, Mitarbeiter, Fans) zurück."""
         # Skill-Punkte der Mitarbeiter summieren (Level)
@@ -4061,6 +4762,8 @@ class GameState:
                                 employees=len(self.employees),
                                 total_level=total_level,
                                 fans=self.fans,
-                                prestige=self.prestige)
+                                prestige=self.prestige,
+                                accessibility=getattr(self, "accessibility_reputation", 0),
+                                accessibility_weekly=self.get_accessibility_weekly_fans())
         return summary
 

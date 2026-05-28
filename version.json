@@ -1,6 +1,6 @@
 {
-    "version": "3.10.0-beta.2",
+    "version": "3.11.0-beta.1",
     "channel": "beta",
-    "notes": "v3.10.0-beta.2: Major-Update mit neuen Kern-Features: SoundCon (Spielemesse) mit Stand-Buchungen, Q&A-Bühnenshows und Hype-Effekten, Soundtrack-Labels, Radio-Verträgen und passiven Tantiemen-Einnahmen. Barrierefreies asynchrones Update-System ohne Einfrieren, inklusive kontinuierlichem akustischem Ticker-Feedback, Tastatur-Blockierung („Bump“) und automatischer Fokus-Erzwingung nach dem Neustart.",
+    "notes": "v3.11.0-beta.1: Das ultimative Audio- & Community-Update! Enthält vier neue Major-Features: 1. Eigene Soundkarten-Herstellung & Hardware-Labor ab dem Jahr 1980 mit passiven wöchentlichen Tantiemen und Patentforschung. 2. Fan-Post & Community-Center zur interaktiven Beantwortung von Briefen mit Hype- und Kassenwirkungen. 3. Mitarbeiter-Persönlichkeiten (Perfektionist, Chaot, Showmaster, etc.) und Büro-Events. 4. Marketing-Jingle-Generator mit akustischer Bumper-Sound-Vorschau.",
     "min_launcher_version": "1.0.0"
 }

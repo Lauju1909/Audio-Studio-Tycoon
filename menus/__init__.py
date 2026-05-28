@@ -1,4 +1,4 @@
-from .base import Menu, TextInputMenu, SliderMenu
+﻿from .base import Menu, TextInputMenu, SliderMenu
 from .settings import SettingsMenu, KeybindingMenu, VolumeSettingsMenu, LanguageMenu
 from .system import UpdateConfirmMenu, UpdateProgressMenu, BankruptcyMenu, SaveMenu, LoadMenu, HelpMenu
 from .office import (
@@ -12,7 +12,7 @@ from .research import (
 )
 from .business import (
     ServiceMenu, GameServiceOptionsMenu, BankMenu, LoanMenu, StockMarketMenu, StockRivalDetailMenu,
-    DonationMenu, MonetizationMenu,
+    DonationMenu, MonetizationMenu, ContractWorkMenu,
     LicenseShopMenu, LicenseSelectMenu, AddonMenu, AddonNameMenu, BundleMenu, BundleNameMenu,
     ProductionMenu, ProductionAmountMenu, MMOPaymentMenu, MMOManagementMenu, MMOOptionsMenu, 
     PublisherDealsMenu, PublisherDealDetailsMenu, MerchMenu, MerchAmountMenu, 
@@ -36,6 +36,11 @@ from .events import (
     LabelRadioMenu, LabelAddGameMenu
 )
 
+# NEU: v3.11.0 Expansion MenÃ¼s (Community, Hardware, Jingle)
+from .community import CommunityMenu, AccessibilityLabMenu, FanMailInboxMenu, FanMailDetailMenu, OfficeEventMenu
+from .hardware import HardwareLabMenu, HardwareLicensingMenu, SoundCardCreateMenu, SoundCardFeaturesMenu, SoundCardOverviewMenu
+from .marketing_jingle import JingleNameInputMenu, JingleGeneratorMenu, JingleMusicMenu, JingleVoiceMenu, JingleSFXMenu
+
 __all__ = [
     "Menu", "TextInputMenu", "SliderMenu", "SettingsMenu", "KeybindingMenu",
     "LanguageMenu", "VolumeSettingsMenu", "UpdateConfirmMenu", "UpdateProgressMenu", "BankruptcyMenu", "SaveMenu",
@@ -46,7 +51,7 @@ __all__ = [
     "TechnologyResearchMenu", "EngineCreateNameMenu", "EngineFeatureSelectMenu",
     "HardwareDevMenu", "ConsoleNameInput", "ConsoleSpecsMenu", "ServiceMenu",
     "GameServiceOptionsMenu", "BankMenu", "LoanMenu", "StockMarketMenu", "StockRivalDetailMenu",
-    "DonationMenu", "MonetizationMenu",
+    "DonationMenu", "MonetizationMenu", "ContractWorkMenu",
     "LicenseShopMenu", "LicenseSelectMenu", "AddonMenu", "AddonNameMenu",
     "BundleMenu", "BundleNameMenu",
     "ProductionMenu", "ProductionAmountMenu", "MMOPaymentMenu", "MMOManagementMenu",
@@ -64,4 +69,9 @@ __all__ = [
     "SoundtrackLabelMenu", "LabelNameInputMenu", "LabelStatusMenu",
     "LabelRadioMenu", "LabelAddGameMenu",
     "EngineLicensingMenu", "EngineLicenseFeeMenu", "GamePortingMenu", "PortPlatformMenu",
+    # NEU: Expansion MenÃ¼s
+    "CommunityMenu", "AccessibilityLabMenu", "FanMailInboxMenu", "FanMailDetailMenu", "OfficeEventMenu",
+    "HardwareLabMenu", "HardwareLicensingMenu", "SoundCardCreateMenu", "SoundCardFeaturesMenu", "SoundCardOverviewMenu",
+    "JingleNameInputMenu", "JingleGeneratorMenu", "JingleMusicMenu", "JingleVoiceMenu", "JingleSFXMenu"
 ]
+

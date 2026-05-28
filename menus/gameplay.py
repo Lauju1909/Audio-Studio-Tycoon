@@ -65,6 +65,9 @@ class GameMenu(Menu):
             {'text': self.game_state.get_text('research_menu'), 'action': lambda: "research_menu"},
             {'text': self.game_state.get_text('office_menu'), 'action': lambda: "office_menu"},
             {'text': self.game_state.get_text('email_inbox_status', total=total_emails, unread=unread_emails), 'action': lambda: "email_inbox"},
+            {'text': self.game_state.get_text('community_menu_title'), 'action': lambda: "community_menu"},
+            {'text': self.game_state.get_text('hardware_menu_title'), 'action': lambda: "hardware_menu"},
+            {'text': self.game_state.get_text('jingle_menu_title'), 'action': lambda: "jingle_name_input"},
             {'text': self.game_state.get_text('bank_menu'), 'action': lambda: "bank_menu"},
             {'text': self.game_state.get_text('service_menu'), 'action': lambda: "service_menu"},
             {'text': self.game_state.get_text('game_porting_title', default='Spiel Portieren'), 'action': lambda: "game_porting_menu"},
@@ -407,8 +410,16 @@ class DevProgressMenu(Menu):
             return self._back_to_list()
         ap = self.game_state.active_projects[self.selected_project_idx]
         if ap["progress"] >= ap["total_weeks"]:
-            self.game_state.finalize_game(ap)
-            return "review_result"
+            # Check if it is a Contract Work
+            if getattr(ap["project"], "target_points", None) is not None:
+                # Beende Auftragsarbeit
+                self.game_state.finish_contract_work(ap)
+                self.audio.play_sound("cash")
+                self.audio.speak(self.game_state.get_text('contract_finished', payout=ap["project"].payout))
+                return "game_menu"
+            else:
+                self.game_state.finalize_game(ap)
+                return "review_result"
         else:
             self.audio.speak(self.game_state.get_text('dev_not_finished'))
             return None
