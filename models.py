@@ -51,6 +51,10 @@ class GameProject:
         # NEU: Sprachen
         self.languages = ["de"] # Startet immer mit Deutsch
         
+        # NEU: Advanced Features
+        self.has_ads = False
+        self.has_mod_support = False
+        
         # NEU: Service & Support
         self.bugs = 0
         self.dlc_count = 0
@@ -119,6 +123,8 @@ class GameProject:
             "lifetime_physical_sales": getattr(self, "lifetime_physical_sales", 0),
             "assigned_employee_ids": getattr(self, "assigned_employee_ids", []),
             "languages": getattr(self, "languages", ["de"]),
+            "has_ads": getattr(self, "has_ads", False),
+            "has_mod_support": getattr(self, "has_mod_support", False),
             "updates": [u.to_dict() for u in getattr(self, "updates", [])],
             "total_bugs_fixed": getattr(self, "total_bugs_fixed", 0),
         }
@@ -150,6 +156,8 @@ class GameProject:
         proj.lifetime_physical_sales = gd.get("lifetime_physical_sales", 0)
         proj.assigned_employee_ids = gd.get("assigned_employee_ids", [])
         proj.languages = gd.get("languages", ["de"])
+        proj.has_ads = gd.get("has_ads", False)
+        proj.has_mod_support = gd.get("has_mod_support", False)
         proj.total_bugs_fixed = gd.get("total_bugs_fixed", 0)
         
         # Updates laden

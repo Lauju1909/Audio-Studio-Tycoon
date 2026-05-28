@@ -1511,8 +1511,20 @@ class GameState:
         for g in self.game_history:
             if g.is_active:
                 g.weeks_on_market += 1
+                
+                # In-Game Werbung (Feature 1)
+                if getattr(g, "has_ads", False):
+                    ad_rev = int((g.sales * 0.05) + (g.revenue * 0.01))
+                    if ad_rev > 0:
+                        self.track_income("other", ad_rev)
+                        g.revenue += ad_rev
+                        self.hype = max(0.0, self.hype - 0.5) # Hype loss due to ads
+
+                # Modding-Support (Feature 2)
+                decay_factor = 0.1 if getattr(g, "has_mod_support", False) else 0.2
+
                 # Verkäufe sinken mit der Zeit, plus saisonale Effekte
-                new_sales = int((self.calculate_sales(g) * season_mod) / (1 + g.weeks_on_market * 0.2))
+                new_sales = int((self.calculate_sales(g) * season_mod) / (1 + g.weeks_on_market * decay_factor))
                 if getattr(g, "bugs", 0) > 0:
                     new_sales = int(new_sales * 0.5) # Bugs halbieren Verkäufe
                     
@@ -2871,7 +2883,7 @@ class GameState:
 
         return int(base_cost + salary_cost + marketing_cost)
 
-    def finalize_game(self, ap_dict):
+    def finalize_game(self, ap_dict, early_access=False):
         """Schließt die Spielentwicklung ab."""
         project = ap_dict["project"]
         bugs = ap_dict["bugs"]
@@ -2923,8 +2935,9 @@ class GameState:
             ))
             
         # Projekt aus Liste entfernen
-        if ap_dict in self.active_projects:
-            self.active_projects.remove(ap_dict)
+        if not early_access:
+            if ap_dict in self.active_projects:
+                self.active_projects.remove(ap_dict)
             
         # Post-Game Logic
         self.co_dev_partner = None
@@ -2963,7 +2976,8 @@ class GameState:
         # Sub-Genre aus Draft übernehmen
         project.sub_genre = self.current_draft.get("sub_genre", None)
 
-        self.game_history.append(project)
+        if project not in self.game_history:
+            self.game_history.append(project)
         return project
 
     # ==========================================================

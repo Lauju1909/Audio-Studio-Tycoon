@@ -43,7 +43,7 @@ from menus import (
     DifficultyMenu, SubGenreMenu, SequelMenu, ChartMenu,
     LicenseShopMenu, LicenseSelectMenu, AddonMenu, AddonNameMenu,
     BundleMenu, BundleNameMenu, ProductionMenu, ProductionAmountMenu,
-    ActiveGamesMenu,
+    ActiveGamesMenu, GameDetailsMenu,
     MMOPaymentMenu, MMOManagementMenu, MMOOptionsMenu,
     PublisherDealsMenu, PublisherDealDetailsMenu, MerchMenu, MerchAmountMenu,
     ESportsMenu, AcquisitionMenu, StockRivalDetailMenu,
@@ -163,6 +163,7 @@ def get_menu_factories(audio, state):
         "multiplayer_create_id_input": lambda: MultiplayerRoomIdInput(audio, state), # Reuse for now
         "multiplayer_lobby": lambda: MultiplayerLobbyMenu(audio, state),
         "active_games_menu": lambda: ActiveGamesMenu(audio, state),
+        "game_details_menu": lambda: GameDetailsMenu(audio, state),
         "current_monetization_menu": lambda: MonetizationMenu(audio, state, show_ads=state.monetization_back_target != "main_menu"),
         "developer_menu": lambda: DeveloperMenu(audio, state),
         # NEU: SoundCon & Soundtrack-Label

@@ -122,3 +122,8 @@ Das Spiel bietet ein brandneues, interaktives Tutorial-System. Beim ersten Betre
 ---
 *Entwickelt mit Leidenschaft fÃ¼r Barrierefreiheit.*
 
+
+### v3.12 (New Features)
+- **In-Game Werbung:** Optional aktivierbar für veröffentlichte Spiele, um zusätzliche Einnahmen zu generieren (auf Kosten von Hype).
+- **Modding-Support:** Reduziert den Verkaufsrückgang für Spiele und verlängert deren Lebensdauer auf dem Markt.
+

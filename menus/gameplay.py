@@ -377,11 +377,23 @@ class DevProgressMenu(Menu):
                 self.options.append({'text': f"{name} ({prog}%)", 'action': make_select(i)})
             self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
         else:
+            ap = self.game_state.active_projects[self.selected_project_idx]
+            prog = int((ap["progress"] / ap["total_weeks"]) * 100)
             self.options = [
                 {'text': self.game_state.get_text('get_progress_label', default="Fortschritt abfragen"), 'action': self._speak_progress},
+            ]
+            
+            # Early Access Option (30-50% progress minimum, we'll check >= 30%)
+            if prog >= 30 and not getattr(ap["project"], "is_early_access", False):
+                self.options.append({
+                    'text': self.game_state.get_text('release_early_access', default="Als Early Access veröffentlichen"),
+                    'action': self._release_early_access
+                })
+                
+            self.options.extend([
                 {'text': self.game_state.get_text('finish_game'), 'action': self._finish},
                 {'text': self.game_state.get_text('back'), 'action': self._back_to_list}
-            ]
+            ])
 
     def _select_project(self, idx):
         self.selected_project_idx = idx
@@ -419,10 +431,29 @@ class DevProgressMenu(Menu):
                 return "game_menu"
             else:
                 self.game_state.finalize_game(ap)
+                if getattr(ap["project"], "is_early_access", False):
+                    # It was in early access, now it's fully released
+                    ap["project"].is_early_access = False
+                    self.audio.speak(self.game_state.get_text('early_access_full_release_msg', default="Das Spiel hat den Early Access verlassen!"))
                 return "review_result"
         else:
             self.audio.speak(self.game_state.get_text('dev_not_finished'))
             return None
+
+    def _release_early_access(self):
+        if self.selected_project_idx < 0 or self.selected_project_idx >= len(self.game_state.active_projects):
+            return self._back_to_list()
+        ap = self.game_state.active_projects[self.selected_project_idx]
+        
+        # Set to Early Access
+        ap["project"].is_early_access = True
+        
+        # We need to finalize it partially so it goes on sale, but keep it in active_projects
+        # We call finalize_game with early_access=True to keep it in active_projects
+        self.game_state.finalize_game(ap, early_access=True)
+        
+        self.audio.speak(self.game_state.get_text('early_access_released_msg', default="Das Spiel ist nun im Early Access verfügbar."))
+        return "review_result"
 
     def speak_current(self, interrupt=True):
         text = self.options[self.current_index]['text']
@@ -694,12 +725,68 @@ class ActiveGamesMenu(Menu):
         for g in active_games:
             woche = g.weeks_on_market
             text = f"{g.name}: Woche {woche}, {g.sales:,} Sales, {g.revenue:,} EUR Einnahmen bisher."
-            self.options.append({'text': text, 'action': lambda: None})
+            self.options.append({'text': text, 'action': lambda game=g: self._select_game(game)})
             
         if not self.options:
             self.options.append({'text': self.game_state.get_text('no_active_games', default="Momentan keine aktiven Spiele auf dem Markt."), 'action': lambda: "game_menu"})
             
         self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
+
+    def _select_game(self, game):
+        self.game_state._pending_game_details = game
+        return "game_details_menu"
+
+class GameDetailsMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        game = getattr(self.game_state, '_pending_game_details', None)
+        title = self.game_state.get_text('game_details_title', default="Spieldetails")
+        if game:
+            title = f"{title}: {game.name}"
+        super().__init__(title, [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        self.options = []
+        game = getattr(self.game_state, '_pending_game_details', None)
+        if game and game.is_active:
+            # Mod Support feature
+            if not getattr(game, 'has_mod_support', False):
+                self.options.append({'text': self.game_state.get_text('activate_mod_support', default="Mod-Support hinzufügen (10.000 EUR)"), 'action': self._add_mod_support})
+            else:
+                self.options.append({'text': self.game_state.get_text('has_mod_support_active', default="Mod-Support: Aktiviert"), 'action': lambda: None})
+                
+            # Ads feature
+            if not getattr(game, 'has_ads', False):
+                self.options.append({'text': self.game_state.get_text('activate_ads', default="In-Game Werbung aktivieren"), 'action': self._activate_ads})
+            else:
+                self.options.append({'text': self.game_state.get_text('has_ads_active', default="In-Game Werbung: Aktiviert"), 'action': lambda: None})
+        
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "active_games_menu"})
+
+    def _add_mod_support(self):
+        game = getattr(self.game_state, '_pending_game_details', None)
+        if game:
+            if self.game_state.money >= 10000:
+                self.game_state.track_expense("other", 10000)
+                game.has_mod_support = True
+                self.audio.play_sound("cash")
+                self._update_options()
+                self.current_index = 0
+            else:
+                self.audio.play_sound("error")
+                self.audio.speak(self.game_state.get_text('not_enough_money'))
+        return None
+
+    def _activate_ads(self):
+        game = getattr(self.game_state, '_pending_game_details', None)
+        if game:
+            game.has_ads = True
+            self.audio.play_sound("confirm")
+            self._update_options()
+            self.current_index = 0
+        return None
 
 class AAADevEventMenu(Menu):
     """Zeigt Entwicklungs-Events (AAA und allgemein) mit Entscheidungsoptionen."""

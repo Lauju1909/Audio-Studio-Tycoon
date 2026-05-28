@@ -1312,45 +1312,40 @@ def get_available_platforms(week):
     current_week = float(week)
     available = []
     for p in PLATFORMS:
-        ay = p.get("unlock_year")
-        ey = p.get("end_year")
-        
-        if ay is not None:
-            start = (ay - START_YEAR) * WEEKS_PER_YEAR + 1
-        else:
-            start = 0.0
-            
-        if ey is not None:
-            end = (ey - START_YEAR) * WEEKS_PER_YEAR + 1
-        else:
-            end = 99999.0
-            
+        aw = p.get("available_week")
+        ew = p.get("end_week")
+        start = float(aw) if aw is not None else 0.0
+        end = float(ew) if ew is not None else 99999.0
         if start <= current_week <= end:
             available.append(p)
     return available
 
 
 def get_available_features(week):
-    """Gibt Engine-Features zurück, die in der aktuellen Woche erforschbar sind."""
+    """Gibt Engine-Features zurück, die in der aktuellen Woche erforschbar sind.
+    Unterstützt sowohl 'week' (alt) als auch 'unlock_year' (neu, historisch).
+    """
     current_week = int(week)
     result = []
     for f in ENGINE_FEATURES:
-        if "unlock_year" in f:
+        if "week" in f:
+            # Altes Format: direkte Woche
+            if int(f["week"]) <= current_week:
+                result.append(f)
+        elif "unlock_year" in f:
+            # Neues Format: unlock_year → Spielwoche berechnen
             unlock_week = (f["unlock_year"] - START_YEAR) * WEEKS_PER_YEAR + 1
             if unlock_week <= current_week:
-                result.append(f)
-        elif "week" in f:
-            if int(f["week"]) <= current_week:
                 result.append(f)
     return result
 
 
 def get_feature_unlock_week(feature):
     """Gibt die Spielwoche zurück, ab der ein Feature erforschbar ist."""
-    if "unlock_year" in feature:
-        return (feature["unlock_year"] - START_YEAR) * WEEKS_PER_YEAR + 1
     if "week" in feature:
         return int(feature["week"])
+    elif "unlock_year" in feature:
+        return (feature["unlock_year"] - START_YEAR) * WEEKS_PER_YEAR + 1
     return 1
 
 # ============================================================
