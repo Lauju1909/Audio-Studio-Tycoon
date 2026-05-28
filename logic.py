@@ -212,6 +212,10 @@ class GameState:
         self.has_server_room = False
         self.server_capacity = 0
         
+        # NEU: Phase D2 - Server Infrastructure & Office Departments
+        self.support_level = 0
+        self.qa_level = 0
+        
         # NEU: Phase E - Publisher Rolle
         self.publishing_offers = []
         self.published_third_party_games = []
@@ -994,6 +998,19 @@ class GameState:
         self.update_subscription_service()
         self._process_engine_licensing()
         self._process_port_projects()
+        
+        # Feature 1.2: Support Department
+        support_level = getattr(self, "support_level", 0)
+        if support_level > 0:
+            self.track_expense("other", support_level * 500)
+            
+        # Feature 1.3: QA Lab
+        qa_level = getattr(self, "qa_level", 0)
+        if qa_level > 0:
+            for proj in getattr(self, "active_projects", []):
+                if proj.get("bugs", 0) > 0:
+                    removed = min(proj["bugs"], qa_level * 2)
+                    proj["bugs"] -= removed
 
         # Monatsankündigung (dynamisch basierend auf WEEKS_PER_YEAR)
         week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
@@ -1527,6 +1544,9 @@ class GameState:
                 new_sales = int((self.calculate_sales(g) * season_mod) / (1 + g.weeks_on_market * decay_factor))
                 if getattr(g, "bugs", 0) > 0:
                     new_sales = int(new_sales * 0.5) # Bugs halbieren Verkäufe
+                    fan_loss = int(g.bugs * 2.0)
+                    fan_loss = max(0, fan_loss - (getattr(self, "support_level", 0) * 5))
+                    self.fans = max(0, self.fans - fan_loss)
                     
                 # Event-Modifikatoren
                 for e in self.active_events:
@@ -1601,10 +1621,17 @@ class GameState:
                 date_week=self.week
             ))
 
-        # MMOs verarbeiten
+        # MMOs & Server Usage verarbeiten
         total_mmo_players = sum(m.players for m in self.active_mmos if m.game.is_active)
+        total_subs = getattr(self, "subscription_subscribers", 0)
+        ad_games_traffic = sum(g.sales for g in self.game_history if g.is_active and getattr(g, "has_ads", False)) // 10
+        server_usage = total_mmo_players + total_subs + ad_games_traffic
+        
         server_capacity = getattr(self, 'server_capacity', 0)
-        server_overloaded = total_mmo_players > server_capacity
+        server_overloaded = server_usage > server_capacity
+        
+        if server_overloaded:
+            self.hype = max(0.0, self.hype - 2.0)
         
         for mmo in self.active_mmos:
             if mmo.game.is_active:
@@ -1622,7 +1649,7 @@ class GameState:
                 if mmo.players < 1000:
                     mmo.game.is_active = False
 
-        if server_overloaded and total_mmo_players > 0 and is_new_month:
+        if server_overloaded and server_usage > 0 and is_new_month:
                 self.emails.append(Email(
                 sender=self.get_text('sender_system'),
                 subject=self.get_text('subject_server_overload'),

@@ -131,6 +131,13 @@ def get_text(text_key, **kwargs):
 
 TRANSLATIONS = {
     "en": {
+        "upgrade_qa_lab": "Upgrade QA Lab to level {level} ({cost} EUR)",
+        "upgrade_support": "Upgrade Support Department to level {level} ({cost} EUR)",
+        "buy_servers": "Buy 50000 server capacity (Current: {capacity}) ({cost} EUR)",
+        "qa_lab_upgraded": "QA Lab upgraded to level {level}!",
+        "support_upgraded": "Support Department upgraded to level {level}!",
+        "servers_bought": "Server capacity increased to {capacity}!",
+
         "2D Fighter": "2D Fighter",
         "AR-Jagd": "AR Hunt",
         "Abakus": "Abacus",
@@ -1756,6 +1763,13 @@ TRANSLATIONS = {
         "contract_finished": "Contract work finished! You receive {payout} Euros."
     },
     "de": {
+        "upgrade_qa_lab": "QA-Labor auf Level {level} aufrüsten ({cost} EUR)",
+        "upgrade_support": "Support-Abteilung auf Level {level} aufrüsten ({cost} EUR)",
+        "buy_servers": "50000 Server-Kapazität kaufen (Aktuell: {capacity}) ({cost} EUR)",
+        "qa_lab_upgraded": "QA-Labor auf Level {level} aufgerüstet!",
+        "support_upgraded": "Support-Abteilung auf Level {level} aufgerüstet!",
+        "servers_bought": "Server-Kapazität auf {capacity} erhöht!",
+
         "2D Fighter": "2D-Kampfspiel",
         "AR-Jagd": "AR-Jagd",
         "Abakus": "Abakus",

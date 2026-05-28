@@ -211,6 +211,15 @@ class OfficeMenu(Menu):
             next_office = OFFICE_LEVELS[current_lvl + 1]
             txt = f"{self.game_state.get_text('upgrade_office')}: {next_office['name']} ({next_office['cost']} EUR)"
             self.options.append({'text': txt, 'action': self._upgrade})
+            
+        qa_lvl = getattr(self.game_state, 'qa_level', 0)
+        self.options.append({'text': self.game_state.get_text('upgrade_qa_lab', level=qa_lvl, cost=50000), 'action': self._upgrade_qa_lab})
+        
+        sup_lvl = getattr(self.game_state, 'support_level', 0)
+        self.options.append({'text': self.game_state.get_text('upgrade_support', level=sup_lvl, cost=25000), 'action': self._upgrade_support})
+        
+        cap = getattr(self.game_state, 'server_capacity', 0)
+        self.options.append({'text': self.game_state.get_text('buy_servers', capacity=cap, cost=10000), 'action': self._buy_servers})
         
         self.options.append({'text': self.game_state.get_text('hr_menu'), 'action': lambda: "hr_menu"})
         self.options.append({'text': self.game_state.get_text('office_upgrades_menu_title'), 'action': lambda: "office_upgrades_menu"})
@@ -227,8 +236,50 @@ class OfficeMenu(Menu):
             self.game_state.office_level += 1
             self.audio.play_sound("confirm")
             self.audio.speak(self.game_state.get_text('office_upgrade_success', name=next_office['name'], max_emp=self.game_state.get_max_employees()))
+            self._update_options()
+            return "office_menu"
+        else:
+            self.audio.play_sound("error")
+            self.audio.speak(self.game_state.get_text('not_enough_money'))
+            return None
 
-            return "game_menu"
+    def _upgrade_qa_lab(self):
+        cost = 50000
+        if self.game_state.money >= cost:
+            self.game_state.track_expense("office", cost)
+            self.game_state.qa_level = getattr(self.game_state, 'qa_level', 0) + 1
+            self.audio.play_sound("buy")
+            self.audio.speak(self.game_state.get_text('qa_lab_upgraded', level=self.game_state.qa_level))
+            self._update_options()
+            return "office_menu"
+        else:
+            self.audio.play_sound("error")
+            self.audio.speak(self.game_state.get_text('not_enough_money'))
+            return None
+
+    def _upgrade_support(self):
+        cost = 25000
+        if self.game_state.money >= cost:
+            self.game_state.track_expense("office", cost)
+            self.game_state.support_level = getattr(self.game_state, 'support_level', 0) + 1
+            self.audio.play_sound("buy")
+            self.audio.speak(self.game_state.get_text('support_upgraded', level=self.game_state.support_level))
+            self._update_options()
+            return "office_menu"
+        else:
+            self.audio.play_sound("error")
+            self.audio.speak(self.game_state.get_text('not_enough_money'))
+            return None
+
+    def _buy_servers(self):
+        cost = 10000
+        if self.game_state.money >= cost:
+            self.game_state.track_expense("office", cost)
+            self.game_state.server_capacity = getattr(self.game_state, 'server_capacity', 0) + 50000
+            self.audio.play_sound("buy")
+            self.audio.speak(self.game_state.get_text('servers_bought', capacity=self.game_state.server_capacity))
+            self._update_options()
+            return "office_menu"
         else:
             self.audio.play_sound("error")
             self.audio.speak(self.game_state.get_text('not_enough_money'))
