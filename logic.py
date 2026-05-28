@@ -2349,23 +2349,23 @@ class GameState:
     def get_researchable_features(self):
         """Features die erforschbar, aber noch nicht freigeschaltet sind."""
         unlocked_names = {f.name for f in self.unlocked_features}
-        return [f for f in ENGINE_FEATURES if f["name"] not in unlocked_names and self.week >= f.get("week", 1)]
+        return [f for f in ENGINE_FEATURES if f["name"] not in unlocked_names and self.week >= ((f.get("unlock_year", START_YEAR) - START_YEAR) * WEEKS_PER_YEAR + 1)]
 
     def get_researchable_topics(self):
         """Themen die erforschbar, aber noch nicht freigeschaltet sind."""
-        return [t for t in RESEARCHABLE_TOPICS if t["name"] not in self.unlocked_topics and self.week >= t.get("week", 1)]
+        return [t for t in RESEARCHABLE_TOPICS if t["name"] not in self.unlocked_topics and self.week >= ((t.get("unlock_year", START_YEAR) - START_YEAR) * WEEKS_PER_YEAR + 1)]
 
     def get_researchable_genres(self):
         """Genres die erforschbar, aber noch nicht freigeschaltet sind."""
-        return [g for g in RESEARCHABLE_GENRES if g["name"] not in self.unlocked_genres and self.week >= g.get("week", 1)]
+        return [g for g in RESEARCHABLE_GENRES if g["name"] not in self.unlocked_genres and self.week >= ((g.get("unlock_year", START_YEAR) - START_YEAR) * WEEKS_PER_YEAR + 1)]
 
     def get_researchable_audiences(self):
         """Zielgruppen die erforschbar, aber noch nicht freigeschaltet sind."""
-        return [a for a in RESEARCHABLE_AUDIENCES if a["name"] not in self.unlocked_audiences and self.week >= a.get("week", 1)]
+        return [a for a in RESEARCHABLE_AUDIENCES if a["name"] not in self.unlocked_audiences and self.week >= ((a.get("unlock_year", START_YEAR) - START_YEAR) * WEEKS_PER_YEAR + 1)]
 
     def get_researchable_technologies(self):
         """Endgame-Technologien, die noch nicht freigeschaltet sind."""
-        return [t for t in RESEARCHABLE_TECHNOLOGIES if t["name"] not in self.unlocked_technologies and self.week >= t.get("week", 1)]
+        return [t for t in RESEARCHABLE_TECHNOLOGIES if t["name"] not in self.unlocked_technologies and self.week >= ((t.get("unlock_year", START_YEAR) - START_YEAR) * WEEKS_PER_YEAR + 1)]
 
     # ==========================================================
     # AKTIENMARKT / INVESTMENTS
