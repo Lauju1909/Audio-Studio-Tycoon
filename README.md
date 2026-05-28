@@ -26,6 +26,9 @@ Das Spiel wird komplett über die Tastatur gesteuert:
 | **F** | **Finanz-Check** (Kontostand, Gewinnberichte) |
 
 ## 🚀 Das ultimative Audio- & Community-Update (v3.11.0-beta.1)
+- **Auftragsarbeiten (Contract Work)**:
+  - Generiere schnelles Geld durch das Erfüllen von externen Aufträgen (Code, Grafik, Sound, Design).
+  - Skaliert mit deinem Firmen-Prestige!
 - **Eigene Soundkarten-Herstellung & Hardware-Labor**:
   - Verfügbar ab dem Jahr 1980.
   - Erforsche zukunftsweisende Audio-Technologien wie *FM-Synthese*, *Wavetable* oder *3D-Binaural*.
