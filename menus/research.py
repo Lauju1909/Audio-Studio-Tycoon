@@ -183,7 +183,10 @@ class EngineFeatureSelectMenu(Menu):
 
     def _update_options(self):
         self.options = []
-        draft = self.game_state.current_engine_draft
+        draft = getattr(self.game_state, 'current_engine_draft', None)
+        if not draft:
+            self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "research_menu"})
+            return
         for f in self.game_state.unlocked_features:
             status = "[x] " if f in draft["features"] else "[ ] "
             self.options.append({'text': f"{status}{f.name}", 'action': lambda feat=f: self._toggle(feat)})
@@ -191,7 +194,9 @@ class EngineFeatureSelectMenu(Menu):
         self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "research_menu"})
 
     def _toggle(self, feat):
-        draft = self.game_state.current_engine_draft
+        draft = getattr(self.game_state, 'current_engine_draft', None)
+        if not draft:
+            return "research_menu"
         if feat in draft["features"]:
              draft["features"].remove(feat)
         else:
@@ -200,7 +205,9 @@ class EngineFeatureSelectMenu(Menu):
         return None
 
     def _confirm(self):
-        draft = self.game_state.current_engine_draft
+        draft = getattr(self.game_state, 'current_engine_draft', None)
+        if not draft:
+            return "research_menu"
         if not draft["features"]:
             self.audio.speak(self.game_state.get_text('engine_no_features'))
             return None

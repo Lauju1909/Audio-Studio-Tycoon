@@ -1831,6 +1831,8 @@ ACHIEVEMENTS = [
     {"id": "star_dev", "type": "fans", "threshold": 1000000, "bonus_type": "money", "bonus_value": 500000},
     {"id": "masterpiece", "type": "score", "threshold": 10.0, "bonus_type": "hype", "bonus_value": 100},
     {"id": "goty_winner", "type": "goty", "threshold": 1, "bonus_type": "fans", "bonus_value": 10000},
+    {"id": "inclusive_studio", "type": "accessibility", "threshold": 25, "bonus_type": "fans", "bonus_value": 2500},
+    {"id": "accessibility_champion", "type": "accessibility", "threshold": 75, "bonus_type": "money", "bonus_value": 150000},
 ]
 
 # ============================================================

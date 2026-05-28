@@ -53,7 +53,8 @@ from menus import (
     SoundConMenu, SoundConFinishMenu, SoundConResultMenu, SoundConHistoryMenu,
     SoundtrackLabelMenu, LabelNameInputMenu, LabelStatusMenu,
     LabelRadioMenu, LabelAddGameMenu,
-    CommunityMenu, FanMailInboxMenu, FanMailDetailMenu, OfficeEventMenu,
+    MultiplayerMainMenu, MultiplayerRoomIdInput, MultiplayerLobbyMenu,
+    CommunityMenu, AccessibilityLabMenu, FanMailInboxMenu, FanMailDetailMenu, OfficeEventMenu,
     HardwareLabMenu, HardwareLicensingMenu, SoundCardCreateMenu, SoundCardFeaturesMenu, SoundCardOverviewMenu,
     JingleNameInputMenu, JingleGeneratorMenu, JingleMusicMenu, JingleVoiceMenu, JingleSFXMenu
 )
@@ -172,6 +173,7 @@ def get_menu_factories(audio, state):
         "label_add_game_menu": lambda: LabelAddGameMenu(audio, state),
         # NEU: Expansion v3.11.0 Menüs
         "community_menu": lambda: CommunityMenu(audio, state),
+        "accessibility_lab": lambda: AccessibilityLabMenu(audio, state),
         "fan_mail_inbox": lambda: FanMailInboxMenu(audio, state),
         "fan_mail_detail": lambda: FanMailDetailMenu(audio, state),
         "office_event_menu": lambda: OfficeEventMenu(audio, state),

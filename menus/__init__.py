@@ -37,7 +37,7 @@ from .events import (
 )
 
 # NEU: v3.11.0 Expansion Menüs (Community, Hardware, Jingle)
-from .community import CommunityMenu, FanMailInboxMenu, FanMailDetailMenu, OfficeEventMenu
+from .community import CommunityMenu, AccessibilityLabMenu, FanMailInboxMenu, FanMailDetailMenu, OfficeEventMenu
 from .hardware import HardwareLabMenu, HardwareLicensingMenu, SoundCardCreateMenu, SoundCardFeaturesMenu, SoundCardOverviewMenu
 from .marketing_jingle import JingleNameInputMenu, JingleGeneratorMenu, JingleMusicMenu, JingleVoiceMenu, JingleSFXMenu
 
@@ -69,7 +69,7 @@ __all__ = [
     "SoundtrackLabelMenu", "LabelNameInputMenu", "LabelStatusMenu",
     "LabelRadioMenu", "LabelAddGameMenu",
     # NEU: Expansion Menüs
-    "CommunityMenu", "FanMailInboxMenu", "FanMailDetailMenu", "OfficeEventMenu",
+    "CommunityMenu", "AccessibilityLabMenu", "FanMailInboxMenu", "FanMailDetailMenu", "OfficeEventMenu",
     "HardwareLabMenu", "HardwareLicensingMenu", "SoundCardCreateMenu", "SoundCardFeaturesMenu", "SoundCardOverviewMenu",
     "JingleNameInputMenu", "JingleGeneratorMenu", "JingleMusicMenu", "JingleVoiceMenu", "JingleSFXMenu"
 ]

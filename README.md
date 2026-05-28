@@ -34,6 +34,10 @@ Das Spiel wird komplett über die Tastatur gesteuert:
 - **Fan-Post & Community-Center**:
   - Empfange wöchentlich Briefe deiner Fans und reagiere interaktiv im Community-Center darauf.
   - Triff weise Entscheidungen in Brief-Antworten und sichere dir Hype-Boosts, Spenden oder neue Fans.
+- **Barrierefreiheits-Labor**:
+  - Investiere im Community-Center in Screenreader-Tests, Audio-Description-Studien und Community-Betas mit blinden Spielern.
+  - Baue eine Barrierefreiheits-Reputation auf, die wöchentlich neue Fans bringt, Bugs aktiver Projekte reduziert und Reviews leicht verbessert.
+  - Hohe Reputation schaltet neue Meilensteine frei und kann jährliche Barrierefreiheits-Zuschüsse auslösen.
 - **Mitarbeiter-Persönlichkeiten & Büro-Events**:
   - Jeder Mitarbeiter besitzt jetzt einen einzigartigen Charakterzug (*Perfektionist*, *Chaot*, *Showmaster*, *Workaholic* oder *Gelassen*) mit individuellen Boni und Nachteilen auf die Spielqualität, Moral oder Entwicklungszeit.
   - Wöchentliche Büro-Ereignisse zwingen dich dazu, barrierefreie Teamentscheidungen bei Konflikten oder Synergien zu treffen.

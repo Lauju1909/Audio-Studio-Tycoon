@@ -17,6 +17,13 @@ class CommunityMenu(Menu):
         unresolved_count = len([m for m in getattr(gs, 'fan_mail_inbox', []) if not m.is_answered])
         fanmail_text = gs.get_text('fan_mail_inbox', count=unresolved_count)
         self.options.append({'text': fanmail_text, 'action': lambda: "fan_mail_inbox"})
+
+        lab_text = gs.get_text(
+            'access_lab_menu_option',
+            score=getattr(gs, "accessibility_reputation", 0),
+            weekly=gs.get_accessibility_weekly_fans()
+        )
+        self.options.append({'text': lab_text, 'action': lambda: "accessibility_lab"})
         
         # 2. Büro-Ereignis (nur wählbar, wenn eines aktiv ist)
         if getattr(gs, 'active_personality_event', None) is not None:
@@ -34,6 +41,85 @@ class CommunityMenu(Menu):
     def _no_event_action(self):
         self.audio.play_sound("error")
         self.audio.speak(self.game_state.get_text('jingle_no_active', default="Keine aktiven Ereignisse."))
+        return None
+
+
+class AccessibilityLabMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(self.game_state.get_text('access_lab_title'), [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        gs = self.game_state
+        score = getattr(gs, "accessibility_reputation", 0)
+        weekly = gs.get_accessibility_weekly_fans()
+        history_count = len(getattr(gs, "accessibility_lab_history", []))
+
+        self.options = [{
+            'text': gs.get_text(
+                'access_lab_status',
+                score=score,
+                weekly=weekly,
+                count=history_count
+            ),
+            'action': self._announce_status
+        }]
+
+        for action in gs.get_accessibility_lab_actions():
+            text = gs.get_text(
+                'access_lab_action_option',
+                name=gs.get_text(action["name_key"]),
+                cost=action["cost"],
+                rep=action["reputation"],
+                fans=action["fans"],
+                hype=action["hype"]
+            )
+            self.options.append({
+                'text': text,
+                'action': lambda action_id=action["id"]: self._run_action(action_id)
+            })
+
+        self.options.append({'text': gs.get_text('back'), 'action': lambda: "community_menu"})
+
+    def announce_entry(self):
+        self.current_index = 0
+        gs = self.game_state
+        self.audio.speak(gs.get_text('access_lab_intro'))
+        self.speak_current(interrupt=False)
+
+    def _announce_status(self):
+        gs = self.game_state
+        self.audio.speak(
+            gs.get_text(
+                'access_lab_status',
+                score=getattr(gs, "accessibility_reputation", 0),
+                weekly=gs.get_accessibility_weekly_fans(),
+                count=len(getattr(gs, "accessibility_lab_history", []))
+            )
+        )
+        return None
+
+    def _run_action(self, action_id):
+        success, result = self.game_state.run_accessibility_lab_action(action_id)
+        if not success:
+            self.audio.play_sound("error")
+            if result == "no_money":
+                self.audio.speak(self.game_state.get_text('not_enough_money'))
+            else:
+                self.audio.speak(self.game_state.get_text('access_lab_failed'))
+            return None
+
+        self.audio.play_sound("confirm")
+        self.audio.speak(
+            self.game_state.get_text(
+                'access_lab_success',
+                name=self.game_state.get_text(result["name_key"]),
+                score=getattr(self.game_state, "accessibility_reputation", 0)
+            )
+        )
+        self._update_options()
         return None
 
 

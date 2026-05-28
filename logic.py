@@ -13,7 +13,7 @@ from models import (
     RivalStudio, RivalGame, Email, AddonProject, BundleProject, 
     ActiveMMO, BankLoan, CustomConsole, PublishingOffer, 
     PublishedThirdPartyGame, BankStatement,
-    SoundConEvent, SoundtrackLabel, RadioContract
+    SoundConEvent, SoundtrackLabel, RadioContract, ManufacturingJob
 )
 from translations import TRANSLATIONS, get_system_language
 from game_data import (
@@ -38,6 +38,7 @@ class GameState:
         self.games_made = 0
         self.total_revenue = 0
         self.developer_mode = False # Versteckter Entwickler-Modus
+        self.pending_update = None
 
         # Trends
         self.current_trend = {}  # {'topic': '...', 'genre': '...', 'week_started': X}
@@ -50,6 +51,7 @@ class GameState:
         # Engines
         self.engines = []
         self.unlocked_features = []  # Liste von EngineFeature (freigeschaltet)
+        self.current_engine_draft = None
         self._init_starter_engine()
 
         # Büro
@@ -143,6 +145,7 @@ class GameState:
         }
         self.accounting = {"income": 0, "expenses": 0, "loan_paid": 0}
         self.rivals = [] # Wird später via _init_rivals gefüllt
+        self._pending_rival_idx = None
         self.bought_platforms = ["PC (MS-DOS)"]
         self.active_platforms = []
         self.unlocked_platforms = [] # Manuell freigeschaltete Plattformen (via Events)
@@ -276,6 +279,9 @@ class GameState:
         self.temp_dev_speed_weeks = 0
         self.temp_quality_boost = 0.0
         self.temp_quality_weeks = 0
+        self.accessibility_reputation = 0
+        self.accessibility_lab_history = []
+        self.last_accessibility_grant_year = 0
 
     def add_welcome_emails(self):
         """Erstellt die Willkommens-E-Mails in der aktuell gesetzten Sprache."""
@@ -849,7 +855,6 @@ class GameState:
         if self.money < amount * cost_per_unit:
             return False
             
-        self.track_expense("merch", amount * cost_per_unit)
         self.track_expense("production", amount * cost_per_unit)
         
         job = ManufacturingJob(game_name, amount, cost_per_unit, weeks)
@@ -1669,11 +1674,13 @@ class GameState:
                 royalties = int(card.market_share * random.randint(4000, 12000))
                 card.royalties_gained = royalties
                 card.lifetime_royalties += royalties
-                self.money += royalties
                 self.track_income("hardware", royalties)
 
         # 4. Fanpost wöchentlich generieren
         self.receive_fan_mail()
+
+        # 4b. Barrierefreiheits-Reputation sorgt fuer langsames Community-Wachstum
+        self.update_accessibility_reputation()
 
         # 5. Büro-Events wöchentlich prüfen & triggern
         self.trigger_personality_event()
@@ -1711,6 +1718,9 @@ class GameState:
         # Lizenzen
         if getattr(project, 'license_bonus', 0) > 0:
             hype += project.license_bonus
+
+        # Projektbezogener Hype aus Fanpost, Jingles und Community-Aktionen
+        hype += getattr(project, 'hype', 0.0)
 
         # Zufallsereignis Bonus
         for event in self.active_events:
@@ -1935,7 +1945,6 @@ class GameState:
         if hasattr(self, 'audio'):
             self.audio.play_sound('buy')
             self.audio.speak(self.get_text('employee_hired', name=employee.name), interrupt=True)
-        self.track_expense("salaries", hire_cost)
         self.employees.append(employee)
         return True
 
@@ -2703,6 +2712,10 @@ class GameState:
         # Lizenz-Bonus
         base_score += getattr(project, 'license_bonus', 0.0)
 
+        # Barrierefreiheits-Reputation: saubere Screenreader-UX hilft Reviews leicht.
+        accessibility_bonus = min(0.05, getattr(self, "accessibility_reputation", 0) / 2000.0)
+        base_score += accessibility_bonus
+
         # Qualitätsstandard-Multiplikator anwenden (macht es über die Jahre schwerer)
         base_review = max(1.0, min(10.0, float(base_score * 10 / self.quality_standard_multi)))
 
@@ -2739,6 +2752,9 @@ class GameState:
             comments.append(self.get_text('review_bad_gameplay'))
         elif slider_match >= 0.9:
             comments.append(self.get_text('review_good_gameplay'))
+
+        if getattr(self, "accessibility_reputation", 0) >= 50:
+            comments.append(self.get_text('review_accessibility_praise'))
 
         # Fazit
         if base_review >= 8.0:
@@ -2974,7 +2990,6 @@ class GameState:
         if self.week > self.last_ad_week:
             reward = 5000
             self.track_income("other", reward)
-            self.track_income("other", reward)
             self.last_ad_week = self.week
             return True, reward
         return False, 0
@@ -3005,6 +3020,114 @@ class GameState:
     # ==========================================================
     # NEU: v3.11.0-beta.1 Expansion Methods (Community & Hardware)
     # ==========================================================
+
+    def get_accessibility_lab_actions(self):
+        """Liefert die verfuegbaren Aktionen fuer das Barrierefreiheits-Labor."""
+        return [
+            {
+                "id": "screenreader_test",
+                "name_key": "access_lab_action_screenreader",
+                "cost": 4000,
+                "reputation": 5,
+                "fans": 120,
+                "hype": 1.0,
+                "bug_reduction": 2,
+                "quality_boost": 0.0,
+                "quality_weeks": 0,
+            },
+            {
+                "id": "audio_description",
+                "name_key": "access_lab_action_audio_description",
+                "cost": 9000,
+                "reputation": 8,
+                "fans": 260,
+                "hype": 2.0,
+                "bug_reduction": 1,
+                "quality_boost": 0.03,
+                "quality_weeks": 6,
+            },
+            {
+                "id": "community_beta",
+                "name_key": "access_lab_action_community_beta",
+                "cost": 15000,
+                "reputation": 12,
+                "fans": 500,
+                "hype": 4.0,
+                "bug_reduction": 5,
+                "quality_boost": 0.04,
+                "quality_weeks": 4,
+            },
+        ]
+
+    def get_accessibility_weekly_fans(self):
+        """Berechnet den passiven woechentlichen Fan-Zuwachs."""
+        rep = getattr(self, "accessibility_reputation", 0)
+        if rep <= 0:
+            return 0
+        return min(800, max(1, int(rep * 1.5)))
+
+    def update_accessibility_reputation(self):
+        """Wendet den passiven Community-Effekt des Barrierefreiheits-Labors an."""
+        weekly_fans = self.get_accessibility_weekly_fans()
+        if weekly_fans > 0:
+            self.fans += weekly_fans
+        if self.active_projects and getattr(self, "accessibility_reputation", 0) >= 50:
+            self.hype = min(250, self.hype + 0.1)
+
+        rep = getattr(self, "accessibility_reputation", 0)
+        current_year = self.get_calendar_year()
+        if rep >= 40 and current_year > getattr(self, "last_accessibility_grant_year", 0):
+            grant_amount = int(10000 + rep * 500)
+            self.track_income("other", grant_amount)
+            self.last_accessibility_grant_year = current_year
+            self.emails.insert(0, Email(
+                sender=self.get_text('sender_system'),
+                subject=self.get_text('subject_access_grant'),
+                body=self.get_text('body_access_grant', amount=grant_amount, score=rep),
+                date_week=self.week
+            ))
+        return weekly_fans
+
+    def run_accessibility_lab_action(self, action_id):
+        """Fuehrt eine Aktion im Barrierefreiheits-Labor aus."""
+        action = next((a for a in self.get_accessibility_lab_actions() if a["id"] == action_id), None)
+        if not action:
+            return False, "invalid"
+        if self.money < action["cost"]:
+            return False, "no_money"
+
+        self.track_expense("research", action["cost"])
+        self.accessibility_reputation = min(
+            100,
+            getattr(self, "accessibility_reputation", 0) + action["reputation"]
+        )
+        self.fans = max(0, self.fans + action["fans"])
+        self.hype = min(250, self.hype + action["hype"])
+
+        bug_reduction = action.get("bug_reduction", 0)
+        if bug_reduction:
+            for ap in self.active_projects:
+                ap["bugs"] = max(0, ap.get("bugs", 0) - bug_reduction)
+
+        if action.get("quality_boost", 0) > 0:
+            self.temp_quality_boost = max(
+                getattr(self, "temp_quality_boost", 0.0),
+                action["quality_boost"]
+            )
+            self.temp_quality_weeks = max(
+                getattr(self, "temp_quality_weeks", 0),
+                action["quality_weeks"]
+            )
+
+        self.accessibility_lab_history.append({
+            "week": self.week,
+            "action_id": action["id"],
+            "cost": action["cost"],
+            "reputation": action["reputation"],
+        })
+        if hasattr(self, "_check_achievements"):
+            self._check_achievements()
+        return True, action
 
     def receive_fan_mail(self):
         """Generiert eine neue Fanpost mit Antwortoptionen."""
@@ -3081,11 +3204,10 @@ class GameState:
         # 3. Geld
         money_diff = effects.get("money", 0)
         if money_diff != 0:
-            self.money += money_diff
             if money_diff > 0:
-                self.track_income("Sonstiges", money_diff)
+                self.track_income("other", money_diff)
             else:
-                self.track_expense("Sonstiges", abs(money_diff))
+                self.track_expense("other", abs(money_diff))
                 
         return True
 
@@ -3105,7 +3227,6 @@ class GameState:
         if self.money < dev_cost:
             return False
             
-        self.money -= dev_cost
         self.track_expense("hardware", dev_cost)
         
         from models import SoundCardProject
@@ -3135,7 +3256,6 @@ class GameState:
         if self.money < tech["cost"]:
             return False
             
-        self.money -= tech["cost"]
         self.track_expense("hardware", tech["cost"])
         self.unlocked_hardware_tech.append(tech_id)
         return True
@@ -3185,7 +3305,6 @@ class GameState:
         if self.money < cost:
             return False
             
-        self.money -= cost
         self.track_expense("marketing", cost)
         
         # Hype Bonus berechnen
@@ -3287,11 +3406,10 @@ class GameState:
         # 2. Geld
         money_diff = effects.get("money", 0)
         if money_diff != 0:
-            self.money += money_diff
             if money_diff > 0:
-                self.track_income("Sonstiges", money_diff)
+                self.track_income("other", money_diff)
             else:
-                self.track_expense("Sonstiges", abs(money_diff))
+                self.track_expense("other", abs(money_diff))
                 
         # 3. Hype
         hype_diff = effects.get("hype", 0.0)
@@ -3407,7 +3525,12 @@ class GameState:
             "temp_dev_speed_penalty": getattr(self, "temp_dev_speed_penalty", 1.0),
             "temp_dev_speed_weeks": getattr(self, "temp_dev_speed_weeks", 0),
             "temp_quality_boost": getattr(self, "temp_quality_boost", 0.0),
-            "temp_quality_weeks": getattr(self, "temp_quality_weeks", 0)
+            "temp_quality_weeks": getattr(self, "temp_quality_weeks", 0),
+            "accessibility_reputation": getattr(self, "accessibility_reputation", 0),
+            "accessibility_lab_history": getattr(self, "accessibility_lab_history", []),
+            "last_accessibility_grant_year": getattr(self, "last_accessibility_grant_year", 0),
+            "unlocked_achievements": getattr(self, "unlocked_achievements", []),
+            "my_goty_wins": getattr(self, "my_goty_wins", 0)
         }
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
@@ -3666,6 +3789,11 @@ class GameState:
         self.temp_dev_speed_weeks = data.get("temp_dev_speed_weeks", 0)
         self.temp_quality_boost = data.get("temp_quality_boost", 0.0)
         self.temp_quality_weeks = data.get("temp_quality_weeks", 0)
+        self.accessibility_reputation = data.get("accessibility_reputation", 0)
+        self.accessibility_lab_history = data.get("accessibility_lab_history", [])
+        self.last_accessibility_grant_year = data.get("last_accessibility_grant_year", 0)
+        self.unlocked_achievements = data.get("unlocked_achievements", [])
+        self.my_goty_wins = data.get("my_goty_wins", 0)
 
         self.reset_draft()
         return True
@@ -4045,6 +4173,9 @@ class GameState:
                     unlocked = True
             elif ach["type"] == "goty":
                 if self.my_goty_wins >= ach["threshold"]:
+                    unlocked = True
+            elif ach["type"] == "accessibility":
+                if getattr(self, "accessibility_reputation", 0) >= ach["threshold"]:
                     unlocked = True
                     
             if unlocked:
@@ -4455,6 +4586,8 @@ class GameState:
                                 employees=len(self.employees),
                                 total_level=total_level,
                                 fans=self.fans,
-                                prestige=self.prestige)
+                                prestige=self.prestige,
+                                accessibility=getattr(self, "accessibility_reputation", 0),
+                                accessibility_weekly=self.get_accessibility_weekly_fans())
         return summary
 

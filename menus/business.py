@@ -372,7 +372,12 @@ class StockRivalDetailMenu(Menu):
     def __init__(self, audio, game_state):
         self.audio = audio
         self.game_state = game_state
-        idx = getattr(self.game_state, '_pending_rival_idx', 0)
+        idx = getattr(self.game_state, '_pending_rival_idx', None)
+        if idx is None or idx < 0 or idx >= len(self.game_state.rivals):
+            title = self.game_state.get_text('stock_market_menu')
+            options = [{'text': self.game_state.get_text('back'), 'action': lambda: "stock_market_menu"}]
+            super().__init__(title, options, audio, game_state)
+            return
         rival = self.game_state.rivals[idx]
         title = f"{rival.name} - {self.game_state.get_text('stock_market_menu')}"
         options = [
