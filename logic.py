@@ -1332,6 +1332,42 @@ class GameState:
         # Projektfortschritt für alle aktiven Projekte
         for ap in self.active_projects:
             proj = ap["project"]
+            
+            # NEU: Auftragsarbeiten
+            if getattr(proj, "target_points", None) is not None:
+                points_added = 0.0
+                skill_map = {"Code": "Programmierung", "Audio": "Sound", "Grafik": "Grafik", "Design": "Design"}
+                skill_name = skill_map.get(proj.type, "Programmierung")
+                
+                active_emps = self._active_employees(proj)
+                for emp in active_emps:
+                    points_added += emp.skills.get(skill_name, 50) / 10.0
+                
+                if not active_emps:
+                    points_added = 5.0
+                    
+                points_added *= getattr(self, "dev_speed_multiplier", 1.0)
+                proj.current_points = min(proj.target_points, proj.current_points + points_added)
+                
+                if proj.current_points >= proj.target_points:
+                    ap["ready_to_finish"] = True
+                
+                # Moral-Malus
+                if ap.get("crunch"):
+                    has_break = self.has_office_bonus("morale_room")
+                    break_mod = 0.5 if has_break else 1.0
+                    for emp in active_emps:
+                        morale_loss = int(random.randint(2, 5) * break_mod)
+                        if getattr(emp, "personality", None) == "workaholic":
+                            morale_loss = int(morale_loss * 1.5)
+                        emp.morale = max(0, emp.morale - morale_loss)
+                else:
+                    for emp in active_emps:
+                        if getattr(emp, "personality", None) == "workaholic":
+                            emp.morale = max(0, emp.morale - 1)
+                            
+                continue
+
             boost = 2 if ap.get("crunch") else 1
             if getattr(proj, 'is_remaster', False):
                 boost *= 1.5
@@ -3659,13 +3695,18 @@ class GameState:
         # Aktive Projekte laden
         self.active_projects = []
         for ad in data.get("active_projects", []):
-            proj = GameProject.from_dict(ad["project"])
+            if ad.get("is_contract"):
+                from models import ContractWorkProject
+                proj = ContractWorkProject.from_dict(ad["project"])
+            else:
+                from models import GameProject
+                proj = GameProject.from_dict(ad["project"])
             
             self.active_projects.append({
                 "project": proj,
                 "progress": ad["progress"],
                 "total_weeks": ad["total_weeks"],
-                "bugs": ad["bugs"],
+                "bugs": ad.get("bugs", 0),
                 "crunch": ad.get("crunch", False),
                 "ready_to_finish": ad.get("ready_to_finish", False),
                 "event_count": ad.get("event_count", 0),
@@ -4572,6 +4613,74 @@ class GameState:
                                 profit=profit, 
                                 fans=self.fans)
         return summary
+
+
+
+    def generate_contract_work_options(self):
+        """Generiert 3 zufaellige Auftragsarbeiten."""
+        import random
+        from models import ContractWorkProject
+        options = []
+        types = ["Code", "Audio", "Grafik", "Design"]
+        
+        base_points = 50 + (self.prestige * 5)
+        base_payout = 2000 + (self.prestige * 200)
+        
+        for i in range(3):
+            ctype = random.choice(types)
+            diff = random.randint(1, 3)
+            
+            target_points = base_points * diff * random.uniform(0.8, 1.2)
+            payout = base_payout * diff * random.uniform(0.9, 1.3)
+            
+            titles = []
+            if ctype == "Code":
+                titles = ["Datenbank-Optimierung", "Netzwerk-Code", "KI-Routinen", "Bugfixing extern"]
+            elif ctype == "Audio":
+                titles = ["Soundeffekte", "Podcast-Jingle", "Hintergrundmusik", "Voice-Over"]
+            elif ctype == "Grafik":
+                titles = ["Logo-Design", "3D-Modellierung", "Sprite-Animationen", "UI-Mockups"]
+            else:
+                titles = ["Level-Design", "Gamedesign-Dokument", "Balancing-Tabelle", "Quest-Schreiben"]
+                
+            name = f"{random.choice(titles)} ({ctype})"
+            
+            options.append({
+                "name": name,
+                "type": ctype,
+                "target_points": int(target_points),
+                "payout": int(payout)
+            })
+            
+        return options
+
+    def start_contract_work(self, option_data):
+        """Startet einen ausgewaehlten Auftrag."""
+        from models import ContractWorkProject
+        cw = ContractWorkProject(
+            name=option_data["name"],
+            work_type=option_data["type"],
+            target_points=option_data["target_points"],
+            payout=option_data["payout"]
+        )
+        self.active_projects.append({
+            "project": cw,
+            "progress": 0.0,
+            "total_weeks": 9999,
+            "bugs": 0,
+            "crunch": False,
+            "ready_to_finish": False,
+            "assigned_employee_ids": []
+        })
+        return True
+
+    def finish_contract_work(self, ap_dict):
+        """Schliesst eine Auftragsarbeit ab und zahlt aus."""
+        proj = ap_dict["project"]
+        self.track_income("other", proj.payout)
+        if ap_dict in self.active_projects:
+            self.active_projects.remove(ap_dict)
+        return True
 
     def get_status_summary(self):
         """Gibt eine Zusammenfassung der Statuswerte (Datum, Geld, Forschungspunkte, Mitarbeiter, Fans) zurück."""

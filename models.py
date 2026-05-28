@@ -734,6 +734,33 @@ class OfficeObject:
         return self.get(key)
 
 
+class ContractWorkProject:
+    """Ein angenommener Auftrag von extern."""
+    def __init__(self, name, work_type, target_points, payout):
+        self.name = name
+        self.type = work_type  # e.g., "Code", "Audio", "Grafik", "Design"
+        self.target_points = target_points
+        self.current_points = 0.0
+        self.payout = payout
+        self.assigned_employee_ids = []
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "type": self.type,
+            "target_points": self.target_points,
+            "current_points": self.current_points,
+            "payout": self.payout,
+            "assigned_employee_ids": self.assigned_employee_ids
+        }
+
+    @classmethod
+    def from_dict(cls, d):
+        cw = cls(d["name"], d["type"], d["target_points"], d["payout"])
+        cw.current_points = d.get("current_points", 0.0)
+        cw.assigned_employee_ids = d.get("assigned_employee_ids", [])
+        return cw
+
 class ManufacturingJob:
     """Ein Auftrag zur Produktion physischer Datenträger."""
     def __init__(self, game_name, amount, cost_per_unit, weeks_to_complete):

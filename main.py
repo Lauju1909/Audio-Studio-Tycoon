@@ -108,6 +108,7 @@ def get_menu_factories(audio, state):
         "email_inbox": lambda: EmailInboxMenu(audio, state),
         "email_detail": lambda: EmailDetailMenu(audio, state),
         "service_menu": lambda: ServiceMenu(audio, state),
+        "contract_work_menu": lambda: ContractWorkMenu(audio, state),
         "game_service_options": lambda: GameServiceOptionsMenu(audio, state),
         "bank_menu": lambda: BankMenu(audio, state),
         "loan_menu": lambda: LoanMenu(audio, state),

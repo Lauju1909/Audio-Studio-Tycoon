@@ -13,9 +13,40 @@ class ServiceMenu(Menu):
             options.append({'text': self.game_state.get_text('service_manage_subscription'), 'action': lambda: "subscription_service_menu"})
         options.extend([
             {'text': self.game_state.get_text('game_service_options'), 'action': lambda: "game_service_options"},
+            {'text': self.game_state.get_text('contract_work_menu_title', default="Auftragsarbeiten"), 'action': lambda: "contract_work_menu"},
             {'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"}
         ])
         super().__init__(title, options, audio, game_state)
+
+class ContractWorkMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(self.game_state.get_text('contract_work_menu_title', default="Auftragsarbeiten"), [], audio, game_state)
+        self.contract_options = []
+        self._update_options()
+
+    def _update_options(self):
+        self.options = []
+        if not self.contract_options:
+            self.contract_options = self.game_state.generate_contract_work_options()
+        
+        for idx, cw in enumerate(self.contract_options):
+            txt = f"{cw['name']} ({cw['type']}) - Ziel: {int(cw['target_points'])} Pkt - {cw['payout']} EUR"
+            self.options.append({'text': txt, 'action': lambda i=idx: self._select_contract(i)})
+            
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "service_menu"})
+
+    def _select_contract(self, idx):
+        cw = self.contract_options[idx]
+        if self.game_state.start_contract_work(cw):
+            self.audio.play_sound("confirm")
+            self.audio.speak(self.game_state.get_text('contract_started', default=f"Auftrag {cw['name']} angenommen!"))
+            self.contract_options.pop(idx)
+            self._update_options()
+            self.current_index = 0
+            return "dev_progress_menu"
+        return None
 
 class SubscriptionServiceMenu(Menu):
     def __init__(self, audio, game_state):

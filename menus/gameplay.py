@@ -409,8 +409,16 @@ class DevProgressMenu(Menu):
             return self._back_to_list()
         ap = self.game_state.active_projects[self.selected_project_idx]
         if ap["progress"] >= ap["total_weeks"]:
-            self.game_state.finalize_game(ap)
-            return "review_result"
+            # Check if it is a Contract Work
+            if getattr(ap["project"], "target_points", None) is not None:
+                # Beende Auftragsarbeit
+                self.game_state.finish_contract_work(ap)
+                self.audio.play_sound("cash")
+                self.audio.speak(self.game_state.get_text('contract_finished', payout=ap["project"].payout))
+                return "game_menu"
+            else:
+                self.game_state.finalize_game(ap)
+                return "review_result"
         else:
             self.audio.speak(self.game_state.get_text('dev_not_finished'))
             return None
