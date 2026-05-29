@@ -1,4 +1,4 @@
-﻿from .base import Menu, TextInputMenu, SliderMenu
+from .base import Menu, TextInputMenu, SliderMenu
 from .settings import SettingsMenu, KeybindingMenu, VolumeSettingsMenu, LanguageMenu
 from .system import UpdateConfirmMenu, UpdateProgressMenu, BankruptcyMenu, SaveMenu, LoadMenu, HelpMenu
 from .office import (
@@ -23,6 +23,7 @@ from .gameplay import (
     AudienceMenu, GameSizeMenu, MarketingMenu, EngineSelectMenu, ProjectTeamSelectMenu, GameNameMenu, 
     DevelopmentSliderMenu, DevProgressMenu, ReviewResultMenu, RemasterSelectMenu, 
     PublisherMenu, ExpoMenu, GOTYMenu, DifficultyMenu, SubGenreMenu, SequelMenu, 
+    ProjectTypeMenu, RemakeSelectMenu,
     ChartMenu, AAADevEventMenu, CreditsMenu, ActiveGamesMenu, DeveloperMenu
 )
 
@@ -61,7 +62,7 @@ __all__ = [
     "AudienceMenu", "GameSizeMenu", "MarketingMenu", "EngineSelectMenu", "ProjectTeamSelectMenu",
     "GameNameMenu", "DevelopmentSliderMenu", "DevProgressMenu", "ReviewResultMenu",
     "RemasterSelectMenu", "PublisherMenu", "ExpoMenu", "GOTYMenu", "DifficultyMenu",
-    "SubGenreMenu", "SequelMenu", "ChartMenu", "AAADevEventMenu", "CreditsMenu", "ActiveGamesMenu",
+    "SubGenreMenu", "SequelMenu", "ProjectTypeMenu", "RemakeSelectMenu", "ChartMenu", "AAADevEventMenu", "CreditsMenu", "ActiveGamesMenu",
     "BuildMenu", "TeambuildingMenu", "ModPortalMenu", "ModBrowserListMenu",
     "MultiplayerMainMenu", "MultiplayerRoomIdInput", "MultiplayerLobbyMenu",
     # NEU: Events

@@ -83,8 +83,7 @@ class GameMenu(Menu):
             return "co_dev_partner_menu"
         else:
             self.game_state.co_dev_partner = None
-            return "topic_menu"
-
+            return "project_type_menu"
 class CoDevPartnerMenu(Menu):
     def __init__(self, audio, game_state):
         self.audio = audio
@@ -107,6 +106,31 @@ class CoDevPartnerMenu(Menu):
         self.game_state.co_dev_partner = partner_name
         self.audio.play_sound("confirm")
         self.audio.speak(self.game_state.get_text('co_dev_started', name=partner_name))
+        return "project_type_menu"
+
+class ProjectTypeMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(self.game_state.get_text('project_type_title', default='Projektart wählen'), [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        self.options = [
+            {'text': self.game_state.get_text('project_type_new', default='Neues Spiel entwickeln'), 'action': lambda: self._select('new')},
+            {'text': self.game_state.get_text('project_type_sequel', default='Fortsetzung (Sequel)'), 'action': lambda: "sequel_menu"},
+            {'text': self.game_state.get_text('project_type_f2p', default='Free-to-Play Spiel entwickeln'), 'action': lambda: self._select('f2p')},
+            {'text': self.game_state.get_text('project_type_remake', default='Remake (Klassiker neu auflegen)'), 'action': lambda: "remake_select_menu"},
+            {'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"}
+        ]
+
+    def _select(self, p_type):
+        if p_type == 'f2p':
+            self.game_state.current_draft['is_f2p'] = True
+            self.game_state.current_draft['is_remake'] = False
+        else:
+            self.game_state.current_draft['is_f2p'] = False
+            self.game_state.current_draft['is_remake'] = False
         return "topic_menu"
 
 class TopicMenu(Menu):
@@ -688,6 +712,38 @@ class SequelMenu(Menu):
     def _select(self, game):
         self.game_state.current_draft['topic'] = game.topic
         self.game_state.current_draft['genre'] = game.genre
+        self.game_state.current_draft['sequel_to'] = game.name
+        self.game_state.current_draft['sequel_number'] = game.sequel_number + 1
+        return "sub_genre_menu"
+
+class RemakeSelectMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(self.game_state.get_text('remake_title', default='Remake wählen'), [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        self.options = []
+        from game_data import WEEKS_PER_YEAR
+        for game in self.game_state.game_history:
+            weeks_since_release = self.game_state.week - getattr(game, 'release_week', 0)
+            if weeks_since_release >= WEEKS_PER_YEAR * 10:
+                self.options.append({
+                    'text': f"{game.name} (10+ Jahre alt)", 
+                    'action': lambda g=game: self._select(g)
+                })
+        
+        if not self.options:
+            self.options.append({'text': self.game_state.get_text('no_remakes', default='Keine Spiele älter als 10 Jahre'), 'action': lambda: "project_type_menu"})
+            
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "project_type_menu"})
+
+    def _select(self, game):
+        self.game_state.current_draft['topic'] = game.topic
+        self.game_state.current_draft['genre'] = game.genre
+        self.game_state.current_draft['is_remake'] = True
+        self.game_state.current_draft['is_f2p'] = False
         self.game_state.current_draft['sequel_to'] = game.name
         self.game_state.current_draft['sequel_number'] = game.sequel_number + 1
         return "sub_genre_menu"

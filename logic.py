@@ -835,7 +835,8 @@ class GameState:
             # Fügt neue Sprachen hinzu
             langs = selected_languages or []
             dev_cost = len(langs) * 10000
-            total_weeks = len(langs) * 1
+            # Mindestens 1 Woche, um ZeroDivisionError zu vermeiden
+            total_weeks = max(1, len(langs))
             
         update = UpdateProject(
             base_game_name=game_name,
@@ -1008,9 +1009,10 @@ class GameState:
         qa_level = getattr(self, "qa_level", 0)
         if qa_level > 0:
             for proj in getattr(self, "active_projects", []):
-                if proj.get("bugs", 0) > 0:
-                    removed = min(proj["bugs"], qa_level * 2)
-                    proj["bugs"] -= removed
+                current_bugs = proj.get("bugs", 0)
+                if current_bugs > 0:
+                    removed = min(current_bugs, qa_level * 2)
+                    proj["bugs"] = current_bugs - removed
 
         # Monatsankündigung (dynamisch basierend auf WEEKS_PER_YEAR)
         week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
@@ -1554,6 +1556,16 @@ class GameState:
                         new_sales = int(new_sales * e["multiplier"])
                     elif e["effect"] == "sales_boost":
                         new_sales = int(new_sales * e["multiplier"])
+
+                if getattr(g, "is_f2p", False):
+                    g.active_players = int(getattr(g, "active_players", 0) * 0.95) + new_sales
+                    f2p_revenue = int(g.active_players * 0.2 * self.profit_multiplier)
+                    g.sales += new_sales
+                    g.revenue += f2p_revenue
+                    self.track_income("sales", f2p_revenue)
+                    if g.weeks_on_market > int(WEEKS_PER_YEAR * 0.4) or new_sales < 100:
+                        g.is_active = False
+                    continue
                 
                 price = AUDIENCE_PRICE.get(g.audience, 30)
                 
@@ -1588,7 +1600,8 @@ class GameState:
         for addon in self.active_addons:
             base_game = next((g for g in self.game_history if g.name == addon.base_game_name), None)
             if base_game and base_game.is_active:
-                sales = int(base_game.sales * 0.05 / (1 + (self.week - addon.week_developed) * 0.1))
+                elapsed = max(1, self.week - addon.week_developed)
+                sales = int(base_game.sales * 0.05 / (1 + elapsed * 0.1))
                 if sales > 0:
                     revenue = int(sales * 15 * self.profit_multiplier)
                     addon.sales += sales
@@ -1810,10 +1823,17 @@ class GameState:
         return min(250, int(hype))
 
     def _process_rivals(self):
-        """Lässt Rivalen Spiele veröffentlichen und Marktanteile beeinflussen."""
+        """Lsst Rivalen Spiele verffentlichen und Marktanteile beeinflussen."""
         import competitor_ai
         
         for rival in self.rivals:
+            if getattr(rival, 'is_owned_by_player', False):
+                # Phase 2 M&A: Passive Einnahmen durch den Backkatalog
+                back_catalog_income = int(sum(getattr(g, 'score', 0) * 100 for g in getattr(rival, 'games', [])))
+                if back_catalog_income > 0:
+                    self.track_income("other", back_catalog_income)
+                continue
+
             r_game = competitor_ai.evaluate_turn(rival, self)
             
             if r_game:
@@ -1849,17 +1869,7 @@ class GameState:
                     ))
 
                 # Dividende ausschütten, falls Anteile besessen werden
-                if getattr(rival, 'is_owned_by_player', False):
-                    # 100% Einnahmen!
-                    income = int(r_game.score * 100000)
-                    self.track_income("other", income)
-                    self.emails.append(Email(
-                        sender=self.get_text('sender_bank'),
-                        subject=self.get_text('subject_studio_income'),
-                        body=self.get_text('body_studio_income', name=rival.name, amount=income),
-                        date_week=self.week
-                    ))
-                elif getattr(rival, 'owned_shares', 0) > 0:
+                if getattr(rival, 'owned_shares', 0) > 0:
                     dividend = int((r_game.score * 10000) * (rival.owned_shares / 100))
                     self.track_income("other", dividend)
                     self.emails.append(Email(
@@ -2889,6 +2899,10 @@ class GameState:
         diff_market = DIFFICULTY_LEVELS[self.difficulty]["market_multi"]
 
         sales = int(base_sales * score_m * fan_bonus * plat_multi * audience_multi * rand_m * diff_market * self.sales_multiplier)
+        if getattr(project, "is_f2p", False):
+            sales *= 10
+        if getattr(project, "is_remake", False):
+            sales = int(sales * 2.0)
         return sales
 
     def calculate_dev_cost(self, project):
@@ -2915,43 +2929,60 @@ class GameState:
         project = ap_dict["project"]
         bugs = ap_dict["bugs"]
         
+        was_early_access = project in self.game_history
+        
         project.week_developed = self.week
 
         # Kosten und Marketing abziehen
-        project.dev_cost = self.calculate_dev_cost(project)
-        self.track_expense("production", project.dev_cost)
+        new_dev_cost = self.calculate_dev_cost(project)
+        cost_diff = new_dev_cost - getattr(project, "dev_cost", 0)
+        project.dev_cost = new_dev_cost
+        if cost_diff > 0:
+            self.track_expense("production", cost_diff)
 
         project.review = self.calculate_review(project, bugs=bugs)
         
         # Hype-Bonus berechnen und anwenden
         self.hype += self.calculate_hype(project)
         hype_multi = 1.0 + (self.hype / 100.0)
-        project.sales = int(self.calculate_sales(project) * hype_multi)
+        new_sales = int(self.calculate_sales(project) * hype_multi)
+        project.sales = getattr(project, "sales", 0) + new_sales
 
-        price = AUDIENCE_PRICE.get(project.audience, 30)
-        total_revenue = int(project.sales * price * self.profit_multiplier)
+        if getattr(project, "is_f2p", False):
+            project.active_players = getattr(project, "active_players", 0) + new_sales
+            price = 0
+        else:
+            price = AUDIENCE_PRICE.get(project.audience, 30)
+            
+        total_revenue_new = int(new_sales * price * self.profit_multiplier)
         
         # Publisher Royalties
         publisher = ap_dict.get("publisher")
         
         if publisher:
-            royalty_cut = int(total_revenue * publisher["royalty"])
-            project.revenue = total_revenue - royalty_cut
-            self.track_income("publishing", publisher["advance"])
+            royalty_cut = int(total_revenue_new * publisher["royalty"])
+            new_revenue = total_revenue_new - royalty_cut
+            if not was_early_access:
+                self.track_income("publishing", publisher["advance"])
         else:
             if "Digitaler Vertrieb & Logistik" in self.unlocked_technologies:
                 distribution_margin = 0.15 
             else:
                 distribution_margin = 0.30 
                 
-            dist_cost = int(total_revenue * distribution_margin)
-            project.revenue = total_revenue - dist_cost
-            project.distribution_cost = dist_cost
+            dist_cost = int(total_revenue_new * distribution_margin)
+            new_revenue = total_revenue_new - dist_cost
+            if hasattr(project, "distribution_cost"):
+                project.distribution_cost += dist_cost
+            else:
+                project.distribution_cost = dist_cost
+
+        project.revenue = getattr(project, "revenue", 0) + new_revenue
 
         # Co-Dev aus dem AP-Dict
-        if ap_dict.get("co_dev"):
+        if ap_dict.get("co_dev") and not was_early_access:
             partner = ap_dict["co_dev"]
-            refund = int(project.dev_cost * 0.5)
+            refund = int(new_dev_cost * 0.5)
             self.track_income("other", refund)
             project.revenue = int(project.revenue * 0.5)
             self.emails.insert(0, Email(
@@ -2969,15 +3000,16 @@ class GameState:
         # Post-Game Logic
         self.co_dev_partner = None
 
-        self.track_income("sales", project.revenue)
+        self.track_income("sales", new_revenue)
             
         # Fan-Gain durch Spiel und Lizenz
-        fan_base_gain = int(project.revenue * 0.005 * (project.review.average / 10))
-        if getattr(project, 'license_bonus', 0) > 0:
+        fan_base_gain = int(new_revenue * 0.005 * (project.review.average / 10))
+        if getattr(project, 'license_bonus', 0) > 0 and not was_early_access:
             fan_base_gain += int(project.license_bonus * 50)
         self.fans += fan_base_gain
-        self.games_made += 1
-        self.total_revenue += project.revenue
+        if not was_early_access:
+            self.games_made += 1
+        self.total_revenue += new_revenue
 
         # Moral-Anpassung nach Release
         for emp in self.employees:
@@ -2987,7 +3019,7 @@ class GameState:
                 emp.morale = max(0, emp.morale - 10)
 
         # Wenn es ein MMO ist, erstelle ActiveMMO Objekt
-        if project.size == "MMO":
+        if project.size == "MMO" and not was_early_access:
             # Initiale Spielerzahl basierend auf Hype und Review
             initial_players = int((project.review.average * 10000) * (1 + self.hype * 0.05))
             mmo = ActiveMMO(game_project=project, initial_players=initial_players)

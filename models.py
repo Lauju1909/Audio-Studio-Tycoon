@@ -18,6 +18,8 @@ class ReviewScore:
 
     @property
     def average(self):
+        if not self.scores:
+            return 0.0
         return sum(self.scores) / len(self.scores)
 
     @property
@@ -54,6 +56,9 @@ class GameProject:
         # NEU: Advanced Features
         self.has_ads = False
         self.has_mod_support = False
+        self.is_f2p = False
+        self.is_remake = False
+        self.active_players = 0
         
         # NEU: Service & Support
         self.bugs = 0
@@ -125,6 +130,9 @@ class GameProject:
             "languages": getattr(self, "languages", ["de"]),
             "has_ads": getattr(self, "has_ads", False),
             "has_mod_support": getattr(self, "has_mod_support", False),
+            "is_f2p": getattr(self, "is_f2p", False),
+            "is_remake": getattr(self, "is_remake", False),
+            "active_players": getattr(self, "active_players", 0),
             "updates": [u.to_dict() for u in getattr(self, "updates", [])],
             "total_bugs_fixed": getattr(self, "total_bugs_fixed", 0),
         }
@@ -158,6 +166,9 @@ class GameProject:
         proj.languages = gd.get("languages", ["de"])
         proj.has_ads = gd.get("has_ads", False)
         proj.has_mod_support = gd.get("has_mod_support", False)
+        proj.is_f2p = gd.get("is_f2p", False)
+        proj.is_remake = gd.get("is_remake", False)
+        proj.active_players = gd.get("active_players", 0)
         proj.total_bugs_fixed = gd.get("total_bugs_fixed", 0)
         
         # Updates laden
@@ -636,7 +647,9 @@ class BankLoan:
         total_repayment = int(amount_borrowed * (1.0 + interest_rate))
         self.amount_remaining = amount_remaining if amount_remaining is not None else total_repayment
         self.weeks_remaining = weeks_remaining if weeks_remaining is not None else duration_weeks
-        self.weekly_payment = int(total_repayment / duration_weeks)
+        # Guard: duration_weeks must be >= 1 to avoid ZeroDivisionError
+        safe_weeks = max(1, duration_weeks)
+        self.weekly_payment = int(total_repayment / safe_weeks)
 
     def to_dict(self):
         return {
