@@ -94,13 +94,19 @@ class BuildMenu(Menu):
             self._announce_inventory()
             return None
 
-        if self.state == "mode_selection":
+        if self.state == 'mode_selection':
             if event.key == gs.key_up:
-                self.category_idx = (self.category_idx - 1) % 3
-                self._announce_category()
+                if self.category_idx > 0:
+                    self.category_idx -= 1
+                    self._announce_category()
+                else:
+                    self.audio.play_sound('bump')
             elif event.key == gs.key_down:
-                self.category_idx = (self.category_idx + 1) % 3
-                self._announce_category()
+                if self.category_idx < 2:
+                    self.category_idx += 1
+                    self._announce_category()
+                else:
+                    self.audio.play_sound('bump')
             elif event.key == gs.key_confirm:
                 self._select_mode()
             elif event.key == gs.key_back:
@@ -108,13 +114,19 @@ class BuildMenu(Menu):
                 self._speak_position()
             return None
 
-        if self.state == "item_selection":
+        if self.state == 'item_selection':
             if event.key == gs.key_up:
-                self.item_idx = (self.item_idx - 1) % len(self.category_items)
-                self._announce_item()
+                if self.item_idx > 0:
+                    self.item_idx -= 1
+                    self._announce_item()
+                else:
+                    self.audio.play_sound('bump')
             elif event.key == gs.key_down:
-                self.item_idx = (self.item_idx + 1) % len(self.category_items)
-                self._announce_item()
+                if self.item_idx < len(self.category_items) - 1:
+                    self.item_idx += 1
+                    self._announce_item()
+                else:
+                    self.audio.play_sound('bump')
             elif event.key == gs.key_confirm:
                 self.state = "placement"
                 self.audio.play_sound("click")
