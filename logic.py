@@ -1023,6 +1023,13 @@ class GameState:
         
         is_new_month = (current_month != prev_month)
 
+        # Passive income from acquired studios
+        for rival in self.rivals:
+            if getattr(rival, 'is_owned_by_player', False):
+                passive_income = random.randint(10000, 50000)
+                self.money += passive_income
+                self.track_income("other", passive_income)
+
         if is_new_month and self.week > 1:
             cal = self.get_calendar_text()
             self.emails.insert(0, Email(
