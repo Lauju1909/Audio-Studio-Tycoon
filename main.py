@@ -27,6 +27,7 @@ from logic import GameState
 from tutorial import TutorialManager
 from translations import get_text, set_language
 from menus import (
+    OfficePerksMenu, HeadhuntingEventMenu,
     MainMenu, UpdateConfirmMenu, UpdateProgressMenu, CompanyNameMenu, GameMenu, TopicMenu,
     GenreMenu, PlatformMenu, AudienceMenu, GameSizeMenu, MarketingMenu,
     EngineSelectMenu, RemasterSelectMenu, PublisherMenu, SettingsMenu,
@@ -87,6 +88,8 @@ def get_menu_factories(audio, state):
         "dev_progress_menu": lambda: DevProgressMenu(audio, state),
         "review_result": lambda: ReviewResultMenu(audio, state),
         "hr_menu": lambda: HRMenu(audio, state),
+        "office_perks_menu": lambda: OfficePerksMenu(audio, state),
+        "headhunting_event_menu": lambda: HeadhuntingEventMenu(audio, state),
         "hire_menu": lambda: HireMenu(audio, state),
         "employee_overview_menu": lambda: EmployeeOverviewMenu(audio, state),
         "fire_menu": lambda: FireMenu(audio, state),
@@ -417,6 +420,12 @@ def main():
                 # Automatischer Wechsel bei ausgelöstem Entwicklungs-Event (alle Groessen)
                 if getattr(state, "pending_dev_event", None) and current_key != "aaa_dev_event_menu":
                     current_key = "aaa_dev_event_menu"
+                    current_menu = menu_factories[current_key]()
+                    current_menu.announce_entry()
+
+                # Headhunting Event
+                if getattr(state, "pending_headhunt_event", None) and current_key != "headhunting_event_menu":
+                    current_key = "headhunting_event_menu"
                     current_menu = menu_factories[current_key]()
                     current_menu.announce_entry()
 
