@@ -18,9 +18,7 @@ class ReviewScore:
 
     @property
     def average(self):
-        if not self.scores:
-            return 0.0
-        return sum(self.scores) / len(self.scores)
+        return sum(self.scores) / len(self.scores) if self.scores else 0.0
 
     @property
     def total(self):
@@ -306,7 +304,7 @@ class ActiveMMO:
         
     @property
     def weekly_cost(self):
-        return int((self.players / 10000) * self.server_cost_per_10k)
+        return int((max(0, self.players) / 10000) * self.server_cost_per_10k)
         
     @property
     def weekly_profit(self):
@@ -482,7 +480,7 @@ class Employee:
     @property
     def quality_contribution(self):
         """Wie viel Qualität fügt dieser Mitarbeiter hinzu (0.0 - 0.1). Sinkt stark bei schlechter Moral."""
-        avg_skill = sum(self.skills.values()) / len(self.skills)
+        avg_skill = sum(self.skills.values()) / max(1, len(self.skills))
         base_contrib = avg_skill / 1000.0  # 0.0 - 0.1
         
         if self.morale < 40:
@@ -783,7 +781,7 @@ class ContractWorkProject:
     def __init__(self, name, work_type, target_points, payout):
         self.name = name
         self.type = work_type  # e.g., "Code", "Audio", "Grafik", "Design"
-        self.target_points = target_points
+        self.target_points = max(1.0, float(target_points))
         self.current_points = 0.0
         self.payout = payout
         self.assigned_employee_ids = []
