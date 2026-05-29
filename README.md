@@ -1,4 +1,4 @@
-﻿# Audio Studio Tycoon (v3.11.0-beta.1) ðŸš€
+# Audio Studio Tycoon (v3.11.0-beta.1) ðŸš€
 
 > [!IMPORTANT]
 > **100% Screenreader-optimiert!** Dieses Spiel wurde von Grund auf fÃ¼r blinde und sehbehinderte Spieler entwickelt. Es nutzt modernste TTS-Technologie (Tolk) fÃ¼r eine nahtlose Spielerfahrung.
@@ -126,4 +126,7 @@ Das Spiel bietet ein brandneues, interaktives Tutorial-System. Beim ersten Betre
 ### v3.12 (New Features)
 - **In-Game Werbung:** Optional aktivierbar für veröffentlichte Spiele, um zusätzliche Einnahmen zu generieren (auf Kosten von Hype).
 - **Modding-Support:** Reduziert den Verkaufsrückgang für Spiele und verlängert deren Lebensdauer auf dem Markt.
+- **Phase 2 - Free-to-Play:** Entwickle Spiele als Free-to-Play mit Mikrotransaktionen für wöchentliches passives Einkommen, abhängig von der aktiven Spielerbasis.
+- **Phase 2 - Remakes:** Wähle Spiele, die älter als 10 Jahre sind, und entwickle Remakes, um Nostalgie-Verkaufs-Boosts zu erhalten!
+- **Phase 2 - Mergers & Acquisitions (M&A):** Kaufe rivalisierende Studios auf, profitiere von deren Katalog durch wöchentliche Dividenden und eliminiere die Konkurrenz.
 
