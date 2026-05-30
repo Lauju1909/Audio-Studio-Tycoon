@@ -56,6 +56,8 @@ class GameProject:
         self.has_mod_support = False
         self.is_f2p = False
         self.is_remake = False
+        self.drm_level = 0
+        self.pirated_copies = 0
         self.active_players = 0
         
         # NEU: Service & Support
@@ -130,6 +132,8 @@ class GameProject:
             "has_mod_support": getattr(self, "has_mod_support", False),
             "is_f2p": getattr(self, "is_f2p", False),
             "is_remake": getattr(self, "is_remake", False),
+            "drm_level": getattr(self, "drm_level", 0),
+            "pirated_copies": getattr(self, "pirated_copies", 0),
             "active_players": getattr(self, "active_players", 0),
             "updates": [u.to_dict() for u in getattr(self, "updates", [])],
             "total_bugs_fixed": getattr(self, "total_bugs_fixed", 0),
@@ -166,6 +170,8 @@ class GameProject:
         proj.has_mod_support = gd.get("has_mod_support", False)
         proj.is_f2p = gd.get("is_f2p", False)
         proj.is_remake = gd.get("is_remake", False)
+        proj.drm_level = gd.get("drm_level", 0)
+        proj.pirated_copies = gd.get("pirated_copies", 0)
         proj.active_players = gd.get("active_players", 0)
         proj.total_bugs_fixed = gd.get("total_bugs_fixed", 0)
         
@@ -449,7 +455,9 @@ class Employee:
         self.is_training = False        # Gesperrt durch Fortbildung
         self.training_weeks_left = 0    # Wochen bis Fortbildung fertig
         self.training_skill_boost = 0   # Skill-Punkte die nach Abschluss vergeben werden
-        self.is_sick = False            # Krank-Status
+        self.is_sick = False
+        self.is_crunching = False
+        self.crunch_weeks = 0            # Krank-Status
         self.sick_weeks_left = 0        # Wochen bis Genesung
 
     def _generate_skills(self):
@@ -557,6 +565,8 @@ class Employee:
             "training_weeks_left": getattr(self, "training_weeks_left", 0),
             "training_skill_boost": getattr(self, "training_skill_boost", 0),
             "is_sick": getattr(self, "is_sick", False),
+            "is_crunching": getattr(self, "is_crunching", False),
+            "crunch_weeks": getattr(self, "crunch_weeks", 0),
             "sick_weeks_left": getattr(self, "sick_weeks_left", 0),
             "personality": getattr(self, "personality", "easygoing"),
         }
@@ -585,6 +595,8 @@ class Employee:
         emp.training_weeks_left = ed.get("training_weeks_left", 0)
         emp.training_skill_boost = ed.get("training_skill_boost", 0)
         emp.is_sick = ed.get("is_sick", False)
+        emp.is_crunching = ed.get("is_crunching", False)
+        emp.crunch_weeks = ed.get("crunch_weeks", 0)
         emp.sick_weeks_left = ed.get("sick_weeks_left", 0)
         emp.personality = ed.get("personality", "easygoing")
         return emp

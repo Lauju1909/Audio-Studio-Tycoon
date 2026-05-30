@@ -1942,7 +1942,14 @@ OFFICE_UPGRADES = [
         "name_key": "upgrade_legal",
         "cost": 80000,
         "bonus": "legal_protection",
-    }
+    },
+    {
+        "id": "campus_upgrade",
+        "name_key": "upgrade_campus",
+        "cost": 1000000,
+        "bonus": "campus_morale",
+    },
+
 ]
 
 
@@ -2058,3 +2065,12 @@ OFFICE_PERSONALITY_EVENTS = [
     }
 ]
 
+
+# ============================================================
+# CONTENT CREATORS
+# ============================================================
+CONTENT_CREATORS = [
+    {"id": "small_streamer", "name_key": "creator_small", "cost": 10000, "boost": 1.2, "duration": 4},
+    {"id": "medium_streamer", "name_key": "creator_medium", "cost": 50000, "boost": 1.5, "duration": 4},
+    {"id": "large_streamer", "name_key": "creator_large", "cost": 250000, "boost": 2.5, "duration": 4},
+]

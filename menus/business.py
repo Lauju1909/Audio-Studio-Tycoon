@@ -59,6 +59,8 @@ class SubscriptionServiceMenu(Menu):
         gs = self.game_state
         self.options = []
         if getattr(gs, 'subscription_active', False):
+            
+            self.options.append({'text': gs.get_text('subscription_add_game'), 'action': lambda: "subscription_add_game_menu"})
             self.options.append({'text': gs.get_text('subscription_stop') + f" ({int(gs.subscription_subscribers):,} Abonnenten)", 'action': self._toggle})
             self.options.append({'text': gs.get_text('subscription_price_up', price=gs.subscription_price), 'action': self._change_price})
             self.options.append({'text': gs.get_text('subscription_price_down', price=gs.subscription_price), 'action': self._change_price_down})
@@ -1172,3 +1174,52 @@ class AcquisitionMenu(Menu):
         self.audio.play_sound("confirm")
         self.audio.speak(self.game_state.get_text('acquisition_success', name=rival.name))
         return "bank_menu"
+
+
+class SubscriptionVaultMenu(Menu):
+    def __init__(self, audio, game_state):
+        super().__init__(game_state.get_text('subscription_vault_title'), [], audio, game_state)
+    def announce_entry(self):
+        self.current_index = 0
+        self.options = []
+        
+        for g in self.game_state.game_history:
+            if g.is_active and g not in getattr(self.game_state, 'subscription_games', []):
+                self.options.append({
+                    'text': self.game_state.get_text('subscription_put_in_vault', name=g.name),
+                    'action': lambda g=g: self.add_game(g)
+                })
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "subscription_service_menu"})
+        super().announce_entry()
+        
+    def add_game(self, g):
+        if not hasattr(self.game_state, 'subscription_games'):
+            self.game_state.subscription_games = []
+        self.game_state.subscription_games.append(g)
+        self.audio.speak(self.game_state.get_text('subscription_added_to_vault', name=g.name))
+        return "subscription_service_menu"
+
+class CreatorSponsorshipMenu(Menu):
+    def __init__(self, audio, game_state):
+        super().__init__(game_state.get_text('creator_menu_title'), [], audio, game_state)
+        
+    def announce_entry(self):
+        self.current_index = 0
+        self.options = []
+        from game_data import CONTENT_CREATORS
+        for c in CONTENT_CREATORS:
+            self.options.append({
+                'text': self.game_state.get_text('creator_sponsor_option', name=self.game_state.get_text(c['name_key']), cost=c['cost']),
+                'action': lambda c=c: self.sponsor(c)
+            })
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "marketing_menu"})
+        super().announce_entry()
+        
+    def sponsor(self, c):
+        if self.game_state.money < c['cost']:
+            self.audio.speak(self.game_state.get_text('creator_fail_money', cost=c['cost']))
+            return None
+        self.game_state.track_expense("marketing", c['cost'])
+        self.game_state.add_sponsorship(c['boost'], c['duration'])
+        self.audio.speak(self.game_state.get_text('creator_success', name=self.game_state.get_text(c['name_key'])))
+        return "marketing_menu"

@@ -606,6 +606,9 @@ class GOTYMenu(Menu):
         self.game_state = game_state
         
         # Verarbeite anstehende Ergebnisse
+        
+        if getattr(self.game_state, "pending_shareholder_meeting", False):
+            return "shareholder_meeting"
         if getattr(self.game_state, "pending_goty_results", None):
             res = self.game_state.pending_goty_results
             winner_text = "Niemand"
@@ -1074,3 +1077,12 @@ class CreditsMenu(Menu):
         self.audio.speak(self.game_state.get_text('credits_text'), interrupt=False)
         self.options = [{'text': self.game_state.get_text('back'), 'action': lambda: "main_menu"}]
         self.speak_current(interrupt=False)
+
+class ShareholderMenu(Menu):
+    def __init__(self, audio, game_state):
+        super().__init__("Shareholder Meeting", [
+            {'text': "Acknowledge", 'action': lambda: "game_menu"}
+        ], audio, game_state)
+        game_state.pending_shareholder_meeting = False
+        target_met = game_state.money >= getattr(game_state, 'shareholder_target', 0)
+        self.audio.speak(f"Shareholder Meeting! Target met: {target_met}. Share value is now {game_state.share_value}.", interrupt=True)

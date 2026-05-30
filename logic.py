@@ -241,6 +241,7 @@ class GameState:
         # NEU: Phase F - Merch und Turniere
         self.active_merch = []
         self.active_tournaments = []
+        self.active_sponsorships = []
 
         # NEU: Phase G - Büro-Bau (Grid)
         self.office_grid = [[None for _ in range(10)] for _ in range(10)] # 10x10 Raster
@@ -1853,8 +1854,10 @@ class GameState:
         # NEU: Phase 7 - Rivalen und GOTY evaluieren
         self._process_rivals()
         self._process_tournaments()
+        self._process_sponsorships()
         if week_in_year == WEEKS_PER_YEAR:
             self._check_goty()
+        self._check_shareholder_meeting()
 
     def calculate_hype(self, project):
         """Berechnet den Hype für ein Spiel basierend auf Marketing, Lizenzen und Events."""
@@ -1959,6 +1962,22 @@ class GameState:
 
 
 
+    
+    def _process_sponsorships(self):
+        if not hasattr(self, "active_sponsorships"):
+            self.active_sponsorships = []
+        for s in list(self.active_sponsorships):
+            s["duration"] -= 1
+            if s["duration"] <= 0:
+                self.streamer_hype_multi /= s["boost"]
+                self.active_sponsorships.remove(s)
+                
+    def add_sponsorship(self, boost, duration):
+        if not hasattr(self, "active_sponsorships"):
+            self.active_sponsorships = []
+        self.active_sponsorships.append({"boost": boost, "duration": duration})
+        self.streamer_hype_multi *= boost
+
     def _process_tournaments(self):
         """Verarbeitet aktive E-Sport-Turniere: liefert Einnahmen, Hype und Fans."""
         if not getattr(self, "active_tournaments", []):
@@ -1994,6 +2013,20 @@ class GameState:
                     'esports_result_subject',
                     name=t.get("name", "Turnier")
                 ), interrupt=False)
+
+    
+    def _check_shareholder_meeting(self):
+        year = self.get_calendar_year()
+        if not hasattr(self, 'last_shareholder_year'):
+            self.last_shareholder_year = year - 1
+        if getattr(self, 'is_public_company', False) and year > self.last_shareholder_year:
+            self.last_shareholder_year = year
+            if self.money < self.shareholder_target:
+                self.share_value = max(10, getattr(self, 'share_value', 100) - 20)
+            else:
+                self.share_value = getattr(self, 'share_value', 100) + 10
+            self.shareholder_target = self.money + 50000
+            self.pending_shareholder_meeting = True
 
     def _check_goty(self):
         """Ermittelt das Spiel des Jahres."""

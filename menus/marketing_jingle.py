@@ -106,6 +106,7 @@ class JingleGeneratorMenu(Menu):
                 'action': self._show_active_jingles
             })
             
+        self.options.append({'text': gs.get_text('creator_menu_title'), 'action': lambda: "creator_menu"})
         self.options.append({'text': gs.get_text('back'), 'action': lambda: "marketing_menu"})
 
     def announce_entry(self):

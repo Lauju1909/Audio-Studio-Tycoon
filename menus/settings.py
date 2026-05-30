@@ -261,12 +261,11 @@ class VolumeSettingsMenu(Menu):
         else:
             text = self.game_state.get_text('volume_sfx') + " " + self.game_state.get_text('percent_label', val=val)
             
-        self.audio.speak(text, interrupt=True)
-        
         if bump:
             self.audio.play_sound("bump")
-        elif key == 'sfx_volume':
+        else:
             self.audio.play_sound("click")
+        self.audio.speak(text, interrupt=True)
             
         return None
 

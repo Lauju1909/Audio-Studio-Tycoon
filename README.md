@@ -117,7 +117,8 @@ Das Spiel bietet ein brandneues, interaktives Tutorial-System. Beim ersten Betre
 - Dein Screenreader (NVDA, Jaws, SAPI) wird automatisch erkannt.
 
 ### Linux
-- Nutze das `Audio_Studio_Tycoon_Linux.sh` Skript zum Starten.
+- **Starten:** Nutze das `Audio_Studio_Tycoon_Linux.sh` Skript zum Starten des Spiels. Fǟr die Screenreader-Unterstǟtzung unter Linux nutzt `Tolk` den Speech Dispatcher (`speechd`). Stelle sicher, dass `speechd` installiert und aktiv ist, damit die akustischen Feedbacks funktionieren.
+- **Kompilieren:** Um das Spiel nativ unter Linux zu kompilieren, fǟhre das mitgelieferte Skript `./build_linux.sh` aus. Dieses nutzt PyInstaller und generiert die ausfǟhrbare Datei im `dist/`-Verzeichnis.
 
 ---
 *Entwickelt mit Leidenschaft fÃ¼r Barrierefreiheit.*
