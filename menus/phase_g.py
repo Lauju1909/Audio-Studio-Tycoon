@@ -137,18 +137,30 @@ class BuildMenu(Menu):
             return None
 
         if self.state == "placement":
-            if event.key == gs.key_up and self.cursor_y > 0:
-                self.cursor_y -= 1
-                self._speak_position()
-            elif event.key == gs.key_down and self.cursor_y < 9:
-                self.cursor_y += 1
-                self._speak_position()
-            elif event.key == pygame.K_LEFT and self.cursor_x > 0:
-                self.cursor_x -= 1
-                self._speak_position()
-            elif event.key == pygame.K_RIGHT and self.cursor_x < 9:
-                self.cursor_x += 1
-                self._speak_position()
+            if event.key == gs.key_up:
+                if self.cursor_y > 0:
+                    self.cursor_y -= 1
+                    self._speak_position()
+                else:
+                    self.audio.play_sound('bump')
+            elif event.key == gs.key_down:
+                if self.cursor_y < 9:
+                    self.cursor_y += 1
+                    self._speak_position()
+                else:
+                    self.audio.play_sound('bump')
+            elif event.key == pygame.K_LEFT:
+                if self.cursor_x > 0:
+                    self.cursor_x -= 1
+                    self._speak_position()
+                else:
+                    self.audio.play_sound('bump')
+            elif event.key == pygame.K_RIGHT:
+                if self.cursor_x < 9:
+                    self.cursor_x += 1
+                    self._speak_position()
+                else:
+                    self.audio.play_sound('bump')
             elif event.key == gs.key_confirm:
                 self._confirm_placement()
             elif event.key == gs.key_back:
@@ -157,18 +169,30 @@ class BuildMenu(Menu):
             return None
 
         # Navigation-Modus
-        if event.key == gs.key_up and self.cursor_y > 0:
-            self.cursor_y -= 1
-            self._speak_position()
-        elif event.key == gs.key_down and self.cursor_y < 9:
-            self.cursor_y += 1
-            self._speak_position()
-        elif event.key == pygame.K_LEFT and self.cursor_x > 0:
-            self.cursor_x -= 1
-            self._speak_position()
-        elif event.key == pygame.K_RIGHT and self.cursor_x < 9:
-            self.cursor_x += 1
-            self._speak_position()
+        if event.key == gs.key_up:
+            if self.cursor_y > 0:
+                self.cursor_y -= 1
+                self._speak_position()
+            else:
+                self.audio.play_sound('bump')
+        elif event.key == gs.key_down:
+            if self.cursor_y < 9:
+                self.cursor_y += 1
+                self._speak_position()
+            else:
+                self.audio.play_sound('bump')
+        elif event.key == pygame.K_LEFT:
+            if self.cursor_x > 0:
+                self.cursor_x -= 1
+                self._speak_position()
+            else:
+                self.audio.play_sound('bump')
+        elif event.key == pygame.K_RIGHT:
+            if self.cursor_x < 9:
+                self.cursor_x += 1
+                self._speak_position()
+            else:
+                self.audio.play_sound('bump')
         elif event.key == gs.key_confirm:
             self.state = "mode_selection"
             self.category_idx = 0

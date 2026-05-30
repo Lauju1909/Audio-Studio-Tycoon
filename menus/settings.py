@@ -238,10 +238,13 @@ class VolumeSettingsMenu(Menu):
     def _adjust_volume(self, key, amount, loop=True):
         val = self.game_state.settings.get(key, 100)
         val += amount
+        bump = False
         if val > 100:
             val = 0 if loop else 100
+            if not loop: bump = True
         elif val < 0:
             val = 100 if loop else 0
+            if not loop: bump = True
             
         self.game_state.settings[key] = val
         self.game_state.save_global_settings()
@@ -250,7 +253,6 @@ class VolumeSettingsMenu(Menu):
             self.audio.apply_volumes(self.game_state.settings)
             
         self._update_options()
-        # self.speak_current(interrupt=True)
         
         if key == 'music_volume':
             text = self.game_state.get_text('volume_music') + " " + self.game_state.get_text('percent_label', val=val)
@@ -261,7 +263,9 @@ class VolumeSettingsMenu(Menu):
             
         self.audio.speak(text, interrupt=True)
         
-        if key == 'sfx_volume':
+        if bump:
+            self.audio.play_sound("bump")
+        elif key == 'sfx_volume':
             self.audio.play_sound("click")
             
         return None

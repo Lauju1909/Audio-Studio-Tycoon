@@ -6,6 +6,7 @@ Spielhistorie, Ereignisse und die Bewertungslogik.
 """
 
 import random
+
 import json
 import os
 from models import (
@@ -1049,14 +1050,13 @@ class GameState:
             self.stress_level = max(0.0, getattr(self, 'stress_level', 0.0) - (2.0 + perk_relief))
 
         if getattr(self, 'stress_level', 0.0) > 80.0 and getattr(self, 'strike_weeks_left', 0) == 0:
-            import random
+
             if random.random() < 0.1: # 10% chance per week
                 self.strike_weeks_left = random.randint(1, 4)
                 strike_cost = self.strike_weeks_left * 5000
                 self.money -= strike_cost
                 self.track_expense("other", strike_cost)
                 self.stress_level = 0.0
-                from models import Email
                 self.emails.insert(0, Email(
                     sender=self.get_text('sender_union'),
                     subject=self.get_text('subject_strike'),
@@ -1068,7 +1068,7 @@ class GameState:
 
         # Headhunting event
         if not getattr(self, "pending_headhunt_event", None) and self.employees:
-            import random
+
             for emp in self.employees:
                 avg_skill = sum(emp.skills.values()) / len(emp.skills) if emp.skills else 0
                 if avg_skill >= 80 and random.random() < 0.005:
@@ -1084,7 +1084,6 @@ class GameState:
         if getattr(self, 'strike_weeks_left', 0) > 0:
             self.strike_weeks_left -= 1
             if self.strike_weeks_left == 0:
-                from models import Email
                 self.emails.insert(0, Email(
                     sender=self.get_text('sender_union'),
                     subject=self.get_text('subject_strike_ended'),
@@ -3125,7 +3124,7 @@ class GameState:
         self.track_expense("staff", train_data["cost"])
         
         if train_data.get("is_specialization"):
-            import random
+
             from game_data import EMPLOYEE_TRAITS
             # Nur gute Traits raussuchen (z.B. Speed-Booster oder Quality)
             good_traits = [t for t in EMPLOYEE_TRAITS if t["effect"] in ["speed", "quality"] and t["value"] > 1.0]
@@ -3315,7 +3314,7 @@ class GameState:
 
     def receive_fan_mail(self):
         """Generiert eine neue Fanpost mit Antwortoptionen."""
-        import random
+
         from models import FanMail
         from game_data import FAN_MAIL_TEMPLATES
         
@@ -3526,7 +3525,7 @@ class GameState:
             return False
             
         # 10% Chance pro Woche
-        import random
+
         if random.random() > 0.10:
             return False
             
@@ -3842,7 +3841,7 @@ class GameState:
             emp = Employee.from_dict(ed)
             # Falls Trait fehlt (Migration), zufällig zuweisen
             if not emp.trait:
-                import random
+
                 from game_data import EMPLOYEE_TRAITS
                 emp.trait = random.choice(EMPLOYEE_TRAITS)
             self.employees.append(emp)
@@ -4236,7 +4235,7 @@ class GameState:
         # Spezialisierungskurs: Sofort eine zufällige freie Spezialisierung vergeben
         if is_spec:
             from game_data import EMPLOYEE_SPECIALIZATIONS
-            import random
+
             current_spec = getattr(emp, 'specialization', None)
             if current_spec:
                 spec_name = current_spec.get("name")
@@ -4571,7 +4570,7 @@ class GameState:
         library_factor = 0.5 + (game_count * 0.1) # 5 Spiele = 1.0 (normal)
         
         # Zufällige Fluktuation
-        import random
+
         drift = random.uniform(0.95, 1.05)
         
         # Abonnenten-Änderung (Wachstum oder Schrumpfen)
@@ -4835,7 +4834,7 @@ class GameState:
 
     def generate_contract_work_options(self):
         """Generiert 3 zufaellige Auftragsarbeiten."""
-        import random
+
         from models import ContractWorkProject
         options = []
         types = ["Code", "Audio", "Grafik", "Design"]
