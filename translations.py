@@ -131,6 +131,12 @@ def get_text(text_key, **kwargs):
 
 TRANSLATIONS = {
     "en": {
+    "menu_anti_cheat": "Buy Anti-Cheat System (100,000 €)",
+    "anti_cheat_success": "Anti-Cheat for {game} successfully installed!",
+    "cheater_email_sender": "Community Manager",
+    "cheater_email_subject": "Cheaters in {game}!",
+    "cheater_email_body": "Boss! A massive cheater wave is ruining the game! We lost {lost} honest players. We need an Anti-Cheat system!",
+
     "menu_movie_deal": "Sell Movie Licenses",
     "movie_deal_success": "Movie deal for {game} successfully concluded!",
     "movie_email_sender": "Hollywood Studios",
@@ -1827,6 +1833,12 @@ TRANSLATIONS = {
         "no_studios_available": "No rival studios available for acquisition."
     },
     "de": {
+    "menu_anti_cheat": "Anti-Cheat System kaufen (100.000 €)",
+    "anti_cheat_success": "Anti-Cheat für {game} erfolgreich installiert!",
+    "cheater_email_sender": "Community Manager",
+    "cheater_email_subject": "Cheater in {game}!",
+    "cheater_email_body": "Boss! Eine massive Cheater-Welle ruiniert das Spiel! Wir haben {lost} ehrliche Spieler verloren. Wir brauchen ein Anti-Cheat System!",
+
     "menu_movie_deal": "Filmlizenzen verkaufen",
     "movie_deal_success": "Filmdeal für {game} erfolgreich abgeschlossen!",
     "movie_email_sender": "Hollywood Studios",

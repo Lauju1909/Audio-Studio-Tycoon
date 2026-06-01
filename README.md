@@ -125,6 +125,7 @@ Das Spiel bietet ein brandneues, interaktives Tutorial-System. Beim ersten Betre
 
 
 ### v3.13 (New Features)
+- **Anti-Cheat System:** F2P-Titel und MMOs werden ab sofort von Cheater-Wellen heimgesucht, die Spieler vergraulen und Fans kosten! Der Kauf eines teuren Anti-Cheat-Systems (100.000 €) für jedes betroffene Spiel ist nun ein essentielles Management-Tool.
 - **Filmlizenzen verkaufen:** Wenn ein Spiel ein Kritikererfolg (Score >= 8.0) und ein Verkaufsschlager (>= 500k Verkäufe) ist, können nun die Filmrechte an Hollywood verkauft werden für einen gigantischen Payout und noch mehr Fans!
 - **Lootboxen & Mikrotransaktionen (MTX):** Füge bestehenden Spielen Lootboxen hinzu, um fortlaufende wöchentliche Einnahmen zu generieren. Aber Vorsicht: Die Community wird das nicht mögen und mit massiven Shitstorms und Fan-Verlusten reagieren!
 

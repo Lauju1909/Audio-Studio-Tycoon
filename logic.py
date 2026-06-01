@@ -1031,6 +1031,18 @@ class GameState:
                 return True
         return False
 
+    def buy_anti_cheat(self, game_name):
+        """Kauft ein Anti-Cheat System für ein MMO oder F2P Spiel."""
+        game = next((g for g in self.game_history if g.name == game_name), None)
+        if game and not getattr(game, 'has_anti_cheat', False):
+            if game.is_f2p or any(m.game.name == game_name for m in getattr(self, 'active_mmos', [])):
+                cost = 100000
+                if self.money >= cost:
+                    self.money -= cost
+                    game.has_anti_cheat = True
+                    return True
+        return False
+
     def update_subscription_service(self):
         """Berechnet wöchentliche Abonnentenzahlen, Einnahmen und Hype für den Abo-Dienst."""
         if not getattr(self, 'subscription_active', False):
@@ -1730,6 +1742,21 @@ class GameState:
 
                 if getattr(g, "is_f2p", False):
                     g.active_players = int(getattr(g, "active_players", 0) * 0.95) + new_sales
+                    
+                    # Cheater-Welle für F2P
+                    if not getattr(g, "has_anti_cheat", False):
+                        import random
+                        if random.random() < 0.05:
+                            lost_players = int(g.active_players * 0.15)
+                            g.active_players -= lost_players
+                            self.fans = max(0, self.fans - lost_players)
+                            self.emails.insert(0, Email(
+                                sender=self.get_text('cheater_email_sender', default="Community Manager"),
+                                subject=self.get_text('cheater_email_subject', game=g.name, default="Cheater in {game}!"),
+                                body=self.get_text('cheater_email_body', game=g.name, lost=lost_players, default="Eine massive Cheater-Welle ruiniert das Spiel! Wir verlieren Spieler!"),
+                                date_week=self.week
+                            ))
+                            
                     f2p_revenue = int(g.active_players * 0.2 * self.profit_multiplier)
                     g.sales += new_sales
                     g.revenue += f2p_revenue
@@ -1830,6 +1857,20 @@ class GameState:
                     self.track_income("other", mtx_rev)
                     mmo.game.revenue += mtx_rev
                     mmo.players = int(mmo.players * 0.95) # players leave faster due to MTX
+                
+                # Cheater-Wellen Logic
+                if not getattr(mmo.game, "has_anti_cheat", False):
+                    import random
+                    if random.random() < 0.05: # 5% Chance pro Woche auf Cheater-Welle
+                        lost_players = int(mmo.players * 0.15)
+                        mmo.players -= lost_players
+                        self.fans = max(0, self.fans - lost_players)
+                        self.emails.insert(0, Email(
+                            sender=self.get_text('cheater_email_sender', default="Community Manager"),
+                            subject=self.get_text('cheater_email_subject', game=mmo.game.name, default="Cheater in {game}!"),
+                            body=self.get_text('cheater_email_body', game=mmo.game.name, lost=lost_players, default="Eine massive Cheater-Welle ruiniert das Spiel! Wir verlieren Spieler!"),
+                            date_week=self.week
+                        ))
                 
                 if server_overloaded:
                     mmo.players = int(mmo.players * 0.85)

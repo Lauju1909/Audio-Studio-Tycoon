@@ -165,6 +165,7 @@ class GameServiceOptionsMenu(Menu):
         self.options = [
             {'text': self.game_state.get_text('menu_add_mtx', default="Mikrotransaktionen integrieren"), 'action': lambda: "add_mtx_menu"},
             {'text': self.game_state.get_text('menu_movie_deal', default="Filmlizenzen verkaufen"), 'action': lambda: "movie_deal_menu"},
+            {'text': self.game_state.get_text('menu_anti_cheat', default="Anti-Cheat System kaufen (100.000 €)"), 'action': lambda: "anti_cheat_menu"},
             {'text': self.game_state.get_text('back'), 'action': lambda: "service_menu"}
         ]
 
@@ -226,6 +227,41 @@ class MovieDealMenu(Menu):
                 self.audio.play_sound('cash')
             if hasattr(self.audio, 'speak'):
                 self.audio.speak(self.game_state.get_text('movie_deal_success', game=game_name, default=f"Filmdeal fur {game_name} erfolgreich abgeschlossen!"))
+        return "game_service_options"
+
+class AntiCheatMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(self.game_state.get_text('menu_anti_cheat', default="Anti-Cheat System kaufen (100.000 €)"), [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        self.options = []
+        valid_games = [g for g in self.game_state.game_history if not getattr(g, "has_anti_cheat", False) and (getattr(g, "is_f2p", False) or any(m.game.name == g.name for m in getattr(self.game_state, 'active_mmos', [])))]
+        for g in valid_games:
+            self.options.append({
+                'text': g.name,
+                'action': lambda name=g.name: self._buy_anti_cheat(name)
+            })
+        if not valid_games:
+            self.options.append({
+                'text': self.game_state.get_text('no_games_available'),
+                'action': None
+            })
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_service_options"})
+
+    def _buy_anti_cheat(self, game_name):
+        if self.game_state.buy_anti_cheat(game_name):
+            if hasattr(self.audio, 'play_sound'):
+                self.audio.play_sound('cash')
+            if hasattr(self.audio, 'speak'):
+                self.audio.speak(self.game_state.get_text('anti_cheat_success', game=game_name, default=f"Anti-Cheat für {game_name} erfolgreich installiert!"))
+        else:
+            if hasattr(self.audio, 'play_sound'):
+                self.audio.play_sound('error')
+            if hasattr(self.audio, 'speak'):
+                self.audio.speak(self.game_state.get_text('not_enough_money', default="Nicht genug Geld!"))
         return "game_service_options"
 
 class BankMenu(Menu):
