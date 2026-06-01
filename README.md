@@ -124,6 +124,9 @@ Das Spiel bietet ein brandneues, interaktives Tutorial-System. Beim ersten Betre
 *Entwickelt mit Leidenschaft fÃ¼r Barrierefreiheit.*
 
 
+### v3.16 (New Features)
+- **Gewerkschafts-System (Union System):** Wenn das Studio wächst (ab 5 Mitarbeitern) und die Arbeitsbedingungen schlecht sind (hoher Stress, miese Moral), organisieren sich die Mitarbeiter in einer Gewerkschaft. Dies führt zu Event-Unterbrechungen, bei denen der Spieler knallharte Entscheidungen treffen muss: Gehälter permanent erhöhen (30%), Einmalboni zahlen, illegales Union-Busting betreiben (inklusive Rausschmiss der Rädelsführer und Rufverlust) oder einen monatelangen Streik riskieren, der die Spieleentwicklung komplett einfriert und wöchentlich massive Kosten verursacht.
+
 ### v3.15 (New Features)
 - **Influencer-Skandale:** Eine brandneue Event-Kette für gesponserte Streamer! Es gibt ein wöchentliches Risiko, dass der Streamer live vor laufender Kamera Mist baut (z.B. Cheats verwendet). Du erhältst eine Notfallmeldung und musst sofort das Krisenmanagement übernehmen: Öffentliche Entschuldigung, den Streamer teuer feuern, oder ignorieren und hoffen, dass es gut geht!
 

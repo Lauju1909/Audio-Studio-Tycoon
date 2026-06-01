@@ -207,6 +207,8 @@ class GameState:
         self.pending_dev_event = None
         self.pending_influencer_event = None
         self.pending_headhunt_event = None
+        self.pending_union_event = None
+        self.has_union = False
 
         # NEU: Phase C - Produktion & Retail
         self.has_presswerk = False
@@ -1173,22 +1175,17 @@ class GameState:
             perk_relief = len(getattr(self, 'office_perks', [])) * 2.0
             self.stress_level = max(0.0, getattr(self, 'stress_level', 0.0) - (2.0 + perk_relief))
 
-        if getattr(self, 'stress_level', 0.0) > 80.0 and getattr(self, 'strike_weeks_left', 0) == 0:
-
-            if random.random() < 0.1: # 10% chance per week
-                self.strike_weeks_left = random.randint(1, 4)
-                strike_cost = self.strike_weeks_left * 5000
-                self.money -= strike_cost
-                self.track_expense("other", strike_cost)
-                self.stress_level = 0.0
-                self.emails.insert(0, Email(
-                    sender=self.get_text('sender_union'),
-                    subject=self.get_text('subject_strike'),
-                    body=self.get_text('body_strike', weeks=self.strike_weeks_left, cost=strike_cost),
-                    date_week=self.week
-                ))
-                if hasattr(self, 'audio'):
-                    self.audio.play_sound('error')
+        avg_morale = sum(e.morale for e in self.employees) / len(self.employees) if self.employees else 100
+        
+        # Trigger Union Formation or Strike Threat
+        if len(self.employees) >= 5 and (getattr(self, 'stress_level', 0.0) > 60.0 or avg_morale < 50):
+            if not getattr(self, 'has_union', False):
+                if random.random() < 0.2 and getattr(self, 'pending_union_event', None) is None:
+                    self.pending_union_event = {"type": "formation"}
+            else:
+                # Already has union, trigger strike threat if morale/stress is still bad
+                if random.random() < 0.15 and getattr(self, 'strike_weeks_left', 0) == 0 and getattr(self, 'pending_union_event', None) is None:
+                    self.pending_union_event = {"type": "strike_threat"}
 
         # Headhunting event
         if not getattr(self, "pending_headhunt_event", None) and self.employees:
@@ -1206,6 +1203,9 @@ class GameState:
 
         # Strike Countdown
         if getattr(self, 'strike_weeks_left', 0) > 0:
+            strike_weekly_cost = len(self.employees) * 10000
+            self.money -= strike_weekly_cost
+            self.track_expense("other", strike_weekly_cost)
             self.strike_weeks_left -= 1
             if self.strike_weeks_left == 0:
                 self.emails.insert(0, Email(

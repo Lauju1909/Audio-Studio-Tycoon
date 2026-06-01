@@ -48,7 +48,7 @@ from menus import (
     MMOPaymentMenu, MMOManagementMenu, MMOOptionsMenu,
     PublisherDealsMenu, PublisherDealDetailsMenu, MerchMenu, MerchAmountMenu, SubscriptionVaultMenu, CreatorSponsorshipMenu,
     ESportsMenu, AcquisitionMenu, StockRivalDetailMenu,
-    SaveMenu, LoadMenu, HelpMenu, GOTYMenu, ShareholderMenu, AAADevEventMenu, InfluencerEventMenu, CreditsMenu,
+    SaveMenu, LoadMenu, HelpMenu, GOTYMenu, ShareholderMenu, AAADevEventMenu, InfluencerEventMenu, UnionEventMenu, CreditsMenu,
     BuildMenu, TeambuildingMenu, ModPortalMenu, ModBrowserListMenu,
     ProjectTeamSelectMenu, DeveloperMenu,
     SoundConMenu, SoundConFinishMenu, SoundConResultMenu, SoundConHistoryMenu,
@@ -165,6 +165,7 @@ def get_menu_factories(audio, state):
         "shareholder_meeting": lambda: ShareholderMenu(audio, state),
         "aaa_dev_event_menu": lambda: AAADevEventMenu(audio, state),
         "influencer_event_menu": lambda: InfluencerEventMenu(audio, state),
+        "union_event_menu": lambda: UnionEventMenu(audio, state),
         "credits_menu": lambda: CreditsMenu(audio, state),
         "build_menu": lambda: BuildMenu(audio, state),
         "teambuilding_menu": lambda: TeambuildingMenu(audio, state),
@@ -433,6 +434,12 @@ def main():
                 # Influencer Event
                 if getattr(state, "pending_influencer_event", None) and current_key != "influencer_event_menu":
                     current_key = "influencer_event_menu"
+                    current_menu = menu_factories[current_key]()
+                    current_menu.announce_entry()
+
+                # Union Event
+                if getattr(state, "pending_union_event", None) and current_key != "union_event_menu":
+                    current_key = "union_event_menu"
                     current_menu = menu_factories[current_key]()
                     current_menu.announce_entry()
 
