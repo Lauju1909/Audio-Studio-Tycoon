@@ -131,6 +131,15 @@ def get_text(text_key, **kwargs):
 
 TRANSLATIONS = {
     "en": {
+    "use_ai_assets": "Generate AI Assets (High Risk!)",
+    "ai_assets_used_msg": "AI assets generated! Progress has increased massively.",
+    "ai_email_sender": "Lead Developer",
+    "ai_email_subject": "AI Assets Integrated",
+    "ai_email_body": "Boss, we integrated AI assets into the game. This saves us weeks of work! Let's hope no one notices where the data comes from...",
+    "lawsuit_email_sender": "Law Firm",
+    "lawsuit_email_subject": "COPYRIGHT INFRINGEMENT!",
+    "lawsuit_email_body": "You are being sued for copyright infringement due to AI-generated assets in {game}! Fine: {cost} Euros. The fans are outraged!",
+
     "menu_anti_cheat": "Buy Anti-Cheat System (100,000 €)",
     "anti_cheat_success": "Anti-Cheat for {game} successfully installed!",
     "cheater_email_sender": "Community Manager",
@@ -1833,6 +1842,15 @@ TRANSLATIONS = {
         "no_studios_available": "No rival studios available for acquisition."
     },
     "de": {
+    "use_ai_assets": "KI-Assets generieren (Risikoreich!)",
+    "ai_assets_used_msg": "KI-Assets generiert! Der Fortschritt ist massiv gestiegen.",
+    "ai_email_sender": "Lead Developer",
+    "ai_email_subject": "KI-Assets integriert",
+    "ai_email_body": "Boss, wir haben die KI-Assets ins Spiel integriert. Das spart uns Wochen an Arbeit! Hoffen wir, dass niemand merkt, woher die Daten stammen...",
+    "lawsuit_email_sender": "Anwaltskanzlei",
+    "lawsuit_email_subject": "URHEBERRECHTSVERLETZUNG!",
+    "lawsuit_email_body": "Sie werden wegen Urheberrechtsverletzung durch KI-generierte Assets in {game} verklagt! Strafe: {cost} Euro. Die Fans sind empört!",
+
     "menu_anti_cheat": "Anti-Cheat System kaufen (100.000 €)",
     "anti_cheat_success": "Anti-Cheat für {game} erfolgreich installiert!",
     "cheater_email_sender": "Community Manager",

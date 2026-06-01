@@ -407,6 +407,12 @@ class DevProgressMenu(Menu):
                 {'text': self.game_state.get_text('get_progress_label', default="Fortschritt abfragen"), 'action': self._speak_progress},
             ]
             
+            if not getattr(ap["project"], "used_ai_assets", False):
+                self.options.append({
+                    'text': self.game_state.get_text('use_ai_assets', default="KI-Assets generieren (Risikoreich!)"),
+                    'action': self._use_ai_assets
+                })
+            
             # Early Access Option (30-50% progress minimum, we'll check >= 30%)
             if prog >= 30 and not getattr(ap["project"], "is_early_access", False):
                 self.options.append({
@@ -478,6 +484,14 @@ class DevProgressMenu(Menu):
         
         self.audio.speak(self.game_state.get_text('early_access_released_msg', default="Das Spiel ist nun im Early Access verfügbar."))
         return "review_result"
+
+    def _use_ai_assets(self):
+        if self.game_state.use_ai_assets(self.selected_project_idx):
+            if hasattr(self.audio, 'play_sound'):
+                self.audio.play_sound('cash')
+            self.audio.speak(self.game_state.get_text('ai_assets_used_msg', default="KI-Assets generiert! Der Fortschritt ist massiv gestiegen."))
+        self._update_options()
+        return None
 
     def speak_current(self, interrupt=True):
         text = self.options[self.current_index]['text']

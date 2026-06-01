@@ -60,6 +60,7 @@ class GameProject:
         self.has_mtx = False
         self.has_movie_deal = False
         self.has_anti_cheat = False
+        self.used_ai_assets = False
         self.drm_level = 0
         self.pirated_copies = 0
         self.active_players = 0
@@ -140,6 +141,7 @@ class GameProject:
             "has_mtx": getattr(self, "has_mtx", False),
             "has_movie_deal": getattr(self, "has_movie_deal", False),
             "has_anti_cheat": getattr(self, "has_anti_cheat", False),
+            "used_ai_assets": getattr(self, "used_ai_assets", False),
             "drm_level": getattr(self, "drm_level", 0),
             "pirated_copies": getattr(self, "pirated_copies", 0),
             "active_players": getattr(self, "active_players", 0),
@@ -182,6 +184,7 @@ class GameProject:
         proj.has_mtx = gd.get("has_mtx", False)
         proj.has_movie_deal = gd.get("has_movie_deal", False)
         proj.has_anti_cheat = gd.get("has_anti_cheat", False)
+        proj.used_ai_assets = gd.get("used_ai_assets", False)
         proj.drm_level = gd.get("drm_level", 0)
         proj.pirated_copies = gd.get("pirated_copies", 0)
         proj.active_players = gd.get("active_players", 0)

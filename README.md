@@ -124,6 +124,9 @@ Das Spiel bietet ein brandneues, interaktives Tutorial-System. Beim ersten Betre
 *Entwickelt mit Leidenschaft fÃ¼r Barrierefreiheit.*
 
 
+### v3.14 (New Features)
+- **KI-Generierte Assets:** Spiele in der Entwicklung können jetzt massiv beschleunigt werden, indem die Entwickler auf KI-Assets zurückgreifen. Das spart Zeit und Budget, aber Vorsicht: Bei Release besteht eine 30%ige Chance, dass das Spiel wegen Urheberrechtsverletzungen von einer Anwaltskanzlei auf 500.000 € verklagt wird, was die Kritikerwertung und die Fan-Basis stark beschädigt!
+
 ### v3.13 (New Features)
 - **Anti-Cheat System:** F2P-Titel und MMOs werden ab sofort von Cheater-Wellen heimgesucht, die Spieler vergraulen und Fans kosten! Der Kauf eines teuren Anti-Cheat-Systems (100.000 €) für jedes betroffene Spiel ist nun ein essentielles Management-Tool.
 - **Filmlizenzen verkaufen:** Wenn ein Spiel ein Kritikererfolg (Score >= 8.0) und ein Verkaufsschlager (>= 500k Verkäufe) ist, können nun die Filmrechte an Hollywood verkauft werden für einen gigantischen Payout und noch mehr Fans!

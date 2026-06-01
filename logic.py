@@ -1043,6 +1043,25 @@ class GameState:
                     return True
         return False
 
+    def use_ai_assets(self, ap_idx):
+        """Nutzt KI-generierte Assets fur einen massiven Fortschrittsschub auf eigenes Risiko."""
+        if 0 <= ap_idx < len(self.active_projects):
+            ap = self.active_projects[ap_idx]
+            proj = ap["project"]
+            if not getattr(proj, 'used_ai_assets', False):
+                proj.used_ai_assets = True
+                progress_boost = min(10.0, ap["total_weeks"] * 0.3)
+                ap["progress"] += progress_boost
+                
+                self.emails.insert(0, Email(
+                    sender=self.get_text('ai_email_sender', default="Lead Developer"),
+                    subject=self.get_text('ai_email_subject', default="KI-Assets integriert"),
+                    body=self.get_text('ai_email_body', default="Boss, wir haben die KI-Assets ins Spiel integriert. Das spart uns Wochen an Arbeit! Hoffen wir, dass niemand merkt, woher die Daten stammen..."),
+                    date_week=self.week
+                ))
+                return True
+        return False
+
     def update_subscription_service(self):
         """Berechnet wöchentliche Abonnentenzahlen, Einnahmen und Hype für den Abo-Dienst."""
         if not getattr(self, 'subscription_active', False):
@@ -3217,6 +3236,25 @@ class GameState:
             self.track_expense("production", cost_diff)
 
         project.review = self.calculate_review(project, bugs=bugs)
+        
+        # KI-Assets Copyright Strike logic
+        if getattr(project, 'used_ai_assets', False):
+            import random
+            if random.random() < 0.30: # 30% Lawsuit chance
+                project.review.scores = [max(1, s - 2) for s in project.review.scores]
+                lawsuit_cost = 500000
+                self.money -= lawsuit_cost
+                self.track_expense("other", lawsuit_cost)
+                self.fans = max(0, self.fans - 50000)
+                self.emails.insert(0, Email(
+                    sender=self.get_text('lawsuit_email_sender', default="Anwaltskanzlei"),
+                    subject=self.get_text('lawsuit_email_subject', default="URHEBERRECHTSVERLETZUNG!"),
+                    body=self.get_text('lawsuit_email_body', game=project.name, cost=lawsuit_cost, default=f"Sie werden wegen Urheberrechtsverletzung durch KI-generierte Assets in {project.name} verklagt! Strafe: {lawsuit_cost} Euro. Die Fans sind empört!"),
+                    date_week=self.week
+                ))
+            else:
+                # Minor penalty for generic assets
+                project.review.scores = [max(1, s - 1) for s in project.review.scores]
         
         # Hype-Bonus berechnen und anwenden
         self.hype += self.calculate_hype(project)
