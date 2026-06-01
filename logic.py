@@ -205,6 +205,8 @@ class GameState:
         # Pending Events (dynamisch gesetzt, hier initialisiert für Stabilität)
         self.pending_goty_results = None
         self.pending_dev_event = None
+        self.pending_influencer_event = None
+        self.pending_headhunt_event = None
 
         # NEU: Phase C - Produktion & Retail
         self.has_presswerk = False
@@ -2130,7 +2132,18 @@ class GameState:
     def _process_sponsorships(self):
         if not hasattr(self, "active_sponsorships"):
             self.active_sponsorships = []
+        
+        import random
         for s in list(self.active_sponsorships):
+            if random.random() < 0.05 and getattr(self, "pending_influencer_event", None) is None:
+                active_games = [g for g in self.game_history if g.is_active]
+                if active_games:
+                    game = random.choice(active_games)
+                    self.pending_influencer_event = {
+                        "game_name": game.name,
+                        "sponsorship": s
+                    }
+                    
             s["duration"] -= 1
             if s["duration"] <= 0:
                 self.streamer_hype_multi /= s["boost"]

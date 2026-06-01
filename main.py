@@ -48,7 +48,7 @@ from menus import (
     MMOPaymentMenu, MMOManagementMenu, MMOOptionsMenu,
     PublisherDealsMenu, PublisherDealDetailsMenu, MerchMenu, MerchAmountMenu, SubscriptionVaultMenu, CreatorSponsorshipMenu,
     ESportsMenu, AcquisitionMenu, StockRivalDetailMenu,
-    SaveMenu, LoadMenu, HelpMenu, GOTYMenu, ShareholderMenu, AAADevEventMenu, CreditsMenu,
+    SaveMenu, LoadMenu, HelpMenu, GOTYMenu, ShareholderMenu, AAADevEventMenu, InfluencerEventMenu, CreditsMenu,
     BuildMenu, TeambuildingMenu, ModPortalMenu, ModBrowserListMenu,
     ProjectTeamSelectMenu, DeveloperMenu,
     SoundConMenu, SoundConFinishMenu, SoundConResultMenu, SoundConHistoryMenu,
@@ -164,6 +164,7 @@ def get_menu_factories(audio, state):
         "goty_menu": lambda: GOTYMenu(audio, state),
         "shareholder_meeting": lambda: ShareholderMenu(audio, state),
         "aaa_dev_event_menu": lambda: AAADevEventMenu(audio, state),
+        "influencer_event_menu": lambda: InfluencerEventMenu(audio, state),
         "credits_menu": lambda: CreditsMenu(audio, state),
         "build_menu": lambda: BuildMenu(audio, state),
         "teambuilding_menu": lambda: TeambuildingMenu(audio, state),
@@ -426,6 +427,12 @@ def main():
                 # Automatischer Wechsel bei ausgelöstem Entwicklungs-Event (alle Groessen)
                 if getattr(state, "pending_dev_event", None) and current_key != "aaa_dev_event_menu":
                     current_key = "aaa_dev_event_menu"
+                    current_menu = menu_factories[current_key]()
+                    current_menu.announce_entry()
+
+                # Influencer Event
+                if getattr(state, "pending_influencer_event", None) and current_key != "influencer_event_menu":
+                    current_key = "influencer_event_menu"
                     current_menu = menu_factories[current_key]()
                     current_menu.announce_entry()
 

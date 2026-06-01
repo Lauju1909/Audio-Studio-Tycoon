@@ -124,6 +124,9 @@ Das Spiel bietet ein brandneues, interaktives Tutorial-System. Beim ersten Betre
 *Entwickelt mit Leidenschaft fÃ¼r Barrierefreiheit.*
 
 
+### v3.15 (New Features)
+- **Influencer-Skandale:** Eine brandneue Event-Kette für gesponserte Streamer! Es gibt ein wöchentliches Risiko, dass der Streamer live vor laufender Kamera Mist baut (z.B. Cheats verwendet). Du erhältst eine Notfallmeldung und musst sofort das Krisenmanagement übernehmen: Öffentliche Entschuldigung, den Streamer teuer feuern, oder ignorieren und hoffen, dass es gut geht!
+
 ### v3.14 (New Features)
 - **KI-Generierte Assets:** Spiele in der Entwicklung können jetzt massiv beschleunigt werden, indem die Entwickler auf KI-Assets zurückgreifen. Das spart Zeit und Budget, aber Vorsicht: Bei Release besteht eine 30%ige Chance, dass das Spiel wegen Urheberrechtsverletzungen von einer Anwaltskanzlei auf 500.000 € verklagt wird, was die Kritikerwertung und die Fan-Basis stark beschädigt!
 
