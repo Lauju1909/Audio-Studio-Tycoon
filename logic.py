@@ -814,6 +814,56 @@ class GameState:
             
         return True, ""
 
+    def start_port_project(self, game_name, new_platform):
+        """Startet einen Port eines alten Spiels auf eine neue Plattform."""
+        original_game = next((g for g in self.game_history if g.name == game_name), None)
+        if not original_game:
+            return False
+
+        # Neues GameProject erstellen
+        port_name = f"{original_game.name} ({new_platform})"
+        
+        project = GameProject(
+            name=port_name,
+            topic=original_game.topic,
+            genre=original_game.genre,
+            sliders=original_game.sliders.copy() if original_game.sliders else {},
+            platform=new_platform,
+            audience=original_game.audience,
+            engine=original_game.engine,
+            size=original_game.size,
+            marketing="Kein Marketing"
+        )
+        
+        # Attribute uebernehmen
+        project.is_port = True
+        project.original_game_name = game_name
+        project.sub_genre = original_game.sub_genre
+        project.sequel_number = original_game.sequel_number
+        project.languages = original_game.languages.copy()
+        
+        # Entwicklungszeit ist deutlich geringer (30% der Originalzeit)
+        base_weeks = {"Klein": 5, "Mittel": 15, "Groß": 30, "AAA": 60}.get(original_game.size, 15)
+        port_weeks = max(2, int(base_weeks * 0.3))
+        
+        # Team zuweisen (alle verfuegbaren)
+        project.assigned_employee_ids = [i for i, e in enumerate(self.employees) if not getattr(e, 'is_sick', False) and not getattr(e, 'is_training', False)]
+
+        new_active = {
+            "project": project,
+            "progress": 0.0,
+            "total_weeks": port_weeks,
+            "bugs": 0,
+            "crunch": False,
+            "ready_to_finish": False,
+            "event_count": 0,
+            "aaa_event_done": False,
+            "co_dev": None,
+            "publisher": None
+        }
+        self.active_projects.append(new_active)
+        return True
+
     def start_update_project(self, game_name, update_type, name="Update", selected_languages=None):
         """Startet ein Update- oder DLC-Projekt für ein existierendes Spiel."""
         # Suche das Basisspiel
@@ -940,6 +990,25 @@ class GameState:
     @property
     def is_developing(self):
         return len(self.active_projects) > 0
+
+    def add_mtx_to_game(self, game_name):
+        """Fügt Mikrotransaktionen/Lootboxen zu einem bestehenden Spiel hinzu."""
+        game = next((g for g in self.game_history if g.name == game_name), None)
+        if game and not getattr(game, 'has_mtx', False):
+            game.has_mtx = True
+            # Initialer Shitstorm bei den Fans
+            fan_loss = int(self.fans * 0.05)
+            self.fans = max(0, self.fans - fan_loss)
+            
+            # Email using get_text for blind-accessibility localization
+            self.emails.insert(0, Email(
+                sender=self.get_text('mtx_email_sender', default="Community Manager"),
+                subject=self.get_text('mtx_email_subject', default="Shitstorm!"),
+                body=self.get_text('mtx_email_body', game=game.name, fans=fan_loss, default=f"Lootboxen in {game.name} kosten uns {fan_loss} Fans!"),
+                date_week=self.week
+            ))
+            return True
+        return False
 
     def update_subscription_service(self):
         """Berechnet wöchentliche Abonnentenzahlen, Einnahmen und Hype für den Abo-Dienst."""
@@ -1612,6 +1681,14 @@ class GameState:
                         g.revenue += ad_rev
                         self.hype = max(0.0, self.hype - 0.5) # Hype loss due to ads
 
+                # Mikrotransaktionen (MTX)
+                if getattr(g, "has_mtx", False):
+                    mtx_rev = int((g.sales * 0.15) + (5000))
+                    if mtx_rev > 0:
+                        self.track_income("other", mtx_rev)
+                        g.revenue += mtx_rev
+                        self.fans = max(0, self.fans - 20) # stetiger Fan-Verlust
+
                 # Modding-Support (Feature 2)
                 decay_factor = 0.1 if getattr(g, "has_mod_support", False) else 0.2
 
@@ -1726,6 +1803,12 @@ class GameState:
                 self.track_income("mmo", rev)
                 self.track_expense("mmo", mmo.weekly_cost)
                 mmo.game.revenue += rev
+                
+                if getattr(mmo.game, "has_mtx", False):
+                    mtx_rev = int(mmo.players * 1.5)
+                    self.track_income("other", mtx_rev)
+                    mmo.game.revenue += mtx_rev
+                    mmo.players = int(mmo.players * 0.95) # players leave faster due to MTX
                 
                 if server_overloaded:
                     mmo.players = int(mmo.players * 0.85)
@@ -2802,6 +2885,30 @@ class GameState:
         Berechnet die Bewertung eines Spiels.
         Inklusive Trend-Bonus.
         """
+        if getattr(project, "is_port", False) and project.original_game_name:
+            original_game = next((g for g in self.game_history if g.name == project.original_game_name), None)
+            if original_game and original_game.review:
+                # Port review is slightly worse or equal to the original game
+                variance = random.uniform(-0.5, 0)
+                base_review = original_game.review.average + variance
+                base_review = max(1.0, min(10.0, float(base_review)))
+                
+                scores = []
+                for _ in range(4):
+                    v = random.uniform(-1.0, 1.0)
+                    s = int(round(max(1.0, min(10.0, base_review + v))))
+                    scores.append(s)
+                
+                comments = []
+                comments.append(self.get_text('review_port_intro', game=project.name, platform=project.platform))
+                if base_review >= 7.0:
+                    comments.append(self.get_text('review_port_good'))
+                else:
+                    comments.append(self.get_text('review_port_bad'))
+                    
+                review = ReviewScore(scores, comments=comments)
+                return review
+
         topic = project.topic
         genre = project.genre
         sliders = project.sliders
@@ -3008,6 +3115,8 @@ class GameState:
             sales *= 10
         if getattr(project, "is_remake", False):
             sales = int(sales * 2.0)
+        if getattr(project, "is_port", False):
+            sales = int(sales * 0.4)
         return sales
 
     def calculate_dev_cost(self, project):

@@ -163,8 +163,39 @@ class GameServiceOptionsMenu(Menu):
 
     def _update_options(self):
         self.options = [
+            {'text': self.game_state.get_text('menu_add_mtx', default="Mikrotransaktionen integrieren"), 'action': lambda: "add_mtx_menu"},
             {'text': self.game_state.get_text('back'), 'action': lambda: "service_menu"}
         ]
+
+class AddMtxMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(self.game_state.get_text('menu_add_mtx', default="Mikrotransaktionen integrieren"), [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        self.options = []
+        valid_games = [g for g in self.game_state.game_history if getattr(g, "is_active", False) and not getattr(g, "has_mtx", False)]
+        for g in valid_games:
+            self.options.append({
+                'text': g.name,
+                'action': lambda name=g.name: self._add_mtx(name)
+            })
+        if not valid_games:
+            self.options.append({
+                'text': self.game_state.get_text('no_games_available'),
+                'action': None
+            })
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_service_options"})
+
+    def _add_mtx(self, game_name):
+        if self.game_state.add_mtx_to_game(game_name):
+            if hasattr(self.audio, 'play_sound'):
+                self.audio.play_sound('cash')
+            if hasattr(self.audio, 'speak'):
+                self.audio.speak(self.game_state.get_text('mtx_added_success', game=game_name, default=f"Lootboxen in {game_name} integriert! Fans sind sauer."))
+        return "game_service_options"
 
 class BankMenu(Menu):
     def __init__(self, audio, game_state):

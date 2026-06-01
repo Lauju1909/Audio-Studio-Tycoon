@@ -131,6 +131,12 @@ def get_text(text_key, **kwargs):
 
 TRANSLATIONS = {
     "en": {
+    "menu_add_mtx": "Integrate Microtransactions/Lootboxes",
+    "mtx_added_success": "Lootboxes integrated into {game}! Expect community backlash...",
+    "mtx_email_sender": "Community Manager",
+    "mtx_email_subject": "Shitstorm incoming!",
+    "mtx_email_body": "Boss, players hate the new lootboxes in {game}. We lost {fans} fans!",
+
     "office_perks_menu": "Office Perks",
     "perk_fruit_basket": "Fruit Basket (Slight stress reduction)",
     "perk_kicker_table": "Kicker Table (Medium stress reduction)",
@@ -1815,6 +1821,12 @@ TRANSLATIONS = {
         "no_studios_available": "No rival studios available for acquisition."
     },
     "de": {
+    "menu_add_mtx": "Mikrotransaktionen/Lootboxen integrieren",
+    "mtx_added_success": "Lootboxen in {game} integriert! Erwarte einen Backlash der Community...",
+    "mtx_email_sender": "Community Manager",
+    "mtx_email_subject": "Shitstorm wegen Lootboxen",
+    "mtx_email_body": "Boss, die Spieler hassen die neuen Lootboxen in {game}. Wir haben {fans} Fans verloren!",
+
         "mmo_lower_price": "Lower price (-1 EUR, +5% players)",
         "subject_bug_report": "Complaint about {game}",
         "subject_co_dev": "Co-development settlement: {name}",

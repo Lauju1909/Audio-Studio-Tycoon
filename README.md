@@ -124,6 +124,9 @@ Das Spiel bietet ein brandneues, interaktives Tutorial-System. Beim ersten Betre
 *Entwickelt mit Leidenschaft fÃ¼r Barrierefreiheit.*
 
 
+### v3.13 (New Features)
+- **Lootboxen & Mikrotransaktionen (MTX):** Füge bestehenden Spielen Lootboxen hinzu, um fortlaufende wöchentliche Einnahmen zu generieren. Aber Vorsicht: Die Community wird das nicht mögen und mit massiven Shitstorms und Fan-Verlusten reagieren!
+
 ### v3.12 (New Features)
 - **In-Game Werbung:** Optional aktivierbar für veröffentlichte Spiele, um zusätzliche Einnahmen zu generieren (auf Kosten von Hype).
 - **Modding-Support:** Reduziert den Verkaufsrückgang für Spiele und verlängert deren Lebensdauer auf dem Markt.

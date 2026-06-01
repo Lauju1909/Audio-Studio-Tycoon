@@ -56,6 +56,8 @@ class GameProject:
         self.has_mod_support = False
         self.is_f2p = False
         self.is_remake = False
+        self.is_port = False
+        self.has_mtx = False
         self.drm_level = 0
         self.pirated_copies = 0
         self.active_players = 0
@@ -132,6 +134,8 @@ class GameProject:
             "has_mod_support": getattr(self, "has_mod_support", False),
             "is_f2p": getattr(self, "is_f2p", False),
             "is_remake": getattr(self, "is_remake", False),
+            "is_port": getattr(self, "is_port", False),
+            "has_mtx": getattr(self, "has_mtx", False),
             "drm_level": getattr(self, "drm_level", 0),
             "pirated_copies": getattr(self, "pirated_copies", 0),
             "active_players": getattr(self, "active_players", 0),
@@ -170,6 +174,8 @@ class GameProject:
         proj.has_mod_support = gd.get("has_mod_support", False)
         proj.is_f2p = gd.get("is_f2p", False)
         proj.is_remake = gd.get("is_remake", False)
+        proj.is_port = gd.get("is_port", False)
+        proj.has_mtx = gd.get("has_mtx", False)
         proj.drm_level = gd.get("drm_level", 0)
         proj.pirated_copies = gd.get("pirated_copies", 0)
         proj.active_players = gd.get("active_players", 0)
