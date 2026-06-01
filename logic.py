@@ -1010,6 +1010,27 @@ class GameState:
             return True
         return False
 
+    def sell_movie_license(self, game_name):
+        """Verkauft Filmrechte fur ein sehr erfolgreiches Spiel."""
+        game = next((g for g in self.game_history if g.name == game_name), None)
+        if game and not getattr(game, 'has_movie_deal', False):
+            if game.review and game.review.average >= 8.0 and game.sales >= 500000:
+                game.has_movie_deal = True
+                movie_revenue = int(game.sales * 2.5)  # Huge payout based on popularity
+                fan_boost = int(game.sales * 0.1)
+                
+                self.track_income("other", movie_revenue)
+                self.fans += fan_boost
+                
+                self.emails.insert(0, Email(
+                    sender=self.get_text('movie_email_sender', default="Hollywood Studios"),
+                    subject=self.get_text('movie_email_subject', game=game.name, default="Film Deal!"),
+                    body=self.get_text('movie_email_body', game=game.name, money=movie_revenue, fans=fan_boost, default=f"Wir machen einen Film aus {game.name}! {movie_revenue} Euro und {fan_boost} neue Fans!"),
+                    date_week=self.week
+                ))
+                return True
+        return False
+
     def update_subscription_service(self):
         """Berechnet wöchentliche Abonnentenzahlen, Einnahmen und Hype für den Abo-Dienst."""
         if not getattr(self, 'subscription_active', False):

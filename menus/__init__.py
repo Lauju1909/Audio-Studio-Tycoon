@@ -12,7 +12,7 @@ from .research import (
 )
 from .business import (
     BusinessMenu, MonetizationMenu, SupportGiftCardTypeMenu, SupportGiftCardAmountMenu,
-    ServiceMenu, GameServiceOptionsMenu, AddMtxMenu, BankMenu, LoanMenu, StockMarketMenu, StockRivalDetailMenu,
+    ServiceMenu, GameServiceOptionsMenu, AddMtxMenu, MovieDealMenu, BankMenu, LoanMenu, StockMarketMenu, StockRivalDetailMenu,
     SubscriptionVaultMenu, CreatorSponsorshipMenu,
     DonationMenu, ContractWorkMenu,
     LicenseShopMenu, LicenseSelectMenu, AddonMenu, AddonNameMenu, BundleMenu, BundleNameMenu,
