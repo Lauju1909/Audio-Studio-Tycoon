@@ -1024,6 +1024,7 @@ class GameState:
                 fan_boost = int(game.sales * 0.1)
                 
                 self.track_income("other", movie_revenue)
+                game.revenue += movie_revenue
                 self.fans += fan_boost
                 
                 self.emails.insert(0, Email(
@@ -1604,7 +1605,17 @@ class GameState:
             boost *= self.dev_speed_multiplier
             if getattr(self, 'office_perks', []):
                 boost *= (1.0 + len(self.office_perks) * 0.02)
-            
+                
+            # VR-spezifischer Malus fr ungeschultes Personal
+            if "(VR)" in getattr(proj, "platform", ""):
+                active_emps = self._active_employees(proj)
+                if active_emps:
+                    avg_skill = sum(e.skill_level for e in active_emps) / len(active_emps)
+                    if avg_skill < 3.5:
+                        boost *= 0.4 # Sehr langsam, wenn das Team nicht hochqualifiziert ist
+                    elif avg_skill < 4.5:
+                        boost *= 0.7
+                    
             ap["progress"] += boost
             
             if ap.get("crunch"):
@@ -1723,7 +1734,11 @@ class GameState:
             self._check_achievements()
 
         # Verkäufe für aktive Spiele
-                   # Modding-Support (Feature 2)
+        for g in self.game_history:
+            if g.is_active:
+                g.weeks_on_market += 1
+                
+                # Modding-Support (Feature 2)
                 decay_factor = 0.1 if getattr(g, "has_mod_support", False) else 0.2
 
                 # Verkäufe sinken mit der Zeit, plus saisonale Effekte
@@ -1766,7 +1781,6 @@ class GameState:
                 if getattr(g, "is_f2p", False):
                     # Cheater-Welle für F2P
                     if not getattr(g, "has_anti_cheat", False):
-                        import random
                         if random.random() < 0.05:
                             lost_players = int(g.active_players * 0.15)
                             g.active_players -= lost_players
@@ -1782,7 +1796,6 @@ class GameState:
                     g.sales += new_sales
                     g.revenue += f2p_revenue
                     self.track_income("sales", f2p_revenue)
-                    if g.weeks_on_market > int(WEEKS_PER_YEAR * 0.4) or new_sales < 100:track_income("sales", f2p_revenue)
                     if g.weeks_on_market > int(WEEKS_PER_YEAR * 0.4) or new_sales < 100:
                         g.is_active = False
                     continue
@@ -1882,7 +1895,6 @@ class GameState:
                 
                 # Cheater-Wellen Logic
                 if not getattr(mmo.game, "has_anti_cheat", False):
-                    import random
                     if random.random() < 0.05: # 5% Chance pro Woche auf Cheater-Welle
                         lost_players = int(mmo.players * 0.15)
                         mmo.players -= lost_players
@@ -2134,7 +2146,6 @@ class GameState:
         if not hasattr(self, "active_sponsorships"):
             self.active_sponsorships = []
         
-        import random
         for s in list(self.active_sponsorships):
             if random.random() < 0.05 and getattr(self, "pending_influencer_event", None) is None:
                 active_games = [g for g in self.game_history if g.is_active]
@@ -3226,10 +3237,14 @@ class GameState:
         if not assigned_emps: assigned_emps = self.employees # Fallback
         salary_cost = sum(e.salary for e in assigned_emps) * dev_weeks
 
-        # Marketing-Kosten
         from game_data import MARKETING_OPTIONS_PH5
         mark_data = next((m for m in MARKETING_OPTIONS_PH5 if m["name"] == project.marketing), {"cost": 0})
         marketing_cost = mark_data["cost"]
+
+        # VR-Cost modifier
+        if "(VR)" in project.platform:
+            base_cost *= 2.5
+            salary_cost *= 2.0
 
         return int(base_cost + salary_cost + marketing_cost)
 
@@ -3253,7 +3268,6 @@ class GameState:
         
         # KI-Assets Copyright Strike logic
         if getattr(project, 'used_ai_assets', False):
-            import random
             if random.random() < 0.30: # 30% Lawsuit chance
                 project.review.scores = [max(1, s - 2) for s in project.review.scores]
                 lawsuit_cost = 500000
@@ -3281,6 +3295,8 @@ class GameState:
             price = 0
         else:
             price = AUDIENCE_PRICE.get(project.audience, 30)
+            if "(VR)" in project.platform:
+                price = int(price * 1.5) # VR Spiele sind deutlich teurer
             
         total_revenue_new = int(new_sales * price * self.profit_multiplier)
         
@@ -3334,6 +3350,11 @@ class GameState:
         fan_base_gain = int(new_revenue * 0.005 * (project.review.average / 10))
         if getattr(project, 'license_bonus', 0) > 0 and not was_early_access:
             fan_base_gain += int(project.license_bonus * 50)
+            
+        # VR-Fan-Boost fr gute Spiele!
+        if "(VR)" in project.platform and project.review.average >= 75:
+            fan_base_gain *= 3
+            
         self.fans += fan_base_gain
         if not was_early_access:
             self.games_made += 1
@@ -3650,6 +3671,54 @@ class GameState:
             else:
                 self.track_expense("other", abs(money_diff))
                 
+        return True
+
+    def finalize_engine(self, ap_dict):
+        """Schließt die Engine-Entwicklung ab."""
+        proj = ap_dict["project"]
+        from models import Engine
+        new_engine = Engine(proj.name, proj.features)
+        self.engines.append(new_engine)
+        
+        if ap_dict in self.active_projects:
+            self.active_projects.remove(ap_dict)
+            
+        self.emails.insert(0, Email(
+            sender=self.get_text('engine_email_sender', default="Lead Engineer"),
+            subject=self.get_text('engine_email_subject', default="Engine fertiggestellt!"),
+            body=self.get_text('engine_email_body', default=f"Boss, die Entwicklung von {proj.name} ist abgeschlossen. Die Engine steht uns nun zur Verfügung!"),
+            date_week=self.week
+        ))
+        return True
+
+    def start_engine_project(self, name, features):
+        """Startet ein Projekt zur Entwicklung einer eigenen Engine."""
+        from models import EngineProject
+        
+        base_cost = 500000
+        base_weeks = 4
+        
+        for f in features:
+            base_cost += f.tech_bonus * 40000
+            base_weeks += f.tech_bonus * 1
+            
+        if self.money < base_cost:
+            return False
+            
+        proj = EngineProject(name, features, base_cost, base_weeks)
+        
+        self.money -= base_cost
+        self.track_expense("other", base_cost)
+        
+        self.active_projects.append({
+            "project": proj,
+            "progress": 0.0,
+            "total_weeks": base_weeks,
+            "bugs": 0,
+            "crunch": False,
+            "ready_to_finish": False,
+            "assigned_employee_ids": []
+        })
         return True
 
     def start_sound_card_project(self, name: str, features: list) -> bool:

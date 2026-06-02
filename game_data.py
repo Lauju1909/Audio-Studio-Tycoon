@@ -460,6 +460,10 @@ PLATFORMS = [
     {"name": "Analogue Pocket", "license_fee": 100000, "market_multi": 10.0, "unlock_year": 2021, "end_year": 2031, "type": "Handheld"},
     {"name": "Evercade EXP", "license_fee": 100000, "market_multi": 10.0, "unlock_year": 2022, "end_year": 2032, "type": "Handheld"},
     {"name": "Steam Deck", "license_fee": 100000, "market_multi": 10.0, "unlock_year": 2022, "end_year": 2032, "type": "Handheld"},
+    {"name": "Oculus Rift (VR)", "license_fee": 300000, "market_multi": 8.0, "unlock_year": 2016, "end_year": 2026, "type": "VR"},
+    {"name": "HTC Vive (VR)", "license_fee": 350000, "market_multi": 8.5, "unlock_year": 2016, "end_year": 2026, "type": "VR"},
+    {"name": "PSVR (VR)", "license_fee": 300000, "market_multi": 8.0, "unlock_year": 2016, "end_year": 2026, "type": "VR"},
+    {"name": "Meta Quest 2 (VR)", "license_fee": 500000, "market_multi": 12.0, "unlock_year": 2020, "end_year": 2030, "type": "VR"},
     {"name": "Cloud-Console", "license_fee": 100000, "market_multi": 10.0, "unlock_year": 2025, "end_year": 2035, "type": "Streaming"},
     {"name": "Neural-Box 1", "license_fee": 100000, "market_multi": 10.0, "unlock_year": 2026, "end_year": 2036, "type": "Konsole"},
 ]
