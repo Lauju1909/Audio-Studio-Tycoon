@@ -425,35 +425,37 @@ def main():
                         current_menu = menu_factories[current_key]()
                         current_menu.announce_entry()
 
-                # Automatischer Wechsel bei ausgelöstem Entwicklungs-Event (alle Groessen)
-                if getattr(state, "pending_dev_event", None) and current_key != "aaa_dev_event_menu":
-                    current_key = "aaa_dev_event_menu"
-                    current_menu = menu_factories[current_key]()
-                    current_menu.announce_entry()
-
-                # Influencer Event
-                if getattr(state, "pending_influencer_event", None) and current_key != "influencer_event_menu":
-                    current_key = "influencer_event_menu"
-                    current_menu = menu_factories[current_key]()
-                    current_menu.announce_entry()
-
-                # Union Event
-                if getattr(state, "pending_union_event", None) and current_key != "union_event_menu":
-                    current_key = "union_event_menu"
-                    current_menu = menu_factories[current_key]()
-                    current_menu.announce_entry()
-
-                # Headhunting Event
-                if getattr(state, "pending_headhunt_event", None) and current_key != "headhunting_event_menu":
-                    current_key = "headhunting_event_menu"
-                    current_menu = menu_factories[current_key]()
-                    current_menu.announce_entry()
-
-                # GOTY-Ergebnis anzeigen
-                if getattr(state, "pending_goty_results", None) and current_key not in ("goty_menu", "dev_progress_menu", "aaa_dev_event_menu"):
-                    current_key = "goty_menu"
-                    current_menu = menu_factories[current_key]()
-                    current_menu.announce_entry()
+                # --- EVENT QUEUEING ---
+                # Verhindert UI Flip-Flop, wenn mehrere Events im selben Tick triggern
+                active_event_menus = (
+                    "aaa_dev_event_menu", 
+                    "influencer_event_menu", 
+                    "union_event_menu", 
+                    "headhunting_event_menu", 
+                    "goty_menu"
+                )
+                
+                if current_key not in active_event_menus:
+                    if getattr(state, "pending_dev_event", None):
+                        current_key = "aaa_dev_event_menu"
+                        current_menu = menu_factories[current_key]()
+                        current_menu.announce_entry()
+                    elif getattr(state, "pending_influencer_event", None):
+                        current_key = "influencer_event_menu"
+                        current_menu = menu_factories[current_key]()
+                        current_menu.announce_entry()
+                    elif getattr(state, "pending_union_event", None):
+                        current_key = "union_event_menu"
+                        current_menu = menu_factories[current_key]()
+                        current_menu.announce_entry()
+                    elif getattr(state, "pending_headhunt_event", None):
+                        current_key = "headhunting_event_menu"
+                        current_menu = menu_factories[current_key]()
+                        current_menu.announce_entry()
+                    elif getattr(state, "pending_goty_results", None) and current_key != "dev_progress_menu":
+                        current_key = "goty_menu"
+                        current_menu = menu_factories[current_key]()
+                        current_menu.announce_entry()
 
         # --- VISUAL RENDERING (OPTIMIERT) ---
         screen.blit(bg_surface, (0, 0))

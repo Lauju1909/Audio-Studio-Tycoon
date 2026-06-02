@@ -387,6 +387,46 @@ class BankStatement:
         }
 
 
+class EngineProject:
+    """Ein Projekt zur Entwicklung einer eigenen In-House Game Engine."""
+    def __init__(self, name, features, dev_cost, total_weeks):
+        self.name = name
+        self.features = features  # Liste von EngineFeature Objekten
+        self.dev_cost = dev_cost
+        self.total_weeks = total_weeks
+        self.progress = 0.0
+        self.is_finished = False
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "features": [f.name if hasattr(f, 'name') else f for f in self.features],
+            "dev_cost": self.dev_cost,
+            "total_weeks": self.total_weeks,
+            "progress": self.progress,
+            "is_finished": self.is_finished,
+            "is_engine_project": True
+        }
+
+    @classmethod
+    def from_dict(cls, data, game_state=None):
+        features = data.get("features", [])
+        if game_state:
+            # Reconstruct actual EngineFeature objects from names
+            actual_features = []
+            for f_name in features:
+                for uf in game_state.unlocked_features:
+                    if uf.name == f_name:
+                        actual_features.append(uf)
+                        break
+            features = actual_features
+        
+        proj = cls(data["name"], features, data["dev_cost"], data["total_weeks"])
+        proj.progress = data.get("progress", 0.0)
+        proj.is_finished = data.get("is_finished", False)
+        return proj
+
+
 class EngineFeature:
     """Ein Feature, das in einer Engine verbaut werden kann."""
 

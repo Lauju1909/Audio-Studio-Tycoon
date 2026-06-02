@@ -14,12 +14,15 @@ class ResearchMenu(Menu):
             {'text': self.game_state.get_text('research_genre'), 'action': lambda: "genre_research_menu"},
             {'text': self.game_state.get_text('research_audience'), 'action': lambda: "audience_research_menu"},
             {'text': self.game_state.get_text('research_feature'), 'action': lambda: "feature_research_menu"},
-            {'text': self.game_state.get_text('research_technology'), 'action': lambda: "technology_research_menu"},
-            {'text': self.game_state.get_text('create_engine'), 'action': lambda: "engine_create_name"},
-            {'text': self.game_state.get_text('engine_licensing_title', default='Engine-Lizenzierung'), 'action': lambda: "engine_licensing_menu"},
-            {'text': self.game_state.get_text('hardware_dev'), 'action': lambda: "hardware_dev_menu"},
-            {'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"}
+            {'text': self.game_state.get_text('research_technology'), 'action': lambda: "technology_research_menu"}
         ]
+        
+        if self.game_state.get_calendar_year() >= 1998:
+            options.append({'text': self.game_state.get_text('create_engine'), 'action': lambda: "engine_create_name"})
+            options.append({'text': self.game_state.get_text('engine_licensing_title', default='Engine-Lizenzierung'), 'action': lambda: "engine_licensing_menu"})
+            
+        options.append({'text': self.game_state.get_text('hardware_dev'), 'action': lambda: "hardware_dev_menu"})
+        options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
         super().__init__(title, options, audio, game_state)
 
 class FeatureResearchMenu(Menu):
@@ -212,12 +215,17 @@ class EngineFeatureSelectMenu(Menu):
         if not draft["features"]:
             self.audio.speak(self.game_state.get_text('engine_no_features'))
             return None
-        from models import Engine
-        new_engine = Engine(draft["name"], draft["features"])
-        self.game_state.engines.append(new_engine)
-        self.audio.play_sound("confirm")
-        self.audio.speak(self.game_state.get_text('engine_success', name=new_engine.name))
-        return "research_menu"
+        
+        # NEU: Startet ein Projekt statt sofortiger Erstellung
+        success = self.game_state.start_engine_project(draft["name"], draft["features"])
+        if success:
+            self.audio.play_sound("confirm")
+            self.audio.speak(self.game_state.get_text('engine_project_started', name=draft["name"]))
+            return "research_menu"
+        else:
+            self.audio.play_sound("error")
+            self.audio.speak(self.game_state.get_text('not_enough_money'))
+            return None
 
 class HardwareDevMenu(Menu):
     def __init__(self, audio, game_state):

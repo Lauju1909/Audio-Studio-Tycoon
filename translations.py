@@ -131,6 +131,13 @@ def get_text(text_key, **kwargs):
 
 TRANSLATIONS = {
     "en": {
+        "upgrade_qa_lab": "Upgrade QA Lab to level {level} ({cost} EUR)",
+        "upgrade_support": "Upgrade Support Department to level {level} ({cost} EUR)",
+        "buy_servers": "Buy 50000 server capacity (Current: {capacity}) ({cost} EUR)",
+        "qa_lab_upgraded": "QA Lab upgraded to level {level}!",
+        "support_upgraded": "Support Department upgraded to level {level}!",
+        "servers_bought": "Server capacity increased to {capacity}!",
+
     "union_form_title": "UNION FORMATION!",
     "union_form_desc": "Boss, the terrible morale and stress were the last straw. The employees have formed a union! They demand immediate negotiations.",
     "union_strike_title": "STRIKE THREAT!",
@@ -1866,6 +1873,13 @@ TRANSLATIONS = {
         "no_studios_available": "No rival studios available for acquisition."
     },
     "de": {
+        "upgrade_qa_lab": "QA-Labor auf Level {level} aufrüsten ({cost} EUR)",
+        "upgrade_support": "Support-Abteilung auf Level {level} aufrüsten ({cost} EUR)",
+        "buy_servers": "50000 Server-Kapazität kaufen (Aktuell: {capacity}) ({cost} EUR)",
+        "qa_lab_upgraded": "QA-Labor auf Level {level} aufgerüstet!",
+        "support_upgraded": "Support-Abteilung auf Level {level} aufgerüstet!",
+        "servers_bought": "Server-Kapazität auf {capacity} erhöht!",
+
         "drm_none": "No DRM",
         "drm_standard": "Standard DRM",
         "drm_aggressive": "Aggressive DRM",
