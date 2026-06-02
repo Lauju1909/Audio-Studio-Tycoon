@@ -121,8 +121,14 @@ Das Spiel bietet ein brandneues, interaktives Tutorial-System. Beim ersten Betre
 - **Kompilieren:** Um das Spiel nativ unter Linux zu kompilieren, fǟhre das mitgelieferte Skript `./build_linux.sh` aus. Dieses nutzt PyInstaller und generiert die ausfǟhrbare Datei im `dist/`-Verzeichnis.
 
 ---
-*Entwickelt mit Leidenschaft fÃ¼r Barrierefreiheit.*
+*Entwickelt mit Leidenschaft für Barrierefreiheit.*
 
+
+### Version 3.17 (Aktuell)
+* **VR-Entwicklung (Virtual Reality):** Entwicklung von VR-Titeln erfordert ab 2016 hohe Lizenzgebühren, verdoppelte bis verdreifachte Entwicklungskosten und wird bei ungeschultem Personal massiv verlangsamt. Top-Titel versprechen jedoch stark erhöhte Fan-Zuwächse und massive Einnahmen durch 50% höhere Verkaufspreise.
+* **Gewerkschafts-System & Streiks:** Mitarbeiter können bei Unzufriedenheit Gewerkschaften gründen und streiken (inkl. Streik-Kosten).
+* **Entlassungs- & Krisen-Events:** Influencer-Skandale und Strafzahlungen wegen Urheberrechtsverletzungen (KI-Assets).
+* **Anti-Cheat:** Monetarisierungsstrafen bei F2P und MMOs ohne Server-Schutz. Dies führt zu Event-Unterbrechungen, bei denen der Spieler knallharte Entscheidungen treffen muss: Gehälter permanent erhöhen (30%), Einmalboni zahlen, illegales Union-Busting betreiben (inklusive Rausschmiss der Rädelsführer und Rufverlust) oder einen monatelangen Streik riskieren, der die Spieleentwicklung komplett einfriert und wöchentlich massive Kosten verursacht.
 
 ### v3.16 (New Features)
 - **Gewerkschafts-System (Union System):** Wenn das Studio wächst (ab 5 Mitarbeitern) und die Arbeitsbedingungen schlecht sind (hoher Stress, miese Moral), organisieren sich die Mitarbeiter in einer Gewerkschaft. Dies führt zu Event-Unterbrechungen, bei denen der Spieler knallharte Entscheidungen treffen muss: Gehälter permanent erhöhen (30%), Einmalboni zahlen, illegales Union-Busting betreiben (inklusive Rausschmiss der Rädelsführer und Rufverlust) oder einen monatelangen Streik riskieren, der die Spieleentwicklung komplett einfriert und wöchentlich massive Kosten verursacht.
