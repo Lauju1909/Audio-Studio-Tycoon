@@ -162,12 +162,14 @@ class GameServiceOptionsMenu(Menu):
         self._update_options()
 
     def _update_options(self):
-        self.options = [
-            {'text': self.game_state.get_text('menu_add_mtx', default="Mikrotransaktionen integrieren"), 'action': lambda: "add_mtx_menu"},
+        self.options = []
+        if self.game_state.get_calendar_year() >= 2010:
+            self.options.append({'text': self.game_state.get_text('menu_add_mtx', default="Mikrotransaktionen integrieren"), 'action': lambda: "add_mtx_menu"})
+        self.options.extend([
             {'text': self.game_state.get_text('menu_movie_deal', default="Filmlizenzen verkaufen"), 'action': lambda: "movie_deal_menu"},
             {'text': self.game_state.get_text('menu_anti_cheat', default="Anti-Cheat System kaufen (100.000 €)"), 'action': lambda: "anti_cheat_menu"},
             {'text': self.game_state.get_text('back'), 'action': lambda: "service_menu"}
-        ]
+        ])
 
 class AddMtxMenu(Menu):
     def __init__(self, audio, game_state):
@@ -906,9 +908,10 @@ class MMOPaymentMenu(Menu):
         options = [
             {'text': game_state.get_text('mmo_model_abo'),  'action': lambda: self._select('Abo')},
             {'text': game_state.get_text('mmo_model_f2p'),  'action': lambda: self._select('F2P')},
-            {'text': game_state.get_text('mmo_model_loot'), 'action': lambda: self._select('Lootboxen')},
-            {'text': game_state.get_text('back'),            'action': lambda: 'game_menu'},
         ]
+        if self.game_state.get_calendar_year() >= 2010:
+            options.append({'text': game_state.get_text('mmo_model_loot'), 'action': lambda: self._select('Lootboxen')})
+        options.append({'text': game_state.get_text('back'), 'action': lambda: 'game_menu'})
         super().__init__(self.game_state.get_text('mmo_payment_menu'), options, audio, game_state)
 
     def _select(self, model):

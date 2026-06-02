@@ -1723,27 +1723,7 @@ class GameState:
             self._check_achievements()
 
         # Verkäufe für aktive Spiele
-        for g in self.game_history:
-            if g.is_active:
-                g.weeks_on_market += 1
-                
-                # In-Game Werbung (Feature 1)
-                if getattr(g, "has_ads", False):
-                    ad_rev = int((g.sales * 0.05) + (g.revenue * 0.01))
-                    if ad_rev > 0:
-                        self.track_income("other", ad_rev)
-                        g.revenue += ad_rev
-                        self.hype = max(0.0, self.hype - 0.5) # Hype loss due to ads
-
-                # Mikrotransaktionen (MTX)
-                if getattr(g, "has_mtx", False):
-                    mtx_rev = int((g.sales * 0.15) + (5000))
-                    if mtx_rev > 0:
-                        self.track_income("other", mtx_rev)
-                        g.revenue += mtx_rev
-                        self.fans = max(0, self.fans - 20) # stetiger Fan-Verlust
-
-                # Modding-Support (Feature 2)
+                   # Modding-Support (Feature 2)
                 decay_factor = 0.1 if getattr(g, "has_mod_support", False) else 0.2
 
                 # Verkäufe sinken mit der Zeit, plus saisonale Effekte
@@ -1763,7 +1743,27 @@ class GameState:
 
                 if getattr(g, "is_f2p", False):
                     g.active_players = int(getattr(g, "active_players", 0) * 0.95) + new_sales
-                    
+                    current_active = g.active_players
+                else:
+                    current_active = new_sales * 5  # Simulate active players for non-F2P games
+
+                # In-Game Werbung (Feature 1)
+                if getattr(g, "has_ads", False):
+                    ad_rev = int(current_active * 0.5)
+                    if ad_rev > 0:
+                        self.track_income("other", ad_rev)
+                        g.revenue += ad_rev
+                        self.hype = max(0.0, self.hype - 0.5) # Hype loss due to ads
+
+                # Mikrotransaktionen (MTX)
+                if getattr(g, "has_mtx", False):
+                    mtx_rev = int(current_active * 1.5)
+                    if mtx_rev > 0:
+                        self.track_income("other", mtx_rev)
+                        g.revenue += mtx_rev
+                        self.fans = max(0, self.fans - 20) # stetiger Fan-Verlust
+
+                if getattr(g, "is_f2p", False):
                     # Cheater-Welle für F2P
                     if not getattr(g, "has_anti_cheat", False):
                         import random
@@ -1782,6 +1782,7 @@ class GameState:
                     g.sales += new_sales
                     g.revenue += f2p_revenue
                     self.track_income("sales", f2p_revenue)
+                    if g.weeks_on_market > int(WEEKS_PER_YEAR * 0.4) or new_sales < 100:track_income("sales", f2p_revenue)
                     if g.weeks_on_market > int(WEEKS_PER_YEAR * 0.4) or new_sales < 100:
                         g.is_active = False
                     continue
