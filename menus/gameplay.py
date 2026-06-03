@@ -501,15 +501,16 @@ class DevProgressMenu(Menu):
             self.options = [
                 {'text': self.game_state.get_text('get_progress_label', default="Fortschritt abfragen"), 'action': self._speak_progress},
             ]
+            is_engine = getattr(ap["project"], "is_engine_project", False) or ap["project"].__class__.__name__ == "EngineProject"
             
-            if not getattr(ap["project"], "used_ai_assets", False):
+            if not getattr(ap["project"], "used_ai_assets", False) and not is_engine:
                 self.options.append({
                     'text': self.game_state.get_text('use_ai_assets', default="KI-Assets generieren (Risikoreich!)"),
                     'action': self._use_ai_assets
                 })
             
             # Early Access Option (30-50% progress minimum, we'll check >= 30%)
-            if prog >= 30 and not getattr(ap["project"], "is_early_access", False):
+            if prog >= 30 and not getattr(ap["project"], "is_early_access", False) and not is_engine:
                 self.options.append({
                     'text': self.game_state.get_text('release_early_access', default="Als Early Access veröffentlichen"),
                     'action': self._release_early_access
@@ -547,6 +548,12 @@ class DevProgressMenu(Menu):
             return self._back_to_list()
         ap = self.game_state.active_projects[self.selected_project_idx]
         if ap["progress"] >= ap["total_weeks"]:
+            is_engine = getattr(ap["project"], "is_engine_project", False) or ap["project"].__class__.__name__ == "EngineProject"
+            if is_engine:
+                self.game_state.finalize_engine(ap)
+                self.audio.speak(self.game_state.get_text('engine_project_started', default="Engine-Entwicklung abgeschlossen!"))
+                return "game_menu"
+                
             # Check if it is a Contract Work
             if getattr(ap["project"], "target_points", None) is not None:
                 # Beende Auftragsarbeit
