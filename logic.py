@@ -163,6 +163,10 @@ class GameState:
         self.console_total_weeks = WEEKS_PER_YEAR
         self.current_console_draft = None
 
+        # NEU: Crowdfunding
+        self.active_crowdfundings = []  # Liste von { "project_name": str, "deadline_week": int, "target": int }
+        self.failed_crowdfundings = 0
+
         # NEU: Phase A - Schwierigkeitsgrad
         self.difficulty = 1  # Index in DIFFICULTY_LEVELS (0=Einfach, 1=Normal, 2=Schwer, 3=Legendär)
 
@@ -818,6 +822,51 @@ class GameState:
             
         return True, ""
 
+    def start_crowdfunding_campaign(self, target_amount):
+        """Startet eine Crowdfunding Kampagne für das aktuelle Draft."""
+        if not self.current_draft:
+            return False, "Kein Projektentwurf vorhanden."
+            
+        name = self.current_draft.get("name", "Untitled") or "Untitled"
+        
+        # Basis-Wahrscheinlichkeit durch Fans
+        # 1 Fan = ~1 EUR potenziell
+        expected_funding = self.fans * random.uniform(0.5, 1.5)
+        
+        # Hype Bonus
+        hype_bonus = 1.0 + (self.hype / 100.0)
+        expected_funding *= hype_bonus
+        
+        if expected_funding >= target_amount:
+            # Erfolg!
+            self.money += target_amount
+            self.track_income("other", target_amount)
+            self.fans += int(target_amount / 100) # Ein paar Fans kommen dazu durch die Kampagne
+            self.hype = min(250, self.hype + 50) # Massive Hype
+            
+            # Merke das Crowdfunding
+            deadline = self.week + random.randint(40, 60) # ~ 1 Jahr Zeit
+            self.active_crowdfundings.append({
+                "project_name": name,
+                "deadline_week": deadline,
+                "target": target_amount
+            })
+            
+            # Projekt starten (wir markieren das Projekt als crowdfunded)
+            self.start_development()
+            
+            # Das soeben erstellte Projekt ist das letzte in active_projects
+            if self.active_projects:
+                proj = self.active_projects[-1]["project"]
+                proj.is_crowdfunded = True
+            
+            return True, "success"
+        else:
+            # Fehlschlag!
+            self.hype = max(0, self.hype - 20) # Peinlicher Fehlschlag
+            self.failed_crowdfundings += 1
+            return False, "failed"
+
     def start_port_project(self, game_name, new_platform):
         """Startet einen Port eines alten Spiels auf eine neue Plattform."""
         original_game = next((g for g in self.game_history if g.name == game_name), None)
@@ -1144,6 +1193,24 @@ class GameState:
                 if current_bugs > 0:
                     removed = min(current_bugs, qa_level * 2)
                     proj["bugs"] = current_bugs - removed
+                    
+        # Crowdfunding-Deadlines prüfen
+        failed_campaigns = []
+        for cf in self.active_crowdfundings:
+            if self.week > cf["deadline_week"]:
+                # Deadline verpasst!
+                self.emails.insert(0, Email(
+                    sender=self.get_text('sender_angry_backers', default="Wütende Backer"),
+                    subject=self.get_text('subject_cf_fail', default="Wo ist unser Spiel?!"),
+                    body=self.get_text('body_cf_fail', name=cf["project_name"], default=f"Wir haben {cf['project_name']} vor einem Jahr unterstützt und es ist immer noch nicht fertig! Betrug!"),
+                    date_week=self.week
+                ))
+                self.fans = max(0, self.fans - int(cf["target"] / 50))
+                self.hype = max(0, self.hype - 100)
+                failed_campaigns.append(cf)
+        
+        for cf in failed_campaigns:
+            self.active_crowdfundings.remove(cf)
 
         # Monatsankündigung (dynamisch basierend auf WEEKS_PER_YEAR)
         week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
@@ -3124,6 +3191,14 @@ class GameState:
         # Qualitätsstandard-Multiplikator anwenden (macht es über die Jahre schwerer)
         base_review = max(1.0, min(10.0, float(base_score * 10 / self.quality_standard_multi)))
 
+        # Crowdfunding Review-Penalty
+        if getattr(project, "is_crowdfunded", False):
+            base_review -= 1.0 # Backers expect the world!
+            if bugs > 0:
+                base_review -= (bugs * 0.05) # Even harsher on bugs!
+                
+        base_review = max(1.0, min(10.0, base_review))
+
         scores = []
         for _ in range(4):
             variance = random.uniform(-1.2, 1.2)
@@ -3223,6 +3298,8 @@ class GameState:
             sales = int(sales * 2.0)
         if getattr(project, "is_port", False):
             sales = int(sales * 0.4)
+        if getattr(project, "is_crowdfunded", False):
+            sales = int(sales * 1.5) # Backers guaranteed purchase
         return sales
 
     def calculate_dev_cost(self, project):
@@ -3340,6 +3417,15 @@ class GameState:
         if not early_access:
             if ap_dict in self.active_projects:
                 self.active_projects.remove(ap_dict)
+            
+            # Crowdfunding abschliessen
+            if getattr(project, "is_crowdfunded", False):
+                to_remove = []
+                for cf in self.active_crowdfundings:
+                    if cf["project_name"] == project.name:
+                        to_remove.append(cf)
+                for cf in to_remove:
+                    self.active_crowdfundings.remove(cf)
             
         # Post-Game Logic
         self.co_dev_partner = None
@@ -3974,7 +4060,11 @@ class GameState:
             "port_projects": [p.to_dict() for p in getattr(self, "port_projects", [])],
             "employees": [e.to_dict() for e in self.employees],
             "engines": [
-                {"name": eng.name, "is_licensed": eng.is_licensed, "license_fee": eng.license_fee, "features": [
+                {"name": eng.name, "is_licensed": eng.is_licensed, "license_fee": eng.license_fee, 
+                 "is_third_party": getattr(eng, "is_third_party", False), 
+                 "usage_cost": getattr(eng, "usage_cost", 0), 
+                 "revenue_share": getattr(eng, "revenue_share", 0.0), 
+                 "features": [
                     {"category": f.category, "name": f.name, "tech_bonus": f.tech_bonus}
                     for f in eng.features
                 ]} for eng in self.engines
@@ -4129,7 +4219,12 @@ class GameState:
                 EngineFeature(fd["category"], fd["name"], fd["tech_bonus"])
                 for fd in ed["features"]
             ]
-            eng = Engine(ed["name"], features)
+            eng = Engine(
+                ed["name"], features, 
+                is_third_party=ed.get("is_third_party", False),
+                usage_cost=ed.get("usage_cost", 0),
+                revenue_share=ed.get("revenue_share", 0.0)
+            )
             eng.is_licensed = ed.get("is_licensed", False)
             eng.license_fee = ed.get("license_fee", 0)
             self.engines.append(eng)

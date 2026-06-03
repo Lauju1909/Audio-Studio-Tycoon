@@ -124,7 +124,12 @@ Das Spiel bietet ein brandneues, interaktives Tutorial-System. Beim ersten Betre
 *Entwickelt mit Leidenschaft für Barrierefreiheit.*
 
 
-### Version 3.17 (Aktuell)
+### Version 3.18 (Aktuell)
+* **Crowdfunding (SoundStarter):** Statt eigener Finanzierung können Spieler vor Entwicklungsbeginn eine SoundStarter-Kampagne starten (100k bis 5M EUR). Erfolgschancen basieren auf Fans und Hype.
+* **Risiko & Belohnung:** Bei Erfolg fließt das Geld sofort, das Projekt erhält einen Sales-Boost beim Release (+50% Basis-Sales, da Backer garantiert kaufen).
+* **Deadlines & Erwartungen:** Crowdfunded-Projekte haben strikte Fristen (~1 Jahr). Bei Verzug drohen wütende E-Mails und massiver Fan- & Rufverlust. Zudem urteilen Kritiker bei Crowdfunding-Spielen härter (Penalty auf Review-Score).
+
+### Version 3.17
 * **VR-Entwicklung (Virtual Reality):** Entwicklung von VR-Titeln erfordert ab 2016 hohe Lizenzgebühren, verdoppelte bis verdreifachte Entwicklungskosten und wird bei ungeschultem Personal massiv verlangsamt. Top-Titel versprechen jedoch stark erhöhte Fan-Zuwächse und massive Einnahmen durch 50% höhere Verkaufspreise.
 * **Gewerkschafts-System & Streiks:** Mitarbeiter können bei Unzufriedenheit Gewerkschaften gründen und streiken (inkl. Streik-Kosten).
 * **Entlassungs- & Krisen-Events:** Influencer-Skandale und Strafzahlungen wegen Urheberrechtsverletzungen (KI-Assets).

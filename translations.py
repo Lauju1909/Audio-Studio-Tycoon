@@ -131,6 +131,23 @@ def get_text(text_key, **kwargs):
 
 TRANSLATIONS = {
     "en": {
+        "cf_choice_title": "Start Development",
+        "cf_normal_dev": "Start Normal Development",
+        "cf_start_campaign": "SoundStarter Campaign ({target} EUR)",
+        "cf_success": "Campaign successful! Raised {amount} EUR!",
+        "cf_failed": "Campaign failed! Not enough hype or fans.",
+        "sender_angry_backers": "Angry Backers",
+        "subject_cf_fail": "Where is our game?!",
+        "body_cf_fail": "We backed {name} a year ago and it is still not finished! Scam!",
+
+        "cf_choice_title": "Start Development or Crowdfunding Campaign?",
+        "cf_normal_dev": "Start Normal Development",
+        "cf_start_campaign": "SoundStarter Campaign ({target} EUR)",
+        "cf_success": "SoundStarter Campaign successful! {amount} EUR collected!",
+        "cf_failed": "SoundStarter Campaign failed! We do not have enough fans or hype.",
+        "sender_angry_backers": "Angry Backers",
+        "subject_cf_fail": "Where is our game?!",
+        "body_cf_fail": "We backed {name} over a year ago and it is still not finished! Scam!",
         "upgrade_qa_lab": "Upgrade QA Lab to level {level} ({cost} EUR)",
         "upgrade_support": "Upgrade Support Department to level {level} ({cost} EUR)",
         "buy_servers": "Buy 50000 server capacity (Current: {capacity}) ({cost} EUR)",
@@ -1873,6 +1890,23 @@ TRANSLATIONS = {
         "no_studios_available": "No rival studios available for acquisition."
     },
     "de": {
+        "cf_choice_title": "Entwicklung starten",
+        "cf_normal_dev": "Normale Entwicklung starten",
+        "cf_start_campaign": "SoundStarter Kampagne ({target} EUR)",
+        "cf_success": "Kampagne erfolgreich! {amount} EUR gesammelt!",
+        "cf_failed": "Kampagne gescheitert! Zu wenig Hype/Fans.",
+        "sender_angry_backers": "Wütende Backer",
+        "subject_cf_fail": "Wo ist unser Spiel?!",
+        "body_cf_fail": "Wir haben {name} vor einem Jahr unterstützt und es ist immer noch nicht fertig! Betrug!",
+
+        "cf_choice_title": "Entwicklung starten oder Crowdfunding Kampagne?",
+        "cf_normal_dev": "Normale Entwicklung starten",
+        "cf_start_campaign": "SoundStarter Kampagne ({target} EUR)",
+        "cf_success": "SoundStarter Kampagne erfolgreich! {amount} EUR gesammelt!",
+        "cf_failed": "SoundStarter Kampagne gescheitert! Wir haben nicht genug Fans oder Hype.",
+        "sender_angry_backers": "Wütende Backer",
+        "subject_cf_fail": "Wo ist unser Spiel?!",
+        "body_cf_fail": "Wir haben {name} vor über einem Jahr unterstützt und es ist immer noch nicht fertig! Betrug!",
         "upgrade_qa_lab": "QA-Labor auf Level {level} aufrüsten ({cost} EUR)",
         "upgrade_support": "Support-Abteilung auf Level {level} aufrüsten ({cost} EUR)",
         "buy_servers": "50000 Server-Kapazität kaufen (Aktuell: {capacity}) ({cost} EUR)",

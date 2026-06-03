@@ -373,6 +373,43 @@ class DevelopmentSliderMenu(SliderMenu):
 
     def _on_confirm(self, values):
         self.game_state.current_draft['sliders'] = values
+        
+        # Crowdfunding erst ab 2009 (historisch korrekt)
+        current_year = 1980 + (self.game_state.week // 52)
+        if current_year >= 2009:
+            return "crowdfunding_choice"
+        else:
+            est = self.game_state.estimate_dev_time()
+            self.game_state.start_development()
+            self.audio.speak(
+                self.game_state.get_text('dev_started', duration=est),
+                interrupt=False
+            )
+            return "dev_progress_menu"
+
+class CrowdfundingChoiceMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(self.game_state.get_text('cf_choice_title', default="Entwicklung starten"), [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        self.options = [
+            {'text': self.game_state.get_text('cf_normal_dev', default="Normale Entwicklung starten"), 'action': self._start_normal}
+        ]
+        
+        # Crowdfunding-Optionen
+        targets = [100000, 500000, 1000000, 5000000]
+        for t in targets:
+            self.options.append({
+                'text': self.game_state.get_text('cf_start_campaign', target=t, default=f"SoundStarter Kampagne ({t} EUR)"), 
+                'action': lambda amt=t: self._start_cf(amt)
+            })
+            
+        self.options.append({'text': self.game_state.get_text('cancel'), 'action': self._cancel})
+
+    def _start_normal(self):
         est = self.game_state.estimate_dev_time()
         self.game_state.start_development()
         self.audio.speak(
@@ -380,6 +417,18 @@ class DevelopmentSliderMenu(SliderMenu):
             interrupt=False
         )
         return "dev_progress_menu"
+        
+    def _start_cf(self, target):
+        success, reason = self.game_state.start_crowdfunding_campaign(target)
+        if success:
+            self.audio.speak(self.game_state.get_text('cf_success', amount=target, default=f"Kampagne erfolgreich! {target} EUR gesammelt!"), interrupt=True)
+            return "dev_progress_menu"
+        else:
+            self.audio.speak(self.game_state.get_text('cf_failed', default="Kampagne gescheitert! Zu wenig Hype/Fans."), interrupt=True)
+            return "main_menu" # Bricht den Draft ab
+            
+    def _cancel(self):
+        return "slider_menu"
 
 class DevProgressMenu(Menu):
     def __init__(self, audio, game_state):
