@@ -108,6 +108,8 @@ def get_menu_factories(audio, state):
         "hardware_dev_menu": lambda: HardwareDevMenu(audio, state),
         "console_name_input": lambda: ConsoleNameInput(audio, state),
         "console_specs_menu": lambda: ConsoleSpecsMenu(audio, state),
+        "console_overview_menu": lambda: __import__('menus.research', fromlist=['']).ConsoleOverviewMenu(audio, state),
+        "console_detail_menu": lambda: __import__('menus.research', fromlist=['']).ConsoleDetailMenu(audio, state),
         "office_menu": lambda: OfficeMenu(audio, state),
         "bankruptcy": lambda: BankruptcyMenu(audio, state),
         "email_inbox": lambda: EmailInboxMenu(audio, state),

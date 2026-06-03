@@ -8,7 +8,7 @@ from .office import (
 from .research import (
     ResearchMenu, FeatureResearchMenu, GenreResearchMenu, TopicResearchMenu, 
     AudienceResearchMenu, TechnologyResearchMenu, EngineCreateNameMenu, 
-    EngineFeatureSelectMenu, HardwareDevMenu, ConsoleNameInput, ConsoleSpecsMenu
+    EngineFeatureSelectMenu, HardwareDevMenu, ConsoleNameInput, ConsoleSpecsMenu, ConsoleOverviewMenu, ConsoleDetailMenu
 )
 from .business import (
      MonetizationMenu, SupportGiftCardTypeMenu, 

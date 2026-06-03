@@ -237,6 +237,10 @@ class HardwareDevMenu(Menu):
             options.append({'text': self.game_state.get_text('create_console'), 'action': lambda: "console_name_input"})
         else:
             options.append({'text': self.game_state.get_text('console_reqs_not_met', default="Konsole (Benoetigt Jahr 2001 & 100 Mio EUR)"), 'action': lambda: None})
+            
+        if getattr(self.game_state, 'custom_consoles', []):
+            options.append({'text': self.game_state.get_text('my_consoles', default='Meine Konsolen'), 'action': lambda: "console_overview_menu"})
+            
         options.append({'text': self.game_state.get_text('back'), 'action': lambda: "research_menu"})
         super().__init__(title, options, audio, game_state)
 
@@ -321,3 +325,37 @@ class ConsoleSpecsMenu(Menu):
             self.audio.speak(self.game_state.get_text('not_enough_money'))
         return None
 
+
+class ConsoleOverviewMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(game_state.get_text('my_consoles', default='Meine Konsolen'), [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        self.options = []
+        consoles = getattr(self.game_state, 'custom_consoles', [])
+        for i, c in enumerate(consoles):
+            self.options.append({
+                'text': c.name,
+                'action': lambda idx=i: self._view_console(idx)
+            })
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "hardware_dev_menu"})
+
+    def _view_console(self, idx):
+        self.game_state.ui_context['selected_console_idx'] = idx
+        return "console_detail_menu"
+
+class ConsoleDetailMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        idx = self.game_state.ui_context.get('selected_console_idx', 0)
+        c = self.game_state.custom_consoles[idx]
+        
+        info = f"{c.name} - Architektur: {getattr(c, 'architecture', 'RISC')}, Leistung: {getattr(c, 'performance', getattr(c, 'tech_level', 1))}. "
+        info += f"Verkaufte Einheiten: {getattr(c, 'units_sold', 0):,}. Marktanteil: {getattr(c, 'market_share', 0)*100:.1f}%."
+        
+        super().__init__(info, [{'text': self.game_state.get_text('back'), 'action': lambda: "console_overview_menu"}], audio, game_state)
+        self.audio.speak(info, interrupt=False)

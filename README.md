@@ -124,7 +124,12 @@ Das Spiel bietet ein brandneues, interaktives Tutorial-System. Beim ersten Betre
 *Entwickelt mit Leidenschaft für Barrierefreiheit.*
 
 
-### Version 3.21 (Aktuell)
+### Version 3.22 (Aktuell)
+* **Hardware- & Konsolen-Entwicklung:** Ab dem Jahr 2001 und mit 100 Mio EUR Kapital können Spieler im Hardware-Labor ihre eigene Spielekonsole entwickeln.
+  * **Ressourcen:** Architektur, Leistung (1-10) und Marketing-Budget können skaliert werden, was Entwicklungszeit und Kosten enorm in die Höhe treibt.
+  * **Hardware-Verkäufe:** Ist die Konsole auf dem Markt, generiert sie jede Woche Verkaufszahlen, Einnahmen und baut einen Marktanteil auf.
+  * **Exklusivtitel:** Entwickelt der Spieler Spiele exklusiv für die eigene Hardware-Plattform, fungiert dies als gigantischer Verkaufs-Boost für die Konsolen!
+### Version 3.21
 * **Börsengang (IPO):** Extrem erfolgreiche Studios (über 10 Mio. EUR, 1 Mio. Fans) können an die Börse gehen!
   * **Mega-Erlös:** Spieler erhalten beim Börsengang eine sofortige, gigantische Kapitalspritze (30% der Unternehmensbewertung).
   * **Shareholder-Meetings:** Jedes Jahr findet eine Aktionärsversammlung statt. Werden die aggressiven Wachstumsziele (110% des Vorjahres-Geldes) verfehlt, sinkt das Vertrauen der Aktionäre massiv. Fällt das Vertrauen auf 0%, wird der Spieler als CEO gefeuert (Game Over!).

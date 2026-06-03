@@ -1648,10 +1648,39 @@ class GameState:
                 new_active.append(e) # Wenn keine Dauer, bleibt es aktiv (oder sollte gelöscht werden? Sicherer: Wir setzen default duration auf 0 beim Event erstellen)
         self.active_events = new_active
         
-        # Marktanteil der eigenen Konsole erhöhen
+        # Eigene Konsolenverkaeufe und Marktanteil
         if hasattr(self, "custom_consoles"):
             for cc in self.custom_consoles:
-                cc.market_share = min(0.5, cc.market_share + (cc.tech_level * 0.0005))
+                # Basis-Wachstum + Hype
+                base_sales = int(5000 * cc.market_share * (1.0 + getattr(cc, 'hype', 0) / 100))
+                
+                # Exklusivtitel-Bonus
+                exclusives_bonus = 1.0
+                for game in self.game_history:
+                    if game.platform == cc.name and game.sales > 0:
+                        exclusives_bonus += 0.5 * (game.review.average / 10.0) # Sehr gute Exklusivtitel pushen extrem!
+                        
+                weekly_sales = int(base_sales * exclusives_bonus)
+                
+                # Saettigung: Irgendwann kauft es keiner mehr
+                saturation = getattr(cc, 'units_sold', 0) / 100000000.0 # Ab 100 Mio wird es schwerer
+                weekly_sales = int(weekly_sales * max(0.1, 1.0 - saturation))
+                
+                cc.units_sold = getattr(cc, 'units_sold', 0) + weekly_sales
+                
+                # Gewinn pro verkaufter Konsole (z.B. 50 EUR pro Stueck)
+                profit = weekly_sales * 50
+                if profit > 0:
+                    self.money += profit
+                    self.track_income("hardware", profit)
+                
+                # Marktanteil waechst langsam durch Verkaeufe
+                cc.market_share = min(0.6, cc.market_share + (weekly_sales / 10000000.0))
+                
+                # Hype nimmt ab
+                if getattr(cc, 'hype', 0) > 0:
+                    cc.hype = max(0, cc.hype - 0.5)
+
             
         # Projektfortschritt für alle aktiven Projekte
         for ap in list(self.active_projects):
@@ -1802,11 +1831,18 @@ class GameState:
         # Konsolenentwicklung
         if getattr(self, "is_developing_console", False):
             self.console_progress += 1
-            if self.console_progress >= self.console_total_weeks:
+            if self.console_progress >= getattr(self, 'console_total_weeks', 100):
                 self.is_developing_console = False
                 c = self.current_console_draft
-                new_console = CustomConsole(c['name'], c['tech_level'], c['cost'], self.week)
-                if not hasattr(self, "custom_consoles"): 
+                new_console = CustomConsole(
+                    name=c['name'],
+                    architecture=c.get('architecture', 'RISC'),
+                    performance=c.get('performance', 1),
+                    marketing_budget=c.get('marketing_budget', 0),
+                    dev_cost=c['cost'],
+                    release_week=self.week
+                )
+                if not hasattr(self, "custom_consoles"):
                     self.custom_consoles = []
                 self.custom_consoles.append(new_console)
                 self.emails.insert(0, Email(
@@ -1816,6 +1852,7 @@ class GameState:
                     date_week=self.week
                 ))
                 self.current_console_draft = None
+
 
         # Zufällige Branchen-News (5% Chance pro Woche)
         # Expo Trigger (Mitte des Jahres)
