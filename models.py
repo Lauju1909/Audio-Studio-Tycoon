@@ -727,6 +727,23 @@ class BankLoan:
             "weeks_remaining": self.weeks_remaining
         }
 
+class EsportsLeague:
+    def __init__(self, game_name, start_week):
+        self.game_name = game_name
+        self.start_week = start_week
+        self.hype = 100
+        self.championships_held = 0
+        self.last_championship_year = 0
+
+    def to_dict(self):
+        return {
+            "game_name": self.game_name,
+            "start_week": self.start_week,
+            "hype": self.hype,
+            "championships_held": self.championships_held,
+            "last_championship_year": self.last_championship_year
+        }
+
 class CustomConsole:
     """Vom Spieler entwickelte Konsole."""
     def __init__(self, name, architecture, performance, marketing_budget, dev_cost, release_week):

@@ -1824,13 +1824,15 @@ class GameState:
 
         # Forschungsfortschritt
         if self.is_researching:
-            self.research_progress += 1
+            if getattr(self, 'strike_weeks_left', 0) == 0:
+                self.research_progress += 1
             if self.research_progress >= self.research_total_weeks:
                 self.complete_research()
 
         # Konsolenentwicklung
         if getattr(self, "is_developing_console", False):
-            self.console_progress += 1
+            if getattr(self, 'strike_weeks_left', 0) == 0:
+                self.console_progress += 1
             if self.console_progress >= getattr(self, 'console_total_weeks', 100):
                 self.is_developing_console = False
                 c = self.current_console_draft

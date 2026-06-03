@@ -133,6 +133,7 @@ TRANSLATIONS = {
     "en": {
         "hardware_dev": "Hardware Lab",
         "create_console": "Develop New Console",
+        "console_already_dev": "A console is already in development...",
         "console_reqs_not_met": "Locked (Requires Year 2001 & 100m EUR)",
         "my_consoles": "View My Consoles",
         "create_console_title": "Enter the name of your new console",
@@ -1924,6 +1925,7 @@ TRANSLATIONS = {
     "de": {
         "hardware_dev": "Hardware-Labor",
         "create_console": "Neue Konsole entwickeln",
+        "console_already_dev": "Eine Konsole wird bereits entwickelt...",
         "console_reqs_not_met": "Gesperrt (Benötigt Jahr 2001 & 100 Mio EUR)",
         "my_consoles": "Meine Konsolen ansehen",
         "create_console_title": "Gebe den Namen der neuen Konsole ein",

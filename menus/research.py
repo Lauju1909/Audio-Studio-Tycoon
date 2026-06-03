@@ -233,7 +233,9 @@ class HardwareDevMenu(Menu):
         self.game_state = game_state
         title = self.game_state.get_text('hardware_dev')
         options = []
-        if self.game_state.get_calendar_year() >= 2001 and self.game_state.money >= 100000000:
+        if getattr(self.game_state, "is_developing_console", False):
+            options.append({'text': self.game_state.get_text('console_already_dev', default="Eine Konsole wird bereits entwickelt..."), 'action': lambda: None})
+        elif self.game_state.get_calendar_year() >= 2001 and self.game_state.money >= 100000000:
             options.append({'text': self.game_state.get_text('create_console'), 'action': lambda: "console_name_input"})
         else:
             options.append({'text': self.game_state.get_text('console_reqs_not_met', default="Konsole (Benoetigt Jahr 2001 & 100 Mio EUR)"), 'action': lambda: None})
