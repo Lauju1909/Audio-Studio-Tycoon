@@ -1231,7 +1231,13 @@ class GameState:
 
         # Office Perks Overhead
         if getattr(self, 'office_perks', []):
-            perk_cost = len(self.office_perks) * 500
+            perk_cost = 0
+            for perk in self.office_perks:
+                if perk == "hr_department": perk_cost += 10000
+                elif perk == "therapist": perk_cost += 5000
+                elif perk == "wellness_benefits": perk_cost += 2000
+                else: perk_cost += 500
+                
             self.money -= perk_cost
             self.track_expense("other", perk_cost)
 
@@ -1388,11 +1394,21 @@ class GameState:
                         body=self.get_text('body_training_done', name=emp.name, skill=emp.primary_skill, value=emp.skills[emp.primary_skill]),
                         date_week=self.week
                     ))
-                continue  # Trainierende Mitarbeiter kündigen nicht / bekommen keine Gehaltsanfragen
+                continue  # Trainierende Mitarbeiter kündigen nicht / bekommen 
+            # -----------------------------------------------
+            # Krankheitsausfaelle & Burnout
+            # -----------------------------------------------
+            is_emp_crunching = False
+            for ap in self.active_projects:
+                if ap.get("crunch") and emp in self._active_employees(ap["project"]):
+                    is_emp_crunching = True
+                    break
+                    
+            if is_emp_crunching:
+                emp.crunch_weeks = getattr(emp, "crunch_weeks", 0) + 1
+            else:
+                emp.crunch_weeks = max(0, getattr(emp, "crunch_weeks", 0) - 1)
 
-            # -----------------------------------------------
-            # NEU Phase 2: Krankheitsausfälle
-            # -----------------------------------------------
             if getattr(emp, 'is_sick', False):
                 emp.sick_weeks_left -= 1
                 if emp.sick_weeks_left <= 0:
@@ -1403,19 +1419,32 @@ class GameState:
                         body=self.get_text('body_sick_recovered', name=emp.name),
                         date_week=self.week
                     ))
-                continue  # Kranke nicht kündigen / keine Gehaltsanfragen
-
-            # Krankheits-Zufallsevent (basierend auf Burnout / Moral)
-            # Bei Moral < 30: 8% Chance, bei Moral < 60: 3% Chance, sonst 1%
+                continue  # Kranke nicht kuendigen / keine Gehaltsanfragen
+                
             if not emp.is_sick and not emp.is_training:
                 sick_chance = 0.01
                 if emp.morale < 30:
                     sick_chance = 0.08
                 elif emp.morale < 60:
                     sick_chance = 0.03
+                    
+                # Burnout Modifier
+                if getattr(emp, "crunch_weeks", 0) > 4:
+                    sick_chance += 0.10 * (emp.crunch_weeks - 4)
+                    
+                # HR Perks reduction
+                perks = getattr(self, "office_perks", [])
+                if "hr_department" in perks: sick_chance -= 0.05
+                if "wellness_benefits" in perks: sick_chance -= 0.05
+                if "therapist" in perks: sick_chance -= 0.08
+                
+                sick_chance = max(0.01, sick_chance)
+
                 if random.random() < sick_chance:
                     emp.is_sick = True
                     emp.sick_weeks_left = random.randint(1, 3)
+                    if getattr(emp, "crunch_weeks", 0) > 4:
+                        emp.sick_weeks_left += 2 # Burnout dauert laenger
                     self.emails.insert(0, Email(
                         sender=self.get_text('sender_hr'),
                         subject=self.get_text('subject_sick', name=emp.name),
@@ -1424,11 +1453,25 @@ class GameState:
                     ))
                     continue
 
-            # Kündigung wegen Burnout
-            if emp.morale == 0 and random.random() < 0.05:
-                quitting_employees.append(emp)
-                continue
+                # Kuendigung wegen Burnout
+                quit_chance = 0.0
+                if emp.morale == 0: quit_chance += 0.05
+                if getattr(emp, "crunch_weeks", 0) > 8: quit_chance += 0.15
                 
+                if "hr_department" in perks: quit_chance -= 0.05
+                if "therapist" in perks: quit_chance -= 0.10
+                
+                if quit_chance > 0 and random.random() < quit_chance:
+                    quitting_employees.append(emp)
+                    if getattr(emp, "crunch_weeks", 0) > 8:
+                        self.emails.insert(0, Email(
+                            sender=self.get_text('sender_hr'),
+                            subject=self.get_text('subject_burnout_quit'),
+                            body=self.get_text('body_burnout_quit', name=emp.name),
+                            date_week=self.week
+                        ))
+                    continue
+
             # Gehaltsforderung (E-Mail)
             if not getattr(emp, 'pending_raise_request', False) and (self.week - getattr(emp, 'last_raise_week', 0)) > 20:
                 expected_salary = sum(emp.skills.values()) * 5 + 500
@@ -1611,7 +1654,7 @@ class GameState:
                 cc.market_share = min(0.5, cc.market_share + (cc.tech_level * 0.0005))
             
         # Projektfortschritt für alle aktiven Projekte
-        for ap in self.active_projects:
+        for ap in list(self.active_projects):
             if getattr(self, 'strike_weeks_left', 0) > 0:
                 continue
             proj = ap["project"]
@@ -1719,9 +1762,12 @@ class GameState:
             # Fertigstellung-Check
             if ap["progress"] >= ap["total_weeks"]:
                 ap["ready_to_finish"] = True
+                if proj.__class__.__name__ == "EngineProject":
+                    self.finalize_engine(ap)
+                    continue
                 
             # AAA Events (Max 1x pro Projekt)
-            if proj.size == "AAA" and not ap.get("aaa_event_done"):
+            if getattr(proj, "size", None) == "AAA" and not ap.get("aaa_event_done"):
                 prog_pct = ap["progress"] / ap["total_weeks"]
                 if 0.2 < prog_pct < 0.8 and random.random() < 0.05:
                     from game_data import AAA_DEV_EVENTS
@@ -1733,11 +1779,11 @@ class GameState:
                     self.time_speed = 0
 
             # Allgemeine Events
-            max_ev = {"Klein": 1, "Mittel": 1, "Groß": 2, "AAA": 0}.get(proj.size, 1)
+            max_ev = {"Klein": 1, "Mittel": 1, "Groß": 2, "AAA": 0}.get(getattr(proj, "size", None), 1)
             if ap.get("event_count", 0) < max_ev:
                 prog_pct = ap["progress"] / ap["total_weeks"]
                 if 0.15 < prog_pct < 0.85:
-                    chance = {"Klein": 0.04, "Mittel": 0.05, "Groß": 0.06}.get(proj.size, 0.05)
+                    chance = {"Klein": 0.04, "Mittel": 0.05, "Groß": 0.06}.get(getattr(proj, "size", None), 0.05)
                     if random.random() < chance:
                         from game_data import GENERAL_DEV_EVENTS
                         self.pending_dev_event = {

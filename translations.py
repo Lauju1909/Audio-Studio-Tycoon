@@ -131,6 +131,11 @@ def get_text(text_key, **kwargs):
 
 TRANSLATIONS = {
     "en": {
+        "perk_wellness_benefits": "Wellness & Health Benefits (2000 EUR/week)",
+        "perk_therapist": "Company Therapist for Burnout Prevention (5000 EUR/week)",
+        "perk_hr_department": "HR Department for Employee Care (10000 EUR/week)",
+        "subject_burnout_quit": "Resignation due to Burnout!",
+        "body_burnout_quit": "Boss, {name} suffered a severe burnout from constant crunching and resigned immediately. We urgently need an HR department or therapists!",
         "drm_choice_title": "Select Copy Protection (DRM)",
         "drm_none": "No DRM (Massive Piracy, +Review Bonus)",
         "drm_standard": "Standard DRM (50,000 EUR, Moderate Piracy)",
@@ -1894,6 +1899,11 @@ TRANSLATIONS = {
         "no_studios_available": "No rival studios available for acquisition."
     },
     "de": {
+        "perk_wellness_benefits": "Wellness & Gesundheitsprogramm (2000 EUR/Woche)",
+        "perk_therapist": "Betriebstherapeut für Burnout-Prävention (5000 EUR/Woche)",
+        "perk_hr_department": "HR-Abteilung für Personalbetreuung (10000 EUR/Woche)",
+        "subject_burnout_quit": "Kündigung wegen Burnout!",
+        "body_burnout_quit": "Chef, {name} hat einen schweren Burnout durch den ständigen Crunch erlitten und sofort gekündigt. Wir brauchen dringend eine HR-Abteilung oder Therapeuten!",
         "drm_choice_title": "Kopierschutz (DRM) wählen",
         "drm_none": "Kein DRM (Massive Piraterie, +Review Bonus)",
         "drm_standard": "Standard DRM (50.000 EUR, Moderate Piraterie)",

@@ -124,7 +124,14 @@ Das Spiel bietet ein brandneues, interaktives Tutorial-System. Beim ersten Betre
 *Entwickelt mit Leidenschaft für Barrierefreiheit.*
 
 
-### Version 3.19 (Aktuell)
+### Version 3.20 (Aktuell)
+* **Krankheits- und HR-System (Burnout):** Zu viel Crunch-Time führt nun dazu, dass sich Mitarbeiter krankmelden (Ausfall für mehrere Wochen) oder bei anhaltendem Stress und extremer "Crunch-Wochen"-Zahl (Burnout) permanent kündigen.
+* **HR-Policies:** Im Büro-Menü lassen sich teure Gegenmaßnahmen buchen:
+  * *Wellness-Benefits (2.000 EUR/Woche):* Reduziert die generelle Krankheitswahrscheinlichkeit.
+  * *Betriebstherapeut (5.000 EUR/Woche):* Verringert die Burnout-Gefahr massiv.
+  * *Eigene HR-Abteilung (10.000 EUR/Woche):* Verbessert die Moral-Auswirkungen und stoppt Kündigungswellen.
+
+### Version 3.19
 * **Kopierschutz & Piraterie (DRM):** Ab 1995 entscheiden Spieler, ob sie ihre Spiele mit DRM schützen. 
   * *Kein DRM:* Hohe Piraterie-Raten (besonders auf dem PC), aber Spieler lieben es (Bonus auf Reviews).
   * *Standard DRM:* Kostet 50.000 EUR und hält die Piraterie in Grenzen.

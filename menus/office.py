@@ -508,7 +508,7 @@ class OfficePerksMenu(Menu):
         
     def _update_options(self):
         self.options = []
-        for perk in ["fruit_basket", "kicker_table", "company_car"]:
+        for perk in ["fruit_basket", "kicker_table", "company_car", "wellness_benefits", "therapist", "hr_department"]:
             active = perk in getattr(self.game_state, "office_perks", [])
             status = self.game_state.get_text('active') if active else self.game_state.get_text('inactive')
             text = f"{self.game_state.get_text('perk_'+perk)} [{status}]"
