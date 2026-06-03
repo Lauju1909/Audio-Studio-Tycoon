@@ -440,13 +440,16 @@ class EngineFeature:
 
 
 class Engine:
-    """Eine vom Spieler erstellte Game-Engine."""
+    """Eine Game-Engine."""
 
-    def __init__(self, name, features=None):
+    def __init__(self, name, features=None, is_third_party=False, usage_cost=0, revenue_share=0.0):
         self.name = name
         self.features = features or []  # Liste von EngineFeature
         self.is_licensed = False
         self.license_fee = 0
+        self.is_third_party = is_third_party
+        self.usage_cost = usage_cost
+        self.revenue_share = revenue_share
 
     @property
     def tech_level(self):
@@ -454,8 +457,8 @@ class Engine:
 
     @property
     def quality_bonus(self):
-        """Bonus auf die Spielqualität (0.0 - 0.3)."""
-        return min(0.3, self.tech_level * 0.02)
+        """Bonus auf die Spielqualität. Eigene/Komplexe Engines skalieren höher."""
+        return min(0.6, self.tech_level * 0.03)
 
     def has_feature_category(self, category):
         """Hat die Engine ein Feature dieser Kategorie?"""

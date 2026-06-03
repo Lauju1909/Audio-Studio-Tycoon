@@ -3197,6 +3197,15 @@ class GameState:
             if bugs > 0:
                 base_review -= (bugs * 0.05) # Even harsher on bugs!
                 
+        # DRM Review Modifiers
+        drm_level = getattr(project, "drm_level", 0)
+        if drm_level == 0:
+            base_review += 0.3 # Fans love DRM-free games
+        elif drm_level == 2:
+            base_review -= 0.5 # Fans hate aggressive DRM
+            if bugs > 0:
+                base_review -= 0.5 # Aggressive DRM + Bugs = Disaster
+
         base_review = max(1.0, min(10.0, base_review))
 
         scores = []
@@ -3300,6 +3309,25 @@ class GameState:
             sales = int(sales * 0.4)
         if getattr(project, "is_crowdfunded", False):
             sales = int(sales * 1.5) # Backers guaranteed purchase
+            
+        # Piraterie berechnen
+        drm_level = getattr(project, "drm_level", 0)
+        piracy_rate = 0.0
+        
+        # Basis-Piraterie nach Plattform (PC hat mehr)
+        if "PC" in project.platform:
+            if drm_level == 0: piracy_rate = 0.35
+            elif drm_level == 1: piracy_rate = 0.15
+            elif drm_level == 2: piracy_rate = 0.02
+        else:
+            if drm_level == 0: piracy_rate = 0.10
+            elif drm_level == 1: piracy_rate = 0.03
+            elif drm_level == 2: piracy_rate = 0.00
+            
+        pirated = int(sales * piracy_rate)
+        project.pirated_copies = pirated
+        sales -= pirated
+        
         return sales
 
     def calculate_dev_cost(self, project):
@@ -3317,13 +3345,18 @@ class GameState:
         from game_data import MARKETING_OPTIONS_PH5
         mark_data = next((m for m in MARKETING_OPTIONS_PH5 if m["name"] == project.marketing), {"cost": 0})
         marketing_cost = mark_data["cost"]
+        
+        # Engine usage cost (Dritte-Partei)
+        engine_usage_cost = 0
+        if getattr(project, "engine", None):
+            engine_usage_cost = getattr(project.engine, "usage_cost", 0)
 
         # VR-Cost modifier
         if "(VR)" in project.platform:
             base_cost *= 2.5
             salary_cost *= 2.0
 
-        return int(base_cost + salary_cost + marketing_cost)
+        return int(base_cost + salary_cost + marketing_cost + engine_usage_cost)
 
     def finalize_game(self, ap_dict, early_access=False):
         """Schließt die Spielentwicklung ab."""
@@ -3397,6 +3430,15 @@ class GameState:
                 project.distribution_cost += dist_cost
             else:
                 project.distribution_cost = dist_cost
+                
+        # Dritte-Partei Engine Revenue Share
+        if getattr(project, "engine", None):
+            rev_share = getattr(project.engine, "revenue_share", 0.0)
+            if rev_share > 0.0:
+                engine_cut = int(new_revenue * rev_share)
+                new_revenue -= engine_cut
+                # Track engine expense optionally
+                self.track_expense("other", engine_cut)
 
         project.revenue = getattr(project, "revenue", 0) + new_revenue
 
