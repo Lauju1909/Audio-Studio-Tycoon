@@ -124,7 +124,13 @@ Das Spiel bietet ein brandneues, interaktives Tutorial-System. Beim ersten Betre
 *Entwickelt mit Leidenschaft für Barrierefreiheit.*
 
 
-### Version 3.18 (Aktuell)
+### Version 3.19 (Aktuell)
+* **Kopierschutz & Piraterie (DRM):** Ab 1995 entscheiden Spieler, ob sie ihre Spiele mit DRM schützen. 
+  * *Kein DRM:* Hohe Piraterie-Raten (besonders auf dem PC), aber Spieler lieben es (Bonus auf Reviews).
+  * *Standard DRM:* Kostet 50.000 EUR und hält die Piraterie in Grenzen.
+  * *Aggressives DRM:* Kostet 200.000 EUR, fast keine Piraterie, führt jedoch zu Review-Strafen (besonders bei unfertigen Spielen).
+
+### Version 3.18
 * **Crowdfunding (SoundStarter):** Statt eigener Finanzierung können Spieler vor Entwicklungsbeginn eine SoundStarter-Kampagne starten (100k bis 5M EUR). Erfolgschancen basieren auf Fans und Hype.
 * **Risiko & Belohnung:** Bei Erfolg fließt das Geld sofort, das Projekt erhält einen Sales-Boost beim Release (+50% Basis-Sales, da Backer garantiert kaufen).
 * **Deadlines & Erwartungen:** Crowdfunded-Projekte haben strikte Fristen (~1 Jahr). Bei Verzug drohen wütende E-Mails und massiver Fan- & Rufverlust. Zudem urteilen Kritiker bei Crowdfunding-Spielen härter (Penalty auf Review-Score).

@@ -131,6 +131,10 @@ def get_text(text_key, **kwargs):
 
 TRANSLATIONS = {
     "en": {
+        "drm_choice_title": "Select Copy Protection (DRM)",
+        "drm_none": "No DRM (Massive Piracy, +Review Bonus)",
+        "drm_standard": "Standard DRM (50,000 EUR, Moderate Piracy)",
+        "drm_aggressive": "Aggressive DRM (200,000 EUR, Low Piracy, -Review Penalty)",
         "cf_choice_title": "Start Development",
         "cf_normal_dev": "Start Normal Development",
         "cf_start_campaign": "SoundStarter Campaign ({target} EUR)",
@@ -1890,6 +1894,10 @@ TRANSLATIONS = {
         "no_studios_available": "No rival studios available for acquisition."
     },
     "de": {
+        "drm_choice_title": "Kopierschutz (DRM) wählen",
+        "drm_none": "Kein DRM (Massive Piraterie, +Review Bonus)",
+        "drm_standard": "Standard DRM (50.000 EUR, Moderate Piraterie)",
+        "drm_aggressive": "Aggressives DRM (200.000 EUR, Wenig Piraterie, -Review Strafe)",
         "cf_choice_title": "Entwicklung starten",
         "cf_normal_dev": "Normale Entwicklung starten",
         "cf_start_campaign": "SoundStarter Kampagne ({target} EUR)",

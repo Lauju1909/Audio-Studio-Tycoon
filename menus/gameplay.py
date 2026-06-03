@@ -374,7 +374,53 @@ class DevelopmentSliderMenu(SliderMenu):
     def _on_confirm(self, values):
         self.game_state.current_draft['sliders'] = values
         
-        # Crowdfunding erst ab 2009 (historisch korrekt)
+        # DRM Menu first (ab 1995 verfgbar)
+        current_year = 1980 + (self.game_state.week // 52)
+        if current_year >= 1995:
+            return "drm_choice"
+        else:
+            if current_year >= 2009:
+                return "crowdfunding_choice"
+            else:
+                est = self.game_state.estimate_dev_time()
+                self.game_state.start_development()
+                self.audio.speak(
+                    self.game_state.get_text('dev_started', duration=est),
+                    interrupt=False
+                )
+                return "dev_progress_menu"
+
+class DRMChoiceMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(self.game_state.get_text('drm_choice_title', default="Kopierschutz (DRM) whlen"), [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        self.options = [
+            {'text': self.game_state.get_text('drm_none', default="Kein DRM (Massive Piraterie, +Review Bonus)"), 'action': lambda: self._select_drm(0)},
+            {'text': self.game_state.get_text('drm_standard', default="Standard DRM (50.000 EUR, 15% Piraterie)"), 'action': lambda: self._select_drm(1)},
+            {'text': self.game_state.get_text('drm_aggressive', default="Aggressives DRM (200.000 EUR, 2% Piraterie, -Review Strafe)"), 'action': lambda: self._select_drm(2)}
+        ]
+
+    def _select_drm(self, level):
+        self.game_state.current_draft['drm_level'] = level
+        
+        # Pay for DRM
+        if level == 1:
+            if self.game_state.money < 50000:
+                self.audio.speak(self.game_state.get_text('not_enough_money'), interrupt=True)
+                return self
+            self.game_state.money -= 50000
+            self.game_state.track_expense("production", 50000)
+        elif level == 2:
+            if self.game_state.money < 200000:
+                self.audio.speak(self.game_state.get_text('not_enough_money'), interrupt=True)
+                return self
+            self.game_state.money -= 200000
+            self.game_state.track_expense("production", 200000)
+            
         current_year = 1980 + (self.game_state.week // 52)
         if current_year >= 2009:
             return "crowdfunding_choice"
@@ -382,7 +428,7 @@ class DevelopmentSliderMenu(SliderMenu):
             est = self.game_state.estimate_dev_time()
             self.game_state.start_development()
             self.audio.speak(
-                self.game_state.get_text('dev_started', duration=est),
+                self.game_state.get_text('dev_time_estimate', weeks=est),
                 interrupt=False
             )
             return "dev_progress_menu"
