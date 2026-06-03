@@ -18,7 +18,7 @@ from .business import (
     LicenseShopMenu, LicenseSelectMenu, AddonMenu, AddonNameMenu, BundleMenu, BundleNameMenu,
     ProductionMenu, ProductionAmountMenu, MMOPaymentMenu, MMOManagementMenu, MMOOptionsMenu, 
     PublisherDealsMenu, PublisherDealDetailsMenu, MerchMenu, MerchAmountMenu, 
-    ESportsMenu, AcquisitionMenu, EngineLicensingMenu, EngineLicenseFeeMenu, GamePortingMenu, PortPlatformMenu
+    ESportsMenu, AcquisitionMenu, EngineLicensingMenu, EngineLicenseFeeMenu, GamePortingMenu, PortPlatformMenu, IPOMenu
 )
 from .gameplay import (
     MainMenu, CompanyNameMenu, GameMenu, TopicMenu, GenreMenu, PlatformMenu, 

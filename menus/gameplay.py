@@ -1343,9 +1343,30 @@ class CreditsMenu(Menu):
 
 class ShareholderMenu(Menu):
     def __init__(self, audio, game_state):
-        super().__init__("Shareholder Meeting", [
-            {'text': "Acknowledge", 'action': lambda: "game_menu"}
-        ], audio, game_state)
+        self.audio = audio
+        self.game_state = game_state
         game_state.pending_shareholder_meeting = False
-        target_met = game_state.money >= getattr(game_state, 'shareholder_target', 0)
-        self.audio.speak(f"Shareholder Meeting! Target met: {target_met}. Share value is now {game_state.share_value}.", interrupt=True)
+        
+        target = getattr(game_state, 'shareholder_target', 0)
+        target_met = game_state.money >= target
+        
+        if target_met:
+            game_state.shareholder_trust = min(100, getattr(game_state, 'shareholder_trust', 100) + 10)
+            msg = game_state.get_text('shareholder_happy', default="Aktionaere sind gluecklich! Umsatzziele erreicht.")
+            audio.play_sound("cheer")
+        else:
+            game_state.shareholder_trust = getattr(game_state, 'shareholder_trust', 100) - 25
+            msg = game_state.get_text('shareholder_angry', default="Aktionaere sind unzufrieden! Ziele verfehlt.")
+            audio.play_sound("error")
+            
+        game_state.shareholder_target = game_state.money * 1.10 # Neues Ziel
+        
+        if game_state.shareholder_trust <= 0:
+            msg += " " + game_state.get_text('shareholder_fired', default="Du wurdest als CEO entlassen! GAME OVER.")
+            options = [{'text': "Game Over", 'action': lambda: "main_menu"}]
+        else:
+            msg += " " + game_state.get_text('shareholder_trust_msg', trust=game_state.shareholder_trust, default=f"Vertrauen liegt bei {game_state.shareholder_trust}%.")
+            options = [{'text': "Verstanden", 'action': lambda: "game_menu"}]
+            
+        super().__init__(game_state.get_text('shareholder_title', default='Jahreshauptversammlung'), options, audio, game_state)
+        self.audio.speak(msg, interrupt=True)

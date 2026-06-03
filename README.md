@@ -124,7 +124,12 @@ Das Spiel bietet ein brandneues, interaktives Tutorial-System. Beim ersten Betre
 *Entwickelt mit Leidenschaft für Barrierefreiheit.*
 
 
-### Version 3.20 (Aktuell)
+### Version 3.21 (Aktuell)
+* **Börsengang (IPO):** Extrem erfolgreiche Studios (über 10 Mio. EUR, 1 Mio. Fans) können an die Börse gehen!
+  * **Mega-Erlös:** Spieler erhalten beim Börsengang eine sofortige, gigantische Kapitalspritze (30% der Unternehmensbewertung).
+  * **Shareholder-Meetings:** Jedes Jahr findet eine Aktionärsversammlung statt. Werden die aggressiven Wachstumsziele (110% des Vorjahres-Geldes) verfehlt, sinkt das Vertrauen der Aktionäre massiv. Fällt das Vertrauen auf 0%, wird der Spieler als CEO gefeuert (Game Over!).
+
+### Version 3.20
 * **Krankheits- und HR-System (Burnout):** Zu viel Crunch-Time führt nun dazu, dass sich Mitarbeiter krankmelden (Ausfall für mehrere Wochen) oder bei anhaltendem Stress und extremer "Crunch-Wochen"-Zahl (Burnout) permanent kündigen.
 * **HR-Policies:** Im Büro-Menü lassen sich teure Gegenmaßnahmen buchen:
   * *Wellness-Benefits (2.000 EUR/Woche):* Reduziert die generelle Krankheitswahrscheinlichkeit.

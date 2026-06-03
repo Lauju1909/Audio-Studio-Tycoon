@@ -159,6 +159,7 @@ def get_menu_factories(audio, state):
         "support_gift_card_type_menu": lambda: __import__('menus.business', fromlist=['']).SupportGiftCardTypeMenu(audio, state),
         "espionage_menu": lambda: __import__('menus.business', fromlist=['']).EspionageMenu(audio, state),
         "office_upgrades_menu": lambda: __import__('menus.office', fromlist=['']).OfficeUpgradeMenu(audio, state),
+        "ipo_menu": lambda: __import__('menus.business', fromlist=['']).IPOMenu(audio, state),
         "settings_menu_ingame": lambda: SettingsMenu(audio, state, lambda: "game_menu"),
         "save_menu": lambda: SaveMenu(audio, state),
         "load_menu": lambda: LoadMenu(audio, state),
