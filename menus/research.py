@@ -232,10 +232,12 @@ class HardwareDevMenu(Menu):
         self.audio = audio
         self.game_state = game_state
         title = self.game_state.get_text('hardware_dev')
-        options = [
-            {'text': self.game_state.get_text('create_console'), 'action': lambda: "console_name_input"},
-            {'text': self.game_state.get_text('back'), 'action': lambda: "research_menu"}
-        ]
+        options = []
+        if self.game_state.get_calendar_year() >= 2001 and self.game_state.money >= 100000000:
+            options.append({'text': self.game_state.get_text('create_console'), 'action': lambda: "console_name_input"})
+        else:
+            options.append({'text': self.game_state.get_text('console_reqs_not_met', default="Konsole (Benoetigt Jahr 2001 & 100 Mio EUR)"), 'action': lambda: None})
+        options.append({'text': self.game_state.get_text('back'), 'action': lambda: "research_menu"})
         super().__init__(title, options, audio, game_state)
 
 class ConsoleNameInput(TextInputMenu):
@@ -244,7 +246,13 @@ class ConsoleNameInput(TextInputMenu):
                          on_confirm=self._on_confirm, on_cancel=lambda: "hardware_dev_menu")
 
     def _on_confirm(self, name):
-        self.game_state.current_console_draft = {"name": name, "tech_level": 1, "cost": 500000}
+        self.game_state.current_console_draft = {
+            "name": name, 
+            "performance": 1, 
+            "architecture": "RISC", 
+            "marketing_budget": 0, 
+            "cost": 50000000 # 50 Mio Base Cost!
+        }
         return "console_specs_menu"
 
 class ConsoleSpecsMenu(Menu):
@@ -259,16 +267,41 @@ class ConsoleSpecsMenu(Menu):
         if not draft:
             self.options = [{'text': self.game_state.get_text('back'), 'action': lambda: "hardware_dev_menu"}]
             return
+            
+        archs = ["RISC", "x86", "Cell", "ARM"]
+        
         self.options = [
-            {'text': f"{self.game_state.get_text('tech_level_label')}: {draft['tech_level']} (+100.000 EUR)", 'action': self._inc_tech},
+            {'text': f"{self.game_state.get_text('console_arch', default='Architektur')}: {draft['architecture']}", 'action': self._cycle_arch},
+            {'text': f"{self.game_state.get_text('console_perf', default='Leistung (1-10)')}: {draft['performance']} (+10 Mio EUR)", 'action': self._inc_perf},
+            {'text': f"{self.game_state.get_text('console_marketing', default='Marketing-Budget')}: {draft['marketing_budget'] // 1000000} Mio (+5 Mio EUR)", 'action': self._inc_marketing},
             {'text': self.game_state.get_text('start_development_cost', cost=draft['cost']), 'action': self._start},
             {'text': self.game_state.get_text('back'), 'action': lambda: "hardware_dev_menu"}
         ]
 
-    def _inc_tech(self):
+    def _cycle_arch(self):
+        archs = ["RISC", "x86", "Cell", "ARM"]
         draft = self.game_state.current_console_draft
-        draft['tech_level'] += 1
-        draft['cost'] += 100000
+        idx = archs.index(draft['architecture'])
+        draft['architecture'] = archs[(idx + 1) % len(archs)]
+        self.audio.play_sound("click")
+        self._update_options()
+        return None
+
+    def _inc_perf(self):
+        draft = self.game_state.current_console_draft
+        if draft['performance'] < 10:
+            draft['performance'] += 1
+            draft['cost'] += 10000000
+            self.audio.play_sound("click")
+        else:
+            self.audio.play_sound("error")
+        self._update_options()
+        return None
+
+    def _inc_marketing(self):
+        draft = self.game_state.current_console_draft
+        draft['marketing_budget'] += 5000000
+        draft['cost'] += 5000000
         self.audio.play_sound("click")
         self._update_options()
         return None
@@ -279,6 +312,12 @@ class ConsoleSpecsMenu(Menu):
             self.game_state.track_expense("research", draft['cost'])
             self.game_state.is_developing_console = True
             self.game_state.console_progress = 0
+            self.game_state.console_total_weeks = 100 + (draft['performance'] * 10) # Takes years!
             self.audio.play_sound("confirm")
+            self.audio.speak(self.game_state.get_text('console_dev_started', default="Entwicklung gestartet! Dies wird Jahre dauern."), interrupt=True)
             return "game_menu"
+        else:
+            self.audio.play_sound("error")
+            self.audio.speak(self.game_state.get_text('not_enough_money'))
         return None
+

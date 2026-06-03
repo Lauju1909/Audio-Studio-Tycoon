@@ -2323,11 +2323,11 @@ class GameState:
             self.last_shareholder_year = year - 1
         if getattr(self, 'is_public_company', False) and year > self.last_shareholder_year:
             self.last_shareholder_year = year
-            if self.money < self.shareholder_target:
+            self.shareholder_target_met = self.money >= self.shareholder_target
+            if not self.shareholder_target_met:
                 self.share_value = max(10, getattr(self, 'share_value', 100) - 20)
             else:
                 self.share_value = getattr(self, 'share_value', 100) + 10
-            self.shareholder_target = self.money + 50000
             self.pending_shareholder_meeting = True
 
     def _check_goty(self):

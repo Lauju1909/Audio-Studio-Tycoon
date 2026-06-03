@@ -729,20 +729,32 @@ class BankLoan:
 
 class CustomConsole:
     """Vom Spieler entwickelte Konsole."""
-    def __init__(self, name, tech_level, dev_cost, release_week):
+    def __init__(self, name, architecture, performance, marketing_budget, dev_cost, release_week):
         self.name = name
-        self.tech_level = tech_level
+        self.architecture = architecture
+        self.performance = performance  # 1-10
+        self.marketing_budget = marketing_budget
         self.dev_cost = dev_cost
         self.release_week = release_week
-        self.market_share = 0.05 # Startet mit 5% Marktanteil
+        self.market_share = min(0.3, 0.05 + (marketing_budget / 50000000.0))
+        self.units_sold = 0
+        self.hype = min(100, marketing_budget / 500000.0)
         
+    @property
+    def tech_level(self):
+        return self.performance
+
     def to_dict(self):
         return {
             "name": self.name,
-            "tech_level": self.tech_level,
+            "architecture": getattr(self, 'architecture', 'Standard'),
+            "performance": getattr(self, 'performance', getattr(self, 'tech_level', 1)),
+            "marketing_budget": getattr(self, 'marketing_budget', 0),
             "dev_cost": self.dev_cost,
             "release_week": self.release_week,
-            "market_share": self.market_share
+            "market_share": self.market_share,
+            "units_sold": getattr(self, 'units_sold', 0),
+            "hype": getattr(self, 'hype', 0)
         }
 
 # ============================================================

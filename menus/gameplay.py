@@ -1347,8 +1347,7 @@ class ShareholderMenu(Menu):
         self.game_state = game_state
         game_state.pending_shareholder_meeting = False
         
-        target = getattr(game_state, 'shareholder_target', 0)
-        target_met = game_state.money >= target
+        target_met = getattr(game_state, 'shareholder_target_met', False)
         
         if target_met:
             game_state.shareholder_trust = min(100, getattr(game_state, 'shareholder_trust', 100) + 10)
