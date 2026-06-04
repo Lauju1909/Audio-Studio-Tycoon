@@ -1333,3 +1333,20 @@ class RadioJingle:
             cost=data.get("cost", 0),
         )
 
+class StreamingPlatform:
+    def __init__(self, start_week: int):
+        self.founded_week = start_week
+        self.subscribers = 0
+        self.server_level = 1
+        self.exclusive_esports = False
+        
+    def get_maintenance_cost(self):
+        return 50000 * self.server_level
+        
+    def get_monthly_revenue(self):
+        # Base ad revenue + sub revenue
+        return self.subscribers * (0.5 + 4.0)
+
+    def get_max_capacity(self):
+        return self.server_level * 500000
+

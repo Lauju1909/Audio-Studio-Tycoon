@@ -3788,3 +3788,34 @@ TRANSLATIONS = {
     }
 }
 
+
+# Streaming Platform
+TRANSLATIONS['de'].update({
+    "streaming_platform_menu_title": "Streaming-Plattform verwalten",
+    "streaming_found_platform": "Streaming-Plattform gründen (Kostet 10.000.000 EUR)",
+    "streaming_found_success": "Du hast deine eigene Streaming-Plattform gegründet!",
+    "streaming_found_error": "Gründung fehlgeschlagen. Du brauchst 10.000.000 EUR und das Jahr muss mind. 2011 sein.",
+    "streaming_platform_info": "Abonnenten: {subs} | Server-Stufe: {level} | Monatl. Kosten: {cost} EUR | Monatl. Einnahmen: {rev} EUR",
+    "streaming_upgrade_server": "Server-Infrastruktur ausbauen (Kostet {cost} EUR)",
+    "streaming_upgrade_success": "Server-Infrastruktur auf Stufe {level} ausgebaut!",
+    "streaming_assign_exclusive": "E-Sports exklusiv auf Plattform streamen (Aktuell: {status})",
+    "streaming_status_yes": "Ja",
+    "streaming_status_no": "Nein",
+    "streaming_monthly_report_subject": "Streaming-Plattform Bericht",
+    "streaming_monthly_report_body": "Abonnenten: {subs}\nEinnahmen: {rev} EUR\nKosten: {cost} EUR\nHardware-Boost durch Cross-Promo aktiv!",
+})
+
+TRANSLATIONS['en'].update({
+    "streaming_platform_menu_title": "Manage Streaming Platform",
+    "streaming_found_platform": "Found Streaming Platform (Costs 10,000,000 EUR)",
+    "streaming_found_success": "You founded your own streaming platform!",
+    "streaming_found_error": "Failed to found. You need 10,000,000 EUR and it must be at least year 2011.",
+    "streaming_platform_info": "Subscribers: {subs} | Server Level: {level} | Monthly Cost: {cost} EUR | Monthly Rev: {rev} EUR",
+    "streaming_upgrade_server": "Upgrade Server Infrastructure (Costs {cost} EUR)",
+    "streaming_upgrade_success": "Server Infrastructure upgraded to Level {level}!",
+    "streaming_assign_exclusive": "Stream E-Sports Exclusively (Current: {status})",
+    "streaming_status_yes": "Yes",
+    "streaming_status_no": "No",
+    "streaming_monthly_report_subject": "Streaming Platform Report",
+    "streaming_monthly_report_body": "Subscribers: {subs}\nRevenue: {rev} EUR\nCosts: {cost} EUR\nHardware-Boost via Cross-Promo active!",
+})

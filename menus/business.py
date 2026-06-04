@@ -1674,3 +1674,101 @@ class ESportsSponsorMenu(Menu):
         self.announce_entry()
         return None
 
+class StreamingPlatformMenu(Menu):
+    def __init__(self, app, state):
+        super().__init__(app, state)
+        self.title = state.get_text('streaming_platform_menu_title')
+        self.options = []
+
+    def on_enter(self):
+        self.options = []
+        if not self.state.streaming_platform:
+            self.options.append(self.state.get_text('streaming_found_platform'))
+        else:
+            sp = self.state.streaming_platform
+            self.options.append(self.state.get_text('streaming_platform_info', subs=sp.subscribers, level=sp.server_level, cost=sp.get_maintenance_cost(), rev=sp.get_monthly_revenue()))
+            self.options.append(self.state.get_text('streaming_upgrade_server', cost=sp.server_level * 5000000))
+            status = self.state.get_text('streaming_status_yes') if sp.exclusive_esports else self.state.get_text('streaming_status_no')
+            self.options.append(self.state.get_text('streaming_assign_exclusive', status=status))
+            
+        self.options.append(self.state.get_text('back'))
+        super().on_enter()
+
+    def on_select(self, index):
+        if not self.state.streaming_platform:
+            if index == 0:
+                if self.state.found_streaming_platform():
+                    self.app.audio.speak(self.state.get_text('streaming_found_success'))
+                else:
+                    self.app.audio.speak(self.state.get_text('streaming_found_error'))
+                self.on_enter()
+            else:
+                self.app.change_menu('business_menu')
+        else:
+            if index == 0:
+                # Just info
+                self.app.audio.speak(self.options[index])
+            elif index == 1:
+                # Upgrade
+                cost = self.state.streaming_platform.server_level * 5000000
+                if self.state.upgrade_streaming_server():
+                    self.app.audio.speak(self.state.get_text('streaming_upgrade_success', level=self.state.streaming_platform.server_level))
+                else:
+                    self.app.audio.speak(self.state.get_text('not_enough_money', required=cost))
+                self.on_enter()
+            elif index == 2:
+                # Toggle
+                self.state.toggle_exclusive_esports()
+                self.app.audio.speak(self.state.get_text('esports_sponsor_changed', tier="")) # Or something else
+                self.on_enter()
+            else:
+                self.app.change_menu('business_menu')
+class StreamingPlatformMenu(Menu):
+    def __init__(self, audio, state):
+        self.audio = audio
+        self.game_state = state
+        super().__init__(state.get_text('streaming_platform_menu_title'), [], audio, state)
+        
+    def _update_options(self):
+        self.options = []
+        if not self.game_state.streaming_platform:
+            self.options.append({'text': self.game_state.get_text('streaming_found_platform'), 'action': self._found})
+        else:
+            sp = self.game_state.streaming_platform
+            self.options.append({'text': self.game_state.get_text('streaming_platform_info', subs=sp.subscribers, level=sp.server_level, cost=sp.get_maintenance_cost(), rev=sp.get_monthly_revenue()), 'action': self._info})
+            self.options.append({'text': self.game_state.get_text('streaming_upgrade_server', cost=sp.server_level * 5000000), 'action': self._upgrade})
+            status = self.game_state.get_text('streaming_status_yes') if sp.exclusive_esports else self.game_state.get_text('streaming_status_no')
+            self.options.append({'text': self.game_state.get_text('streaming_assign_exclusive', status=status), 'action': self._toggle})
+            
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
+
+    def on_enter(self):
+        self._update_options()
+        super().on_enter()
+
+    def _found(self):
+        if self.game_state.found_streaming_platform():
+            self.audio.speak(self.game_state.get_text('streaming_found_success'))
+        else:
+            self.audio.speak(self.game_state.get_text('streaming_found_error'))
+        self._update_options()
+        return "streaming_platform_menu"
+        
+    def _info(self):
+        return "streaming_platform_menu"
+        
+    def _upgrade(self):
+        if self.game_state.upgrade_streaming_server():
+            self.audio.speak(self.game_state.get_text('streaming_upgrade_success', level=self.game_state.streaming_platform.server_level))
+        else:
+            cost = self.game_state.streaming_platform.server_level * 5000000
+            self.audio.speak(self.game_state.get_text('not_enough_money', required=cost))
+        self._update_options()
+        return "streaming_platform_menu"
+        
+    def _toggle(self):
+        self.game_state.toggle_exclusive_esports()
+        self.audio.speak(self.game_state.get_text('esports_sponsor_changed', tier="Toggle"))
+        self._update_options()
+        return "streaming_platform_menu"
+

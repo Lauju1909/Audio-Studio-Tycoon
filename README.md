@@ -181,3 +181,11 @@ Das Spiel bietet ein brandneues, interaktives Tutorial-System. Beim ersten Betre
 
 
 * **E-Sports Ligen & Events**: Gründen Sie eigene E-Sports Ligen für Ihre Multiplayer-Hits, hosten Sie Championships (von lokalen Events bis zu Mega-Stadien) und akquirieren Sie Sponsoren, um den Hype und die Verkaufszahlen in die Höhe zu treiben.
+
+## Neu: Eigene Streaming-Plattform
+Ab dem Ingame-Jahr 2011 können Spieler nun eine eigene Streaming-Plattform gründen.
+Features:
+- **Server-Infrastruktur:** Baue die Kapazitäten deiner Server aus.
+- **Exklusive Inhalte:** Streame deine E-Sports-Ligen exklusiv und steigere massiv dein monatliches Wachstum.
+- **Hardware Cross-Promo:** Pusht die Verkäufe deiner Custom Consoles!
+- **Abo- & Werbeeinnahmen:** Generiert jeden Monat lukrative Umsätze.

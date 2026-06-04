@@ -14,7 +14,8 @@ from models import (
     RivalStudio, RivalGame, Email, AddonProject, BundleProject, 
     ActiveMMO, BankLoan, CustomConsole, PublishingOffer, 
     PublishedThirdPartyGame, BankStatement,
-    SoundConEvent, SoundtrackLabel, RadioContract, ManufacturingJob
+    SoundConEvent, SoundtrackLabel, RadioContract, ManufacturingJob,
+    StreamingPlatform
 )
 from translations import TRANSLATIONS, get_system_language
 from game_data import (
@@ -99,6 +100,9 @@ class GameState:
 
         # Aktive MMOs
         self.active_mmos = []
+
+        # Streaming Plattform
+        self.streaming_platform = None
 
         # Bankwesen & Finanzen
         self.bank_statements = []
@@ -1307,6 +1311,7 @@ class GameState:
         # Monatlicher Kontoauszug
         if (self.week == 1) or (is_new_month and self.week > 4):
             self._send_monthly_bank_statement()
+            self._process_streaming_platform_monthly()
 
         # Jahres-Reset für Buchhaltung und Jahresbilanz
         if (self.week - 1) % WEEKS_PER_YEAR == 0:
@@ -5518,6 +5523,69 @@ class GameState:
         if ap_dict in self.active_projects:
             self.active_projects.remove(ap_dict)
         return True
+
+    def found_streaming_platform(self) -> bool:
+        if self.get_calendar_year() < 2011:
+            return False
+        cost = 10000000
+        if self.money < cost:
+            return False
+        self.streaming_platform = StreamingPlatform(self.week)
+        self.track_expense("other", cost)
+        return True
+
+    def upgrade_streaming_server(self) -> bool:
+        if not self.streaming_platform:
+            return False
+        cost = self.streaming_platform.server_level * 5000000
+        if self.money < cost:
+            return False
+        self.track_expense("other", cost)
+        self.streaming_platform.server_level += 1
+        return True
+
+    def toggle_exclusive_esports(self):
+        if self.streaming_platform:
+            self.streaming_platform.exclusive_esports = not self.streaming_platform.exclusive_esports
+
+    def _process_streaming_platform_monthly(self):
+        if not self.streaming_platform:
+            return
+        
+        # Costs
+        maintenance = self.streaming_platform.get_maintenance_cost()
+        self.track_expense("other", maintenance)
+        
+        # Revenue
+        rev = self.streaming_platform.get_monthly_revenue()
+        if rev > 0:
+            self.track_income("other", rev)
+            
+        # Growth
+        growth_rate = 1.05
+        if self.streaming_platform.exclusive_esports:
+            growth_rate += 0.05
+            
+        new_subs = int(self.streaming_platform.subscribers * growth_rate) + 1000
+        # Cap by server level
+        cap = self.streaming_platform.get_max_capacity()
+        if new_subs > cap:
+            new_subs = cap
+        self.streaming_platform.subscribers = new_subs
+        
+        # Hardware boost
+        if self.streaming_platform.subscribers > 100000:
+            for console in getattr(self, "custom_consoles", []):
+                if console.market_phase != "discontinued":
+                    boost = int(self.streaming_platform.subscribers * 0.01)
+                    console.units_sold += boost
+                    console.revenue += boost * console.price
+                    self.track_income("console_sales", boost * console.price)
+                    
+        # Send report
+        subject = self.get_text("streaming_monthly_report_subject")
+        body = self.get_text("streaming_monthly_report_body", subs=self.streaming_platform.subscribers, rev=rev, cost=maintenance)
+        self.emails.append(Email("Streaming Team", subject, body, self.week))
 
     def get_status_summary(self):
         """Gibt eine Zusammenfassung der Statuswerte (Datum, Geld, Forschungspunkte, Mitarbeiter, Fans) zurück."""

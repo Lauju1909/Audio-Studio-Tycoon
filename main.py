@@ -147,6 +147,7 @@ def get_menu_factories(audio, state):
         "subscription_add_game_menu": lambda: SubscriptionVaultMenu(audio, state),
         "creator_menu": lambda: CreatorSponsorshipMenu(audio, state),
         "merch_amount_menu": lambda: MerchAmountMenu(audio, state),
+        "streaming_platform_menu": lambda: __import__('menus.business', fromlist=['']).StreamingPlatformMenu(audio, state),
         "esports_menu": lambda: ESportsMenu(audio, state),
         "esports_create_league_menu": lambda: __import__('menus.business', fromlist=['']).ESportsCreateLeagueMenu(audio, state),
         "esports_manage_league_menu": lambda: __import__('menus.business', fromlist=['']).ESportsManageLeagueMenu(audio, state),
