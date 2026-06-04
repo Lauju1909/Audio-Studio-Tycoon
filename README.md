@@ -189,3 +189,5 @@ Features:
 - **Exklusive Inhalte:** Streame deine E-Sports-Ligen exklusiv und steigere massiv dein monatliches Wachstum.
 - **Hardware Cross-Promo:** Pusht die Verkäufe deiner Custom Consoles!
 - **Abo- & Werbeeinnahmen:** Generiert jeden Monat lukrative Umsätze.
+
+- **Subsidiary Management & Merchandising (Neu!)**: Voll funktionsfähiges Merch-Menü, Sponsoring von Content Creators und erweiterte Firmenübernahmen (M&A) mit der Möglichkeit, Töchter zu investieren, sie auf eine eigene Konsole festzulegen oder sie aufzulösen.
