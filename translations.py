@@ -131,6 +131,15 @@ def get_text(text_key, **kwargs):
 
 TRANSLATIONS = {
     "en": {
+        "console_opt_develop": "Develop custom console",
+        "console_active_stats": "{name}: {users} Users | Profit: ",
+        "console_in_dev": "Console {name} in development ({progress}%)",
+        "console_name_prompt": "Enter a name for your console:",
+        "console_comp_title": "Select Console Components",
+        "console_tier_opt": "{tier} (Cost: , Price: , Tech: +{tech})",
+        "console_started": "Started development of console {name}!",
+        "console_finished": "The console {name} is finished and now on the market!",
+
         "hardware_dev": "Hardware Lab",
         "create_console": "Develop New Console",
         "console_already_dev": "A console is already in development...",
@@ -2028,6 +2037,15 @@ TRANSLATIONS = {
         "no_studios_available": "No rival studios available for acquisition."
     },
     "de": {
+        "console_opt_develop": "Eigene Konsole entwickeln",
+        "console_active_stats": "{name}: {users} Nutzer | Gewinn: {revenue}€",
+        "console_in_dev": "Konsole {name} in Entwicklung ({progress}%)",
+        "console_name_prompt": "Gib einen Namen für deine Konsole ein:",
+        "console_comp_title": "Konsolen-Komponenten wählen",
+        "console_tier_opt": "{tier} (Kosten: {cost}€, Preis: {price}€, Tech: +{tech})",
+        "console_started": "Entwicklung der Konsole {name} gestartet!",
+        "console_finished": "Die Konsole {name} ist fertiggestellt und nun auf dem Markt!",
+
         "hardware_dev": "Hardware-Labor",
         "create_console": "Neue Konsole entwickeln",
         "console_already_dev": "Eine Konsole wird bereits entwickelt...",

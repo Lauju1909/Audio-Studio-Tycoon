@@ -153,6 +153,7 @@ def get_menu_factories(audio, state):
         "esports_manage_league_menu": lambda: __import__('menus.business', fromlist=['']).ESportsManageLeagueMenu(audio, state),
         "esports_championship_menu": lambda: __import__('menus.business', fromlist=['']).ESportsChampionshipMenu(audio, state),
         "acquisition_menu": lambda: AcquisitionMenu(audio, state),
+        "subsidiary_manage_menu": lambda: __import__('menus.business', fromlist=['']).SubsidiaryManagementMenu(audio, state),
         "engine_licensing_menu": lambda: __import__('menus', fromlist=['']).EngineLicensingMenu(audio, state),
         "engine_license_fee_menu": lambda: __import__('menus', fromlist=['']).EngineLicenseFeeMenu(audio, state),
         "game_porting_menu": lambda: __import__('menus', fromlist=['']).GamePortingMenu(audio, state),

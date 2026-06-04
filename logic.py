@@ -295,6 +295,9 @@ class GameState:
         # ============================================================
         self.fan_mail_inbox = []
         self.sound_card_projects = []
+
+        self.custom_consoles = []
+        self.active_custom_console = None
         self.active_jingles = []
         self.unlocked_hardware_tech = []
         self.active_personality_event = None
@@ -2161,6 +2164,53 @@ class GameState:
 
         # 3. Soundkarten wöchentliche Updates
         self.update_hardware_development()
+
+        # Eigene Konsolen
+        if getattr(self, "active_custom_console", None):
+            cc = self.active_custom_console
+            if not getattr(cc, "is_released", False):
+                progress_gain = 0
+                for emp in self.employees:
+                    if not emp.is_training and not emp.is_sick and emp.morale > 0:
+                        progress_gain += emp.skills.get("Programmierung", 50) / 100.0
+                
+                total_weeks = getattr(cc, "total_weeks", 50)
+                weekly_progress = (progress_gain / total_weeks) * 0.5
+                cc.progress += weekly_progress
+                if cc.progress >= 1.0:
+                    cc.progress = 1.0
+                    cc.is_released = True
+                    cc.weeks_on_market = 0
+                    if hasattr(self.audio, "play_sound"):
+                        self.audio.play_sound("success")
+                    if hasattr(self.audio, "speak"):
+                        self.audio.speak(self.get_text('console_finished', name=cc.name))
+                    
+                    from game_data import PLATFORMS
+                    PLATFORMS.append({
+                        "name": cc.name,
+                        "license_fee": 0,
+                        "market_multi": 1.0 + (cc.tech_level / 100.0),
+                        "unlock_year": self.get_calendar_year(),
+                        "end_year": self.get_calendar_year() + 10,
+                        "type": "Konsole"
+                    })
+            else:
+                cc.weeks_on_market += 1
+                base_sales = int(cc.tech_level * 500 * (1.0 + (self.fans / 10000.0)))
+                decay = max(0.1, 1.0 - (cc.weeks_on_market / 100.0))
+                weekly_sales = int(base_sales * decay)
+                cc.units_sold += weekly_sales
+                
+                revenue = weekly_sales * cc.price
+                cc.revenue += revenue
+                self.money += revenue
+                if revenue > 0:
+                    self.track_income("hardware", revenue)
+                
+                cc.active_users += weekly_sales
+                if cc.active_users > 0:
+                    cc.active_users = int(cc.active_users * 0.99)
         
         for card in getattr(self, "sound_card_projects", []):
             if card.is_released:
@@ -2242,16 +2292,38 @@ class GameState:
         import competitor_ai
         
         for rival in self.rivals:
-            if getattr(rival, 'is_owned_by_player', False):
+            is_owned = getattr(rival, 'is_owned_by_player', False)
+            if is_owned:
                 # Phase 2 M&A: Passive Einnahmen durch den Backkatalog
                 back_catalog_income = int(sum(getattr(g, 'score', 0) * 100 for g in getattr(rival, 'games', [])))
                 if back_catalog_income > 0:
+                    self.money += back_catalog_income
                     self.track_income("other", back_catalog_income)
-                continue
 
             r_game = competitor_ai.evaluate_turn(rival, self)
             
-            if r_game:
+            if r_game and is_owned:
+                # Apply quality boost
+                quality_boost = getattr(rival, 'games_quality_boost', 0)
+                if quality_boost > 0:
+                    r_game.score = min(10.0, r_game.score + quality_boost / 10.0)
+                    
+                # Develop for our console
+                if getattr(rival, 'develop_for_custom_console', False) and getattr(self, 'active_custom_console', None):
+                    self.active_custom_console['market_presence'] += 5.0
+                    
+                # Einnahmen aus dem neuen Spiel direkt an den Spieler
+                release_income = int(r_game.score * random.randint(100000, 500000))
+                self.money += release_income
+                self.track_income("publishing", release_income)
+                
+                self.emails.append(Email(
+                    sender=self.get_text('sender_industry_news'),
+                    subject=f"Tochterfirma {rival.name} verffentlicht {r_game.name}!",
+                    body=f"Dein Tochterstudio {rival.name} hat '{r_game.name}' verffentlicht (Wertung: {r_game.score:.1f}/10). Einnahmen: {release_income:,} EUR.",
+                    date_week=self.week
+                ))
+            elif r_game:
                 # Sabotage-Check: Wenn der Spieler gerade das gleiche Genre entwickelt
                 sabotage_msg = ""
                 can_sabotage = (self.week - self.last_sabotage_week) >= 4
@@ -4316,6 +4388,12 @@ class GameState:
             "soundtrack_label": self.soundtrack_label.to_dict() if getattr(self, "soundtrack_label", None) else None,
             "fan_mail_inbox": [m.to_dict() for m in getattr(self, "fan_mail_inbox", [])],
             "sound_card_projects": [p.to_dict() for p in getattr(self, "sound_card_projects", [])],
+
+            "custom_consoles": [c.to_dict() for c in getattr(self, "custom_consoles", [])],
+            "active_custom_console": getattr(self, "active_custom_console").to_dict() if getattr(self, "active_custom_console", None) else None,
+
+            "custom_consoles": [c.to_dict() for c in getattr(self, "custom_consoles", [])],
+            "active_custom_console": getattr(self, "active_custom_console").to_dict() if getattr(self, "active_custom_console", None) else None,
             "active_jingles": [{"jingle": j.to_dict(), "weeks_left": getattr(j, "weeks_left", 4)} for j in getattr(self, "active_jingles", [])],
             "unlocked_hardware_tech": getattr(self, "unlocked_hardware_tech", []),
             "active_personality_event": getattr(self, "active_personality_event", None),
@@ -4586,6 +4664,18 @@ class GameState:
             self.fan_mail_inbox.append(FanMail.from_dict(md))
             
         self.sound_card_projects = []
+
+        self.custom_consoles = []
+        if "custom_consoles" in data:
+            from models import CustomConsoleProject
+            for c_data in data["custom_consoles"]:
+                self.custom_consoles.append(CustomConsoleProject.from_dict(c_data))
+        
+        self.active_custom_console = None
+        if "active_custom_console" in data and data["active_custom_console"]:
+            from models import CustomConsoleProject
+            self.active_custom_console = CustomConsoleProject.from_dict(data["active_custom_console"])
+            
         for pd in data.get("sound_card_projects", []):
             self.sound_card_projects.append(SoundCardProject.from_dict(pd))
             

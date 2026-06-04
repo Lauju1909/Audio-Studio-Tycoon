@@ -42,6 +42,8 @@ from .events import (
 # NEU: v3.11.0 Expansion MenÃ¼s (Community, Hardware, Jingle)
 from .community import CommunityMenu, AccessibilityLabMenu, FanMailInboxMenu, FanMailDetailMenu, OfficeEventMenu
 from .hardware import HardwareLabMenu, HardwareLicensingMenu, SoundCardCreateMenu, SoundCardFeaturesMenu, SoundCardOverviewMenu
+
+from .hardware import ConsoleCreateMenu, ConsoleComponentsMenu
 from .marketing_jingle import JingleNameInputMenu, JingleGeneratorMenu, JingleMusicMenu, JingleVoiceMenu, JingleSFXMenu
 
 __all__ = [

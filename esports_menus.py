@@ -4,7 +4,7 @@ class ESportsMenu(Menu):
         super().__init__(game_state.get_text('esports_menu_title', default='E-Sports Zentrale'), [], audio, game_state)
     def announce_entry(self):
         self.options = []
-        if self.game_state.year < 2010:
+        if self.game_state.get_calendar_year() < 2010:
             self.options.append({'text': self.game_state.get_text('esports_locked', default='E-Sports (Gesperrt bis 2010)'), 'action': lambda: None})
         else:
             self.options.append({'text': self.game_state.get_text('esports_create_league', default='Neue Liga gruenden (5.000.000 EUR)'), 'action': lambda: "esports_create_league_menu"})

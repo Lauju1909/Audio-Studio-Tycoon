@@ -1350,3 +1350,45 @@ class StreamingPlatform:
     def get_max_capacity(self):
         return self.server_level * 500000
 
+class CustomConsoleProject:
+    """Repräsentiert die Entwicklung einer eigenen Spielekonsole."""
+    def __init__(self, name: str, tech_level: int, dev_cost: int, price: int, progress: float = 0.0, is_released: bool = False, units_sold: int = 0, revenue: int = 0, active_users: int = 0, weeks_on_market: int = 0):
+        self.name = name
+        self.tech_level = tech_level
+        self.dev_cost = dev_cost
+        self.price = price
+        self.progress = progress
+        self.is_released = is_released
+        self.units_sold = units_sold
+        self.revenue = revenue
+        self.active_users = active_users
+        self.weeks_on_market = weeks_on_market
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "tech_level": self.tech_level,
+            "dev_cost": self.dev_cost,
+            "price": self.price,
+            "progress": self.progress,
+            "is_released": self.is_released,
+            "units_sold": self.units_sold,
+            "revenue": self.revenue,
+            "active_users": self.active_users,
+            "weeks_on_market": self.weeks_on_market
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        return cls(
+            name=data["name"],
+            tech_level=data.get("tech_level", 10),
+            dev_cost=data.get("dev_cost", 10000000),
+            price=data.get("price", 299),
+            progress=data.get("progress", 0.0),
+            is_released=data.get("is_released", False),
+            units_sold=data.get("units_sold", 0),
+            revenue=data.get("revenue", 0),
+            active_users=data.get("active_users", 0),
+            weeks_on_market=data.get("weeks_on_market", 0)
+        )
