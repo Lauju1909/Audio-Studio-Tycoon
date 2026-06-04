@@ -1,4 +1,4 @@
-import unittest
+﻿import unittest
 from logic import GameState
 from models import Employee, GameProject
 
@@ -11,6 +11,8 @@ class TestBurnoutSystem(unittest.TestCase):
         # Add test employee
         self.emp = Employee(name="Test Employee")
         self.emp.morale = 100
+        import random
+        random.seed(42)
         self.emp.crunch_weeks = 0
         self.state.employees.append(self.emp)
 
@@ -71,3 +73,4 @@ class TestBurnoutSystem(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
