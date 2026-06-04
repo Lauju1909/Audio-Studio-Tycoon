@@ -205,6 +205,7 @@ class GameState:
         self.active_licenses = self.owned_licenses  # Alias für Kompatibilität
 
         # NEU: Phase B - Addons
+        self.active_merch_campaigns = []
         self.active_addons = []  # Addon-Projekte die verkaufen
 
         # NEU: Phase B - Bundles
@@ -927,6 +928,19 @@ class GameState:
         self.active_projects.append(new_active)
         return True
 
+
+    def start_merch_campaign(self, game_name, merch_type, duration_weeks, investment):
+        """Startet eine neue Merchandising-Kampagne."""
+        if self.money < investment:
+            return False
+            
+        self.track_expense("marketing", investment)
+        
+        from models import MerchCampaign
+        camp = MerchCampaign(game_name, merch_type, duration_weeks, investment)
+        self.active_merch_campaigns.append(camp)
+        return True
+
     def start_update_project(self, game_name, update_type, name="Update", selected_languages=None):
         """Startet ein Update- oder DLC-Projekt für ein existierendes Spiel."""
         # Suche das Basisspiel
@@ -1191,6 +1205,34 @@ class GameState:
         self.update_subscription_service()
         self._process_engine_licensing()
         self._process_port_projects()
+
+        # Merchandising verarbeiten
+        for m in list(getattr(self, "active_merch_campaigns", [])):
+            base_game = next((g for g in self.game_history if g.name == m.game_name), None)
+            if base_game:
+                multiplier = 1.0
+                if m.merch_type == "T-Shirts": multiplier = 1.2
+                elif m.merch_type == "Action-Figuren": multiplier = 2.0
+                elif m.merch_type == "Soundtrack CD/Vinyl": multiplier = 1.5
+                
+                ip_strength = base_game.ip_rating / 100.0
+                weekly_income = int((m.investment / m.duration_weeks) * 1.5 * multiplier * (0.5 + ip_strength))
+                
+                m.total_revenue += weekly_income
+                self.track_income("merch", weekly_income)
+                
+                self.fans += int(10 * multiplier)
+                self.hype = min(100, getattr(self, "hype", 0) + 1)
+                
+            m.weeks_active += 1
+            if m.weeks_active >= m.duration_weeks:
+                self.emails.insert(0, Email(
+                    sender=self.get_text("sender_marketing"),
+                    subject=f"Merch beendet: {m.game_name}",
+                    body=f"Die {m.merch_type}-Kampagne fÃ¼r {m.game_name} ist beendet.\nGesamtumsatz: {m.total_revenue} Euro", date_week=self.week
+                ))
+                self.active_merch_campaigns.remove(m)
+
         
         # Feature 1.2: Support Department
         support_level = getattr(self, "support_level", 0)
