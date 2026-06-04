@@ -949,13 +949,14 @@ class GameState:
             # Kostet mehr, bringt aber Einnahmen
             dev_cost = 50000
             total_weeks = 8
-        elif update_type == "Language":
+        elif update.update_type == "Language":
             # Fügt neue Sprachen hinzu
             langs = selected_languages or []
             dev_cost = len(langs) * 10000
             # Mindestens 1 Woche, um ZeroDivisionError zu vermeiden
             total_weeks = max(1, len(langs))
             
+        from models import UpdateProject
         update = UpdateProject(
             base_game_name=game_name,
             name=name,
@@ -966,9 +967,10 @@ class GameState:
         )
         
         new_active = {
-            "update": update,
+            "project": update,
             "progress": 0.0,
-            "total_weeks": total_weeks
+            "total_weeks": total_weeks,
+            "bugs": 0
         }
         self.active_projects.append(new_active)
         return True
@@ -1420,6 +1422,35 @@ class GameState:
             else:
                 emp.crunch_weeks = max(0, getattr(emp, "crunch_weeks", 0) - 1)
 
+            # Vacation Logic
+            if getattr(emp, 'vacation_weeks_left', 0) > 0:
+                emp.vacation_weeks_left -= 1
+                emp.fatigue = max(0, getattr(emp, 'fatigue', 0) - 20)
+                emp.morale = min(100, emp.morale + 10)
+                continue
+
+            # Fatigue Logic
+            is_working = self.is_developing or getattr(self, 'active_custom_console', None) or len(getattr(self, 'active_ports', [])) > 0 or len(getattr(self, 'active_contract_works', [])) > 0
+            if is_working and not emp.is_training and not getattr(emp, 'is_sick', False):
+                emp.fatigue = getattr(emp, 'fatigue', 0) + random.randint(1, 3)
+                if is_emp_crunching:
+                    emp.fatigue += 5
+            else:
+                emp.fatigue = max(0, getattr(emp, 'fatigue', 0) - 2)
+
+            if getattr(emp, 'fatigue', 0) >= 100 and not getattr(emp, 'is_sick', False):
+                emp.fatigue = 0
+                emp.is_sick = True
+                emp.sick_weeks_left = random.randint(3, 6)
+                emp.morale = max(0, emp.morale - 30)
+                self.emails.insert(0, Email(
+                    sender=self.get_text('sender_hr'),
+                    subject=self.get_text('subject_burnout', default='Mitarbeiter-Burnout!'),
+                    body=self.get_text('body_burnout', name=emp.name, default=f'{emp.name} hat einen Burnout erlitten und faellt fuer {emp.sick_weeks_left} Wochen aus!'),
+                    date_week=self.week
+                ))
+                continue
+
             if getattr(emp, 'is_sick', False):
                 emp.sick_weeks_left -= 1
                 if emp.sick_weeks_left <= 0:
@@ -1804,6 +1835,11 @@ class GameState:
                 ap["ready_to_finish"] = True
                 if proj.__class__.__name__ == "EngineProject":
                     self.finalize_engine(ap)
+                    continue
+                elif proj.__class__.__name__ in ["UpdateProject", "DLCProject"]:
+                    self._finish_update_project(proj)
+                    if ap in self.active_projects:
+                        self.active_projects.remove(ap)
                     continue
                 
             # AAA Events (Max 1x pro Projekt)
@@ -2689,7 +2725,7 @@ class GameState:
         if self.money < cost:
             return False
         self.track_expense("production", cost)
-        game.dlc_count += 1
+        print(f"Old dlc_count: {game.dlc_count}"); game.dlc_count += 1; print(f"New dlc_count: {game.dlc_count}")
         game.is_active = True # Bringt Spiel zurück in die Charts
         # Markt-Reset: Ca. 1 Monat (dynamisch)
         reset_weeks = max(4, int(WEEKS_PER_YEAR / 10))
@@ -5445,13 +5481,17 @@ class GameState:
             bugs_to_fix = int(game.bugs * 0.5) + 1
             game.bugs = max(0, game.bugs - bugs_to_fix)
             game.total_bugs_fixed += bugs_to_fix
-        elif update_type == "Content":
+        elif update.update_type == "Content":
             self.fans += 500
             self.hype = min(100, self.hype + 20)
-        elif update_type == "Language":
+        elif update.update_type == "Language":
             for l in update.languages:
                 if l not in game.languages:
                     game.languages.append(l)
+        elif update.update_type == "DLC":
+            game.dlc_count += 1
+            game.is_active = True
+            game.sales += int(game.sales * 0.1)
                     
         self.emails.insert(0, Email(
             sender=self.get_text('sender_dev'),

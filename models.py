@@ -515,6 +515,8 @@ class Employee:
         self.training_skill_boost = 0   # Skill-Punkte die nach Abschluss vergeben werden
         self.is_sick = False
         self.is_crunching = False
+        self.fatigue = 0           # 0-100, steigt bei Arbeit
+        self.vacation_weeks_left = 0 # Wenn > 0, ist der Mitarbeiter im Urlaub
         self.crunch_weeks = 0            # Krank-Status
         self.sick_weeks_left = 0        # Wochen bis Genesung
 
