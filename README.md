@@ -179,3 +179,5 @@ Das Spiel bietet ein brandneues, interaktives Tutorial-System. Beim ersten Betre
 - **Phase 2 - Remakes:** Wähle Spiele, die älter als 10 Jahre sind, und entwickle Remakes, um Nostalgie-Verkaufs-Boosts zu erhalten!
 - **Phase 2 - Mergers & Acquisitions (M&A):** Kaufe rivalisierende Studios auf, profitiere von deren Katalog durch wöchentliche Dividenden und eliminiere die Konkurrenz.
 
+
+* **E-Sports Ligen & Events**: Gründen Sie eigene E-Sports Ligen für Ihre Multiplayer-Hits, hosten Sie Championships (von lokalen Events bis zu Mega-Stadien) und akquirieren Sie Sponsoren, um den Hype und die Verkaufszahlen in die Höhe zu treiben.
