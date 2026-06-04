@@ -40,7 +40,7 @@ class GameState:
         self.total_revenue = 0
         self.developer_mode = False # Versteckter Entwickler-Modus
         self.pending_update = None
-
+        self.ui_context = {}
         # Trends
         self.current_trend = {}  # {'topic': '...', 'genre': '...', 'week_started': X}
         self.last_trend_week = 0
@@ -250,6 +250,9 @@ class GameState:
         self.active_merch = []
         self.active_tournaments = []
         self.active_sponsorships = []
+
+        # NEU: E-Sports-Ligen (ab 2010)
+        self.esports_leagues = []  # Liste von EsportsLeague-Objekten
 
         # NEU: Phase G - Büro-Bau (Grid)
         self.office_grid = [[None for _ in range(10)] for _ in range(10)] # 10x10 Raster
@@ -2185,6 +2188,7 @@ class GameState:
         # NEU: Phase 7 - Rivalen und GOTY evaluieren
         self._process_rivals()
         self._process_tournaments()
+        self._process_esports_leagues()
         self._process_sponsorships()
         if week_in_year == WEEKS_PER_YEAR:
             self._check_goty()
@@ -2356,6 +2360,65 @@ class GameState:
                 ), interrupt=False)
 
     
+    def _process_esports_leagues(self):
+        """Verarbeitet aktive E-Sports-Ligen wöchentlich:
+        - Hype-Zerfall (0.3-0.5% pro Woche, geschützt durch Sponsor-Tier)
+        - Passive Sponsoren-Einnahmen basierend auf Tier, Hype und Fans
+        - Aktive Spieler-Retention (GaaS-Boost)
+        - Streaming-Deal-Einnahmen wöchentlich
+        """
+        leagues = getattr(self, 'esports_leagues', [])
+        if not leagues:
+            return
+
+        import random
+        total_passive_income = 0
+
+        for league in leagues:
+            # 1. Hype-Zerfall: Tier schützt vor schnellem Verfall
+            tier_data = league.get_sponsor_tier_data()
+            hype_min = tier_data["hype_min"]
+            decay_rate = 0.997 if league.sponsor_tier == "global" else \
+                         0.995 if league.sponsor_tier == "national" else \
+                         0.993 if league.sponsor_tier == "regional" else \
+                         0.990 if league.sponsor_tier == "local" else \
+                         0.988
+            league.hype = max(hype_min, league.hype * decay_rate)
+
+            # 2. Sponsoren-Einnahmen basierend auf Tier
+            sponsor_weekly = league.calculate_weekly_sponsor_income(
+                self.fans, getattr(self, 'hype', 50)
+            )
+            if sponsor_weekly > 0:
+                variation = random.uniform(0.9, 1.1)
+                sponsor_weekly = int(sponsor_weekly * variation)
+                league.total_sponsor_income += sponsor_weekly
+                total_passive_income += sponsor_weekly
+
+            # 3. Streaming-Deal-Einnahmen
+            if league.streaming_deals > 0:
+                stream_income = int(league.streaming_deals * 50000 * (league.hype / 100.0))
+                stream_income = int(stream_income * random.uniform(0.85, 1.15))
+                league.total_sponsor_income += stream_income
+                total_passive_income += stream_income
+
+            # 4. Aktive Spieler-Retention: Spiel bleibt relevant
+            game = next((g for g in self.game_history if g.name == league.game_name), None)
+            if game:
+                retention_boost = max(200, int(self.fans * 0.005 * (league.hype / 100.0)))
+                game.active_players = max(
+                    getattr(game, 'active_players', 0),
+                    retention_boost
+                )
+
+            # 5. Hype global boostet leicht, wenn Liga aktiv
+            hype_boost = 0.1 * (league.hype / 100.0)
+            self.hype = min(100, getattr(self, 'hype', 50) + hype_boost)
+
+        if total_passive_income > 0:
+            self.money += total_passive_income
+            self.track_income("esports", total_passive_income)
+
     def _check_shareholder_meeting(self):
         year = self.get_calendar_year()
         if not hasattr(self, 'last_shareholder_year'):
@@ -4260,7 +4323,8 @@ class GameState:
             "accessibility_lab_history": getattr(self, "accessibility_lab_history", []),
             "last_accessibility_grant_year": getattr(self, "last_accessibility_grant_year", 0),
             "unlocked_achievements": getattr(self, "unlocked_achievements", []),
-            "my_goty_wins": getattr(self, "my_goty_wins", 0)
+            "my_goty_wins": getattr(self, "my_goty_wins", 0),
+            "esports_leagues": [l.to_dict() for l in getattr(self, "esports_leagues", [])],
         }
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
@@ -4546,6 +4610,16 @@ class GameState:
         self.last_accessibility_grant_year = data.get("last_accessibility_grant_year", 0)
         self.unlocked_achievements = data.get("unlocked_achievements", [])
         self.my_goty_wins = data.get("my_goty_wins", 0)
+
+        # NEU: E-Sports-Ligen laden
+        from models import EsportsLeague
+        self.esports_leagues = []
+        for ld in data.get("esports_leagues", []):
+            league = EsportsLeague(ld["game_name"], ld["start_week"])
+            league.hype = ld.get("hype", 100.0)
+            league.championships_held = ld.get("championships_held", 0)
+            league.last_championship_year = ld.get("last_championship_year", 0)
+            self.esports_leagues.append(league)
 
         self.reset_draft()
         return True

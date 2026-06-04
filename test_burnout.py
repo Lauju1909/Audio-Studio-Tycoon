@@ -45,6 +45,18 @@ class TestBurnoutSystem(unittest.TestCase):
         self.emp.morale = 0
         self.state.crunch_active = True # Verhindert morale-regeneration
         
+        # Create an active project with crunch so crunch_weeks stays high
+        proj = GameProject(name="Crunchy", size="Indie", topic="Action", genre="RPG")
+        proj.assigned_employee_ids = [0]
+        ap = {
+            "project": proj,
+            "crunch": True,
+            "progress": 0,
+            "total_weeks": 10,
+            "bugs": 0
+        }
+        self.state.active_projects.append(ap)
+        
         # Simuliere viele Wochen um Quit zu erzwingen (Chance 0.15)
         quit_happened = False
         for _ in range(50):

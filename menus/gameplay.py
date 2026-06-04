@@ -1,4 +1,4 @@
-from .base import Menu, TextInputMenu, SliderMenu
+﻿from .base import Menu, TextInputMenu, SliderMenu
 from game_data import (
     GENRES, SLIDER_NAMES, AUDIENCES,
     OFFICE_LEVELS, GAME_SIZES,
@@ -112,7 +112,7 @@ class ProjectTypeMenu(Menu):
     def __init__(self, audio, game_state):
         self.audio = audio
         self.game_state = game_state
-        super().__init__(self.game_state.get_text('project_type_title', default='Projektart wählen'), [], audio, game_state)
+        super().__init__(self.game_state.get_text('project_type_title', default='Projektart wÃ¤hlen'), [], audio, game_state)
         self._update_options()
 
     def _update_options(self):
@@ -258,11 +258,11 @@ class MarketingMenu(Menu):
         return "team_select_menu"
 
 class ProjectTeamSelectMenu(Menu):
-    """Menü zur Auswahl der Mitarbeiter für ein Projekt."""
+    """MenÃ¼ zur Auswahl der Mitarbeiter fÃ¼r ein Projekt."""
     def __init__(self, audio, game_state):
         self.audio = audio
         self.game_state = game_state
-        # Standard: Alle verfügbaren Mitarbeiter sind ausgewählt
+        # Standard: Alle verfÃ¼gbaren Mitarbeiter sind ausgewÃ¤hlt
         if "assigned_employee_ids" not in self.game_state.current_draft:
              self.game_state.current_draft["assigned_employee_ids"] = [i for i, e in enumerate(self.game_state.employees) if not getattr(e, 'is_sick', False) and not getattr(e, 'is_training', False)]
         
@@ -279,11 +279,11 @@ class ProjectTeamSelectMenu(Menu):
             busy_ids.extend(getattr(ap["project"], 'assigned_employee_ids', []))
 
         for i, emp in enumerate(self.game_state.employees):
-            # Kranke/Trainierende MA können nicht gewählt werden
+            # Kranke/Trainierende MA kÃ¶nnen nicht gewÃ¤hlt werden
             if getattr(emp, 'is_sick', False) or getattr(emp, 'is_training', False):
                 continue
             
-            # Bereits beschäftigte MA (außer sie sind bereits diesem Projekt zugewiesen)
+            # Bereits beschÃ¤ftigte MA (auÃŸer sie sind bereits diesem Projekt zugewiesen)
             if i in busy_ids and i not in assigned_ids:
                 continue
                 
@@ -303,10 +303,10 @@ class ProjectTeamSelectMenu(Menu):
                 elif spec.get("bonus_type") == "Topic" and draft_topic == spec.get("target"):
                     text += " [BONUS!]"
             
-            # WICHTIG: idx=i fixiert den aktuellen Wert von i für die Lambda-Funktion
+            # WICHTIG: idx=i fixiert den aktuellen Wert von i fÃ¼r die Lambda-Funktion
             self.options.append({'text': text, 'action': lambda idx=i: self._toggle(idx)})
 
-        # Bestätigen Option
+        # BestÃ¤tigen Option
         count = len(assigned_ids)
         self.options.append({'text': self.game_state.get_text('team_confirm', count=count), 'action': self._confirm})
         self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "marketing_menu"})
@@ -329,7 +329,7 @@ class ProjectTeamSelectMenu(Menu):
             self.audio.speak(self.game_state.get_text('team_none_selected_error'))
             return None
         
-        # Zeitschätzung ansagen
+        # ZeitschÃ¤tzung ansagen
         weeks = self.game_state.estimate_dev_time()
         self.audio.speak(self.game_state.get_text('dev_time_estimate', weeks=weeks))
         
@@ -490,7 +490,7 @@ class DevProgressMenu(Menu):
             for i, ap in enumerate(self.game_state.active_projects):
                 prog = int((ap["progress"] / ap["total_weeks"]) * 100)
                 name = ap["project"].name
-                # Closure für idx
+                # Closure fÃ¼r idx
                 def make_select(idx):
                     return lambda: self._select_project(idx)
                 self.options.append({'text': f"{name} ({prog}%)", 'action': make_select(i)})
@@ -512,7 +512,7 @@ class DevProgressMenu(Menu):
             # Early Access Option (30-50% progress minimum, we'll check >= 30%)
             if prog >= 30 and not getattr(ap["project"], "is_early_access", False) and not is_engine:
                 self.options.append({
-                    'text': self.game_state.get_text('release_early_access', default="Als Early Access veröffentlichen"),
+                    'text': self.game_state.get_text('release_early_access', default="Als Early Access verÃ¶ffentlichen"),
                     'action': self._release_early_access
                 })
                 
@@ -584,7 +584,7 @@ class DevProgressMenu(Menu):
         # We call finalize_game with early_access=True to keep it in active_projects
         self.game_state.finalize_game(ap, early_access=True)
         
-        self.audio.speak(self.game_state.get_text('early_access_released_msg', default="Das Spiel ist nun im Early Access verfügbar."))
+        self.audio.speak(self.game_state.get_text('early_access_released_msg', default="Das Spiel ist nun im Early Access verfÃ¼gbar."))
         return "review_result"
 
     def _use_ai_assets(self):
@@ -600,7 +600,7 @@ class DevProgressMenu(Menu):
         self.audio.speak(text, interrupt=interrupt)
 
 class DeveloperMenu(Menu):
-    """Geheimes Menü für Tests."""
+    """Geheimes MenÃ¼ fÃ¼r Tests."""
     def __init__(self, audio, game_state):
         self.audio = audio
         self.game_state = game_state
@@ -609,13 +609,13 @@ class DeveloperMenu(Menu):
 
     def _update_options(self):
         self.options = [
-            {'text': "Geld hinzufügen (1 Mio)", 'action': self._add_money},
+            {'text': "Geld hinzufÃ¼gen (1 Mio)", 'action': self._add_money},
             {'text': "Entwicklung sofort beenden", 'action': self._instant_dev},
-            {'text': "Forschungspunkte hinzufügen", 'action': self._add_rp},
+            {'text': "Forschungspunkte hinzufÃ¼gen", 'action': self._add_rp},
             {'text': "Alle Themen/Genres freischalten", 'action': self._unlock_all},
             {'text': "Moral auf 100", 'action': self._fix_morale},
-            {'text': "Fans hinzufügen (100k)", 'action': self._add_fans},
-            {'text': "Zurück", 'action': lambda: "game_menu"}
+            {'text': "Fans hinzufÃ¼gen (100k)", 'action': self._add_fans},
+            {'text': "ZurÃ¼ck", 'action': lambda: "game_menu"}
         ]
 
     def _add_money(self):
@@ -633,7 +633,7 @@ class DeveloperMenu(Menu):
 
     def _add_rp(self):
         self.game_state.research_points += 500
-        self.audio.speak("500 Forschungspunkte hinzugefügt.")
+        self.audio.speak("500 Forschungspunkte hinzugefÃ¼gt.")
         return None
 
     def _unlock_all(self):
@@ -655,7 +655,7 @@ class DeveloperMenu(Menu):
     
     def _add_fans(self):
         self.game_state.fans += 100000
-        self.audio.speak("100.000 Fans hinzugefügt.")
+        self.audio.speak("100.000 Fans hinzugefÃ¼gt.")
         return None
 
 class ReviewResultMenu(Menu):
@@ -735,7 +735,7 @@ class GOTYMenu(Menu):
             
             # In Historie speichern
             self.game_state.goty_history[res["year"]] = winner_text
-            # WICHTIG: Ergebnis löschen, damit wir nicht im Loop hängen bleiben!
+            # WICHTIG: Ergebnis lÃ¶schen, damit wir nicht im Loop hÃ¤ngen bleiben!
             self.game_state.pending_goty_results = None
             
         super().__init__(self.game_state.get_text('goty_title'), [], audio, game_state)
@@ -839,7 +839,7 @@ class RemakeSelectMenu(Menu):
     def __init__(self, audio, game_state):
         self.audio = audio
         self.game_state = game_state
-        super().__init__(self.game_state.get_text('remake_title', default='Remake wählen'), [], audio, game_state)
+        super().__init__(self.game_state.get_text('remake_title', default='Remake wÃ¤hlen'), [], audio, game_state)
         self._update_options()
 
     def _update_options(self):
@@ -854,7 +854,7 @@ class RemakeSelectMenu(Menu):
                 })
         
         if not self.options:
-            self.options.append({'text': self.game_state.get_text('no_remakes', default='Keine Spiele älter als 10 Jahre'), 'action': lambda: "project_type_menu"})
+            self.options.append({'text': self.game_state.get_text('no_remakes', default='Keine Spiele Ã¤lter als 10 Jahre'), 'action': lambda: "project_type_menu"})
             
         self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "project_type_menu"})
 
@@ -928,7 +928,7 @@ class GameDetailsMenu(Menu):
         if game and game.is_active:
             # Mod Support feature
             if not getattr(game, 'has_mod_support', False):
-                self.options.append({'text': self.game_state.get_text('activate_mod_support', default="Mod-Support hinzufügen (10.000 EUR)"), 'action': self._add_mod_support})
+                self.options.append({'text': self.game_state.get_text('activate_mod_support', default="Mod-Support hinzufÃ¼gen (10.000 EUR)"), 'action': self._add_mod_support})
             else:
                 self.options.append({'text': self.game_state.get_text('has_mod_support_active', default="Mod-Support: Aktiviert"), 'action': lambda: None})
                 
@@ -1041,7 +1041,7 @@ class AAADevEventMenu(Menu):
                 return None
             gs.track_expense("dev_event", cost)
             
-        # Zeitverzögerung
+        # ZeitverzÃ¶gerung
         delay = opt.get('delay', 0)
         if delay > 0:
             ap["total_weeks"] += delay
@@ -1089,9 +1089,9 @@ class InfluencerEventMenu(Menu):
 
     def _update_options(self):
         self.options = [
-            {'text': self.game_state.get_text('influencer_opt_1', default="Öffentlich entschuldigen (-Fans, rettet Image)"), 'action': self._apologize},
+            {'text': self.game_state.get_text('influencer_opt_1', default="Ã–ffentlich entschuldigen (-Fans, rettet Image)"), 'action': self._apologize},
             {'text': self.game_state.get_text('influencer_opt_2', default="Fristlos feuern & klagen (-Viel Geld, bewahrt Ehre)"), 'action': self._fire},
-            {'text': self.game_state.get_text('influencer_opt_3', default="Ignorieren (Riskant, kann Langzeit-Verkäufe ruinieren)"), 'action': self._ignore}
+            {'text': self.game_state.get_text('influencer_opt_3', default="Ignorieren (Riskant, kann Langzeit-VerkÃ¤ufe ruinieren)"), 'action': self._ignore}
         ]
 
     def _apologize(self):
@@ -1106,7 +1106,7 @@ class InfluencerEventMenu(Menu):
         self.game_state.track_expense("other", fine)
         if hasattr(self.audio, 'play_sound'):
             self.audio.play_sound('cash')
-        self.audio.speak(self.game_state.get_text('influencer_res_2', cost=fine, default=f"Streamer gefeuert! Vertragsstrafen kosten uns {fine} €, aber die Gamer respektieren uns dafür!"))
+        self.audio.speak(self.game_state.get_text('influencer_res_2', cost=fine, default=f"Streamer gefeuert! Vertragsstrafen kosten uns {fine} â‚¬, aber die Gamer respektieren uns dafÃ¼r!"))
         self._clear_event()
         return "game_menu"
 
@@ -1119,9 +1119,9 @@ class InfluencerEventMenu(Menu):
                     g.sales = int(g.sales * 0.5)
                     g.is_active = False
             self.game_state.fans = max(0, int(self.game_state.fans * 0.8))
-            self.audio.speak(self.game_state.get_text('influencer_res_3_bad', default="Das Ignorieren war ein Fehler! Ein gigantischer Shitstorm zerstört das Spiel und wir verlieren massig Fans!"))
+            self.audio.speak(self.game_state.get_text('influencer_res_3_bad', default="Das Ignorieren war ein Fehler! Ein gigantischer Shitstorm zerstÃ¶rt das Spiel und wir verlieren massig Fans!"))
         else:
-            self.audio.speak(self.game_state.get_text('influencer_res_3_good', default="Glück gehabt. Das Internet hat den Skandal in wenigen Tagen vergessen. Keine Konsequenzen!"))
+            self.audio.speak(self.game_state.get_text('influencer_res_3_good', default="GlÃ¼ck gehabt. Das Internet hat den Skandal in wenigen Tagen vergessen. Keine Konsequenzen!"))
         self._clear_event()
         return "game_menu"
 
@@ -1141,9 +1141,9 @@ class UnionEventMenu(Menu):
         self.game_state = game_state
         self.event_data = getattr(game_state, 'pending_union_event', {"type": "formation"})
         
-        if self.event_data["type"] == "formation":
-            title = self.game_state.get_text('union_form_title', default="GEWERKSCHAFTS-GRÜNDUNG!")
-            desc = self.game_state.get_text('union_form_desc', default="Boss, die miese Moral und der Stress haben das Fass zum Überlaufen gebracht. Die Mitarbeiter haben eine Gewerkschaft gegründet! Sie fordern sofortige Verhandlungen.")
+        if self.event_data.get("type", "formation") == "formation":
+            title = self.game_state.get_text('union_form_title', default="GEWERKSCHAFTS-GRÃœNDUNG!")
+            desc = self.game_state.get_text('union_form_desc', default="Boss, die miese Moral und der Stress haben das Fass zum Ãœberlaufen gebracht. Die Mitarbeiter haben eine Gewerkschaft gegrÃ¼ndet! Sie fordern sofortige Verhandlungen.")
         else:
             title = self.game_state.get_text('union_strike_title', default="STREIKDROHUNG!")
             desc = self.game_state.get_text('union_strike_desc', default="Die Gewerkschaft ist unzufrieden! Wenn wir nicht zahlen, legen sie ab morgen die Arbeit nieder. Was sollen wir tun?")
@@ -1156,9 +1156,9 @@ class UnionEventMenu(Menu):
 
     def _update_options(self):
         self.options = [
-            {'text': self.game_state.get_text('union_opt_1', default="Gehälter anpassen (+30% für alle, Moral steigt)"), 'action': self._raise_salaries},
-            {'text': self.game_state.get_text('union_opt_2', default="Einmaliger Bonus (10k pro Mitarbeiter, keine Dauerlösung)"), 'action': self._pay_bonus},
-            {'text': self.game_state.get_text('union_opt_3', default="Union-Busting betreiben (Feuert Rädelsführer, illegal & riskant)"), 'action': self._union_busting},
+            {'text': self.game_state.get_text('union_opt_1', default="GehÃ¤lter anpassen (+30% fÃ¼r alle, Moral steigt)"), 'action': self._raise_salaries},
+            {'text': self.game_state.get_text('union_opt_2', default="Einmaliger Bonus (10k pro Mitarbeiter, keine DauerlÃ¶sung)"), 'action': self._pay_bonus},
+            {'text': self.game_state.get_text('union_opt_3', default="Union-Busting betreiben (Feuert RÃ¤delsfÃ¼hrer, illegal & riskant)"), 'action': self._union_busting},
             {'text': self.game_state.get_text('union_opt_4', default="Ignorieren (STREIK!)"), 'action': self._ignore}
         ]
 
@@ -1167,7 +1167,7 @@ class UnionEventMenu(Menu):
             emp.salary = int(emp.salary * 1.3)
             emp.morale = 100
         self.game_state.has_union = True
-        self.audio.speak(self.game_state.get_text('union_res_1', default="Die Gehälter wurden erhöht. Die Mitarbeiter sind glücklich und die Arbeit geht weiter!"))
+        self.audio.speak(self.game_state.get_text('union_res_1', default="Die GehÃ¤lter wurden erhÃ¶ht. Die Mitarbeiter sind glÃ¼cklich und die Arbeit geht weiter!"))
         if hasattr(self.audio, 'play_sound'):
             self.audio.play_sound('cash')
         self._clear_event()
@@ -1180,7 +1180,7 @@ class UnionEventMenu(Menu):
         for emp in self.game_state.employees:
             emp.morale = min(100, emp.morale + 30)
         self.game_state.has_union = True
-        self.audio.speak(self.game_state.get_text('union_res_2', cost=cost, default=f"Ein Bonus von {cost} € wurde gezahlt. Sie sind vorerst ruhig."))
+        self.audio.speak(self.game_state.get_text('union_res_2', cost=cost, default=f"Ein Bonus von {cost} â‚¬ wurde gezahlt. Sie sind vorerst ruhig."))
         if hasattr(self.audio, 'play_sound'):
             self.audio.play_sound('cash')
         self._clear_event()
@@ -1197,13 +1197,13 @@ class UnionEventMenu(Menu):
         
         if random.random() < 0.5:
             self.game_state.has_union = False
-            self.audio.speak(self.game_state.get_text('union_res_3_success', default="Rädelsführer gefeuert! Die Gewerkschaft ist zerschlagen, aber die Fans sind angewidert!"))
+            self.audio.speak(self.game_state.get_text('union_res_3_success', default="RÃ¤delsfÃ¼hrer gefeuert! Die Gewerkschaft ist zerschlagen, aber die Fans sind angewidert!"))
         else:
             self.game_state.has_union = True
             fine = 500000
             self.game_state.money -= fine
             self.game_state.track_expense("other", fine)
-            self.audio.speak(self.game_state.get_text('union_res_3_fail', default="Union-Busting aufgeflogen! Strafzahlung von 500.000 €! Fans hassen uns und die Gewerkschaft bleibt!"))
+            self.audio.speak(self.game_state.get_text('union_res_3_fail', default="Union-Busting aufgeflogen! Strafzahlung von 500.000 â‚¬! Fans hassen uns und die Gewerkschaft bleibt!"))
         self._clear_event()
         return "game_menu"
 
@@ -1211,7 +1211,7 @@ class UnionEventMenu(Menu):
         import random
         self.game_state.has_union = True
         self.game_state.strike_weeks_left = random.randint(3, 6)
-        self.audio.speak(self.game_state.get_text('union_res_4', default="STREIK! Die gesamte Spieleentwicklung ruht und es kostet uns jede Woche ein Vermögen!"))
+        self.audio.speak(self.game_state.get_text('union_res_4', default="STREIK! Die gesamte Spieleentwicklung ruht und es kostet uns jede Woche ein VermÃ¶gen!"))
         self._clear_event()
         return "game_menu"
 
@@ -1233,7 +1233,7 @@ class ExpoMenu(Menu):
     def _update_options(self):
         self.options = []
         if self.state == "size":
-            self.title = "Spiele-Messe: Standgröße wählen"
+            self.title = "Spiele-Messe: StandgrÃ¶ÃŸe wÃ¤hlen"
             self.options.append({'text': self.game_state.get_text('expo_small_stand'), 'action': lambda: self._select_size(50000, 5)})
             self.options.append({'text': self.game_state.get_text('expo_medium_stand'), 'action': lambda: self._select_size(250000, 15)})
             self.options.append({'text': self.game_state.get_text('expo_large_stand'), 'action': lambda: self._select_size(1000000, 40)})
@@ -1369,3 +1369,4 @@ class ShareholderMenu(Menu):
             
         super().__init__(game_state.get_text('shareholder_title', default='Jahreshauptversammlung'), options, audio, game_state)
         self.audio.speak(msg, interrupt=True)
+

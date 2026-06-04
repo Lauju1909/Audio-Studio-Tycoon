@@ -728,12 +728,57 @@ class BankLoan:
         }
 
 class EsportsLeague:
+    """Eine E-Sports-Liga fuer ein bestimmtes Multiplayer-Spiel."""
+
+    # Sponsoring-Tier-Daten: (id, weekly_income, hype_decay_protection)
+    SPONSOR_TIERS = [
+        {"id": "none",       "weekly_base": 0,       "hype_min": 10.0},
+        {"id": "local",      "weekly_base": 25000,   "hype_min": 15.0},
+        {"id": "regional",   "weekly_base": 100000,  "hype_min": 20.0},
+        {"id": "national",   "weekly_base": 400000,  "hype_min": 30.0},
+        {"id": "global",     "weekly_base": 1500000, "hype_min": 50.0},
+    ]
+
+    # Championship-Typen: (id, cost, hype_bonus, viewer_multiplier, streaming_rev_per_viewer)
+    CHAMPIONSHIP_TYPES = [
+        {"id": "small",   "cost": 1_000_000,  "hype_bonus": 30,  "viewer_mult": 0.5,  "rev_per_viewer": 3},
+        {"id": "medium",  "cost": 5_000_000,  "hype_bonus": 70,  "viewer_mult": 1.0,  "rev_per_viewer": 5},
+        {"id": "stadium", "cost": 15_000_000, "hype_bonus": 150, "viewer_mult": 2.5,  "rev_per_viewer": 8},
+        {"id": "mega",    "cost": 40_000_000, "hype_bonus": 300, "viewer_mult": 6.0,  "rev_per_viewer": 12},
+    ]
+
     def __init__(self, game_name, start_week):
         self.game_name = game_name
         self.start_week = start_week
-        self.hype = 100
+        self.hype = 100.0
         self.championships_held = 0
         self.last_championship_year = 0
+        # Neu: Erweitertes Tracking
+        self.sponsor_tier = "none"          # Aktueller Sponsoring-Tier
+        self.total_sponsor_income = 0       # Gesamte Sponsoren-Einnahmen
+        self.total_championship_income = 0  # Gesamte Championship-Einnahmen
+        self.total_viewers = 0              # Zuschauer aller Championships
+        self.last_championship_viewers = 0  # Zuschauer des letzten Events
+        self.last_championship_revenue = 0  # Einnahmen des letzten Events
+        self.streaming_deals = 0            # Aktive Streaming-Deals
+        self.prize_pool_total = 0           # Ausgeschuettete Preisgelder
+
+    def get_sponsor_tier_data(self):
+        """Gibt den Daten-Dict fuer den aktuellen Sponsor-Tier zurueck."""
+        for t in self.SPONSOR_TIERS:
+            if t["id"] == self.sponsor_tier:
+                return t
+        return self.SPONSOR_TIERS[0]
+
+    def calculate_weekly_sponsor_income(self, fan_count, hype_global):
+        """Berechnet den woechtlichen passiven Sponsor-Einnahmen."""
+        tier = self.get_sponsor_tier_data()
+        base = tier["weekly_base"]
+        if base == 0:
+            return 0
+        fan_factor = min(3.0, 1.0 + fan_count / 1_000_000)
+        hype_factor = self.hype / 100.0
+        return int(base * fan_factor * hype_factor)
 
     def to_dict(self):
         return {
@@ -741,8 +786,33 @@ class EsportsLeague:
             "start_week": self.start_week,
             "hype": self.hype,
             "championships_held": self.championships_held,
-            "last_championship_year": self.last_championship_year
+            "last_championship_year": self.last_championship_year,
+            "sponsor_tier": self.sponsor_tier,
+            "total_sponsor_income": self.total_sponsor_income,
+            "total_championship_income": self.total_championship_income,
+            "total_viewers": self.total_viewers,
+            "last_championship_viewers": self.last_championship_viewers,
+            "last_championship_revenue": self.last_championship_revenue,
+            "streaming_deals": self.streaming_deals,
+            "prize_pool_total": self.prize_pool_total,
         }
+
+    @staticmethod
+    def from_dict(data):
+        league = EsportsLeague(data["game_name"], data["start_week"])
+        league.hype = float(data.get("hype", 100.0))
+        league.championships_held = data.get("championships_held", 0)
+        league.last_championship_year = data.get("last_championship_year", 0)
+        league.sponsor_tier = data.get("sponsor_tier", "none")
+        league.total_sponsor_income = data.get("total_sponsor_income", 0)
+        league.total_championship_income = data.get("total_championship_income", 0)
+        league.total_viewers = data.get("total_viewers", 0)
+        league.last_championship_viewers = data.get("last_championship_viewers", 0)
+        league.last_championship_revenue = data.get("last_championship_revenue", 0)
+        league.streaming_deals = data.get("streaming_deals", 0)
+        league.prize_pool_total = data.get("prize_pool_total", 0)
+        return league
+
 
 class CustomConsole:
     """Vom Spieler entwickelte Konsole."""

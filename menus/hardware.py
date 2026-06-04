@@ -16,7 +16,7 @@ class HardwareLabMenu(Menu):
         gs = self.game_state
         
         # Jahr prüfen
-        if gs.get_calendar_year() < 1980:
+        if gs.get_calendar_year() < 2001:
             self.title = gs.get_text('hardware_menu_title') + " (Gesperrt)"
             self.options.append({'text': gs.get_text('back'), 'action': lambda: "game_menu"})
             return
