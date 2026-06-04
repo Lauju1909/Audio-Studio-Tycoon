@@ -618,7 +618,7 @@ class EngineLicensingMenu(Menu):
                 'text': f"{eng.name} - Status: {status} - GebÃ¼hr: {fee}",
                 'action': lambda idx=i: self._select_engine(idx)
             })
-        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "business_menu"})
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
 
     def _select_engine(self, idx):
         self.game_state.ui_context['selected_engine_idx'] = idx
@@ -670,7 +670,7 @@ class GamePortingMenu(Menu):
                 'text': self.game_state.get_text('no_games_available'),
                 'action': None
             })
-        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "business_menu"})
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
 
     def _select_game(self, game_name):
         self.game_state.ui_context['port_game_name'] = game_name
@@ -1484,7 +1484,7 @@ class ESportsMenu(Menu):
             leagues = getattr(self.game_state, 'esports_leagues', [])
             if leagues:
                 self.options.append({'text': self.game_state.get_text('esports_manage_leagues', default='Ligen & World Championships'), 'action': lambda: "esports_manage_league_menu"})
-        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "business_menu"})
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
         super().announce_entry()
 
 class ESportsCreateLeagueMenu(Menu):
