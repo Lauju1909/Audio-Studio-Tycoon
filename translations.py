@@ -2049,6 +2049,19 @@ TRANSLATIONS = {
         "no_studios_available": "No rival studios available for acquisition."
     },
     "de": {
+        "body_burnout": "{name} hat einen Burnout erlitten und faellt fuer {weeks} Wochen aus!",
+        "content_started": "Content-Update-Entwicklung gestartet.",
+        "dlc_started": "DLC-Entwicklung gestartet.",
+        "patch_started": "Patch-Entwicklung gestartet.",
+        "start_content_update": "Content-Update entwickeln (Kostenlos)",
+        "start_dlc": "DLC entwickeln (Kostenpflichtig)",
+        "start_patch": "Patch entwickeln (Bugs beheben)",
+        "subject_burnout": "Mitarbeiter-Burnout!",
+        "vacation_employee_option": "{name} (Erschoepfung: {fatigue}%)",
+        "vacation_menu_title": "Mitarbeiter in den Urlaub schicken",
+        "vacation_none_available": "Keine verfuegbaren Mitarbeiter.",
+        "vacation_success": "{name} ist nun fuer 4 Wochen im Urlaub.",
+
         "console_opt_develop": "Eigene Konsole entwickeln",
         "console_active_stats": "{name}: {users} Nutzer | Gewinn: {revenue}€",
         "console_in_dev": "Konsole {name} in Entwicklung ({progress}%)",
