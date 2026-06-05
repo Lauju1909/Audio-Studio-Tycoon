@@ -191,3 +191,8 @@ Features:
 - **Abo- & Werbeeinnahmen:** Generiert jeden Monat lukrative Umsätze.
 
 - **Subsidiary Management & Merchandising (Neu!)**: Voll funktionsfähiges Merch-Menü, Sponsoring von Content Creators und erweiterte Firmenübernahmen (M&A) mit der Möglichkeit, Töchter zu investieren, sie auf eine eigene Konsole festzulegen oder sie aufzulösen.
+
+## QA & Fixes
+- **Timeline Adjustments:** E-Sports unlock year corrected to 2010.
+- **Localization:** DE/EN translation keys synchronized perfectly.
+- **Accessibility:** Validated linear menu boundaries and Tolk/TTS support across the game.
