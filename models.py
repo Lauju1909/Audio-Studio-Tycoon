@@ -1335,6 +1335,148 @@ class RadioJingle:
             cost=data.get("cost", 0),
         )
 
+class CloudGamingService:
+    """
+    Cloud-Gaming-Plattform: Der Spieler betreibt einen eigenen Cloud-Dienst,
+    auf dem Abonnenten die eigenen Spiele streamen können.
+    Tier-Lizenzen bestimmen den monatlichen Abopreis und die Serverkapazität.
+    Freigeschaltet ab Spieljahr 2000.
+    """
+
+    # Abo-Tiers: (id, name_de, name_en, monatspreis, server_kosten_woche, max_abos, hype_bonus)
+    TIERS = [
+        {
+            "id": "basic",
+            "name_de": "Basic",
+            "name_en": "Basic",
+            "monthly_fee": 4.99,
+            "weekly_server_cost": 10_000,
+            "max_subscribers": 50_000,
+            "hype_bonus": 0.5,
+        },
+        {
+            "id": "standard",
+            "name_de": "Standard",
+            "name_en": "Standard",
+            "monthly_fee": 9.99,
+            "weekly_server_cost": 40_000,
+            "max_subscribers": 250_000,
+            "hype_bonus": 1.0,
+        },
+        {
+            "id": "premium",
+            "name_de": "Premium",
+            "name_en": "Premium",
+            "monthly_fee": 14.99,
+            "weekly_server_cost": 120_000,
+            "max_subscribers": 1_000_000,
+            "hype_bonus": 2.0,
+        },
+        {
+            "id": "unlimited",
+            "name_de": "Unlimited",
+            "name_en": "Unlimited",
+            "monthly_fee": 19.99,
+            "weekly_server_cost": 350_000,
+            "max_subscribers": 5_000_000,
+            "hype_bonus": 5.0,
+        },
+    ]
+
+    def __init__(self, start_week: int, tier: str = "basic"):
+        self.founded_week = start_week
+        self.tier = tier
+        self.subscribers = 0
+        self.churn_rate = 0.02          # 2% Abwanderung pro Woche
+        self.server_level = 1           # 1-5 Server-Ausbau
+        self.catalogued_games = []      # Spielnamen, die auf dem Dienst verfügbar sind
+        self.total_revenue = 0
+        self.total_server_costs = 0
+        self.weeks_active = 0
+        # Für Statistik
+        self.peak_subscribers = 0
+        self.upgrade_history = []       # Liste von (week, old_tier, new_tier)
+
+    def get_tier_data(self) -> dict:
+        """Gibt Tier-Daten für das aktuelle Tier zurück."""
+        for t in self.TIERS:
+            if t["id"] == self.tier:
+                return t
+        return self.TIERS[0]
+
+    def get_weekly_revenue(self) -> int:
+        """Berechnet den wöchentlichen Umsatz (Monatsgebühr / 4 × Abonnenten)."""
+        td = self.get_tier_data()
+        return int((td["monthly_fee"] / 4.0) * self.subscribers)
+
+    def get_weekly_server_cost(self) -> int:
+        """Serverkosten pro Woche (steigen mit Server-Level)."""
+        td = self.get_tier_data()
+        return int(td["weekly_server_cost"] * self.server_level)
+
+    def get_max_subscribers(self) -> int:
+        """Maximale Abonnentenzahl basierend auf Tier und Server-Level."""
+        td = self.get_tier_data()
+        return int(td["max_subscribers"] * self.server_level)
+
+    def get_weekly_profit(self) -> int:
+        return self.get_weekly_revenue() - self.get_weekly_server_cost()
+
+    def add_game(self, game_name: str):
+        """Fügt ein Spiel zum Katalog hinzu, wenn noch nicht vorhanden."""
+        if game_name not in self.catalogued_games:
+            self.catalogued_games.append(game_name)
+
+    def can_upgrade_tier(self) -> bool:
+        """Prüft ob ein höheres Tier verfügbar ist."""
+        tier_ids = [t["id"] for t in self.TIERS]
+        current_idx = tier_ids.index(self.tier) if self.tier in tier_ids else 0
+        return current_idx < len(self.TIERS) - 1
+
+    def upgrade_tier(self, start_week: int) -> bool:
+        """Stuft den Dienst auf das nächste Tier hoch."""
+        tier_ids = [t["id"] for t in self.TIERS]
+        current_idx = tier_ids.index(self.tier) if self.tier in tier_ids else 0
+        if current_idx >= len(self.TIERS) - 1:
+            return False
+        old_tier = self.tier
+        self.tier = tier_ids[current_idx + 1]
+        self.upgrade_history.append((start_week, old_tier, self.tier))
+        return True
+
+    def to_dict(self) -> dict:
+        return {
+            "founded_week": self.founded_week,
+            "tier": self.tier,
+            "subscribers": self.subscribers,
+            "churn_rate": self.churn_rate,
+            "server_level": self.server_level,
+            "catalogued_games": self.catalogued_games,
+            "total_revenue": self.total_revenue,
+            "total_server_costs": self.total_server_costs,
+            "weeks_active": self.weeks_active,
+            "peak_subscribers": self.peak_subscribers,
+            "upgrade_history": self.upgrade_history,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        svc = cls(
+            start_week=data.get("founded_week", 0),
+            tier=data.get("tier", "basic"),
+        )
+        svc.subscribers = data.get("subscribers", 0)
+        svc.churn_rate = data.get("churn_rate", 0.02)
+        svc.server_level = data.get("server_level", 1)
+        svc.catalogued_games = data.get("catalogued_games", [])
+        svc.total_revenue = data.get("total_revenue", 0)
+        svc.total_server_costs = data.get("total_server_costs", 0)
+        svc.weeks_active = data.get("weeks_active", 0)
+        svc.peak_subscribers = data.get("peak_subscribers", 0)
+        svc.upgrade_history = data.get("upgrade_history", [])
+        return svc
+
+
 class StreamingPlatform:
     def __init__(self, start_week: int):
         self.founded_week = start_week

@@ -27,5 +27,9 @@
   "de_Hörspiel": "Hörspiel",
   "de_esports_champ_stadium": "esports_champ_stadium",
   "de_esports_sponsors": "esports_sponsors",
-  "de_FPS": "FPS"
+  "de_FPS": "FPS",
+  "de_sender_dev": "sender_dev",
+  "de_subject_update_finished": "subject_update_finished",
+  "de_body_update_finished": "body_update_finished",
+  "de_sender_marketing": "sender_marketing"
 }

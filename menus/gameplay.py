@@ -968,6 +968,42 @@ class GameDetailsMenu(Menu):
             self.current_index = 0
         return None
 
+    def _start_patch(self):
+        game = getattr(self.game_state, '_pending_game_details', None)
+        if game:
+            if self.game_state.start_update_project(game.name, "Patch", name="Patch"):
+                self.audio.play_sound("confirm")
+                self.audio.speak(self.game_state.get_text("patch_started", default="Patch-Entwicklung gestartet."))
+                return "active_games_menu"
+            else:
+                self.audio.play_sound("error")
+                self.audio.speak(self.game_state.get_text("not_enough_money"))
+        return None
+
+    def _start_content_update(self):
+        game = getattr(self.game_state, '_pending_game_details', None)
+        if game:
+            if self.game_state.start_update_project(game.name, "Content", name="Content-Update"):
+                self.audio.play_sound("confirm")
+                self.audio.speak(self.game_state.get_text("content_started", default="Content-Update gestartet."))
+                return "active_games_menu"
+            else:
+                self.audio.play_sound("error")
+                self.audio.speak(self.game_state.get_text("not_enough_money"))
+        return None
+
+    def _start_dlc(self):
+        game = getattr(self.game_state, '_pending_game_details', None)
+        if game:
+            if self.game_state.start_update_project(game.name, "DLC", name="DLC"):
+                self.audio.play_sound("confirm")
+                self.audio.speak(self.game_state.get_text("dlc_started", default="DLC-Entwicklung gestartet."))
+                return "active_games_menu"
+            else:
+                self.audio.play_sound("error")
+                self.audio.speak(self.game_state.get_text("not_enough_money"))
+        return None
+
 class AAADevEventMenu(Menu):
     """Zeigt Entwicklungs-Events (AAA und allgemein) mit Entscheidungsoptionen."""
     def __init__(self, audio, game_state):

@@ -90,6 +90,7 @@ def get_menu_factories(audio, state):
         "dev_progress_menu": lambda: DevProgressMenu(audio, state),
         "review_result": lambda: ReviewResultMenu(audio, state),
         "hr_menu": lambda: HRMenu(audio, state),
+        "vacation_menu": lambda: __import__('menus.office', fromlist=['']).VacationMenu(audio, state),
         "office_perks_menu": lambda: OfficePerksMenu(audio, state),
         "headhunting_event_menu": lambda: HeadhuntingEventMenu(audio, state),
         "hire_menu": lambda: HireMenu(audio, state),

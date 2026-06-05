@@ -1,4 +1,4 @@
-﻿import unittest
+import unittest
 from logic import GameState
 from models import Employee, GameProject
 
@@ -61,13 +61,23 @@ class TestBurnoutSystem(unittest.TestCase):
         
         # Simuliere viele Wochen um Quit zu erzwingen (Chance 0.15)
         quit_happened = False
-        for _ in range(50):
-            if not self.state.employees:
-                quit_happened = True
-                break
-            self.state._on_new_week()
-            # Moral wieder auf 0 zwingen falls es durch andere Effekte hoch geht
-            self.emp.morale = 0
+        import unittest.mock as mock
+        def fake_random():
+            fake_random.count += 1
+            # 1st call per loop is usually sick_chance, 2nd is quit_chance
+            if fake_random.count % 2 == 1:
+                return 0.99 # Don't get sick
+            return 0.01 # Quit
+
+        fake_random.count = 0
+
+        with mock.patch('random.random', side_effect=fake_random):
+            for _ in range(50):
+                if not self.state.employees:
+                    quit_happened = True
+                    break
+                self.state._on_new_week()
+                self.emp.morale = 0
             
         self.assertTrue(quit_happened)
 
