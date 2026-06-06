@@ -14,7 +14,6 @@ import subprocess
 import threading
 import urllib.request
 import hashlib
-import shutil
 from typing import Callable, Optional
 
 GITHUB_API = "https://api.github.com/repos/Lauju1909/Audio-Studio-Tycoon/releases"

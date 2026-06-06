@@ -11,7 +11,6 @@ import sys
 import ctypes
 import queue
 import threading
-import time
 
 def resource_path(relative_path):
     """ Findet den absoluten Pfad zur Ressource, kompatibel mit Dev-Umgebung und PyInstaller. """
@@ -96,7 +95,7 @@ class AudioManager:
                         else:
                             print("[Audio] Tolk geladen, aber kein Screenreader erkannt. Nutze SAPI über Tolk.")
                 else:
-                    print(f"[Audio Fehler]: Tolk.dll wurde an keinem Ort gefunden.")
+                    print("[Audio Fehler]: Tolk.dll wurde an keinem Ort gefunden.")
             except Exception as e:
                 print(f"[Audio Exception]: Tolk-Init fehlgeschlagen: {e}")
                 self.tolk = None
@@ -176,11 +175,9 @@ class AudioManager:
         # Methode 3: Direkt über ctypes/SAPI COM (letzter Ausweg)
         try:
             # SpVoice über ctypes direkt ansprechen
-            from ctypes import POINTER, byref
             import comtypes.client
             from comtypes import CoInitialize
             CoInitialize()
-            from comtypes.gen import SpeechLib
             voice = comtypes.client.CreateObject("SAPI.SpVoice")
             self.sapi_voice = voice
             self.sapi_active = True

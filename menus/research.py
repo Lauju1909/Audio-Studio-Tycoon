@@ -1,7 +1,7 @@
 from .base import Menu, TextInputMenu
 from game_data import (
     RESEARCHABLE_TOPICS, RESEARCHABLE_GENRES, RESEARCHABLE_AUDIENCES, 
-    RESEARCHABLE_TECHNOLOGIES, ENGINE_FEATURES
+    RESEARCHABLE_TECHNOLOGIES
 )
 
 class ResearchMenu(Menu):

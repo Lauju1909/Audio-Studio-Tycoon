@@ -6,7 +6,6 @@ Backspace) und senden jede Ausgabe über audio.speak() an den Screenreader.
 Keine ASCII-Art, keine visuellen Tabellen.
 """
 
-import pygame
 from .base import Menu, TextInputMenu
 from models import SoundtrackLabel
 
@@ -176,7 +175,6 @@ class SoundConFinishMenu(Menu):
         ev = gs.active_soundcon
         if ev:
             # Vorschau auf Ergebnis ansagen (ohne anzuwenden)
-            from models import SoundConEvent
             preview_hype = round(ev.base_hype * (1.0 + gs.prestige / 200.0) * (1.0 + ev.qa_rounds * 0.15), 1)
             preview_fans = int(ev.base_fans * (1.0 + gs.prestige / 200.0) * (1.0 + ev.qa_rounds * 0.15))
             self.audio.speak(
@@ -355,6 +353,10 @@ class SoundtrackLabelMenu(Menu):
                 'text': gs.get_text('label_opt_add_game'),
                 'action': 'label_add_game'
             })
+            opts.append({
+                'text': gs.get_text('label_opt_compilation', cost=25_000),
+                'action': 'label_compilation'
+            })
 
         opts.append({'text': gs.get_text('back'), 'action': 'back_to_game'})
         return opts
@@ -395,6 +397,31 @@ class SoundtrackLabelMenu(Menu):
 
             elif action == 'label_add_game':
                 return 'label_add_game_menu'
+
+            elif action == 'label_compilation':
+                if len(gs.soundtrack_label.catalogued_games) < 3:
+                    self.audio.play_sound('error')
+                    self.audio.speak(gs.get_text('label_compilation_fail_games'))
+                elif gs.money < 25000:
+                    self.audio.play_sound('error')
+                    self.audio.speak(gs.get_text('label_compilation_fail_money', cost=25_000))
+                else:
+                    gs.track_expense("other", 25000)
+                    gs.soundtrack_label.compilation_albums_released += 1
+                    # Base revenue per game in catalog + randomness
+                    import random
+                    base = len(gs.soundtrack_label.catalogued_games) * 15000
+                    bonus = random.randint(5000, 30000)
+                    total_revenue = base + bonus
+                    hype_boost = min(30, len(gs.soundtrack_label.catalogued_games) * 2 + random.randint(5, 15))
+                    
+                    gs.track_income("other", total_revenue)
+                    gs.hype = min(250, gs.hype + hype_boost)
+                    gs.soundtrack_label.prestige_bonus += 2
+                    
+                    self.audio.play_sound('success')
+                    self.audio.speak(gs.get_text('label_compilation_success', revenue=total_revenue, hype=hype_boost))
+                return None
 
             elif action == 'back_to_game':
                 return 'back_to_game'

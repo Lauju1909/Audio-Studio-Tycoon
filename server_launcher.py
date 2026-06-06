@@ -7,7 +7,6 @@ import subprocess
 import sys
 import os
 import threading
-import time
 
 class ServerLauncher:
     def __init__(self, audio, game_state):

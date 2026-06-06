@@ -296,7 +296,6 @@ class LoanMenu(Menu):
         self._update_options()
 
     def _update_options(self):
-        from models import BankLoan
         if self.game_state.bank_loan:
             loan = self.game_state.bank_loan
             self.options = [
@@ -423,7 +422,6 @@ class MonetizationMenu(Menu):
             return None
 
         self.audio.speak(self.game_state.get_text('ad_playing'))
-        import time
         self.audio.play_sound("cash")
         
         success, amount = self.game_state.watch_ad()
@@ -1500,7 +1498,6 @@ class ESportsCreateLeagueMenu(Menu):
     def announce_entry(self):
         self.options = []
         existing_leagues = [l.game_name for l in getattr(self.game_state, 'esports_leagues', [])]
-        from game_data import GENRES
         
         for game in self.game_state.game_history:
             # We assume multiplayer is maybe Action or Sport for now, or just let them pick any released game.

@@ -1,9 +1,7 @@
-from fastapi import FastAPI, HTTPException, Depends, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
-from typing import List, Optional, Dict
+from typing import List, Dict
 import uvicorn
-import json
-from supabase import create_client, Client
 from dotenv import load_dotenv
 
 load_dotenv()

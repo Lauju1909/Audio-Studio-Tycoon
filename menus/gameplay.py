@@ -1,9 +1,6 @@
 from .base import Menu, TextInputMenu, SliderMenu
 from game_data import (
-    GENRES, SLIDER_NAMES, AUDIENCES,
-    OFFICE_LEVELS, GAME_SIZES,
-    get_compatibility, get_compatibility_text,
-    get_available_platforms,
+    SLIDER_NAMES, GAME_SIZES,
 )
 import random
 
@@ -38,7 +35,6 @@ class CompanyNameMenu(TextInputMenu):
         return "difficulty_menu"
 
     def generate_random_name(self):
-        import random
         names = [
             "Pixel Studios", "Audio Vision", "Red Barrels", "Lauju Games", 
             "Blind Box", "Sound Wave Games", "Next Gen Studios", "Echo Games", 
@@ -351,7 +347,6 @@ class GameNameMenu(TextInputMenu):
         return "slider_menu"
 
     def generate_random_name(self):
-        import random
         prefixes = ["Project", "The Last", "Super", "Mega", "Blind", "Dark", "Crazy", "Epic", "Legend of", "Call of", "Return to"]
         suffixes = ["Adventure", "Strike", "Hero", "Tycoon", "Quest", "Legends", "Warriors", "Audio", "World", "Chronicles"]
         
@@ -681,7 +676,7 @@ class ReviewResultMenu(Menu):
         try:
             from ai_reviewer import ai_reviewer
             self.review_text = ai_reviewer.generate_review(self.game_state, game, score)
-        except Exception as e:
+        except Exception:
             self.review_text = f"Wertung: {score}/10."
 
     def _update_options(self):
@@ -1153,7 +1148,6 @@ class InfluencerEventMenu(Menu):
         return "game_menu"
 
     def _ignore(self):
-        import random
         if random.random() < 0.6:
             game_name = self.event_data["game_name"] if self.event_data else ""
             for g in self.game_state.game_history:
@@ -1229,7 +1223,6 @@ class UnionEventMenu(Menu):
         return "game_menu"
 
     def _union_busting(self):
-        import random
         # Fire 1-2 employees
         fired_count = min(random.randint(1, 2), len(self.game_state.employees))
         for _ in range(fired_count):
@@ -1250,7 +1243,6 @@ class UnionEventMenu(Menu):
         return "game_menu"
 
     def _ignore(self):
-        import random
         self.game_state.has_union = True
         self.game_state.strike_weeks_left = random.randint(3, 6)
         self.audio.speak(self.game_state.get_text('union_res_4', default="STREIK! Die gesamte Spieleentwicklung ruht und es kostet uns jede Woche ein VermÃ¶gen!"))
@@ -1328,7 +1320,6 @@ class ExpoMenu(Menu):
         self.cost += cost
         self.base_hype += hype
         
-        import random
         if random.random() < 0.4:
             self.state = "event"
             self._update_options()
@@ -1338,7 +1329,6 @@ class ExpoMenu(Menu):
             return self._finish_expo()
 
     def _resolve_event(self, choice):
-        import random
         if choice == "security":
             if self.game_state.money < self.cost + 50000:
                 self.audio.play_sound("error")

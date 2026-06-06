@@ -1,7 +1,5 @@
 import os
 import sys
-import json
-import translations
 
 # Mache Module aus dem Hauptverzeichnis verfügbar
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

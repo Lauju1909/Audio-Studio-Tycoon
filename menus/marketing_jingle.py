@@ -1,5 +1,4 @@
 from .base import Menu, TextInputMenu
-import pygame
 import random
 
 class JingleNameInputMenu(TextInputMenu):

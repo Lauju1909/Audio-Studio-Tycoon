@@ -1,5 +1,4 @@
 import sys
-import os
 
 # Force utf-8 stdout/stderr on Windows
 if sys.platform == "win32":

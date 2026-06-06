@@ -463,7 +463,6 @@ class OfficeUpgradeMenu(Menu):
         self._update_options()
 
     def _update_options(self):
-        from game_data import OFFICE_UPGRADES
         self.options = []
         
         owned_upgrades = []

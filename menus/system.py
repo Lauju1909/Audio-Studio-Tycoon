@@ -1,5 +1,3 @@
-import os
-import json
 from .base import Menu
 
 class UpdateConfirmMenu(Menu):

@@ -20,7 +20,6 @@ class ESportsCreateLeagueMenu(Menu):
     def announce_entry(self):
         self.options = []
         existing_leagues = [l.game_name for l in getattr(self.game_state, 'esports_leagues', [])]
-        from game_data import GENRES
         
         for game in self.game_state.game_history:
             # We assume multiplayer is maybe Action or Sport for now, or just let them pick any released game.

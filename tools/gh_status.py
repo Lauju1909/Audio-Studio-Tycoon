@@ -1,4 +1,5 @@
-import urllib.request, json
+import urllib.request
+import json
 try:
     req = urllib.request.Request('https://api.github.com/repos/Lauju1909/Audio-Studio-Tycoon/releases')
     with urllib.request.urlopen(req) as response:

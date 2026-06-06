@@ -4,7 +4,6 @@ Verantwortlich für die Kommunikation mit dem Mod-Portal und dem Backend.
 """
 
 import requests
-import json
 import os
 from dotenv import load_dotenv
 

@@ -1,9 +1,4 @@
 import pygame
-import time
-from models import GameProject
-from game_data import (
-    get_compatibility, get_compatibility_text,
-)
 
 class Menu:
     def __init__(self, title, options, audio, game_state):

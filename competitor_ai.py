@@ -1,6 +1,6 @@
 import random
 from game_data import TREND_TOPICS, TREND_GENRES, START_YEAR, WEEKS_PER_YEAR
-from models import RivalGame, Email
+from models import RivalGame
 
 def get_calendar_year(week):
     return START_YEAR + (week - 1) // WEEKS_PER_YEAR

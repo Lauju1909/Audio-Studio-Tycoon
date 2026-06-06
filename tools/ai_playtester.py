@@ -16,7 +16,7 @@ pygame.display.set_mode((1,1))
 
 from logic import GameState
 from main import get_menu_factories
-from menus.gameplay import SliderMenu, TextInputMenu
+from menus.gameplay import SliderMenu
 import translations
 
 class MockAudioManager:
@@ -366,8 +366,8 @@ def run_all_tests():
     print(f"State Validation Errors (Phase 1): {len(state_errors)}")
     print(f"Save/Load Errors (Phase 2): {len(save_errors)}")
     print(f"Audio Errors (Phase 3): {len(audio_errors)}")
-    print(f"Gamepad / Joystick Crash (Phase 8): 0 (Lief ohne Fehler)")
-    print(f"Netzwerk Latenz (Phase 7): Erfolgreich abgefedert")
+    print("Gamepad / Joystick Crash (Phase 8): 0 (Lief ohne Fehler)")
+    print("Netzwerk Latenz (Phase 7): Erfolgreich abgefedert")
     print(f"Performance Drops (Phase 6): {len(all_perf)} Ruckler erkannt (>50ms)")
     print(f"Localization Warnings: {len(all_errors) - len(crashes) - len(state_errors) - len(save_errors) - len(audio_errors)}")
     

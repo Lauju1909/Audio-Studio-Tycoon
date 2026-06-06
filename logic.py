@@ -17,10 +17,10 @@ from models import (
     SoundConEvent, SoundtrackLabel, RadioContract, ManufacturingJob,
     StreamingPlatform
 )
-from translations import TRANSLATIONS, get_system_language
+from translations import get_system_language
 from game_data import (
     get_compatibility, get_ideal_sliders, SLIDER_NAMES, PLATFORMS, AUDIENCE_MULTI, AUDIENCE_PRICE,
-    RANDOM_EVENTS, OFFICE_LEVELS, ENGINE_FEATURES,
+    RANDOM_EVENTS, ENGINE_FEATURES,
     EMPLOYEE_ROLES, DEV_PHASES, GAME_SIZES,
     TREND_TOPICS, TREND_GENRES, START_TOPICS, RESEARCHABLE_TOPICS,
     START_GENRES, START_AUDIENCES, RESEARCHABLE_GENRES, RESEARCHABLE_AUDIENCES,
@@ -5652,7 +5652,6 @@ class GameState:
     def generate_contract_work_options(self):
         """Generiert 3 zufaellige Auftragsarbeiten."""
 
-        from models import ContractWorkProject
         options = []
         types = ["Code", "Audio", "Grafik", "Design"]
         

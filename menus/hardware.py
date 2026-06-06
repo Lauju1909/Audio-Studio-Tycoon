@@ -1,5 +1,4 @@
 from .base import Menu, TextInputMenu
-import pygame
 import random
 from game_data import HARDWARE_TECH_LIST
 

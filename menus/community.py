@@ -1,5 +1,4 @@
 from .base import Menu
-import pygame
 
 class CommunityMenu(Menu):
     def __init__(self, audio, game_state):

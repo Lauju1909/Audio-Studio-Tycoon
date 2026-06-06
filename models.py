@@ -1160,6 +1160,7 @@ class SoundtrackLabel:
         self.total_royalties     = 0.0        # Kumulierte Einnahmen
         self.streaming_fans      = 0          # Fans durch Streaming-Plattformen
         self.prestige_bonus      = 0          # Label-Prestige
+        self.compilation_albums_released = 0  # Anzahl veröffentlichter Kompilationen
 
     @property
     def active_radio_contracts(self) -> list:
@@ -1205,6 +1206,7 @@ class SoundtrackLabel:
             "total_royalties": self.total_royalties,
             "streaming_fans": self.streaming_fans,
             "prestige_bonus": self.prestige_bonus,
+            "compilation_albums_released": self.compilation_albums_released,
         }
 
     @staticmethod
@@ -1218,6 +1220,7 @@ class SoundtrackLabel:
         label.total_royalties  = data.get("total_royalties", 0.0)
         label.streaming_fans   = data.get("streaming_fans", 0)
         label.prestige_bonus   = data.get("prestige_bonus", 0)
+        label.compilation_albums_released = data.get("compilation_albums_released", 0)
         return label
 
 
