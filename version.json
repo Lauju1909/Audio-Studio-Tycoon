@@ -1,6 +1,6 @@
 {
-    "version": "3.11.0-beta.1",
-    "channel": "beta",
-    "notes": "v3.11.0-beta.1: Das ultimative Audio- & Community-Update! Enthält vier neue Major-Features: 1. Eigene Soundkarten-Herstellung & Hardware-Labor ab dem Jahr 1980 mit passiven wöchentlichen Tantiemen und Patentforschung. 2. Fan-Post & Community-Center zur interaktiven Beantwortung von Briefen mit Hype- und Kassenwirkungen. 3. Mitarbeiter-Persönlichkeiten (Perfektionist, Chaot, Showmaster, etc.) und Büro-Events. 4. Marketing-Jingle-Generator mit akustischer Bumper-Sound-Vorschau.",
+    "version": "4.1.0",
+    "channel": "release",
+    "notes": "v4.1.0: Final release with all updates cleaned up and stabilized.",
     "min_launcher_version": "1.0.0"
 }
