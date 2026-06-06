@@ -1,6 +1,6 @@
 {
-    "version": "4.1.0",
+    "version": "4.1.1",
     "channel": "release",
-    "notes": "v4.1.0: Final release with all updates cleaned up and stabilized.",
+    "notes": "v4.1.1: Hotfix for missing imports causing startup crash.",
     "min_launcher_version": "1.0.0"
 }

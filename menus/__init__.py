@@ -3,7 +3,8 @@ from .settings import SettingsMenu, KeybindingMenu, VolumeSettingsMenu, Language
 from .system import UpdateConfirmMenu, UpdateProgressMenu, BankruptcyMenu, SaveMenu, LoadMenu, HelpMenu
 from .office import (
     HRMenu, HireMenu, EmployeeOverviewMenu, FireMenu, TrainingEmployeeSelectMenu, 
-    TrainingOptionMenu, OfficeMenu, EmailInboxMenu, EmailDetailMenu
+    TrainingOptionMenu, OfficeMenu, EmailInboxMenu, EmailDetailMenu,
+    OfficeUpgradeMenu, OfficePerksMenu, HeadhuntingEventMenu
 )
 from .research import (
     ResearchMenu, FeatureResearchMenu, GenreResearchMenu, TopicResearchMenu, 
@@ -26,7 +27,8 @@ from .gameplay import (
     DevelopmentSliderMenu, DevProgressMenu, ReviewResultMenu, RemasterSelectMenu, 
     PublisherMenu, ExpoMenu, GOTYMenu, ShareholderMenu, DifficultyMenu, SubGenreMenu, SequelMenu, 
     ProjectTypeMenu, RemakeSelectMenu,
-    ChartMenu, AAADevEventMenu, InfluencerEventMenu, UnionEventMenu, CreditsMenu, ActiveGamesMenu, DeveloperMenu
+    ChartMenu, AAADevEventMenu, InfluencerEventMenu, UnionEventMenu, CreditsMenu, ActiveGamesMenu, DeveloperMenu,
+    CoDevPartnerMenu, DRMChoiceMenu, CrowdfundingChoiceMenu, GameDetailsMenu
 )
 
 from .phase_g import BuildMenu, TeambuildingMenu, ModPortalMenu, ModBrowserListMenu
@@ -34,7 +36,7 @@ from .multiplayer import MultiplayerMainMenu, MultiplayerRoomIdInput, Multiplaye
 
 # NEU: SoundCon & Soundtrack-Label
 from .events import (
-    SoundConMenu, SoundConFinishMenu, SoundConResultMenu, SoundConHistoryMenu,
+    SoundConMenu, SoundConFinishMenu, SoundConResultMenu, SoundConHistoryMenu, SoundConQAMenu,
     SoundtrackLabelMenu, LabelNameInputMenu, LabelStatusMenu,
     LabelRadioMenu, LabelAddGameMenu
 )
@@ -51,7 +53,7 @@ __all__ = [
     "LanguageMenu", "VolumeSettingsMenu", "UpdateConfirmMenu", "UpdateProgressMenu", "BankruptcyMenu", "SaveMenu",
     "LoadMenu", "HelpMenu", "HRMenu", "HireMenu", "EmployeeOverviewMenu", "FireMenu",
     "TrainingEmployeeSelectMenu", "TrainingOptionMenu", "OfficeMenu",
-    "EmailInboxMenu", "EmailDetailMenu", "ResearchMenu", "FeatureResearchMenu",
+    "EmailInboxMenu", "EmailDetailMenu", "OfficeUpgradeMenu", "OfficePerksMenu", "HeadhuntingEventMenu", "ResearchMenu", "FeatureResearchMenu",
     "GenreResearchMenu", "TopicResearchMenu", "AudienceResearchMenu",
     "TechnologyResearchMenu", "EngineCreateNameMenu", "EngineFeatureSelectMenu",
     "HardwareDevMenu", "ConsoleNameInput", "ConsoleSpecsMenu", "ServiceMenu",
@@ -66,11 +68,12 @@ __all__ = [
     "AudienceMenu", "GameSizeMenu", "MarketingMenu", "EngineSelectMenu", "ProjectTeamSelectMenu",
     "GameNameMenu", "DevelopmentSliderMenu", "DevProgressMenu", "ReviewResultMenu",
     "RemasterSelectMenu", "PublisherMenu", "ExpoMenu", "GOTYMenu", "DifficultyMenu",
-    "SubGenreMenu", "SequelMenu", "ProjectTypeMenu", "RemakeSelectMenu", "ChartMenu", "AAADevEventMenu", "InfluencerEventMenu", "UnionEventMenu", "CreditsMenu", "ActiveGamesMenu",
+    "SubGenreMenu", "SequelMenu", "ProjectTypeMenu", "RemakeSelectMenu", "ChartMenu", "AAADevEventMenu", "InfluencerEventMenu", "UnionEventMenu", "CreditsMenu", "ActiveGamesMenu", "DeveloperMenu",
+    "CoDevPartnerMenu", "DRMChoiceMenu", "CrowdfundingChoiceMenu", "GameDetailsMenu",
     "BuildMenu", "TeambuildingMenu", "ModPortalMenu", "ModBrowserListMenu",
     "MultiplayerMainMenu", "MultiplayerRoomIdInput", "MultiplayerLobbyMenu",
     # NEU: Events
-    "SoundConMenu", "SoundConFinishMenu", "SoundConResultMenu", "SoundConHistoryMenu",
+    "SoundConMenu", "SoundConFinishMenu", "SoundConResultMenu", "SoundConHistoryMenu", "SoundConQAMenu",
     "SoundtrackLabelMenu", "LabelNameInputMenu", "LabelStatusMenu",
     "LabelRadioMenu", "LabelAddGameMenu",
     "EngineLicensingMenu", "EngineLicenseFeeMenu", "GamePortingMenu", "PortPlatformMenu",

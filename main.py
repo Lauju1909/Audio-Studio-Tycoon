@@ -195,6 +195,7 @@ def get_menu_factories(audio, state):
         "soundcon_finish_confirm": lambda: SoundConFinishMenu(audio, state),
         "soundcon_result_menu": lambda: SoundConResultMenu(audio, state),
         "soundcon_history_menu": lambda: SoundConHistoryMenu(audio, state),
+        "soundcon_qa_menu": lambda: SoundConQAMenu(audio, state),
         "label_menu": lambda: SoundtrackLabelMenu(audio, state),
         "label_name_input": lambda: LabelNameInputMenu(audio, state),
         "label_status_menu": lambda: LabelStatusMenu(audio, state),

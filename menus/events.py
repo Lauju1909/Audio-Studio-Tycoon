@@ -654,3 +654,42 @@ class LabelAddGameMenu(Menu):
                 self.audio.play_sound('bump')
 
         return None
+
+
+class SoundConQAMenu(Menu):
+    """Interaktives Q&A Menü für die SoundCon."""
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        self.round_num = getattr(game_state.active_soundcon, 'qa_rounds', 0) + 1 if game_state.active_soundcon else 1
+        
+        import random
+        self.q_idx = random.randint(1, 3)
+        question = self.game_state.get_text(f'soundcon_qa_question_{self.q_idx}')
+        
+        options = []
+        if self.q_idx == 1:
+            options.append({'text': self.game_state.get_text('soundcon_qa_ans_1_1'), 'action': lambda: self._answer(15, 0, 0, 'hype')})
+            options.append({'text': self.game_state.get_text('soundcon_qa_ans_1_2'), 'action': lambda: self._answer(2, 5, 0, 'neutral')})
+            options.append({'text': self.game_state.get_text('soundcon_qa_ans_1_3'), 'action': lambda: self._answer(0, 0, 0, 'neutral')})
+        elif self.q_idx == 2:
+            options.append({'text': self.game_state.get_text('soundcon_qa_ans_2_1'), 'action': lambda: self._answer(20, -5, 0, 'hype')})
+            options.append({'text': self.game_state.get_text('soundcon_qa_ans_2_2'), 'action': lambda: self._answer(5, 10, 500, 'prestige')})
+        elif self.q_idx == 3:
+            options.append({'text': self.game_state.get_text('soundcon_qa_ans_3_1'), 'action': lambda: self._answer(25, 0, 0, 'hype')})
+            options.append({'text': self.game_state.get_text('soundcon_qa_ans_3_2'), 'action': lambda: self._answer(5, 15, 0, 'prestige')})
+            
+        super().__init__(question, options, audio, game_state)
+        
+    def _answer(self, hype, prestige, fans, result_type):
+        res = self.game_state.conduct_soundcon_qa_interactive(hype, prestige, fans)
+        if res['success']:
+            if result_type == 'hype':
+                msg = self.game_state.get_text('soundcon_qa_result_hype', hype=hype)
+            elif result_type == 'prestige':
+                msg = self.game_state.get_text('soundcon_qa_result_prestige', prestige=prestige, fans=fans)
+            else:
+                msg = self.game_state.get_text('soundcon_qa_result_neutral', fans=fans)
+                
+            self.audio.speak(msg)
+        return 'soundcon_menu'

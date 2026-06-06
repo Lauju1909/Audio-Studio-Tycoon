@@ -68,7 +68,8 @@ class GameMenu(Menu):
             {'text': self.game_state.get_text('community_menu_title'), 'action': lambda: "community_menu"},
             {'text': self.game_state.get_text('hardware_menu_title'), 'action': lambda: "hardware_menu"},
             {'text': self.game_state.get_text('esports_menu_title', default='E-Sports Zentrale'), 'action': lambda: "esports_menu"},
-
+            {'text': self.game_state.get_text('soundcon_menu_title', default='SoundCon Messe'), 'action': lambda: "soundcon_menu"},
+            {'text': self.game_state.get_text('label_menu_title', default='Soundtrack-Label'), 'action': lambda: "label_menu"},
             {'text': self.game_state.get_text('merch_menu_title', default='Merchandising'), 'action': lambda: "merch_menu"},
             {'text': self.game_state.get_text('creator_menu_title', default='Content Creators Sponsern'), 'action': lambda: "creator_menu"},
             {'text': self.game_state.get_text('streaming_platform_menu_title', default='Streaming-Plattform'), 'action': lambda: "streaming_platform_menu"},

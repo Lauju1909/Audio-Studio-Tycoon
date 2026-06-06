@@ -691,6 +691,25 @@ class GameState:
             )
         return {"success": True, "qa_round": qa_num, "message": "soundcon_qa_success"}
 
+
+    def conduct_soundcon_qa_interactive(self, hype_bonus, prestige_bonus, fan_bonus) -> dict:
+        if not self.active_soundcon:
+            return {"success": False, "message": "soundcon_not_booked"}
+        if self.active_soundcon.qa_rounds >= 3:
+            return {"success": False, "message": "soundcon_qa_max"}
+            
+        self.active_soundcon.qa_rounds += 1
+        
+        # Manuell Bonus hinzufügen
+        self.active_soundcon.hype_gained = getattr(self.active_soundcon, 'hype_gained', 0) + hype_bonus
+        self.active_soundcon.fans_gained = getattr(self.active_soundcon, 'fans_gained', 0) + fan_bonus
+        self.active_soundcon.prestige_gained = getattr(self.active_soundcon, 'prestige_gained', 0) + prestige_bonus
+        
+        if hasattr(self, 'audio'):
+            self.audio.play_sound('confirm')
+            
+        return {"success": True, "qa_round": self.active_soundcon.qa_rounds}
+
     def finish_soundcon(self) -> dict:
         """Schließt die SoundCon ab und berechnet die Ergebnisse.
 
