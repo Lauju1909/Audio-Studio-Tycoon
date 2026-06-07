@@ -1630,7 +1630,7 @@ class PodcastProduction:
         return p
 
 class AudioPass:
-    "\""Ein Abo-Service (Game Pass) fr den eigenen Spiele-Katalog."\""
+    """Ein Abo-Service (Game Pass) fr den eigenen Spiele-Katalog."""
     def __init__(self):
         self.active = False
         self.monthly_price = 9.99

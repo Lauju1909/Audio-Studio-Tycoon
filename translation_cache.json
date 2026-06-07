@@ -31,5 +31,8 @@
   "de_sender_dev": "sender_dev",
   "de_subject_update_finished": "subject_update_finished",
   "de_body_update_finished": "body_update_finished",
-  "de_sender_marketing": "sender_marketing"
+  "de_sender_marketing": "sender_marketing",
+  "de_cloud_gaming_title": "cloud_gaming_title",
+  "de_cloud_gaming_start": "cloud_gaming_start",
+  "de_cloud_gaming_started": "cloud_gaming_started"
 }

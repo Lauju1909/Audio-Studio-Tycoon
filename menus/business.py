@@ -11,6 +11,7 @@ class ServiceMenu(Menu):
         options = []
         if self.game_state.get_calendar_year() >= 2000:
             options.append({'text': self.game_state.get_text('service_manage_subscription'), 'action': lambda: "subscription_service_menu"})
+            options.append({'text': self.game_state.get_text('cloud_gaming_title', default="Cloud Gaming Service"), 'action': lambda: "cloud_gaming_menu"})
         options.extend([
             {'text': self.game_state.get_text('game_service_options'), 'action': lambda: "game_service_options"},
             {'text': self.game_state.get_text('contract_work_menu_title', default="Auftragsarbeiten"), 'action': lambda: "contract_work_menu"},
@@ -1832,3 +1833,84 @@ class SubsidiaryManagementMenu(Menu):
         self.audio.speak(self.game_state.get_text('subsidiary_absorb_success', default='Studio aufgelöst. Wir haben ihre Spiele und {} Fans übernommen.').format(transferred_fans))
         self.game_state.rivals.pop(idx)
         return "acquisition_menu"
+
+class CloudGamingMenu(Menu):
+    def __init__(self, audio, game_state):
+        super().__init__(game_state.get_text('cloud_gaming_title', default='Cloud Gaming Service'), [], audio, game_state)
+        self.options = []
+
+    def on_enter(self):
+        self.options.clear()
+        gs = self.game_state
+        cg = getattr(gs, "cloud_gaming", None)
+        if not cg:
+            self.options.append({'text': gs.get_text('back'), 'action': lambda: "business_menu"})
+            return
+
+        if not cg.active:
+            self.options.append({
+                'text': gs.get_text('cloud_gaming_start', default='Dienst starten (10.000.000 $)'),
+                'action': self._start
+            })
+        else:
+            self.options.append({
+                'text': gs.get_text('cloud_gaming_stop', default='Dienst stoppen') + f" ({cg.subscribers:,} Subs)",
+                'action': self._toggle
+            })
+            self.options.append({
+                'text': gs.get_text('cloud_gaming_price_up', default='Preis erhoehen (Aktuell: {}$)', price=cg.price),
+                'action': self._price_up
+            })
+            self.options.append({
+                'text': gs.get_text('cloud_gaming_price_down', default='Preis senken (Aktuell: {}$)', price=cg.price),
+                'action': self._price_down
+            })
+            upgrade_cost = cg.tech_level * 5000000
+            self.options.append({
+                'text': gs.get_text('cloud_gaming_upgrade', default='Server ausbauen (Stufe {}, Kosten: {:,}$)', level=cg.tech_level, cost=upgrade_cost),
+                'action': self._upgrade
+            })
+            
+        self.options.append({'text': gs.get_text('back'), 'action': lambda: "business_menu"})
+
+    def _start(self):
+        cg = self.game_state.cloud_gaming
+        if self.game_state.money >= 10000000:
+            self.game_state.money -= 10000000
+            cg.active = True
+            cg.tech_level = 1
+            self.audio.speak(self.game_state.get_text('cloud_gaming_started', default='Cloud Gaming Service gestartet.'))
+        else:
+            self.audio.speak(self.game_state.get_text('not_enough_money'))
+        return "cloud_gaming_menu"
+
+    def _toggle(self):
+        cg = self.game_state.cloud_gaming
+        cg.active = not cg.active
+        self.audio.speak(self.game_state.get_text('cloud_gaming_stopped', default='Dienst gestoppt.'))
+        return "cloud_gaming_menu"
+
+    def _price_up(self):
+        cg = self.game_state.cloud_gaming
+        cg.price += 1.0
+        self.audio.speak(self.game_state.get_text('price_changed', default='Preis geaendert.'))
+        return "cloud_gaming_menu"
+
+    def _price_down(self):
+        cg = self.game_state.cloud_gaming
+        if cg.price > 1.0:
+            cg.price -= 1.0
+        self.audio.speak(self.game_state.get_text('price_changed', default='Preis geaendert.'))
+        return "cloud_gaming_menu"
+
+    def _upgrade(self):
+        cg = self.game_state.cloud_gaming
+        cost = cg.tech_level * 5000000
+        if self.game_state.money >= cost:
+            self.game_state.money -= cost
+            cg.tech_level += 1
+            cg.server_cost_per_sub = max(0.5, cg.server_cost_per_sub - 0.2)
+            self.audio.speak(self.game_state.get_text('cloud_gaming_upgraded', default='Serverkapazitaet verbessert!'))
+        else:
+            self.audio.speak(self.game_state.get_text('not_enough_money'))
+        return "cloud_gaming_menu"

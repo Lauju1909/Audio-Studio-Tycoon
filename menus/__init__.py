@@ -19,7 +19,8 @@ from .business import (
     LicenseShopMenu, LicenseSelectMenu, AddonMenu, AddonNameMenu, BundleMenu, BundleNameMenu,
     ProductionMenu, ProductionAmountMenu, MMOPaymentMenu, MMOManagementMenu, MMOOptionsMenu, 
     PublisherDealsMenu, PublisherDealDetailsMenu, MerchMenu, MerchAmountMenu,
-    ESportsMenu, ESportsCreateLeagueMenu, ESportsManageLeagueMenu, ESportsChampionshipMenu, ESportsSponsorMenu, AcquisitionMenu, EngineLicensingMenu, EngineLicenseFeeMenu, GamePortingMenu, PortPlatformMenu, IPOMenu
+    ESportsMenu, ESportsCreateLeagueMenu, ESportsManageLeagueMenu, ESportsChampionshipMenu, ESportsSponsorMenu, AcquisitionMenu, EngineLicensingMenu, EngineLicenseFeeMenu, GamePortingMenu, PortPlatformMenu, IPOMenu,
+    CloudGamingMenu
 )
 from .gameplay import (
     MainMenu, CompanyNameMenu, GameMenu, TopicMenu, GenreMenu, PlatformMenu, 
@@ -64,6 +65,7 @@ __all__ = [
     "ProductionMenu", "ProductionAmountMenu", "MMOPaymentMenu", "MMOManagementMenu",
     "MMOOptionsMenu", "PublisherDealsMenu", "PublisherDealDetailsMenu",
     "MerchMenu", "MerchAmountMenu", "SubscriptionVaultMenu", "CreatorSponsorshipMenu", "ESportsMenu", "AcquisitionMenu", "MainMenu",
+    "CloudGamingMenu",
     "CompanyNameMenu", "GameMenu", "TopicMenu", "GenreMenu", "PlatformMenu",
     "AudienceMenu", "GameSizeMenu", "MarketingMenu", "EngineSelectMenu", "ProjectTeamSelectMenu",
     "GameNameMenu", "DevelopmentSliderMenu", "DevProgressMenu", "ReviewResultMenu",

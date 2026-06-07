@@ -164,6 +164,7 @@ def get_menu_factories(audio, state):
         "bundle_name_input": lambda: BundleNameMenu(audio, state),
         "co_dev_partner_menu": lambda: __import__('menus.gameplay', fromlist=['']).CoDevPartnerMenu(audio, state),
         "subscription_service_menu": lambda: __import__('menus.business', fromlist=['']).SubscriptionServiceMenu(audio, state),
+        "cloud_gaming_menu": lambda: __import__('menus.business', fromlist=['']).CloudGamingMenu(audio, state),
         "support_gift_card_type_menu": lambda: __import__('menus.business', fromlist=['']).SupportGiftCardTypeMenu(audio, state),
         "espionage_menu": lambda: __import__('menus.business', fromlist=['']).EspionageMenu(audio, state),
         "office_upgrades_menu": lambda: __import__('menus.office', fromlist=['']).OfficeUpgradeMenu(audio, state),

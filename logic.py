@@ -15,7 +15,7 @@ from models import (
     ActiveMMO, BankLoan, CustomConsole, PublishingOffer, 
     PublishedThirdPartyGame, BankStatement,
     SoundConEvent, SoundtrackLabel, RadioContract, ManufacturingJob,
-    StreamingPlatform, PodcastNetwork, PodcastProduction, AudioPass
+    StreamingPlatform, PodcastNetwork, PodcastProduction, AudioPass, CloudGamingService
 )
 from translations import get_system_language
 from game_data import (
@@ -302,6 +302,7 @@ class GameState:
         self.active_jingles = []
         self.soundtrack_label = None
         self.audio_pass = AudioPass()
+        self.cloud_gaming = CloudGamingService()
         self.podcast_network = PodcastNetwork()
         self.unlocked_hardware_tech = []
         self.active_personality_event = None
@@ -1228,6 +1229,8 @@ class GameState:
         self._process_engine_licensing()
         self._process_port_projects()
         self._process_podcast_network()
+        self._process_cloud_gaming()
+        self._process_audio_pass()
 
         # Merchandising verarbeiten
         for m in list(getattr(self, "active_merch_campaigns", [])):
@@ -4491,6 +4494,7 @@ class GameState:
             "soundtrack_label": self.soundtrack_label.to_dict() if getattr(self, "soundtrack_label", None) else {},
             "podcast_network": self.podcast_network.to_dict() if hasattr(self, "podcast_network") else {},
             "audio_pass": self.audio_pass.to_dict() if getattr(self, "audio_pass", None) else {},
+            "cloud_gaming": self.cloud_gaming.to_dict() if getattr(self, "cloud_gaming", None) else {},
             "fan_mail_inbox": [m.to_dict() for m in getattr(self, "fan_mail_inbox", [])],
             "sound_card_projects": [p.to_dict() for p in getattr(self, "sound_card_projects", [])],
             "custom_consoles": [c.to_dict() for c in getattr(self, "custom_consoles", [])],
@@ -4768,6 +4772,11 @@ class GameState:
             self.audio_pass = AudioPass.from_dict(data["audio_pass"])
         else:
             self.audio_pass = AudioPass()
+
+        if "cloud_gaming" in data:
+            self.cloud_gaming = CloudGamingService.from_dict(data["cloud_gaming"])
+        else:
+            self.cloud_gaming = CloudGamingService()
 
         # NEU: v3.11.0-beta.1 Expansion Variables laden
         from models import FanMail, SoundCardProject, RadioJingle
@@ -5333,6 +5342,31 @@ class GameState:
                     income = int(demand * fee)
                     if income > 0:
                         self.track_income("engine_license", income)
+
+    def _process_cloud_gaming(self):
+        cg = getattr(self, "cloud_gaming", None)
+        if cg and cg.active:
+            target_subs = max(0, int((self.hype * 200 * cg.tech_level) - (cg.price * 500)))
+            if cg.subscribers < target_subs:
+                cg.subscribers += int((target_subs - cg.subscribers) * 0.1) + 5
+            else:
+                cg.subscribers -= int((cg.subscribers - target_subs) * 0.2) + 5
+            cg.subscribers = max(0, cg.subscribers)
+            
+            income = int(cg.subscribers * (cg.price / 4.0)) # weekly
+            server_cost = int(cg.subscribers * (cg.server_cost_per_sub / 4.0))
+            
+            self.track_income("other", income)
+            self.track_expense("server_costs", server_cost)
+            
+    def _process_audio_pass(self):
+        ap = getattr(self, "audio_pass", None)
+        if ap and ap.active:
+            # We assume it has a tick_month, but let's just do a weekly approximation here
+            # Since AudioPass tick_month is defined in models, we can call it once a month, 
+            # but let's call it weekly with / 4
+            income = int(ap.tick_month() / 4.0) if hasattr(ap, 'tick_month') else 0
+            self.track_income("other", income)
 
     def _process_podcast_network(self):
         """Verarbeitet das Podcast-Netzwerk."""
