@@ -1572,3 +1572,59 @@ class MerchCampaign:
         m.weeks_active = data.get("weeks_active", 0)
         m.total_revenue = data.get("total_revenue", 0)
         return m
+
+
+class PodcastNetwork:
+    """Represents the player's podcast and audiobook network."""
+    def __init__(self, is_active=False):
+        self.is_active = is_active
+        self.subscribers = 0
+        self.reputation = 0
+        self.active_podcasts = []
+        
+    def to_dict(self):
+        return {
+            "is_active": self.is_active,
+            "subscribers": self.subscribers,
+            "reputation": self.reputation,
+            "active_podcasts": [p.to_dict() for p in self.active_podcasts]
+        }
+
+    @staticmethod
+    def from_dict(data):
+        pn = PodcastNetwork(data.get("is_active", False))
+        pn.subscribers = data.get("subscribers", 0)
+        pn.reputation = data.get("reputation", 0)
+        pn.active_podcasts = [PodcastProduction.from_dict(p) for p in data.get("active_podcasts", [])]
+        return pn
+
+class PodcastProduction:
+    def __init__(self, name, topic, format_type, quality, weeks_running=0):
+        self.name = name
+        self.topic = topic
+        self.format_type = format_type
+        self.quality = quality
+        self.weeks_running = weeks_running
+        self.total_revenue = 0
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "topic": self.topic,
+            "format_type": self.format_type,
+            "quality": self.quality,
+            "weeks_running": self.weeks_running,
+            "total_revenue": self.total_revenue
+        }
+
+    @staticmethod
+    def from_dict(data):
+        p = PodcastProduction(
+            data["name"],
+            data["topic"],
+            data["format_type"],
+            data["quality"],
+            data.get("weeks_running", 0)
+        )
+        p.total_revenue = data.get("total_revenue", 0)
+        return p

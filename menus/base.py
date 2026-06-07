@@ -82,7 +82,7 @@ class Menu:
         elif event.key == gs.key_confirm:
             self.audio.play_sound("confirm")
             action = self.options[self.current_index].get('action')
-            if action:
+            if callable(action):
                 return action()
         return None
 

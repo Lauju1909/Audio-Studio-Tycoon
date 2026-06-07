@@ -357,6 +357,10 @@ class SoundtrackLabelMenu(Menu):
                 'text': gs.get_text('label_opt_compilation', cost=25_000),
                 'action': 'label_compilation'
             })
+            opts.append({
+                'text': gs.get_text('label_opt_concert', cost=100_000),
+                'action': 'label_concert'
+            })
 
         opts.append({'text': gs.get_text('back'), 'action': 'back_to_game'})
         return opts
@@ -421,6 +425,29 @@ class SoundtrackLabelMenu(Menu):
                     
                     self.audio.play_sound('success')
                     self.audio.speak(gs.get_text('label_compilation_success', revenue=total_revenue, hype=hype_boost))
+                return None
+
+            elif action == 'label_concert':
+                if len(gs.soundtrack_label.catalogued_games) < 5:
+                    self.audio.play_sound('error')
+                    self.audio.speak(gs.get_text('label_concert_fail_games'))
+                elif gs.money < 100000:
+                    self.audio.play_sound('error')
+                    self.audio.speak(gs.get_text('label_concert_fail_money', cost=100_000))
+                else:
+                    gs.track_expense("other", 100000)
+                    import random
+                    base = len(gs.soundtrack_label.catalogued_games) * 25000
+                    bonus = random.randint(50000, 150000)
+                    total_revenue = base + bonus
+                    hype_boost = min(100, len(gs.soundtrack_label.catalogued_games) * 5 + random.randint(20, 50))
+                    
+                    gs.track_income("other", total_revenue)
+                    gs.hype = min(250, gs.hype + hype_boost)
+                    gs.soundtrack_label.prestige_bonus += 5
+                    
+                    self.audio.play_sound('success')
+                    self.audio.speak(gs.get_text('label_concert_success', revenue=total_revenue, hype=hype_boost))
                 return None
 
             elif action == 'back_to_game':

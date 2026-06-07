@@ -15,7 +15,7 @@ from models import (
     ActiveMMO, BankLoan, CustomConsole, PublishingOffer, 
     PublishedThirdPartyGame, BankStatement,
     SoundConEvent, SoundtrackLabel, RadioContract, ManufacturingJob,
-    StreamingPlatform
+    StreamingPlatform, PodcastNetwork, PodcastProduction
 )
 from translations import get_system_language
 from game_data import (
@@ -298,8 +298,10 @@ class GameState:
         self.sound_card_projects = []
 
         self.custom_consoles = []
-        self.active_custom_console = None
+        self.radio_contracts = []
         self.active_jingles = []
+        self.soundtrack_label = None
+        self.podcast_network = PodcastNetwork()
         self.unlocked_hardware_tech = []
         self.active_personality_event = None
         self.active_personality_employee = None
@@ -1224,6 +1226,7 @@ class GameState:
         self.update_subscription_service()
         self._process_engine_licensing()
         self._process_port_projects()
+        self._process_podcast_network()
 
         # Merchandising verarbeiten
         for m in list(getattr(self, "active_merch_campaigns", [])):
@@ -4482,13 +4485,12 @@ class GameState:
             "soundcon_last_year": getattr(self, "soundcon_last_year", 0),
             "active_soundcon": self.active_soundcon.to_dict() if getattr(self, "active_soundcon", None) else None,
             "pending_soundcon_result": getattr(self, "pending_soundcon_result", None),
-            "soundtrack_label": self.soundtrack_label.to_dict() if getattr(self, "soundtrack_label", None) else None,
+            "radio_contracts": [c.to_dict() for c in getattr(self, "radio_contracts", [])],
+            "active_jingles": [j.to_dict() for j in getattr(self, "active_jingles", [])],
+            "soundtrack_label": self.soundtrack_label.to_dict() if getattr(self, "soundtrack_label", None) else {},
+            "podcast_network": self.podcast_network.to_dict() if hasattr(self, "podcast_network") else {},
             "fan_mail_inbox": [m.to_dict() for m in getattr(self, "fan_mail_inbox", [])],
             "sound_card_projects": [p.to_dict() for p in getattr(self, "sound_card_projects", [])],
-
-            "custom_consoles": [c.to_dict() for c in getattr(self, "custom_consoles", [])],
-            "active_custom_console": getattr(self, "active_custom_console").to_dict() if getattr(self, "active_custom_console", None) else None,
-
             "custom_consoles": [c.to_dict() for c in getattr(self, "custom_consoles", [])],
             "active_custom_console": getattr(self, "active_custom_console").to_dict() if getattr(self, "active_custom_console", None) else None,
             "active_jingles": [{"jingle": j.to_dict(), "weeks_left": getattr(j, "weeks_left", 4)} for j in getattr(self, "active_jingles", [])],
@@ -4750,8 +4752,15 @@ class GameState:
         self.active_soundcon = SoundConEvent.from_dict(active_sc) if active_sc else None
         self.pending_soundcon_result = data.get("pending_soundcon_result")
 
-        label_data = data.get("soundtrack_label")
-        self.soundtrack_label = SoundtrackLabel.from_dict(label_data) if label_data else None
+        if "soundtrack_label" in data:
+            self.soundtrack_label = SoundtrackLabel.from_dict(data["soundtrack_label"])
+        else:
+            self.soundtrack_label = None
+            
+        if "podcast_network" in data:
+            self.podcast_network = PodcastNetwork.from_dict(data["podcast_network"])
+        else:
+            self.podcast_network = PodcastNetwork()
 
         # NEU: v3.11.0-beta.1 Expansion Variables laden
         from models import FanMail, SoundCardProject, RadioJingle
@@ -5317,6 +5326,36 @@ class GameState:
                     income = int(demand * fee)
                     if income > 0:
                         self.track_income("engine_license", income)
+
+    def _process_podcast_network(self):
+        """Verarbeitet das Podcast-Netzwerk."""
+        if not hasattr(self, "podcast_network") or not self.podcast_network.is_active:
+            return
+            
+        for pod in self.podcast_network.active_podcasts:
+            pod.weeks_running += 1
+            # Revenue calculation
+            base_income = self.podcast_network.subscribers * (pod.quality / 100.0) * 0.05
+            # Factor in format
+            if pod.format_type == "Täglich":
+                base_income *= 2.0
+            elif pod.format_type == "Wöchentlich":
+                base_income *= 1.0
+            elif pod.format_type == "Hörbuch":
+                base_income *= 0.5 # lower frequency but higher rep
+                
+            income = int(base_income)
+            pod.total_revenue += income
+            self.track_income("other", income)
+            
+            # Reputation shift
+            if pod.quality >= 70:
+                self.podcast_network.reputation = min(100, self.podcast_network.reputation + 1)
+                if random.random() < 0.1:
+                    self.podcast_network.subscribers += int(self.podcast_network.reputation * 10)
+            elif pod.quality <= 40:
+                self.podcast_network.reputation = max(0, self.podcast_network.reputation - 2)
+                self.podcast_network.subscribers = max(0, self.podcast_network.subscribers - int(self.podcast_network.subscribers * 0.05))
 
     def _process_port_projects(self):
         """Verarbeitet aktive Portierungs-Projekte."""

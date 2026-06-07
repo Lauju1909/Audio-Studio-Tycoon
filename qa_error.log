@@ -1,0 +1,114 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 2 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu ERROR        [ 50%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [100%]
+
+=================================== ERRORS ====================================
+_______________ ERROR at setup of test_aggressive_fuzzing_menu ________________
+
+    @pytest.fixture
+    def mock_tolk():
+>       with patch('audio.Tolk_Output') as mock_out, patch('audio.Tolk_Speak') as mock_speak:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests_super_qa\test_fuzzer.py:8: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\unittest\mock.py:1503: in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <unittest.mock._patch object at 0x00000213BBC5C050>
+
+    def get_original(self):
+        target = self.getter()
+        name = self.attribute
+    
+        original = DEFAULT
+        local = False
+    
+        try:
+            original = target.__dict__[name]
+        except (AttributeError, KeyError):
+            original = getattr(target, name, DEFAULT)
+        else:
+            local = True
+    
+        if name in _builtins and isinstance(target, ModuleType):
+            self.create = True
+    
+        if not self.create and original is DEFAULT:
+>           raise AttributeError(
+                "%s does not have the attribute %r" % (target, name)
+            )
+E           AttributeError: <module 'audio' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\audio.py'> does not have the attribute 'Tolk_Output'
+
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\unittest\mock.py:1473: AttributeError
+---------------------------- Captured stdout setup ----------------------------
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.13)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+=========================== short test summary info ===========================
+ERROR tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu - Attribute...
+========================= 1 passed, 1 error in 0.84s ==========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 2 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu ERROR        [ 50%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [100%]
+
+=================================== ERRORS ====================================
+_______________ ERROR at setup of test_aggressive_fuzzing_menu ________________
+
+    @pytest.fixture
+    def mock_tolk():
+>       with patch('audio.Tolk_Output') as mock_out, patch('audio.Tolk_Speak') as mock_speak:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests_super_qa\test_fuzzer.py:8: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\unittest\mock.py:1503: in __enter__
+    original, local = self.get_original()
+                      ^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <unittest.mock._patch object at 0x00000220676AC050>
+
+    def get_original(self):
+        target = self.getter()
+        name = self.attribute
+    
+        original = DEFAULT
+        local = False
+    
+        try:
+            original = target.__dict__[name]
+        except (AttributeError, KeyError):
+            original = getattr(target, name, DEFAULT)
+        else:
+            local = True
+    
+        if name in _builtins and isinstance(target, ModuleType):
+            self.create = True
+    
+        if not self.create and original is DEFAULT:
+>           raise AttributeError(
+                "%s does not have the attribute %r" % (target, name)
+            )
+E           AttributeError: <module 'audio' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\audio.py'> does not have the attribute 'Tolk_Output'
+
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\unittest\mock.py:1473: AttributeError
+---------------------------- Captured stdout setup ----------------------------
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.13)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+=========================== short test summary info ===========================
+ERROR tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu - Attribute...
+========================= 1 passed, 1 error in 0.17s ==========================
