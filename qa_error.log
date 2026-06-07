@@ -2106,3 +2106,2315 @@ Checking for missing critical functions...
 =========================== short test summary info ===========================
 FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
 ========================= 1 failed, 5 passed in 0.32s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.23s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.23s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.23s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.24s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.24s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.23s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.23s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.25s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.24s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.24s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.24s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.25s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.23s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.25s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.24s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.24s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.23s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.23s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.23s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.23s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.25s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.23s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.25s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.25s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.26s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.24s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.23s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.24s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.23s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.23s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.23s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.23s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.24s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.27s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.23s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.23s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.27s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.27s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.23s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.23s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.23s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.24s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 6 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu PASSED       [ 16%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [ 33%]
+tests_super_qa/test_microscopic_qa.py::test_missing_functions_check FAILED [ 50%]
+tests_super_qa/test_microscopic_qa.py::test_timeline_historical_accuracy PASSED [ 66%]
+tests_super_qa/test_microscopic_qa.py::test_save_load_corruption PASSED  [ 83%]
+tests_super_qa/test_microscopic_qa.py::test_offline_online_simulation PASSED [100%]
+
+================================== FAILURES ===================================
+________________________ test_missing_functions_check _________________________
+
+    def test_missing_functions_check():
+        print("Checking for missing critical functions...")
+        import logic
+        import audio
+        import network
+        # Ensure critical handlers exist
+>       assert hasattr(logic, 'handle_input'), "logic.handle_input missing!"
+E       AssertionError: logic.handle_input missing!
+E       assert False
+E        +  where False = hasattr(<module 'logic' from 'C:\\Users\\lauri\\.gemini\\antigravity\\scratch\\Audio_Studio_Tycoon\\logic.py'>, 'handle_input')
+
+tests_super_qa\test_microscopic_qa.py:13: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Checking for missing critical functions...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_microscopic_qa.py::test_missing_functions_check - ...
+========================= 1 failed, 5 passed in 0.24s =========================

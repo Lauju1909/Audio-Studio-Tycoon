@@ -34,5 +34,8 @@
   "de_sender_marketing": "sender_marketing",
   "de_cloud_gaming_title": "cloud_gaming_title",
   "de_cloud_gaming_start": "cloud_gaming_start",
-  "de_cloud_gaming_started": "cloud_gaming_started"
+  "de_cloud_gaming_started": "cloud_gaming_started",
+  "de_cloud_gaming_upgraded": "cloud_gaming_upgraded",
+  "de_cloud_gaming_stopped": "cloud_gaming_stopped",
+  "de_price_changed": "price_changed"
 }

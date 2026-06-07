@@ -509,6 +509,12 @@ class DevProgressMenu(Menu):
                     'text': self.game_state.get_text('use_ai_assets', default="KI-Assets generieren (Risikoreich!)"),
                     'action': self._use_ai_assets
                 })
+
+            if "KI-Soundtrack Generation" in self.game_state.unlocked_technologies and not getattr(ap["project"], "used_ai_soundtrack", False) and not is_engine:
+                self.options.append({
+                    'text': self.game_state.get_text('use_ai_soundtrack', default="KI-Soundtrack integrieren (Riskant!)"),
+                    'action': self._use_ai_soundtrack
+                })
             
             # Early Access Option (30-50% progress minimum, we'll check >= 30%)
             if prog >= 30 and not getattr(ap["project"], "is_early_access", False) and not is_engine:
@@ -593,6 +599,14 @@ class DevProgressMenu(Menu):
             if hasattr(self.audio, 'play_sound'):
                 self.audio.play_sound('cash')
             self.audio.speak(self.game_state.get_text('ai_assets_used_msg', default="KI-Assets generiert! Der Fortschritt ist massiv gestiegen."))
+        self._update_options()
+        return None
+
+    def _use_ai_soundtrack(self):
+        if self.game_state.use_ai_soundtrack(self.selected_project_idx):
+            if hasattr(self.audio, 'play_sound'):
+                self.audio.play_sound('cash')
+            self.audio.speak(self.game_state.get_text('ai_soundtrack_used_msg', default="KI-Soundtrack eingebaut! Das könnte einen Shitstorm geben..."))
         self._update_options()
         return None
 

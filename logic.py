@@ -1165,6 +1165,22 @@ class GameState:
                 return True
         return False
 
+    def use_ai_soundtrack(self, ap_idx):
+        """Nutzt KI-generierte Soundtracks für das Projekt (benötigt Forschung)."""
+        if 0 <= ap_idx < len(self.active_projects):
+            ap = self.active_projects[ap_idx]
+            proj = ap["project"]
+            if not getattr(proj, 'used_ai_soundtrack', False):
+                proj.used_ai_soundtrack = True
+                self.emails.insert(0, Email(
+                    sender=self.get_text('ai_email_sender', default="Lead Developer"),
+                    subject="KI-Soundtrack integriert",
+                    body="Wir haben die Musik komplett durch KI generieren lassen. Es klingt unglaublich gut, und wir haben uns Monate an Studiozeit gespart. Hoffentlich gibt es keinen Shitstorm...",
+                    date_week=self.week
+                ))
+                return True
+        return False
+
     def update_subscription_service(self):
         """Berechnet wöchentliche Abonnentenzahlen, Einnahmen und Hype für den Abo-Dienst."""
         if not getattr(self, 'subscription_active', False):
@@ -2399,7 +2415,7 @@ class GameState:
             is_owned = getattr(rival, 'is_owned_by_player', False)
             if is_owned:
                 # Phase 2 M&A: Passive Einnahmen durch den Backkatalog
-                back_catalog_income = int(sum(getattr(g, 'score', 0) * 100 for g in getattr(rival, 'games', [])))
+                back_catalog_income = int(sum(getattr(g, 'score', 0) * 200 for g in getattr(rival, 'games', [])))
                 if back_catalog_income > 0:
                     self.money += back_catalog_income
                     self.track_income("other", back_catalog_income)
@@ -3534,6 +3550,14 @@ class GameState:
             base_review -= 0.5 # Fans hate aggressive DRM
             if bugs > 0:
                 base_review -= 0.5 # Aggressive DRM + Bugs = Disaster
+
+        if getattr(project, "used_ai_soundtrack", False):
+            if random.random() < 0.4:
+                base_review -= 1.5
+                self.fans = max(0, int(self.fans * 0.9))
+                self.emails.insert(0, Email(self.get_text('sender_community', default="Community"), "Shitstorm wegen KI-Musik", f"Die Spieler hassen den KI-generierten Soundtrack von {project.name}. Massive Kritik online!", self.week))
+            else:
+                base_review += 1.0
 
         base_review = max(1.0, min(10.0, base_review))
 

@@ -528,6 +528,7 @@ RESEARCHABLE_TECHNOLOGIES = [
     {"name": "Dekorations-Wahn 1",            "cost": 20000,  "unlock_year": 1930, "research_weeks": 3, "description": "Schaltet kleine Bücheregale und Poster frei."},
     {"name": "Dekorations-Wahn 2",            "cost": 50000,  "unlock_year": 1963, "research_weeks": 4, "description": "Schaltet Pokal-Vitrinen und Lava-Lampen frei."},
     {"name": "Dekorations-Wahn 3",            "cost": 90000,  "unlock_year": 1980, "research_weeks": 5, "description": "Schaltet Neon-Schilder, Teppiche und Globen frei."},
+    {"name": "KI-Soundtrack Generation",      "cost": 150000, "unlock_year": 2023, "research_weeks": 8, "description": "Ermöglicht die Generierung kompletter Soundtracks durch KI."},
 ]
 
 # ============================================================

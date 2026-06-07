@@ -309,7 +309,7 @@ class ActiveMMO:
         # Free-to-Play hat massiv mehr Spieler, aber weniger Einnahmen pro Spieler
         if self.payment_model == "F2P":
             self.players = initial_players * 5
-            self.subscription_fee = 1  # 1 Euro pro Woche (Mikrotransaktionen)
+            self.subscription_fee = 2  # Increased from 1 to 2 Euro pro Woche (Mikrotransaktionen) um Profitabilität zu sichern
         elif self.payment_model == "Lootboxen":
             self.players = initial_players * 3
             self.subscription_fee = 5  # Extremer Profit durch Whales
