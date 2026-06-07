@@ -15,7 +15,7 @@ from models import (
     ActiveMMO, BankLoan, CustomConsole, PublishingOffer, 
     PublishedThirdPartyGame, BankStatement,
     SoundConEvent, SoundtrackLabel, RadioContract, ManufacturingJob,
-    StreamingPlatform, PodcastNetwork, PodcastProduction
+    StreamingPlatform, PodcastNetwork, PodcastProduction, AudioPass
 )
 from translations import get_system_language
 from game_data import (
@@ -301,6 +301,7 @@ class GameState:
         self.radio_contracts = []
         self.active_jingles = []
         self.soundtrack_label = None
+        self.audio_pass = AudioPass()
         self.podcast_network = PodcastNetwork()
         self.unlocked_hardware_tech = []
         self.active_personality_event = None
@@ -4489,6 +4490,7 @@ class GameState:
             "active_jingles": [j.to_dict() for j in getattr(self, "active_jingles", [])],
             "soundtrack_label": self.soundtrack_label.to_dict() if getattr(self, "soundtrack_label", None) else {},
             "podcast_network": self.podcast_network.to_dict() if hasattr(self, "podcast_network") else {},
+            "audio_pass": self.audio_pass.to_dict() if getattr(self, "audio_pass", None) else {},
             "fan_mail_inbox": [m.to_dict() for m in getattr(self, "fan_mail_inbox", [])],
             "sound_card_projects": [p.to_dict() for p in getattr(self, "sound_card_projects", [])],
             "custom_consoles": [c.to_dict() for c in getattr(self, "custom_consoles", [])],
@@ -4761,6 +4763,11 @@ class GameState:
             self.podcast_network = PodcastNetwork.from_dict(data["podcast_network"])
         else:
             self.podcast_network = PodcastNetwork()
+
+        if "audio_pass" in data:
+            self.audio_pass = AudioPass.from_dict(data["audio_pass"])
+        else:
+            self.audio_pass = AudioPass()
 
         # NEU: v3.11.0-beta.1 Expansion Variables laden
         from models import FanMail, SoundCardProject, RadioJingle

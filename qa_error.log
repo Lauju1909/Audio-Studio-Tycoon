@@ -112,3 +112,619 @@ Hello from the pygame community. https://www.pygame.org/contribute.html
 =========================== short test summary info ===========================
 ERROR tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu - Attribute...
 ========================= 1 passed, 1 error in 0.17s ==========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 2 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu FAILED       [ 50%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [100%]
+
+================================== FAILURES ===================================
+________________________ test_aggressive_fuzzing_menu _________________________
+
+mock_tolk = <MagicMock name='Tolk_Speak' id='2441076608704'>
+
+    def test_aggressive_fuzzing_menu(mock_tolk):
+        print("Initiating EXTREME FUZZING on Audio_Studio_Tycoon...")
+        try:
+>           import logic
+
+tests_super_qa\test_fuzzer.py:14: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """
+    Spielzustand für Audio Studio Tycoon - Audio Edition.
+    
+    Verwaltet Firmendaten, Geld, Fans, Mitarbeiter, Engines,
+    Spielhistorie, Ereignisse und die Bewertungslogik.
+    """
+    
+    import random
+    
+    import json
+    import os
+>   from models import (
+        GameProject, ReviewScore, Employee, Engine, EngineFeature,
+        RivalStudio, RivalGame, Email, AddonProject, BundleProject,
+        ActiveMMO, BankLoan, CustomConsole, PublishingOffer,
+        PublishedThirdPartyGame, BankStatement,
+        SoundConEvent, SoundtrackLabel, RadioContract, ManufacturingJob,
+        StreamingPlatform, PodcastNetwork, PodcastProduction
+    )
+E     File "C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon\models.py", line 1633
+E       "\""Ein Abo-Service (Game Pass) fr den eigenen Spiele-Katalog."\""
+E           ^^^
+E   SyntaxError: invalid syntax
+
+logic.py:12: SyntaxError
+---------------------------- Captured stdout setup ----------------------------
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.13)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+---------------------------- Captured stdout call -----------------------------
+Initiating EXTREME FUZZING on Audio_Studio_Tycoon...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu -   File "...
+========================= 1 failed, 1 passed in 0.21s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 2 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu FAILED       [ 50%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [100%]
+
+================================== FAILURES ===================================
+________________________ test_aggressive_fuzzing_menu _________________________
+
+mock_tolk = <MagicMock name='Tolk_Speak' id='2176819613376'>
+
+    def test_aggressive_fuzzing_menu(mock_tolk):
+        print("Initiating EXTREME FUZZING on Audio_Studio_Tycoon...")
+        try:
+>           import logic
+
+tests_super_qa\test_fuzzer.py:14: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """
+    Spielzustand für Audio Studio Tycoon - Audio Edition.
+    
+    Verwaltet Firmendaten, Geld, Fans, Mitarbeiter, Engines,
+    Spielhistorie, Ereignisse und die Bewertungslogik.
+    """
+    
+    import random
+    
+    import json
+    import os
+>   from models import (
+        GameProject, ReviewScore, Employee, Engine, EngineFeature,
+        RivalStudio, RivalGame, Email, AddonProject, BundleProject,
+        ActiveMMO, BankLoan, CustomConsole, PublishingOffer,
+        PublishedThirdPartyGame, BankStatement,
+        SoundConEvent, SoundtrackLabel, RadioContract, ManufacturingJob,
+        StreamingPlatform, PodcastNetwork, PodcastProduction
+    )
+E     File "C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon\models.py", line 1633
+E       "\""Ein Abo-Service (Game Pass) fr den eigenen Spiele-Katalog."\""
+E           ^^^
+E   SyntaxError: invalid syntax
+
+logic.py:12: SyntaxError
+---------------------------- Captured stdout setup ----------------------------
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.13)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+---------------------------- Captured stdout call -----------------------------
+Initiating EXTREME FUZZING on Audio_Studio_Tycoon...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu -   File "...
+========================= 1 failed, 1 passed in 0.21s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 2 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu FAILED       [ 50%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [100%]
+
+================================== FAILURES ===================================
+________________________ test_aggressive_fuzzing_menu _________________________
+
+mock_tolk = <MagicMock name='Tolk_Speak' id='2188667932352'>
+
+    def test_aggressive_fuzzing_menu(mock_tolk):
+        print("Initiating EXTREME FUZZING on Audio_Studio_Tycoon...")
+        try:
+>           import logic
+
+tests_super_qa\test_fuzzer.py:14: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """
+    Spielzustand für Audio Studio Tycoon - Audio Edition.
+    
+    Verwaltet Firmendaten, Geld, Fans, Mitarbeiter, Engines,
+    Spielhistorie, Ereignisse und die Bewertungslogik.
+    """
+    
+    import random
+    
+    import json
+    import os
+>   from models import (
+        GameProject, ReviewScore, Employee, Engine, EngineFeature,
+        RivalStudio, RivalGame, Email, AddonProject, BundleProject,
+        ActiveMMO, BankLoan, CustomConsole, PublishingOffer,
+        PublishedThirdPartyGame, BankStatement,
+        SoundConEvent, SoundtrackLabel, RadioContract, ManufacturingJob,
+        StreamingPlatform, PodcastNetwork, PodcastProduction, AudioPass
+    )
+E     File "C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon\models.py", line 1633
+E       "\""Ein Abo-Service (Game Pass) fr den eigenen Spiele-Katalog."\""
+E           ^^^
+E   SyntaxError: invalid syntax
+
+logic.py:12: SyntaxError
+---------------------------- Captured stdout setup ----------------------------
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.13)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+---------------------------- Captured stdout call -----------------------------
+Initiating EXTREME FUZZING on Audio_Studio_Tycoon...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu -   File "...
+========================= 1 failed, 1 passed in 0.26s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 2 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu FAILED       [ 50%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [100%]
+
+================================== FAILURES ===================================
+________________________ test_aggressive_fuzzing_menu _________________________
+
+mock_tolk = <MagicMock name='Tolk_Speak' id='1813963361984'>
+
+    def test_aggressive_fuzzing_menu(mock_tolk):
+        print("Initiating EXTREME FUZZING on Audio_Studio_Tycoon...")
+        try:
+>           import logic
+
+tests_super_qa\test_fuzzer.py:14: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """
+    Spielzustand für Audio Studio Tycoon - Audio Edition.
+    
+    Verwaltet Firmendaten, Geld, Fans, Mitarbeiter, Engines,
+    Spielhistorie, Ereignisse und die Bewertungslogik.
+    """
+    
+    import random
+    
+    import json
+    import os
+>   from models import (
+        GameProject, ReviewScore, Employee, Engine, EngineFeature,
+        RivalStudio, RivalGame, Email, AddonProject, BundleProject,
+        ActiveMMO, BankLoan, CustomConsole, PublishingOffer,
+        PublishedThirdPartyGame, BankStatement,
+        SoundConEvent, SoundtrackLabel, RadioContract, ManufacturingJob,
+        StreamingPlatform, PodcastNetwork, PodcastProduction, AudioPass
+    )
+E     File "C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon\models.py", line 1633
+E       "\""Ein Abo-Service (Game Pass) fr den eigenen Spiele-Katalog."\""
+E           ^^^
+E   SyntaxError: invalid syntax
+
+logic.py:12: SyntaxError
+---------------------------- Captured stdout setup ----------------------------
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.13)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+---------------------------- Captured stdout call -----------------------------
+Initiating EXTREME FUZZING on Audio_Studio_Tycoon...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu -   File "...
+========================= 1 failed, 1 passed in 0.21s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 2 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu FAILED       [ 50%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [100%]
+
+================================== FAILURES ===================================
+________________________ test_aggressive_fuzzing_menu _________________________
+
+mock_tolk = <MagicMock name='Tolk_Speak' id='2718557490880'>
+
+    def test_aggressive_fuzzing_menu(mock_tolk):
+        print("Initiating EXTREME FUZZING on Audio_Studio_Tycoon...")
+        try:
+>           import logic
+
+tests_super_qa\test_fuzzer.py:14: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """
+    Spielzustand für Audio Studio Tycoon - Audio Edition.
+    
+    Verwaltet Firmendaten, Geld, Fans, Mitarbeiter, Engines,
+    Spielhistorie, Ereignisse und die Bewertungslogik.
+    """
+    
+    import random
+    
+    import json
+    import os
+>   from models import (
+        GameProject, ReviewScore, Employee, Engine, EngineFeature,
+        RivalStudio, RivalGame, Email, AddonProject, BundleProject,
+        ActiveMMO, BankLoan, CustomConsole, PublishingOffer,
+        PublishedThirdPartyGame, BankStatement,
+        SoundConEvent, SoundtrackLabel, RadioContract, ManufacturingJob,
+        StreamingPlatform, PodcastNetwork, PodcastProduction, AudioPass
+    )
+E     File "C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon\models.py", line 1633
+E       "\""Ein Abo-Service (Game Pass) fr den eigenen Spiele-Katalog."\""
+E           ^^^
+E   SyntaxError: invalid syntax
+
+logic.py:12: SyntaxError
+---------------------------- Captured stdout setup ----------------------------
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.13)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+---------------------------- Captured stdout call -----------------------------
+Initiating EXTREME FUZZING on Audio_Studio_Tycoon...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu -   File "...
+========================= 1 failed, 1 passed in 0.23s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 2 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu FAILED       [ 50%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [100%]
+
+================================== FAILURES ===================================
+________________________ test_aggressive_fuzzing_menu _________________________
+
+mock_tolk = <MagicMock name='Tolk_Speak' id='2568301399744'>
+
+    def test_aggressive_fuzzing_menu(mock_tolk):
+        print("Initiating EXTREME FUZZING on Audio_Studio_Tycoon...")
+        try:
+>           import logic
+
+tests_super_qa\test_fuzzer.py:14: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """
+    Spielzustand für Audio Studio Tycoon - Audio Edition.
+    
+    Verwaltet Firmendaten, Geld, Fans, Mitarbeiter, Engines,
+    Spielhistorie, Ereignisse und die Bewertungslogik.
+    """
+    
+    import random
+    
+    import json
+    import os
+>   from models import (
+        GameProject, ReviewScore, Employee, Engine, EngineFeature,
+        RivalStudio, RivalGame, Email, AddonProject, BundleProject,
+        ActiveMMO, BankLoan, CustomConsole, PublishingOffer,
+        PublishedThirdPartyGame, BankStatement,
+        SoundConEvent, SoundtrackLabel, RadioContract, ManufacturingJob,
+        StreamingPlatform, PodcastNetwork, PodcastProduction, AudioPass
+    )
+E     File "C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon\models.py", line 1633
+E       "\""Ein Abo-Service (Game Pass) fr den eigenen Spiele-Katalog."\""
+E           ^^^
+E   SyntaxError: invalid syntax
+
+logic.py:12: SyntaxError
+---------------------------- Captured stdout setup ----------------------------
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.13)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+---------------------------- Captured stdout call -----------------------------
+Initiating EXTREME FUZZING on Audio_Studio_Tycoon...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu -   File "...
+========================= 1 failed, 1 passed in 0.27s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 2 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu FAILED       [ 50%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [100%]
+
+================================== FAILURES ===================================
+________________________ test_aggressive_fuzzing_menu _________________________
+
+mock_tolk = <MagicMock name='Tolk_Speak' id='2173066235584'>
+
+    def test_aggressive_fuzzing_menu(mock_tolk):
+        print("Initiating EXTREME FUZZING on Audio_Studio_Tycoon...")
+        try:
+>           import logic
+
+tests_super_qa\test_fuzzer.py:14: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """
+    Spielzustand für Audio Studio Tycoon - Audio Edition.
+    
+    Verwaltet Firmendaten, Geld, Fans, Mitarbeiter, Engines,
+    Spielhistorie, Ereignisse und die Bewertungslogik.
+    """
+    
+    import random
+    
+    import json
+    import os
+>   from models import (
+        GameProject, ReviewScore, Employee, Engine, EngineFeature,
+        RivalStudio, RivalGame, Email, AddonProject, BundleProject,
+        ActiveMMO, BankLoan, CustomConsole, PublishingOffer,
+        PublishedThirdPartyGame, BankStatement,
+        SoundConEvent, SoundtrackLabel, RadioContract, ManufacturingJob,
+        StreamingPlatform, PodcastNetwork, PodcastProduction, AudioPass
+    )
+E     File "C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon\models.py", line 1633
+E       "\""Ein Abo-Service (Game Pass) fr den eigenen Spiele-Katalog."\""
+E           ^^^
+E   SyntaxError: invalid syntax
+
+logic.py:12: SyntaxError
+---------------------------- Captured stdout setup ----------------------------
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.13)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+---------------------------- Captured stdout call -----------------------------
+Initiating EXTREME FUZZING on Audio_Studio_Tycoon...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu -   File "...
+========================= 1 failed, 1 passed in 0.26s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 2 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu FAILED       [ 50%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [100%]
+
+================================== FAILURES ===================================
+________________________ test_aggressive_fuzzing_menu _________________________
+
+mock_tolk = <MagicMock name='Tolk_Speak' id='2274182123200'>
+
+    def test_aggressive_fuzzing_menu(mock_tolk):
+        print("Initiating EXTREME FUZZING on Audio_Studio_Tycoon...")
+        try:
+>           import logic
+
+tests_super_qa\test_fuzzer.py:14: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """
+    Spielzustand für Audio Studio Tycoon - Audio Edition.
+    
+    Verwaltet Firmendaten, Geld, Fans, Mitarbeiter, Engines,
+    Spielhistorie, Ereignisse und die Bewertungslogik.
+    """
+    
+    import random
+    
+    import json
+    import os
+>   from models import (
+        GameProject, ReviewScore, Employee, Engine, EngineFeature,
+        RivalStudio, RivalGame, Email, AddonProject, BundleProject,
+        ActiveMMO, BankLoan, CustomConsole, PublishingOffer,
+        PublishedThirdPartyGame, BankStatement,
+        SoundConEvent, SoundtrackLabel, RadioContract, ManufacturingJob,
+        StreamingPlatform, PodcastNetwork, PodcastProduction, AudioPass
+    )
+E     File "C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon\models.py", line 1633
+E       "\""Ein Abo-Service (Game Pass) fr den eigenen Spiele-Katalog."\""
+E           ^^^
+E   SyntaxError: invalid syntax
+
+logic.py:12: SyntaxError
+---------------------------- Captured stdout setup ----------------------------
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.13)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+---------------------------- Captured stdout call -----------------------------
+Initiating EXTREME FUZZING on Audio_Studio_Tycoon...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu -   File "...
+========================= 1 failed, 1 passed in 0.75s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 2 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu FAILED       [ 50%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [100%]
+
+================================== FAILURES ===================================
+________________________ test_aggressive_fuzzing_menu _________________________
+
+mock_tolk = <MagicMock name='Tolk_Speak' id='2364302757568'>
+
+    def test_aggressive_fuzzing_menu(mock_tolk):
+        print("Initiating EXTREME FUZZING on Audio_Studio_Tycoon...")
+        try:
+>           import logic
+
+tests_super_qa\test_fuzzer.py:14: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """
+    Spielzustand für Audio Studio Tycoon - Audio Edition.
+    
+    Verwaltet Firmendaten, Geld, Fans, Mitarbeiter, Engines,
+    Spielhistorie, Ereignisse und die Bewertungslogik.
+    """
+    
+    import random
+    
+    import json
+    import os
+>   from models import (
+        GameProject, ReviewScore, Employee, Engine, EngineFeature,
+        RivalStudio, RivalGame, Email, AddonProject, BundleProject,
+        ActiveMMO, BankLoan, CustomConsole, PublishingOffer,
+        PublishedThirdPartyGame, BankStatement,
+        SoundConEvent, SoundtrackLabel, RadioContract, ManufacturingJob,
+        StreamingPlatform, PodcastNetwork, PodcastProduction, AudioPass
+    )
+E     File "C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon\models.py", line 1633
+E       "\""Ein Abo-Service (Game Pass) fr den eigenen Spiele-Katalog."\""
+E           ^^^
+E   SyntaxError: invalid syntax
+
+logic.py:12: SyntaxError
+---------------------------- Captured stdout setup ----------------------------
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.13)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+---------------------------- Captured stdout call -----------------------------
+Initiating EXTREME FUZZING on Audio_Studio_Tycoon...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu -   File "...
+========================= 1 failed, 1 passed in 0.22s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 2 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu FAILED       [ 50%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [100%]
+
+================================== FAILURES ===================================
+________________________ test_aggressive_fuzzing_menu _________________________
+
+mock_tolk = <MagicMock name='Tolk_Speak' id='1530535562944'>
+
+    def test_aggressive_fuzzing_menu(mock_tolk):
+        print("Initiating EXTREME FUZZING on Audio_Studio_Tycoon...")
+        try:
+>           import logic
+
+tests_super_qa\test_fuzzer.py:14: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """
+    Spielzustand für Audio Studio Tycoon - Audio Edition.
+    
+    Verwaltet Firmendaten, Geld, Fans, Mitarbeiter, Engines,
+    Spielhistorie, Ereignisse und die Bewertungslogik.
+    """
+    
+    import random
+    
+    import json
+    import os
+>   from models import (
+        GameProject, ReviewScore, Employee, Engine, EngineFeature,
+        RivalStudio, RivalGame, Email, AddonProject, BundleProject,
+        ActiveMMO, BankLoan, CustomConsole, PublishingOffer,
+        PublishedThirdPartyGame, BankStatement,
+        SoundConEvent, SoundtrackLabel, RadioContract, ManufacturingJob,
+        StreamingPlatform, PodcastNetwork, PodcastProduction, AudioPass
+    )
+E     File "C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon\models.py", line 1633
+E       "\""Ein Abo-Service (Game Pass) fr den eigenen Spiele-Katalog."\""
+E           ^^^
+E   SyntaxError: invalid syntax
+
+logic.py:12: SyntaxError
+---------------------------- Captured stdout setup ----------------------------
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.13)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+---------------------------- Captured stdout call -----------------------------
+Initiating EXTREME FUZZING on Audio_Studio_Tycoon...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu -   File "...
+========================= 1 failed, 1 passed in 0.21s =========================
+============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0 -- C:\Users\lauri\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon
+plugins: anyio-4.13.0
+collecting ... collected 2 items
+
+tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu FAILED       [ 50%]
+tests_super_qa/test_fuzzer.py::test_extreme_edge_cases PASSED            [100%]
+
+================================== FAILURES ===================================
+________________________ test_aggressive_fuzzing_menu _________________________
+
+mock_tolk = <MagicMock name='Tolk_Speak' id='2104500244160'>
+
+    def test_aggressive_fuzzing_menu(mock_tolk):
+        print("Initiating EXTREME FUZZING on Audio_Studio_Tycoon...")
+        try:
+>           import logic
+
+tests_super_qa\test_fuzzer.py:14: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    """
+    Spielzustand für Audio Studio Tycoon - Audio Edition.
+    
+    Verwaltet Firmendaten, Geld, Fans, Mitarbeiter, Engines,
+    Spielhistorie, Ereignisse und die Bewertungslogik.
+    """
+    
+    import random
+    
+    import json
+    import os
+>   from models import (
+        GameProject, ReviewScore, Employee, Engine, EngineFeature,
+        RivalStudio, RivalGame, Email, AddonProject, BundleProject,
+        ActiveMMO, BankLoan, CustomConsole, PublishingOffer,
+        PublishedThirdPartyGame, BankStatement,
+        SoundConEvent, SoundtrackLabel, RadioContract, ManufacturingJob,
+        StreamingPlatform, PodcastNetwork, PodcastProduction, AudioPass
+    )
+E     File "C:\Users\lauri\.gemini\antigravity\scratch\Audio_Studio_Tycoon\models.py", line 1633
+E       "\""Ein Abo-Service (Game Pass) fr den eigenen Spiele-Katalog."\""
+E           ^^^
+E   SyntaxError: invalid syntax
+
+logic.py:12: SyntaxError
+---------------------------- Captured stdout setup ----------------------------
+pygame 2.6.1 (SDL 2.28.4, Python 3.13.13)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+---------------------------- Captured stdout call -----------------------------
+Initiating EXTREME FUZZING on Audio_Studio_Tycoon...
+=========================== short test summary info ===========================
+FAILED tests_super_qa/test_fuzzer.py::test_aggressive_fuzzing_menu -   File "...
+========================= 1 failed, 1 passed in 0.21s =========================

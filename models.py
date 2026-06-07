@@ -1628,3 +1628,75 @@ class PodcastProduction:
         )
         p.total_revenue = data.get("total_revenue", 0)
         return p
+
+class AudioPass:
+    "\""Ein Abo-Service (Game Pass) fr den eigenen Spiele-Katalog."\""
+    def __init__(self):
+        self.active = False
+        self.monthly_price = 9.99
+        self.subscribers = 0
+        self.catalog = [] # Liste von Spielnamen
+        self.total_revenue = 0.0
+
+    def tick_month(self):
+        if not self.active: return 0.0
+        # Subscribers grow/shrink based on catalog size and price
+        base_appeal = len(self.catalog) * 5000
+        target_subs = max(0, int(base_appeal - (self.monthly_price * 1000)))
+        
+        # Smooth transition to target
+        if self.subscribers < target_subs:
+            self.subscribers += int((target_subs - self.subscribers) * 0.1) + 10
+        else:
+            self.subscribers -= int((self.subscribers - target_subs) * 0.2) + 10
+            
+        self.subscribers = max(0, self.subscribers)
+        income = self.subscribers * self.monthly_price
+        self.total_revenue += income
+        return income
+
+    def to_dict(self):
+        return {
+            "active": self.active,
+            "monthly_price": self.monthly_price,
+            "subscribers": self.subscribers,
+            "catalog": self.catalog,
+            "total_revenue": self.total_revenue
+        }
+        
+    @staticmethod
+    def from_dict(d):
+        ap = AudioPass()
+        ap.active = d.get("active", False)
+        ap.monthly_price = d.get("monthly_price", 9.99)
+        ap.subscribers = d.get("subscribers", 0)
+        ap.catalog = d.get("catalog", [])
+        ap.total_revenue = d.get("total_revenue", 0.0)
+        return ap
+
+class CloudGamingService:
+    def __init__(self):
+        self.active = False
+        self.subscribers = 0
+        self.server_cost_per_sub = 2.0
+        self.price = 14.99
+        self.tech_level = 1
+        
+    def to_dict(self):
+        return {
+            "active": self.active,
+            "subscribers": self.subscribers,
+            "server_cost_per_sub": self.server_cost_per_sub,
+            "price": self.price,
+            "tech_level": self.tech_level
+        }
+        
+    @staticmethod
+    def from_dict(d):
+        cg = CloudGamingService()
+        cg.active = d.get("active", False)
+        cg.subscribers = d.get("subscribers", 0)
+        cg.server_cost_per_sub = d.get("server_cost_per_sub", 2.0)
+        cg.price = d.get("price", 14.99)
+        cg.tech_level = d.get("tech_level", 1)
+        return cg
