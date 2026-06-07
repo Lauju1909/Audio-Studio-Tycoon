@@ -1211,6 +1211,8 @@ class SoundtrackLabel:
 
     @staticmethod
     def from_dict(data: dict) -> "SoundtrackLabel":
+        if not data or "label_name" not in data:
+            return None
         label = SoundtrackLabel(data["label_name"])
         label.founding_week    = data.get("founding_week", 0)
         label.catalogued_games = data.get("catalogued_games", [])
