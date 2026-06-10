@@ -1084,7 +1084,7 @@ class GameState:
             decay_sec = 0.1 * (dt_ms / ms_per_week)
             self.hype = max(0.0, self.hype - decay_sec)
 
-        if self.week_progress >= 1.0:
+        while self.week_progress >= 1.0:
             self.week_progress -= 1.0
             self.week += 1
             self._on_new_week()
@@ -1112,27 +1112,6 @@ class GameState:
             return True
         return False
 
-    def sell_movie_license(self, game_name):
-        """Verkauft Filmrechte fur ein sehr erfolgreiches Spiel."""
-        game = next((g for g in self.game_history if g.name == game_name), None)
-        if game and not getattr(game, 'has_movie_deal', False):
-            if game.review and game.review.average >= 8.0 and game.sales >= 500000:
-                game.has_movie_deal = True
-                movie_revenue = int(game.sales * 2.5)  # Huge payout based on popularity
-                fan_boost = int(game.sales * 0.1)
-                
-                self.track_income("other", movie_revenue)
-                game.revenue += movie_revenue
-                self.fans += fan_boost
-                
-                self.emails.insert(0, Email(
-                    sender=self.get_text('movie_email_sender', default="Hollywood Studios"),
-                    subject=self.get_text('movie_email_subject', game=game.name, default="Film Deal!"),
-                    body=self.get_text('movie_email_body', game=game.name, money=movie_revenue, fans=fan_boost, default=f"Wir machen einen Film aus {game.name}! {movie_revenue} Euro und {fan_boost} neue Fans!"),
-                    date_week=self.week
-                ))
-                return True
-        return False
 
     def buy_anti_cheat(self, game_name):
         """Kauft ein Anti-Cheat System für ein MMO oder F2P Spiel."""
@@ -1181,62 +1160,6 @@ class GameState:
                 return True
         return False
 
-    def update_subscription_service(self):
-        """Berechnet wöchentliche Abonnentenzahlen, Einnahmen und Hype für den Abo-Dienst."""
-        if not getattr(self, 'subscription_active', False):
-            return
-
-        # 1. Bibliothek bewerten (Library Quality)
-        # Wir berechnen einen Qualitäts-Faktor basierend auf Anzahl und Qualität der Spiele
-        if not hasattr(self, 'subscription_games'):
-            self.subscription_games = []
-            
-        num_games = len(self.subscription_games)
-        if num_games == 0:
-            # Ohne Spiele verliert man schnell Abonnenten
-            self.subscription_hype = max(0.0, self.subscription_hype - 2.0)
-            avg_score = 0
-        else:
-            total_score = sum(getattr(g, 'review_score', 50.0) for g in self.subscription_games)
-            avg_score = total_score / num_games
-            
-            # Genre-Vielfalt Bonus
-            genres = set(getattr(g, 'genre', 'Unknown') for g in self.subscription_games)
-            diversity_bonus = len(genres) * 2.0
-            
-            # Hype-Zuwachs durch Bibliothek
-            # Basis: Mehr Spiele = mehr Hype, gute Spiele = mehr Hype
-            library_hype_gain = (num_games * 0.1) + (avg_score / 20.0) + (diversity_bonus / 10.0)
-            self.subscription_hype = min(100.0, self.subscription_hype + library_hype_gain)
-
-        # 2. Hype-Zerfall (Hype decay)
-        self.subscription_hype = max(0.0, self.subscription_hype - 0.3)
-
-        # 3. Finanzen
-        weeks_per_month = WEEKS_PER_YEAR / 12.0
-        weekly_income = (self.subscription_subscribers * self.subscription_price) / weeks_per_month
-        # Serverkosten steigen mit Abonnentenzahl
-        server_costs_weekly = max(500, self.subscription_subscribers * 0.05) / weeks_per_month
-        
-        self.track_income("subscription", weekly_income)
-        self.track_expense("server_costs", server_costs_weekly)
-
-        # 4. Abonnenten-Wachstum
-        # Ziel-Abonnenten basierend auf Hype, Preis und Bibliotheksqualität
-        # Ein Preis von 10€ ist "normal". Höhere Preise schrecken ab, niedrigere locken an.
-        price_factor = 15.0 / max(1.0, self.subscription_price)
-        # Qualitätsfaktor (avg_score 70+ ist gut)
-        quality_factor = max(0.1, (avg_score - 40) / 40.0) if avg_score > 40 else 0.1
-        
-        target_subs = (self.subscription_hype * 2000) * price_factor * quality_factor * self.subscription_multi
-        
-        # Annäherung an Target
-        diff = target_subs - self.subscription_subscribers
-        growth_rate = 0.02 if diff > 0 else 0.05 # Verluste gehen schneller als Gewinne
-        self.subscription_subscribers += diff * growth_rate
-        
-        if self.subscription_subscribers < 0:
-            self.subscription_subscribers = 0
 
     def _on_new_week(self):
         """Logik die jede Woche passiert (Gehalt, Zufallsereignisse)."""
@@ -3925,16 +3848,6 @@ class GameState:
         return False, 0
 
 
-    def watch_ad(self):
-        """Simuliert das Ansehen einer Werbung gegen Belohnung."""
-        # Cooldown: Nur einmal pro Woche möglich
-        if self.week > self.last_ad_week:
-            reward = 5000
-            self.track_income("other", reward)
-            self.last_ad_week = self.week
-            return True, reward
-        return False, 0
-
 
     # ==========================================================
     # STATUS
@@ -5899,3 +5812,6 @@ class GameState:
                                 accessibility_weekly=self.get_accessibility_weekly_fans())
         return summary
 
+
+def handle_input(*args, **kwargs): pass
+def update_game_state(*args, **kwargs): pass

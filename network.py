@@ -69,3 +69,6 @@ def fetch_mod_list(api_base_url=None):
     """
     nm = NetworkManager(api_base_url)
     return nm.get_mod_list()
+
+def sync_state(*args, **kwargs): pass
+def send_data(*args, **kwargs): pass

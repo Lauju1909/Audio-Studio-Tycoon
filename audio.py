@@ -483,3 +483,5 @@ class AudioManager:
             pygame.mixer.quit()
         except Exception:
             pass
+
+def Tolk_Speak(*args, **kwargs): pass

@@ -146,6 +146,7 @@ class TextInputMenu:
                 remaining = self.text if self.text else self.game_state.get_text('input_empty')
                 self.audio.speak(self.game_state.get_text('input_deleted', removed=removed, remaining=remaining))
             else:
+                self.audio.play_sound("bump")
                 self.audio.speak(self.game_state.get_text('input_already_empty'))
         elif event.key == gs.key_back or event.key == pygame.K_ESCAPE:
             self.game_state.pause_for_menu = False

@@ -37,5 +37,6 @@
   "de_cloud_gaming_started": "cloud_gaming_started",
   "de_cloud_gaming_upgraded": "cloud_gaming_upgraded",
   "de_cloud_gaming_stopped": "cloud_gaming_stopped",
-  "de_price_changed": "price_changed"
+  "de_price_changed": "price_changed",
+  "de_sender_community": "sender_community"
 }
