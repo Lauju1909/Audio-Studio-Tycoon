@@ -149,13 +149,13 @@ class BuildMenu(Menu):
                     self._speak_position()
                 else:
                     self.audio.play_sound('bump')
-            elif event.key == pygame.K_LEFT:
+            elif event.key == getattr(gs, 'key_left', getattr(gs, 'key_left', pygame.K_LEFT)):
                 if self.cursor_x > 0:
                     self.cursor_x -= 1
                     self._speak_position()
                 else:
                     self.audio.play_sound('bump')
-            elif event.key == pygame.K_RIGHT:
+            elif event.key == getattr(gs, 'key_right', getattr(gs, 'key_right', pygame.K_RIGHT)):
                 if self.cursor_x < 9:
                     self.cursor_x += 1
                     self._speak_position()
@@ -181,13 +181,13 @@ class BuildMenu(Menu):
                 self._speak_position()
             else:
                 self.audio.play_sound('bump')
-        elif event.key == pygame.K_LEFT:
+        elif event.key == getattr(gs, 'key_left', pygame.K_LEFT):
             if self.cursor_x > 0:
                 self.cursor_x -= 1
                 self._speak_position()
             else:
                 self.audio.play_sound('bump')
-        elif event.key == pygame.K_RIGHT:
+        elif event.key == getattr(gs, 'key_right', pygame.K_RIGHT):
             if self.cursor_x < 9:
                 self.cursor_x += 1
                 self._speak_position()

@@ -1,6 +1,0 @@
-{
-    "version": "3.9.0",
-    "channel": "stable",
-    "notes": "v3.9.0: Stabiles Release des interaktiven Tutorial-Systems für alle Menübereiche (Büro, Spielentwicklung, Forschung, Personal, Marketing, Finanzen, Multiplayer). Vollständige DE/EN-Übersetzungen für alle Tutorial-Schritte. Automated Test Suite zur Verifizierung aller Tutorial-Interaktionen. Einstellbares wöchentliches Zeitsystem mit dynamischen monatlichen Gehaltsläufen und moralischen Möbel-Boni.",
-    "min_launcher_version": "1.0.0"
-}

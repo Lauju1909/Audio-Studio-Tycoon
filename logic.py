@@ -5813,5 +5813,10 @@ class GameState:
         return summary
 
 
+
+    def watch_ad(self):
+        self.track_income("other", 5000)
+        return True, 5000
+
 def handle_input(*args, **kwargs): pass
 def update_game_state(*args, **kwargs): pass

@@ -185,6 +185,8 @@ class KeybindingMenu(Menu):
             {'text': f"{self.game_state.get_text('key_down')} ({_get_key_name(gs.key_down)})", 'action': lambda: self._start_bind('key_down')},
             {'text': f"{self.game_state.get_text('key_confirm')} ({_get_key_name(gs.key_confirm)})", 'action': lambda: self._start_bind('key_confirm')},
             {'text': f"{self.game_state.get_text('key_back')} ({_get_key_name(gs.key_back)})", 'action': lambda: self._start_bind('key_back')},
+            {'text': f"{self.game_state.get_text('key_left')} ({_get_key_name(gs.key_left)})", 'action': lambda: self._start_bind('key_left')},
+            {'text': f"{self.game_state.get_text('key_right')} ({_get_key_name(gs.key_right)})", 'action': lambda: self._start_bind('key_right')},
             {'text': f"{self.game_state.get_text('key_home')} ({_get_key_name(gs.key_home)})", 'action': lambda: self._start_bind('key_home')},
             {'text': f"{self.game_state.get_text('key_end')} ({_get_key_name(gs.key_end)})", 'action': lambda: self._start_bind('key_end')},
             {'text': self.game_state.get_text('back'), 'action': self._back}
@@ -271,11 +273,11 @@ class VolumeSettingsMenu(Menu):
 
     def handle_input(self, event):
         gs = self.game_state
-        if event.key == pygame.K_LEFT:
+        if event.key == getattr(gs, 'key_left', pygame.K_LEFT):
             if self.current_index < 3:
                 keys = ['music_volume', 'speech_volume', 'sfx_volume']
                 return self._adjust_volume(keys[self.current_index], -10, loop=False)
-        elif event.key == pygame.K_RIGHT:
+        elif event.key == getattr(gs, 'key_right', pygame.K_RIGHT):
             if self.current_index < 3:
                 keys = ['music_volume', 'speech_volume', 'sfx_volume']
                 return self._adjust_volume(keys[self.current_index], 10, loop=False)

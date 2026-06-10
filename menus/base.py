@@ -26,7 +26,7 @@ class Menu:
     def handle_input(self, event):
         gs = self.game_state
         if not self.options:
-            if event.key in [gs.key_up, gs.key_down, gs.key_confirm, gs.key_back, gs.key_home, gs.key_end, pygame.K_LEFT, pygame.K_RIGHT]:
+            if event.key in [gs.key_up, gs.key_down, gs.key_confirm, gs.key_back, gs.key_home, gs.key_end, getattr(gs, 'key_left', pygame.K_LEFT), getattr(gs, 'key_right', pygame.K_RIGHT)]:
                 self.audio.play_sound("bump")
             return None
             
@@ -58,7 +58,7 @@ class Menu:
                 self.speak_current()
             else:
                 self.audio.play_sound("bump")
-        elif event.key == gs.key_back or event.key == pygame.K_LEFT:
+        elif event.key == gs.key_back or event.key == getattr(gs, 'key_left', pygame.K_LEFT):
             back_action = None
             for opt in self.options:
                 text_lower = opt['text'].strip().lower()
@@ -225,7 +225,7 @@ class SliderMenu:
                 self._speak_current()
             else:
                 self.audio.play_sound("bump")
-        elif event.key == pygame.K_RIGHT:
+        elif event.key == getattr(gs, 'key_right', pygame.K_RIGHT):
             name = self.slider_names[self.current_index]
             if self.values[name] < 10 and self.remaining > 0:
                 self.values[name] += 1
@@ -237,7 +237,7 @@ class SliderMenu:
             else:
                 self.audio.play_sound("bump")
                 self.audio.speak(self.game_state.get_text('slider_max'))
-        elif event.key == pygame.K_LEFT:
+        elif event.key == getattr(gs, 'key_left', pygame.K_LEFT):
             name = self.slider_names[self.current_index]
             if self.values[name] > 0:
                 self.values[name] -= 1

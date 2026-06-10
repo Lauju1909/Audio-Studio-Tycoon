@@ -113,7 +113,7 @@ Das Spiel bietet ein brandneues, interaktives Tutorial-System. Beim ersten Betre
 
 ## ðŸ”§ Installation
 ### Windows
-- Entpacke die `.zip` und starte `Audio_Studio_Tycoon_v3.11.0-beta.1.exe`.
+- Entpacke die `.zip` und starte `Audio_Studio_Tycoon_v[VersionNumber].exe`.
 - Dein Screenreader (NVDA, Jaws, SAPI) wird automatisch erkannt.
 
 ### Linux

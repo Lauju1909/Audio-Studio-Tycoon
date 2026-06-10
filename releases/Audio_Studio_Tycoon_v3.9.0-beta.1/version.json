@@ -1,6 +1,0 @@
-{
-    "version": "3.9.0-beta.1",
-    "channel": "beta",
-    "notes": "v3.9.0-beta.1: Interaktives Tutorial-System für alle Menübereiche (Büro, Spielentwicklung, Forschung, Personal, Marketing, Finanzen, Multiplayer). Vollständige DE/EN-Übersetzungen für alle Tutorial-Schritte. Automated Test Suite für Tutorial-Validierung. Verbesserte Möbel-Moral-Boni.",
-    "min_launcher_version": "1.0.0"
-}
