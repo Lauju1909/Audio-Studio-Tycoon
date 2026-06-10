@@ -9,8 +9,8 @@ pip install pyinstaller
 # Run pyinstaller with the Linux spec file
 pyinstaller --clean Audio_Studio_Tycoon_Linux.spec
 
-# Optional: rename the output to include version if we want to follow the convention
-# VERSION=$(grep '"version":' version.json | cut -d '"' -f 4)
-# mv dist/Audio_Studio_Tycoon_Linux "dist/Audio_Studio_Tycoon_v${VERSION}_linux"
+VERSION=$(grep '"version":' version.json | cut -d '"' -f 4)
+mv dist/Audio_Studio_Tycoon_Linux "dist/Audio_Studio_Tycoon_v${VERSION}"
+zip -r "releases/Audio_Studio_Tycoon_v${VERSION}.zip" "dist/Audio_Studio_Tycoon_v${VERSION}"
 
 echo "Build complete. Check the 'dist' directory."
