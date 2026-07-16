@@ -31,7 +31,7 @@ from menus import (
     MainMenu, UpdateConfirmMenu, UpdateProgressMenu, CompanyNameMenu, GameMenu, TopicMenu,
     GenreMenu, PlatformMenu, AudienceMenu, GameSizeMenu, MarketingMenu,
     EngineSelectMenu, RemasterSelectMenu, PublisherMenu, SettingsMenu,
-    VolumeSettingsMenu, KeybindingMenu, LanguageMenu, ExpoMenu, GameNameMenu,
+    VolumeSettingsMenu, KeybindingMenu, LanguageMenu, CustomLanguageInputMenu, ExpoMenu, GameNameMenu,
     DevelopmentSliderMenu, DRMChoiceMenu, CrowdfundingChoiceMenu, DevProgressMenu, ReviewResultMenu,
     HRMenu, HireMenu, EmployeeOverviewMenu, FireMenu, TrainingEmployeeSelectMenu,
     TrainingOptionMenu, ResearchMenu, FeatureResearchMenu,
@@ -60,9 +60,13 @@ from menus import (
     JingleNameInputMenu, JingleGeneratorMenu, JingleMusicMenu, JingleVoiceMenu, JingleSFXMenu
 )
 
-def get_menu_factories(audio, state):
-    """Gibt Factory-Funktionen für alle Menüs zurück."""
-    return {
+def setup_router(audio, state):
+    """Initialisiert den MenuRouter und registriert alle Menüs."""
+    from ui.router import MenuRouter
+    import menus.publisher_system # Löst @register_menu aus
+    router = MenuRouter(audio, state)
+    
+    routes = {
         "main_menu": lambda: MainMenu(audio, state),
         "update_confirm_menu": lambda: UpdateConfirmMenu(audio, state),
         "update_progress_menu": lambda: UpdateProgressMenu(audio, state),
@@ -80,6 +84,7 @@ def get_menu_factories(audio, state):
         "publisher_menu": lambda: PublisherMenu(audio, state),
         "settings_menu": lambda: SettingsMenu(audio, state, lambda: "main_menu"),
         "language_menu": lambda: LanguageMenu(audio, state),
+        "custom_lang_input_menu": lambda: CustomLanguageInputMenu(audio, state),
         "volume_settings_menu": lambda: VolumeSettingsMenu(audio, state),
         "keybinding_menu": lambda: KeybindingMenu(audio, state),
         "expo_menu": lambda: ExpoMenu(audio, state),
@@ -191,7 +196,6 @@ def get_menu_factories(audio, state):
         "game_details_menu": lambda: GameDetailsMenu(audio, state),
         "current_monetization_menu": lambda: MonetizationMenu(audio, state, show_ads=state.monetization_back_target != "main_menu"),
         "developer_menu": lambda: DeveloperMenu(audio, state),
-        # NEU: SoundCon & Soundtrack-Label
         "soundcon_menu": lambda: SoundConMenu(audio, state),
         "soundcon_finish_confirm": lambda: SoundConFinishMenu(audio, state),
         "soundcon_result_menu": lambda: SoundConResultMenu(audio, state),
@@ -200,10 +204,9 @@ def get_menu_factories(audio, state):
         "label_menu": lambda: SoundtrackLabelMenu(audio, state),
         "label_name_input": lambda: LabelNameInputMenu(audio, state),
         "label_status_menu": lambda: LabelStatusMenu(audio, state),
-        "soundcon_radio_menu": lambda: LabelRadioMenu(audio, state), # alias if needed
+        "soundcon_radio_menu": lambda: LabelRadioMenu(audio, state),
         "label_radio_menu": lambda: LabelRadioMenu(audio, state),
         "label_add_game_menu": lambda: LabelAddGameMenu(audio, state),
-        # NEU: Expansion v3.11.0 Menüs
         "community_menu": lambda: CommunityMenu(audio, state),
         "accessibility_lab": lambda: AccessibilityLabMenu(audio, state),
         "fan_mail_inbox": lambda: FanMailInboxMenu(audio, state),
@@ -220,6 +223,11 @@ def get_menu_factories(audio, state):
         "jingle_select_voice": lambda: JingleVoiceMenu(audio, state),
         "jingle_select_sfx": lambda: JingleSFXMenu(audio, state),
     }
+
+    for menu_id, factory in routes.items():
+        router.register_dynamic(menu_id, factory)
+
+    return router
 
 def main():
     """Hauptspielschleife."""
@@ -310,8 +318,8 @@ def main():
             pass
 
 
-    menu_factories = get_menu_factories(audio, state)
-    current_menu = menu_factories[current_key]()
+    router = setup_router(audio, state)
+    current_menu = router.get_menu(current_key)
 
     audio.speak(get_text("main_welcome"))
     audio.play_music("music_back")
@@ -332,9 +340,9 @@ def main():
         if hasattr(current_menu, 'update'):
             result = current_menu.update()
             if result:
-                if result in menu_factories:
+                if router.has_menu(result):
                     current_key = result
-                    current_menu = menu_factories[current_key]()
+                    current_menu = router.get_menu(current_key)
                     current_menu.announce_entry()
 
         for event in pygame.event.get():
@@ -383,16 +391,16 @@ def main():
                     # Direkter Sprung ins Dev-Menü
                     result = "developer_menu"
                     current_key = result
-                    current_menu = menu_factories[current_key]()
+                    current_menu = router.get_menu(current_key)
                     current_menu.announce_entry()
                     continue
                 
                 try:
                     result = current_menu.handle_input(event)
                     if result:
-                        if result in menu_factories:
+                        if router.has_menu(result):
                             current_key = result
-                            current_menu = menu_factories[current_key]()
+                            current_menu = router.get_menu(current_key)
                             current_menu.announce_entry()
                             
                             # Trigger Contextual Tutorials
@@ -426,7 +434,7 @@ def main():
                     
                     # Versuche zurück zum Hauptmenü zu gehen statt abzustürzen
                     current_key = "main_menu"
-                    current_menu = menu_factories[current_key]()
+                    current_menu = router.get_menu(current_key)
                     current_menu.announce_entry()
                     audio.speak("Ein interner Fehler ist aufgetreten. Rückkehr zum Hauptmenü.")
 
@@ -435,7 +443,7 @@ def main():
                 if state.is_developing and any_ready and current_key != "dev_progress_menu":
                     if not state.pause_for_menu:
                         current_key = "dev_progress_menu"
-                        current_menu = menu_factories[current_key]()
+                        current_menu = router.get_menu(current_key)
                         current_menu.announce_entry()
 
                 # --- EVENT QUEUEING ---
@@ -451,23 +459,23 @@ def main():
                 if current_key not in active_event_menus:
                     if getattr(state, "pending_dev_event", None):
                         current_key = "aaa_dev_event_menu"
-                        current_menu = menu_factories[current_key]()
+                        current_menu = router.get_menu(current_key)
                         current_menu.announce_entry()
                     elif getattr(state, "pending_influencer_event", None):
                         current_key = "influencer_event_menu"
-                        current_menu = menu_factories[current_key]()
+                        current_menu = router.get_menu(current_key)
                         current_menu.announce_entry()
                     elif getattr(state, "pending_union_event", None):
                         current_key = "union_event_menu"
-                        current_menu = menu_factories[current_key]()
+                        current_menu = router.get_menu(current_key)
                         current_menu.announce_entry()
                     elif getattr(state, "pending_headhunt_event", None):
                         current_key = "headhunting_event_menu"
-                        current_menu = menu_factories[current_key]()
+                        current_menu = router.get_menu(current_key)
                         current_menu.announce_entry()
                     elif getattr(state, "pending_goty_results", None) and current_key != "dev_progress_menu":
                         current_key = "goty_menu"
-                        current_menu = menu_factories[current_key]()
+                        current_menu = router.get_menu(current_key)
                         current_menu.announce_entry()
 
         # --- VISUAL RENDERING (OPTIMIERT) ---

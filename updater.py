@@ -20,16 +20,22 @@ GITHUB_API = "https://api.github.com/repos/Lauju1909/Audio-Studio-Tycoon/release
 UPDATE_TIMEOUT = 10  # Sekunden für den Update-Check
 
 
-def _parse_version(v_str: str) -> list:
-    """Wandelt '3.2.0-beta.1' in [3, 2, 0] um (ignoriert Suffix)."""
+def _parse_version(v_str: str) -> tuple:
+    """Wandelt '3.2.0-beta.1' in ([3, 2, 0], 'beta.1') um für korrekten Vergleich."""
     try:
-        core = v_str.strip().lstrip("v").split("-")[0]
+        v_str = v_str.strip().lstrip("v")
+        if "-" in v_str:
+            core, suffix = v_str.split("-", 1)
+        else:
+            core = v_str
+            suffix = "z_stable"  # Stable ist neuer als beta
+            
         parts = [int(x) for x in core.split(".") if x.isdigit()]
         while len(parts) < 3:
             parts.append(0)
-        return parts
+        return (tuple(parts), suffix)
     except Exception:  # pylint: disable=broad-exception-caught
-        return [0, 0, 0]
+        return ((0, 0, 0), "")
 
 
 def _fetch_releases(timeout: int = UPDATE_TIMEOUT) -> Optional[list]:
@@ -53,7 +59,7 @@ def get_latest_stable_release() -> Optional[dict]:
     releases = _fetch_releases()
     if not releases:
         return None
-    stable = [r for r in releases if not r.get("prerelease", True) and not r.get("draft", True)]
+    stable = [r for r in releases if not r.get("prerelease", False) and not r.get("draft", False)]
     if not stable:
         return None
     stable.sort(key=lambda r: _parse_version(r.get("tag_name", "0.0.0")), reverse=True)
@@ -65,7 +71,7 @@ def get_latest_beta_release() -> Optional[dict]:
     releases = _fetch_releases()
     if not releases:
         return None
-    betas = [r for r in releases if r.get("prerelease", False) and not r.get("draft", True)]
+    betas = [r for r in releases if r.get("prerelease", False) and not r.get("draft", False)]
     if not betas:
         return None
     betas.sort(key=lambda r: _parse_version(r.get("tag_name", "0.0.0")), reverse=True)
@@ -114,10 +120,12 @@ def check_for_updates(current_version: str, channel: str = "stable") -> dict:
         Dict mit: update_available, version, changelog, download_url, hash, channel
     """
     try:
-        if channel == "beta":
-            release = get_latest_beta_release() or get_latest_stable_release()
-        else:
+        if channel == "stable":
             release = get_latest_stable_release()
+        elif channel == "beta":
+            release = get_latest_beta_release()
+        else:
+            release = None
 
         if not release:
             return {"update_available": False, "error": "no_release"}

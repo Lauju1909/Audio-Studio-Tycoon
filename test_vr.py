@@ -52,6 +52,7 @@ class TestVRSystem(unittest.TestCase):
         # Make employees bad
         for emp in self.state.employees:
             emp.skill_level = 2
+            emp.assigned_project = project
             
         self.state.active_projects.append({
             "project": project,
@@ -64,8 +65,8 @@ class TestVRSystem(unittest.TestCase):
         old_progress = self.state.active_projects[0]["progress"]
         
         # We manually step `_on_new_week` but we can't easily because progress is done every tick.
-        # Let's just run update_tick
-        print('ACTIVE:', self.state.active_projects); self.state.update_tick(600000)
+        # Let's just run update_tick for 1 week (15000 ms)
+        self.state.update_tick(15000)
         new_progress = self.state.active_projects[0]["progress"]
         
         # 0.4 penalty for low skill!

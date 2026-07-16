@@ -1,5 +1,5 @@
 from .base import Menu, TextInputMenu, SliderMenu
-from .settings import SettingsMenu, KeybindingMenu, VolumeSettingsMenu, LanguageMenu
+from .settings import SettingsMenu, KeybindingMenu, VolumeSettingsMenu, LanguageMenu, CustomLanguageInputMenu
 from .system import UpdateConfirmMenu, UpdateProgressMenu, BankruptcyMenu, SaveMenu, LoadMenu, HelpMenu
 from .office import (
     HRMenu, HireMenu, EmployeeOverviewMenu, FireMenu, TrainingEmployeeSelectMenu, 
@@ -51,7 +51,7 @@ from .marketing_jingle import JingleNameInputMenu, JingleGeneratorMenu, JingleMu
 
 __all__ = [
     "Menu", "TextInputMenu", "SliderMenu", "SettingsMenu", "KeybindingMenu",
-    "LanguageMenu", "VolumeSettingsMenu", "UpdateConfirmMenu", "UpdateProgressMenu", "BankruptcyMenu", "SaveMenu",
+    "LanguageMenu", "CustomLanguageInputMenu", "VolumeSettingsMenu", "UpdateConfirmMenu", "UpdateProgressMenu", "BankruptcyMenu", "SaveMenu",
     "LoadMenu", "HelpMenu", "HRMenu", "HireMenu", "EmployeeOverviewMenu", "FireMenu",
     "TrainingEmployeeSelectMenu", "TrainingOptionMenu", "OfficeMenu",
     "EmailInboxMenu", "EmailDetailMenu", "OfficeUpgradeMenu", "OfficePerksMenu", "HeadhuntingEventMenu", "ResearchMenu", "FeatureResearchMenu",

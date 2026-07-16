@@ -97,6 +97,19 @@ class GameState:
         # NEU: Monetarisierungs-Cooldown
         self.last_ad_week = -10
         self.monetization_back_target = "bank_menu" # Default target for back button
+        
+        # Managers
+        from managers.hr import HRManager
+        from managers.finance import FinanceManager
+        from managers.marketing import MarketingManager
+        from managers.publisher import PublisherManager
+        self.hr_manager = HRManager(self)
+        self.finance_manager = FinanceManager(self)
+        self.marketing_manager = MarketingManager(self)
+        
+        # Notifications
+        from notifications import MailClient
+        self.mail_client = MailClient(self)
 
         # Aktive MMOs
         self.active_mmos = []
@@ -278,6 +291,7 @@ class GameState:
         self.multiplayer = None
 
         # NEU: Tutorial-System
+        self.publisher_manager = PublisherManager(self)
         self.completed_tutorials = [] # Liste der abgeschlossenen Tutorial-IDs
         self.active_tutorial = None # Aktuelles Tutorial-Objekt
         self.tutorial_step_index = 0
@@ -1167,69 +1181,12 @@ class GameState:
         self.update_subscription_service()
         self._process_engine_licensing()
         self._process_port_projects()
+        if hasattr(self, 'publisher_manager'):
+            self.publisher_manager.update_tick()
         self._process_podcast_network()
         self._process_cloud_gaming()
         self._process_audio_pass()
 
-        # Merchandising verarbeiten
-        for m in list(getattr(self, "active_merch_campaigns", [])):
-            base_game = next((g for g in self.game_history if g.name == m.game_name), None)
-            if base_game:
-                multiplier = 1.0
-                if m.merch_type == "T-Shirts": multiplier = 1.2
-                elif m.merch_type == "Action-Figuren": multiplier = 2.0
-                elif m.merch_type == "Soundtrack CD/Vinyl": multiplier = 1.5
-                
-                ip_strength = base_game.ip_rating / 100.0
-                weekly_income = int((m.investment / m.duration_weeks) * 1.5 * multiplier * (0.5 + ip_strength))
-                
-                m.total_revenue += weekly_income
-                self.track_income("merch", weekly_income)
-                
-                self.fans += int(10 * multiplier)
-                self.hype = min(100, getattr(self, "hype", 0) + 1)
-                
-            m.weeks_active += 1
-            if m.weeks_active >= m.duration_weeks:
-                self.emails.insert(0, Email(
-                    sender=self.get_text("sender_marketing"),
-                    subject=f"Merch beendet: {m.game_name}",
-                    body=f"Die {m.merch_type}-Kampagne fÃ¼r {m.game_name} ist beendet.\nGesamtumsatz: {m.total_revenue} Euro", date_week=self.week
-                ))
-                self.active_merch_campaigns.remove(m)
-
-        
-        # Feature 1.2: Support Department
-        support_level = getattr(self, "support_level", 0)
-        if support_level > 0:
-            self.track_expense("other", support_level * 500)
-            
-        # Feature 1.3: QA Lab
-        qa_level = getattr(self, "qa_level", 0)
-        if qa_level > 0:
-            for proj in getattr(self, "active_projects", []):
-                current_bugs = proj.get("bugs", 0)
-                if current_bugs > 0:
-                    removed = min(current_bugs, qa_level * 2)
-                    proj["bugs"] = current_bugs - removed
-                    
-        # Crowdfunding-Deadlines prüfen
-        failed_campaigns = []
-        for cf in self.active_crowdfundings:
-            if self.week > cf["deadline_week"]:
-                # Deadline verpasst!
-                self.emails.insert(0, Email(
-                    sender=self.get_text('sender_angry_backers', default="Wütende Backer"),
-                    subject=self.get_text('subject_cf_fail', default="Wo ist unser Spiel?!"),
-                    body=self.get_text('body_cf_fail', name=cf["project_name"], default=f"Wir haben {cf['project_name']} vor einem Jahr unterstützt und es ist immer noch nicht fertig! Betrug!"),
-                    date_week=self.week
-                ))
-                self.fans = max(0, self.fans - int(cf["target"] / 50))
-                self.hype = max(0, self.hype - 100)
-                failed_campaigns.append(cf)
-        
-        for cf in failed_campaigns:
-            self.active_crowdfundings.remove(cf)
 
         # Monatsankündigung (dynamisch basierend auf WEEKS_PER_YEAR)
         week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
@@ -1239,74 +1196,6 @@ class GameState:
         prev_month = int((prev_week_in_year - 1) * 12 / WEEKS_PER_YEAR) if self.week > 1 else -1
         
         is_new_month = (current_month != prev_month)
-
-        # Passive income from acquired studios
-        for rival in self.rivals:
-            if getattr(rival, 'is_owned_by_player', False):
-                passive_income = random.randint(10000, 50000)
-                self.money += passive_income
-                self.track_income("other", passive_income)
-
-
-        # Office Perks Overhead
-        if getattr(self, 'office_perks', []):
-            perk_cost = 0
-            for perk in self.office_perks:
-                if perk == "hr_department": perk_cost += 10000
-                elif perk == "therapist": perk_cost += 5000
-                elif perk == "wellness_benefits": perk_cost += 2000
-                else: perk_cost += 500
-                
-            self.money -= perk_cost
-            self.track_expense("other", perk_cost)
-
-        # Stress and Strikes
-        is_crunching_any = any(ap.get('crunch') for ap in self.active_projects)
-        if is_crunching_any:
-            self.stress_level = min(100.0, getattr(self, 'stress_level', 0.0) + 5.0)
-        else:
-            perk_relief = len(getattr(self, 'office_perks', [])) * 2.0
-            self.stress_level = max(0.0, getattr(self, 'stress_level', 0.0) - (2.0 + perk_relief))
-
-        avg_morale = sum(e.morale for e in self.employees) / len(self.employees) if self.employees else 100
-        
-        # Trigger Union Formation or Strike Threat
-        if len(self.employees) >= 5 and (getattr(self, 'stress_level', 0.0) > 60.0 or avg_morale < 50):
-            if not getattr(self, 'has_union', False):
-                if random.random() < 0.2 and getattr(self, 'pending_union_event', None) is None:
-                    self.pending_union_event = {"type": "formation"}
-            else:
-                # Already has union, trigger strike threat if morale/stress is still bad
-                if random.random() < 0.15 and getattr(self, 'strike_weeks_left', 0) == 0 and getattr(self, 'pending_union_event', None) is None:
-                    self.pending_union_event = {"type": "strike_threat"}
-
-        # Headhunting event
-        if not getattr(self, "pending_headhunt_event", None) and self.employees:
-
-            for emp in self.employees:
-                avg_skill = sum(emp.skills.values()) / len(emp.skills) if emp.skills else 0
-                if avg_skill >= 80 and random.random() < 0.005:
-                    rival_offer = int(emp.salary * random.uniform(1.2, 2.0))
-                    self.pending_headhunt_event = {
-                        "employee": emp,
-                        "rival_offer": rival_offer
-                    }
-                    self.time_speed = 0
-                    break
-
-        # Strike Countdown
-        if getattr(self, 'strike_weeks_left', 0) > 0:
-            strike_weekly_cost = len(self.employees) * 10000
-            self.money -= strike_weekly_cost
-            self.track_expense("other", strike_weekly_cost)
-            self.strike_weeks_left -= 1
-            if self.strike_weeks_left == 0:
-                self.emails.insert(0, Email(
-                    sender=self.get_text('sender_union'),
-                    subject=self.get_text('subject_strike_ended'),
-                    body=self.get_text('body_strike_ended'),
-                    date_week=self.week
-                ))
 
         if is_new_month and self.week > 1:
             cal = self.get_calendar_text()
@@ -1320,382 +1209,10 @@ class GameState:
             if hasattr(self, 'audio'):
                 self.audio.speak(self.get_text('announce_new_month', date=cal), interrupt=False)
 
-        # Monatlicher Kontoauszug
-        if (self.week == 1) or (is_new_month and self.week > 4):
-            self._send_monthly_bank_statement()
-            self._process_streaming_platform_monthly()
-
-        # Jahres-Reset für Buchhaltung und Jahresbilanz
-        if (self.week - 1) % WEEKS_PER_YEAR == 0:
-            if self.week > 1 and hasattr(self, "accounting"):
-                inc = self.accounting.get("income", 0)
-                exp = self.accounting.get("expenses", 0)
-                prof = inc - exp
-                self.emails.insert(0, Email(
-                    sender=self.get_text('sender_accounting'),
-                    subject=self.get_text('subject_yearly_report', year=self.get_calendar_year() - 1),
-                    body=self.get_text('body_yearly_report', income=inc, expenses=exp, profit=prof),
-                    date_week=self.week
-                ))
-            self.accounting = {"income": 0, "expenses": 0, "loan_paid": 0}
-            # Neue Themen freischalten
-            self._unlock_historical_topics()
-            
-        # --- Pleite-Check (Bankruptcy Check) ---
-        if self.is_bankrupt() and not getattr(self, "pending_bankrupt", False):
-            self.pending_bankrupt = True
-            self.time_speed = 0  # Pause das Spiel bei Bankrott
-            if hasattr(self, 'audio'):
-                self.audio.play_sound('warn')
-                self.audio.speak(self.get_text('bankruptcy_warning'), interrupt=True)
-            
-        # --- AUDIO FEEDBACK: Warnung bei wenig Geld ---
-        if self.money < 5000 and self.week > 10:
-            if hasattr(self, 'audio'):
-                self.audio.play_sound('warn')
-                self.audio.speak(self.get_text('low_money_warning', amount=self.money), interrupt=False)
-            
-        # Gehälter berechnen (monatlich aufgeteilt auf Wochen)
-        self.pay_salaries()
-        
-        # Gehälter abziehen (jetzt monatlich bei Monatswechsel)
-        if is_new_month and self.week > 1:
-            total_salary = self.accrued_salaries
-            self.track_expense("salaries", total_salary)
-            self.accrued_salaries = 0 # Reset nach Zahlung
-        
-        
-        # NEU Phase H: Erweiterte Mitarbeiter-Logik (Moral, Kündigungen, Gehalt)
-        
-        # Büro-Moralbonus berechnen (Summe aller morale_bonus der platzierten Objekte)
-        office_morale_bonus = 0
-        for obj in getattr(self, 'office_objects', []):
-            m_bonus = 0
-            if hasattr(obj, 'get'):
-                m_bonus = obj.get("morale_bonus", 0)
-            elif isinstance(obj, dict):
-                from game_data import BUILD_OBJECTS
-                obj_type = obj.get("type", obj.get("object_type"))
-                obj_def = BUILD_OBJECTS.get(obj_type)
-                if obj_def:
-                    m_bonus = obj_def.get("morale_bonus", 0)
-            office_morale_bonus += m_bonus
-
-        # NEU: Team-Persönlichkeit easygoing
-        has_easygoing = any(getattr(e, "personality", None) == "easygoing" for e in self.employees)
-
-        quitting_employees = []
-        for i, emp in enumerate(self.employees):
-            emp.weeks_employed += 1
-            if not getattr(self, 'crunch_active', False):
-                # Standard-Basis (2) + Büro-Bonus
-                reg_bonus = 2 + office_morale_bonus
-                if has_easygoing:
-                    reg_bonus *= 1.10
-                if getattr(emp, "personality", None) == "perfectionist":
-                    reg_bonus *= 0.90
-                emp.morale = min(100, emp.morale + max(1, int(reg_bonus)))
-
-            # -----------------------------------------------
-            # NEU Phase 2: Training-Countdown
-            # -----------------------------------------------
-            if getattr(emp, 'is_training', False):
-                emp.training_weeks_left -= 1
-                if emp.training_weeks_left <= 0:
-                    emp.is_training = False
-                    # Skill vergeben
-                    boost = getattr(emp, 'training_skill_boost', 0)
-                    if boost > 0:
-                        emp.skills[emp.primary_skill] = min(100, emp.skills[emp.primary_skill] + boost)
-                    emp.training_skill_boost = 0
-                    self.emails.insert(0, Email(
-                        sender=self.get_text('sender_hr'),
-                        subject=self.get_text('subject_training_done', name=emp.name),
-                        body=self.get_text('body_training_done', name=emp.name, skill=emp.primary_skill, value=emp.skills[emp.primary_skill]),
-                        date_week=self.week
-                    ))
-                continue  # Trainierende Mitarbeiter kündigen nicht / bekommen 
-            # -----------------------------------------------
-            # Krankheitsausfaelle & Burnout
-            # -----------------------------------------------
-            is_emp_crunching = False
-            for ap in self.active_projects:
-                if ap.get("crunch") and emp in self._active_employees(ap["project"]):
-                    is_emp_crunching = True
-                    break
-                    
-            if is_emp_crunching:
-                emp.crunch_weeks = getattr(emp, "crunch_weeks", 0) + 1
-            else:
-                emp.crunch_weeks = max(0, getattr(emp, "crunch_weeks", 0) - 1)
-
-            # Vacation Logic
-            if getattr(emp, 'vacation_weeks_left', 0) > 0:
-                emp.vacation_weeks_left -= 1
-                emp.fatigue = max(0, getattr(emp, 'fatigue', 0) - 20)
-                emp.morale = min(100, emp.morale + 10)
-                continue
-
-            # Fatigue Logic
-            is_working = self.is_developing or getattr(self, 'active_custom_console', None) or len(getattr(self, 'active_ports', [])) > 0 or len(getattr(self, 'active_contract_works', [])) > 0
-            if is_working and not emp.is_training and not getattr(emp, 'is_sick', False):
-                emp.fatigue = getattr(emp, 'fatigue', 0) + random.randint(1, 3)
-                if is_emp_crunching:
-                    emp.fatigue += 5
-            else:
-                emp.fatigue = max(0, getattr(emp, 'fatigue', 0) - 2)
-
-            if getattr(emp, 'fatigue', 0) >= 100 and not getattr(emp, 'is_sick', False):
-                emp.fatigue = 0
-                emp.is_sick = True
-                emp.sick_weeks_left = random.randint(3, 6)
-                emp.morale = max(0, emp.morale - 30)
-                self.emails.insert(0, Email(
-                    sender=self.get_text('sender_hr'),
-                    subject=self.get_text('subject_burnout', default='Mitarbeiter-Burnout!'),
-                    body=self.get_text('body_burnout', name=emp.name, default=f'{emp.name} hat einen Burnout erlitten und faellt fuer {emp.sick_weeks_left} Wochen aus!'),
-                    date_week=self.week
-                ))
-                continue
-
-            if getattr(emp, 'is_sick', False):
-                emp.sick_weeks_left -= 1
-                if emp.sick_weeks_left <= 0:
-                    emp.is_sick = False
-                    self.emails.insert(0, Email(
-                        sender=self.get_text('sender_hr'),
-                        subject=self.get_text('subject_sick_recovered', name=emp.name),
-                        body=self.get_text('body_sick_recovered', name=emp.name),
-                        date_week=self.week
-                    ))
-                continue  # Kranke nicht kuendigen / keine Gehaltsanfragen
-                
-            if not emp.is_sick and not emp.is_training:
-                sick_chance = 0.01
-                if emp.morale < 30:
-                    sick_chance = 0.08
-                elif emp.morale < 60:
-                    sick_chance = 0.03
-                    
-                # Burnout Modifier
-                if getattr(emp, "crunch_weeks", 0) > 4:
-                    sick_chance += 0.10 * (emp.crunch_weeks - 4)
-                    
-                # HR Perks reduction
-                perks = getattr(self, "office_perks", [])
-                if "hr_department" in perks: sick_chance -= 0.05
-                if "wellness_benefits" in perks: sick_chance -= 0.05
-                if "therapist" in perks: sick_chance -= 0.08
-                
-                sick_chance = max(0.01, sick_chance)
-
-                if random.random() < sick_chance:
-                    emp.is_sick = True
-                    emp.sick_weeks_left = random.randint(1, 3)
-                    if getattr(emp, "crunch_weeks", 0) > 4:
-                        emp.sick_weeks_left += 2 # Burnout dauert laenger
-                    self.emails.insert(0, Email(
-                        sender=self.get_text('sender_hr'),
-                        subject=self.get_text('subject_sick', name=emp.name),
-                        body=self.get_text('body_sick', name=emp.name, weeks=emp.sick_weeks_left),
-                        date_week=self.week
-                    ))
-                    continue
-
-                # Kuendigung wegen Burnout
-                quit_chance = 0.0
-                if emp.morale == 0: quit_chance += 0.05
-                if getattr(emp, "crunch_weeks", 0) > 8: quit_chance += 0.15
-                
-                if "hr_department" in perks: quit_chance -= 0.05
-                if "therapist" in perks: quit_chance -= 0.10
-                
-                if quit_chance > 0 and random.random() < quit_chance:
-                    quitting_employees.append(emp)
-                    if getattr(emp, "crunch_weeks", 0) > 8:
-                        self.emails.insert(0, Email(
-                            sender=self.get_text('sender_hr'),
-                            subject=self.get_text('subject_burnout_quit'),
-                            body=self.get_text('body_burnout_quit', name=emp.name),
-                            date_week=self.week
-                        ))
-                    continue
-
-            # Gehaltsforderung (E-Mail)
-            if not getattr(emp, 'pending_raise_request', False) and (self.week - getattr(emp, 'last_raise_week', 0)) > 20:
-                expected_salary = sum(emp.skills.values()) * 5 + 500
-                # Will eine Erhöhung, wenn sein Skill 30% mehr wert ist als er verdient
-                if expected_salary > emp.salary * 1.3 and random.random() < 0.1:
-                    emp.pending_raise_request = True
-                    new_salary = int(emp.salary * 1.25)
-                    mail_subj = self.get_text('subject_salary_raise')
-                    mail_body = self.get_text('body_salary_raise', name=emp.name, current=emp.salary, expected=new_salary)
-                    
-                    mail = Email(sender=emp.name, subject=mail_subj, body=mail_body, date_week=self.week)
-                    mail.is_salary_request = True
-                    mail.employee_idx = i
-                    mail.requested_salary = new_salary
-                    self.emails.insert(0, mail)
-                    
-        for e in quitting_employees:
-            if e in self.employees:
-                self.employees.remove(e)
-                self.emails.insert(0, Email(
-                sender=e.name,
-                subject=self.get_text('subject_quit'),
-                body=self.get_text('body_quit', name=e.name),
-                date_week=self.week
-            ))
-
-
-        
-        # Kreditabzahlung
-        if getattr(self, "bank_loan", None):
-            payment = min(self.bank_loan.weekly_payment, self.bank_loan.amount_remaining)
-            # NEU: Wenn nicht genug Geld für die Rate → Bankrott-Warnung
-            if self.money < payment:
-                if not getattr(self, "pending_bankrupt", False):
-                    self.pending_bankrupt = True
-                    self.time_speed = 0
-                    if hasattr(self, 'audio'):
-                        self.audio.play_sound('warn')
-                        self.audio.speak(self.get_text('loan_default_warning'), interrupt=True)
-            else:
-                self.track_expense("loan_repayment", payment)
-                self.accounting["loan_paid"] += payment
-                self.bank_loan.amount_remaining -= payment
-                self.bank_loan.weeks_remaining -= 1
-                if self.bank_loan.amount_remaining <= 0 or self.bank_loan.weeks_remaining <= 0:
-                    self.bank_loan = None
-                    self.emails.insert(0, Email(
-                        sender=self.get_text('sender_bank'),
-                        subject=self.get_text('subject_loan_paid'),
-                        body=self.get_text('body_loan_paid'),
-                        date_week=self.week
-                    ))
-                    if hasattr(self, 'audio'):
-                        self.audio.play_sound('success')
-                        self.audio.speak(self.get_text('subject_loan_paid'), interrupt=False)
-        
-        # NEU Phase I/II: Industriespionage / Headhunting
-        if self.week % 8 == 0 and self.employees and self.rivals:
-            rival = random.choice(self.rivals)
-            
-            # Check für Sicherheits-Zentrale & Rechtsabteilung
-            security_bonus = 1.0
-            legal_bonus = 1.0
-            has_legal = False
-            for obj in getattr(self, 'office_objects', []):
-                if obj.get('bonus') == 'security':
-                    security_bonus = 0.5 # Chance halbiert
-                if obj.get('bonus') == 'legal_protection':
-                    legal_bonus = 0.7 # Weitere 30% Reduktion
-                    has_legal = True
-            
-            # Basis-Chance skaliert mit Schwierigkeit
-            diff_multi = {0: 0.2, 1: 0.5, 2: 1.0, 3: 1.8}.get(self.difficulty, 1.0)
-            chance = 0.06 * diff_multi * security_bonus * legal_bonus
-            
-            if getattr(rival, 'ai_personality', '') == "Aggressive": chance *= 1.5
-            
-            if random.random() < chance:
-                target_emp = random.choice(self.employees)
-                
-                # Schutz-Logik Phase II: Rechtsabteilung schützt Top-Leute
-                if has_legal and getattr(target_emp, 'level', 1) >= 8:
-                    # Der Versuch scheitert stillschweigend (Vertrag ist zu gut)
-                    pass
-                elif not getattr(target_emp, 'pending_poach_offer', False):
-                    target_emp.pending_poach_offer = True
-                    offer_salary = int(target_emp.salary * 1.5)
-                    mail = Email(
-                        sender="Headhunter",
-                        subject=self.get_text('subject_poach_offer', name=target_emp.name),
-                        body=self.get_text('body_poach_offer', name=target_emp.name, rival=rival.name, salary=offer_salary),
-                        date_week=self.week
-                    )
-                    mail.is_poach_offer = True
-                    mail.employee_idx = self.employees.index(target_emp)
-                    mail.offered_salary = offer_salary
-                    self.emails.insert(0, mail)
-
-        # Mitarbeiter verlässt Studio bei ignoriertem Abwerbeangebot
-        for emp in list(self.employees):
-            if getattr(emp, 'pending_poach_offer', False):
-                # Wir nutzen ein einfaches 'timer' Attribut oder prüfen ob das Angebot alt ist
-                # Da wir kein Zeitstempel im Employee für das Angebot haben, nutzen wir eine Chance
-                if random.random() < 0.3: # 30% Chance pro Woche zu gehen
-                    self.employees.remove(emp)
-                    self.emails.insert(0, Email(
-                        sender="System",
-                        subject=self.get_text('subject_employee_left', name=emp.name),
-                        body=self.get_text('body_employee_left_poach', name=emp.name),
-                        date_week=self.week
-                    ))
-                    self.audio.speak(self.get_text('employee_left_poach', name=emp.name))
-
-        # NEU Phase II: Marktforschung / KI-Spionage
-        has_intel = False
-        for obj in getattr(self, 'office_objects', []):
-            if obj.get('bonus') == 'competitor_intel':
-                has_intel = True
-                break
-        
-        if has_intel and is_new_month:
-            potential_targets = [r for r in self.rivals if getattr(r, 'planned_project', None)]
-            if potential_targets:
-                target = random.choice(potential_targets)
-                plan = target.planned_project
-                self.emails.append(Email(
-                    sender=self.get_text('sender_intel'),
-                    subject=self.get_text('subject_intel_report', name=target.name),
-                    body=self.get_text('body_intel_report', name=target.name, genre=self.get_text(plan['genre'])),
-                    date_week=self.week
-                ))
-
-        # Trend check (ca. alle 4-8 Monate)
-        trend_interval = random.randint(int(WEEKS_PER_YEAR * 0.4), int(WEEKS_PER_YEAR * 0.8))
-        if self.week - self.last_trend_week >= trend_interval:
-            if self.week % 8 == 0:
-                self.generate_trend()
-
-        # --- SoundCon: Jahresereignis (jedes Jahr Woche 2 = Messe-Zeit) ---
-        week_in_year = (self.week - 1) % WEEKS_PER_YEAR + 1
-        current_year = self.get_calendar_year()
-        if week_in_year == 2 and current_year > self.soundcon_last_year:
-            # Messe steht an – Spieler via E-Mail informieren
-            self.emails.insert(0, Email(
-                sender=self.get_text('soundcon_sender'),
-                subject=self.get_text('soundcon_email_subject', year=current_year),
-                body=self.get_text('soundcon_email_body'),
-                date_week=self.week
-            ))
-            if hasattr(self, 'audio'):
-                self.audio.play_sound('confirm')
-                self.audio.speak(self.get_text('soundcon_announcement', year=current_year), interrupt=False)
-
-        # --- Soundtrack-Label: Wöchentliche Tantiemen ---
-        if getattr(self, 'soundtrack_label', None):
-            label_income = self.soundtrack_label.tick_week()
-            label_hype   = self.soundtrack_label.tick_hype()
-            if label_income > 0:
-                self.track_income('other', label_income)
-            if label_hype > 0:
-                self.hype = min(250, self.hype + label_hype)
-
-        # Zufallsereignisse prüfen
-        self.check_random_event()
-        
-        # Abgelaufene Events entfernen
-        new_active = []
-        for e in self.active_events:
-            if "duration" in e:
-                e["duration"] -= 1
-                if e["duration"] > 0:
-                    new_active.append(e)
-            else:
-                new_active.append(e) # Wenn keine Dauer, bleibt es aktiv (oder sollte gelöscht werden? Sicherer: Wir setzen default duration auf 0 beim Event erstellen)
-        self.active_events = new_active
+        # Manager Ticks
+        self.hr_manager.tick()
+        self.finance_manager.tick(is_new_month)
+        self.marketing_manager.tick(is_new_month)
         
         # Eigene Konsolenverkaeufe und Marktanteil
         if hasattr(self, "custom_consoles"):
@@ -1730,8 +1247,21 @@ class GameState:
                 if getattr(cc, 'hype', 0) > 0:
                     cc.hype = max(0, cc.hype - 0.5)
 
-            
-        # Projektfortschritt für alle aktiven Projekte
+        # Zufallsereignisse prüfen
+        self.check_random_event()
+        
+        # Abgelaufene Events entfernen
+        new_active = []
+        for e in self.active_events:
+            if "duration" in e:
+                e["duration"] -= 1
+                if e["duration"] > 0:
+                    new_active.append(e)
+            else:
+                new_active.append(e)
+        self.active_events = new_active
+
+                # Projektfortschritt für alle aktiven Projekte
         for ap in list(self.active_projects):
             if getattr(self, 'strike_weeks_left', 0) > 0:
                 continue
@@ -4427,7 +3957,6 @@ class GameState:
             "active_soundcon": self.active_soundcon.to_dict() if getattr(self, "active_soundcon", None) else None,
             "pending_soundcon_result": getattr(self, "pending_soundcon_result", None),
             "radio_contracts": [c.to_dict() for c in getattr(self, "radio_contracts", [])],
-            "active_jingles": [j.to_dict() for j in getattr(self, "active_jingles", [])],
             "soundtrack_label": self.soundtrack_label.to_dict() if getattr(self, "soundtrack_label", None) else {},
             "podcast_network": self.podcast_network.to_dict() if hasattr(self, "podcast_network") else {},
             "audio_pass": self.audio_pass.to_dict() if getattr(self, "audio_pass", None) else {},
@@ -4450,6 +3979,44 @@ class GameState:
             "unlocked_achievements": getattr(self, "unlocked_achievements", []),
             "my_goty_wins": getattr(self, "my_goty_wins", 0),
             "esports_leagues": [l.to_dict() for l in getattr(self, "esports_leagues", [])],
+            "difficulty": getattr(self, "difficulty", 1),
+            "research_points": getattr(self, "research_points", 0),
+            "prestige": getattr(self, "prestige", 0),
+            "tax_rate": getattr(self, "tax_rate", 0.15),
+            "sales_multiplier": getattr(self, "sales_multiplier", 1.0),
+            "profit_multiplier": getattr(self, "profit_multiplier", 1.0),
+            "logic_multiplier": getattr(self, "logic_multiplier", 1.0),
+            "hype_multiplier": getattr(self, "hype_multiplier", 1.0),
+            "dev_speed_multiplier": getattr(self, "dev_speed_multiplier", 1.0),
+            "interest_rate": getattr(self, "interest_rate", 0.05),
+            "marketing_efficiency": getattr(self, "marketing_efficiency", 1.0),
+            "streamer_hype_multi": getattr(self, "streamer_hype_multi", 1.0),
+            "quality_standard_multi": getattr(self, "quality_standard_multi", 1.0),
+            "subscription_multi": getattr(self, "subscription_multi", 1.0),
+            "goty_history": getattr(self, "goty_history", {}),
+            "chart_history": getattr(self, "chart_history", []),
+            "streaming_platform": self.streaming_platform.to_dict() if getattr(self, "streaming_platform", None) else None,
+            "subscription_active": getattr(self, "subscription_active", False),
+            "subscription_price": getattr(self, "subscription_price", 9.99),
+            "subscription_subscribers": getattr(self, "subscription_subscribers", 0),
+            "subscription_hype": getattr(self, "subscription_hype", 0.0),
+            "financial_history": getattr(self, "financial_history", []),
+            "bank_statements": [s.to_dict() for s in getattr(self, "bank_statements", [])],
+            "owned_licenses": getattr(self, "owned_licenses", []),
+            "active_addons": [a.to_dict() for a in getattr(self, "active_addons", [])],
+            "active_bundles": [b.to_dict() for b in getattr(self, "active_bundles", [])],
+            "active_merch_campaigns": [m.to_dict() for m in getattr(self, "active_merch_campaigns", [])],
+            "manufacturing_jobs": [m.to_dict() for m in getattr(self, "manufacturing_jobs", [])],
+            "active_merch": getattr(self, "active_merch", []),
+            "active_tournaments": getattr(self, "active_tournaments", []),
+            "active_sponsorships": getattr(self, "active_sponsorships", []),
+            "active_crowdfundings": getattr(self, "active_crowdfundings", []),
+            "failed_crowdfundings": getattr(self, "failed_crowdfundings", 0),
+            "support_level": getattr(self, "support_level", 0),
+            "qa_level": getattr(self, "qa_level", 0),
+            "is_developing_console": getattr(self, "is_developing_console", False),
+            "console_progress": getattr(self, "console_progress", 0),
+            "console_total_weeks": getattr(self, "console_total_weeks", 48)
         }
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
@@ -4699,6 +4266,79 @@ class GameState:
             self.soundtrack_label = SoundtrackLabel.from_dict(data["soundtrack_label"])
         else:
             self.soundtrack_label = None
+
+        self.difficulty = data.get("difficulty", 1)
+        self.research_points = data.get("research_points", 0)
+        self.prestige = data.get("prestige", 0)
+        self.tax_rate = data.get("tax_rate", 0.15)
+        self.sales_multiplier = data.get("sales_multiplier", 1.0)
+        self.profit_multiplier = data.get("profit_multiplier", 1.0)
+        self.logic_multiplier = data.get("logic_multiplier", 1.0)
+        self.hype_multiplier = data.get("hype_multiplier", 1.0)
+        self.dev_speed_multiplier = data.get("dev_speed_multiplier", 1.0)
+        self.interest_rate = data.get("interest_rate", 0.05)
+        self.marketing_efficiency = data.get("marketing_efficiency", 1.0)
+        self.streamer_hype_multi = data.get("streamer_hype_multi", 1.0)
+        self.quality_standard_multi = data.get("quality_standard_multi", 1.0)
+        self.subscription_multi = data.get("subscription_multi", 1.0)
+        self.goty_history = data.get("goty_history", {})
+        self.chart_history = data.get("chart_history", [])
+        
+        sp_data = data.get("streaming_platform")
+        if sp_data:
+            self.streaming_platform = StreamingPlatform.from_dict(sp_data)
+        else:
+            self.streaming_platform = None
+            
+        self.subscription_active = data.get("subscription_active", False)
+        self.subscription_price = data.get("subscription_price", 9.99)
+        self.subscription_subscribers = data.get("subscription_subscribers", 0)
+        self.subscription_hype = data.get("subscription_hype", 0.0)
+        self.financial_history = data.get("financial_history", [])
+        
+        self.bank_statements = []
+        if "bank_statements" in data:
+            for s in data["bank_statements"]:
+                self.bank_statements.append(BankStatement(s["week"], s["year"], s["income_items"], s["expense_items"], s["final_balance"]))
+
+        self.owned_licenses = data.get("owned_licenses", [])
+        
+        self.active_addons = []
+        if "active_addons" in data:
+            for a in data["active_addons"]:
+                self.active_addons.append(AddonProject.from_dict(a) if hasattr(AddonProject, 'from_dict') else a)
+                
+        self.active_bundles = []
+        if "active_bundles" in data:
+            for b in data["active_bundles"]:
+                self.active_bundles.append(BundleProject.from_dict(b) if hasattr(BundleProject, 'from_dict') else b)
+                
+        self.active_merch_campaigns = []
+        if "active_merch_campaigns" in data:
+            from models import MerchCampaign
+            for m in data["active_merch_campaigns"]:
+                self.active_merch_campaigns.append(MerchCampaign.from_dict(m))
+
+        self.manufacturing_jobs = []
+        if "manufacturing_jobs" in data:
+            from models import ManufacturingJob
+            for m in data["manufacturing_jobs"]:
+                mj = ManufacturingJob(m["game_name"], m["amount"], m["cost_per_unit"], m["weeks_to_complete"])
+                mj.weeks_left = m.get("weeks_left", mj.weeks_to_complete)
+                mj.is_finished = m.get("is_finished", False)
+                self.manufacturing_jobs.append(mj)
+                
+        self.active_merch = data.get("active_merch", [])
+        self.active_tournaments = data.get("active_tournaments", [])
+        self.active_sponsorships = data.get("active_sponsorships", [])
+        self.active_crowdfundings = data.get("active_crowdfundings", [])
+        self.failed_crowdfundings = data.get("failed_crowdfundings", 0)
+        self.support_level = data.get("support_level", 0)
+        self.qa_level = data.get("qa_level", 0)
+        self.is_developing_console = data.get("is_developing_console", False)
+        self.console_progress = data.get("console_progress", 0)
+        self.console_total_weeks = data.get("console_total_weeks", 48)
+        self.completed_tutorials = data.get("completed_tutorials", [])
             
         if "podcast_network" in data:
             self.podcast_network = PodcastNetwork.from_dict(data["podcast_network"])
@@ -4769,11 +4409,7 @@ class GameState:
         from models import EsportsLeague
         self.esports_leagues = []
         for ld in data.get("esports_leagues", []):
-            league = EsportsLeague(ld["game_name"], ld["start_week"])
-            league.hype = ld.get("hype", 100.0)
-            league.championships_held = ld.get("championships_held", 0)
-            league.last_championship_year = ld.get("last_championship_year", 0)
-            self.esports_leagues.append(league)
+            self.esports_leagues.append(EsportsLeague.from_dict(ld))
 
         self.reset_draft()
         return True

@@ -46,38 +46,55 @@ def background_translate(text, target_lang, cache_key, source_lang="de"):
             return token
         protected_text = re.sub(r"\{([^}]+)\}", replacer, text)
         encoded_text = urllib.parse.quote(protected_text)
-        url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl={source_lang}&tl={target_lang}&dt=t&q={encoded_text}"
         
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(req, timeout=5) as response:
-            result = json.loads(response.read().decode("utf-8"))
-            translated = "".join([sentence[0] for sentence in result[0]])
-            for token, ph in placeholders.items():
-                token_pattern = re.compile(token.replace("_", r"_?\s*"))
-                translated = token_pattern.sub(f"{{{ph}}}", translated)
+        url_gtx = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl={source_lang}&tl={target_lang}&dt=t&q={encoded_text}"
+        req_gtx = urllib.request.Request(url_gtx, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+        })
+        
+        translated = ""
+        try:
+            with urllib.request.urlopen(req_gtx, timeout=5) as response:
+                result = json.loads(response.read().decode("utf-8"))
+                translated = "".join([sentence[0] for sentence in result[0]])
+        except Exception:
+            # Fallback to MyMemory API if Google blocks
+            url_my = f"https://api.mymemory.translated.net/get?q={encoded_text}&langpair={source_lang}|{target_lang}"
+            req_my = urllib.request.Request(url_my, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req_my, timeout=5) as response:
+                result = json.loads(response.read().decode("utf-8"))
+                translated = result.get("responseData", {}).get("translatedText", "")
+                if not translated or "MYMEMORY" in translated:
+                    # Final fallback to no translation
+                    translated = text
+        
+        if not translated:
+            translated = text
             
-            with CACHE_LOCK:
-                _TRANSLATION_CACHE[cache_key] = translated
-            save_cache()
+        for token, ph in placeholders.items():
+            token_pattern = re.compile(token.replace("_", r"_?\s*"))
+            translated = token_pattern.sub(f"{{{ph}}}", translated)
             
-            TRANSLATIONS_UPDATED = True
-    except Exception:
+        with CACHE_LOCK:
+            _TRANSLATION_CACHE[cache_key] = translated
+        save_cache()
+        
+        TRANSLATIONS_UPDATED = True
+    except Exception as e:
         pass
     finally:
         PENDING_TRANSLATIONS -= 1
 
 def get_system_language():
     try:
-        if sys.platform == "win32":
-            import ctypes
-            windll = ctypes.windll.kernel32
-            lang_id = windll.GetUserDefaultUILanguage()
-            primary_lang = lang_id & 0x3ff
-            if primary_lang == 0x07:
-                return "de"
-        return "en"
+        import locale
+        lang, _ = locale.getlocale()
+        if lang and lang.startswith('de'):
+            return 'de'
     except:
-        return "en"
+        pass
+    return 'en'
 
 CURRENT_LANGUAGE = get_system_language()
 
@@ -1188,6 +1205,8 @@ TRANSLATIONS = {
         "key_bound": "{action} was bound to the key {key}.",
         "key_confirm": "Confirm",
         "key_down": "Down",
+        "key_left": "Left",
+        "key_right": "Right",
         "key_end": "To End (End)",
         "key_home": "To Start (Pos1)",
         "key_up": "Up",
@@ -3209,6 +3228,8 @@ TRANSLATIONS = {
         "key_bound": "{action} wurde auf die Taste {key} gelegt.",
         "key_confirm": "BestÃ¤tigen",
         "key_down": "Nach unten",
+        "key_left": "Nach links",
+        "key_right": "Nach rechts",
         "key_end": "Zum Ende (Ende)",
         "key_home": "Zum Anfang (Pos1)",
         "key_up": "Nach oben",

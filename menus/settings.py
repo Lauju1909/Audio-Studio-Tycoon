@@ -1,5 +1,5 @@
 import pygame
-from .base import Menu
+from .base import Menu, TextInputMenu
 
 class SettingsMenu(Menu):
     def __init__(self, audio, game_state, on_back):
@@ -334,8 +334,19 @@ class LanguageMenu(Menu):
                 'text': f"[{marker}] {lang_display}",
                 'action': make_action(lang_code, lang_display)
             })
+        
+        custom_lang = self.game_state.settings.get('language', 'de')
+        if custom_lang not in self.LANGUAGES:
+            self.options.append({
+                'text': f"[*] {custom_lang} (Custom)",
+                'action': lambda: self._set_language(custom_lang, custom_lang)
+            })
+
+        self.options.append({'text': self.game_state.get_text('custom_language') + "...", 'action': self._goto_custom_language})
         self.options.append({'text': self.game_state.get_text('back'), 'action': self.on_back})
 
+    def _goto_custom_language(self):
+        return "custom_lang_input_menu"
     def _set_language(self, new_lang, lang_display):
         import translations
         self.game_state.settings['language'] = new_lang
@@ -359,3 +370,17 @@ class LanguageMenu(Menu):
         if event.key == gs.key_back or event.key == pygame.K_ESCAPE:
             return self.on_back()
         return super().handle_input(event)
+
+class CustomLanguageInputMenu(TextInputMenu):
+    def __init__(self, audio, game_state):
+        super().__init__(game_state.get_text('custom_language_prompt'), audio, game_state)
+
+    def on_submit(self, text):
+        if text.strip():
+            lang_code = text.strip().lower()
+            import translations
+            self.game_state.settings['language'] = lang_code
+            self.game_state.save_global_settings()
+            self.audio.speak(f"Lade Übersetzungen für {lang_code}...", interrupt=True)
+            translations.set_language(lang_code)
+        return "language_menu"

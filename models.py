@@ -628,6 +628,8 @@ class Employee:
             "is_crunching": getattr(self, "is_crunching", False),
             "crunch_weeks": getattr(self, "crunch_weeks", 0),
             "sick_weeks_left": getattr(self, "sick_weeks_left", 0),
+            "vacation_weeks_left": getattr(self, "vacation_weeks_left", 0),
+            "fatigue": getattr(self, "fatigue", 0),
             "personality": getattr(self, "personality", "easygoing"),
         }
 
@@ -658,6 +660,8 @@ class Employee:
         emp.is_crunching = ed.get("is_crunching", False)
         emp.crunch_weeks = ed.get("crunch_weeks", 0)
         emp.sick_weeks_left = ed.get("sick_weeks_left", 0)
+        emp.vacation_weeks_left = ed.get("vacation_weeks_left", 0)
+        emp.fatigue = ed.get("fatigue", 0)
         emp.personality = ed.get("personality", "easygoing")
         return emp
 
@@ -1499,6 +1503,22 @@ class StreamingPlatform:
     def get_max_capacity(self):
         return self.server_level * 500000
 
+    def to_dict(self):
+        return {
+            "founded_week": self.founded_week,
+            "subscribers": self.subscribers,
+            "server_level": self.server_level,
+            "exclusive_esports": self.exclusive_esports
+        }
+        
+    @staticmethod
+    def from_dict(d):
+        sp = StreamingPlatform(d.get("founded_week", 1))
+        sp.subscribers = d.get("subscribers", 0)
+        sp.server_level = d.get("server_level", 1)
+        sp.exclusive_esports = d.get("exclusive_esports", False)
+        return sp
+
 class CustomConsoleProject:
     """Repräsentiert die Entwicklung einer eigenen Spielekonsole."""
     def __init__(self, name: str, tech_level: int, dev_cost: int, price: int, progress: float = 0.0, is_released: bool = False, units_sold: int = 0, revenue: int = 0, active_users: int = 0, weeks_on_market: int = 0):
@@ -1632,7 +1652,7 @@ class PodcastProduction:
         return p
 
 class AudioPass:
-    """Ein Abo-Service (Game Pass) fr den eigenen Spiele-Katalog."""
+    "Ein Abo-Service (Game Pass) fuer den eigenen Spiele-Katalog."
     def __init__(self):
         self.active = False
         self.monthly_price = 9.99

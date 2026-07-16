@@ -38,5 +38,7 @@
   "de_cloud_gaming_upgraded": "cloud_gaming_upgraded",
   "de_cloud_gaming_stopped": "cloud_gaming_stopped",
   "de_price_changed": "price_changed",
-  "de_sender_community": "sender_community"
+  "de_sender_community": "sender_community",
+  "fr_console_already_dev": "Une console est déjà en développement...",
+  "is_console_already_dev": "Hugga er þegar í þróun..."
 }
