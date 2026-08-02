@@ -9,13 +9,25 @@ import random
 
 import json
 import os
+from managers.corporate_warfare import CorporateWarfareManager
+from managers.union_manager import UnionManager
+from managers.it_security import ITSecurityManager
+from managers.conventions import ConventionManager
+from managers.real_estate import RealEstateManager
+from managers.stock_manager import StockManager
+from managers.subscription_manager import SubscriptionManager
+from managers.monetization_manager import MonetizationManager
+from managers.publishing_manager import PublishingManager
+from managers.crypto_manager import CryptoManager
+from managers.monopoly_manager import MonopolyManager
+from managers.global_event_manager import GlobalEventManager
 from models import (
     GameProject, ReviewScore, Employee, Engine, EngineFeature, 
     RivalStudio, RivalGame, Email, AddonProject, BundleProject, 
     ActiveMMO, BankLoan, CustomConsole, PublishingOffer, 
     PublishedThirdPartyGame, BankStatement,
     SoundConEvent, SoundtrackLabel, RadioContract, ManufacturingJob,
-    StreamingPlatform, PodcastNetwork, PodcastProduction, AudioPass, CloudGamingService
+    StreamingPlatform, PodcastNetwork, AudioPass, CloudGamingService
 )
 from translations import get_system_language
 from game_data import (
@@ -40,6 +52,18 @@ class GameState:
         self.games_made = 0
         self.total_revenue = 0
         self.developer_mode = False # Versteckter Entwickler-Modus
+        self.corporate_warfare = CorporateWarfareManager()
+        self.union_manager = UnionManager()
+        self.stock_manager = StockManager()
+        self.subscription_manager = SubscriptionManager()
+        self.monetization_manager = MonetizationManager()
+        self.publishing_manager = PublishingManager()
+        self.crypto_manager = CryptoManager()
+        self.monopoly_manager = MonopolyManager()
+        self.global_event_manager = GlobalEventManager()
+        self.it_manager = ITSecurityManager()
+        self.convention_manager = ConventionManager()
+        self.real_estate_manager = RealEstateManager()
         self.pending_update = None
         self.ui_context = {}
         # Trends
@@ -65,6 +89,14 @@ class GameState:
         # Ereignisse
         self.last_event_week = 0
         self.active_events = []
+        self.metaverse_land_value = 0.0
+        self.metaverse_investment = 0.0
+        self.metaverse_weeks_active = 0
+        self.metaverse_burst = False
+        self.metaverse_land_value = 0.0
+        self.metaverse_investment = 0.0
+        self.metaverse_weeks_active = 0
+        self.metaverse_burst = False
 
         # Forschungs-System
         self.is_researching = False
@@ -504,7 +536,7 @@ class GameState:
             elif effect_type == "prestige":
                 self.prestige += val
             elif effect_type == "tax_increase":
-                self.tax_rate += val
+                self.tax_rate = max(0.0, min(0.99, self.tax_rate + val))
             elif effect_type == "sales_multi":
                 self.sales_multiplier *= val
             elif effect_type == "logic_boost":
@@ -1051,6 +1083,24 @@ class GameState:
         """Gibt das aktuelle Kalenderjahr zurück (Start: START_YEAR)."""
         return START_YEAR + (self.week - 1) // WEEKS_PER_YEAR
 
+    def is_feature_unlocked(self, feature_id):
+        """Prüft ob ein Feature laut FEATURE_UNLOCKS verfügbar ist."""
+        from game_data import FEATURE_UNLOCKS
+        
+        feature = FEATURE_UNLOCKS.get(feature_id)
+        if not feature:
+            return True # If not specified, it's unlocked by default
+            
+        current_year = self.get_calendar_year()
+        if "year" in feature and current_year < feature["year"]:
+            return False
+            
+        if "office_level" in feature and self.office_level < feature["office_level"]:
+            return False
+            
+        return True
+
+
     def get_calendar_text(self):
         """Gibt Kalenderjahr, Monat und Woche zurück (dynamisch basierend auf WEEKS_PER_YEAR)."""
         year = self.get_calendar_year()
@@ -1059,7 +1109,7 @@ class GameState:
         # Dynamische Monatsberechnung (12 Monate pro Jahr)
         month_idx = int((week_in_year - 1) * 12 / WEEKS_PER_YEAR)
         
-        lang = self.settings.get("language", "de")
+        self.settings.get("language", "de")
         month_key = [
             "month_jan", "month_feb", "month_mar", "month_apr", "month_may", "month_jun",
             "month_jul", "month_aug", "month_sep", "month_oct", "month_nov", "month_dec"
@@ -1176,6 +1226,31 @@ class GameState:
 
 
     def _on_new_week(self):
+        # --- NEW: Mitarbeiter-Wochenupdate & Headhunting ---
+        for emp in self.employees:
+            emp.weeks_employed = getattr(emp, "weeks_employed", 0) + 1
+            
+            # Alle 48 Wochen (1 Jahr) einen Talent-Punkt geben, wenn Level > 1
+            if emp.weeks_employed % 48 == 0 and emp.skill_level > 1:
+                emp.talent_points = getattr(emp, "talent_points", 0) + 1
+
+            # Headhunting Event (Zufall, ca. 1x pro 2-3 Jahre pro Studio wenn gute Leute da sind)
+            if 'Marketing-Guru' in getattr(emp, 'talents', []):
+                self.hype = min(100.0, self.hype + 0.1)
+            
+            if getattr(self, "pending_headhunt_event", None) is None:
+                if emp.skill_level >= 3 and not emp.is_ceo:
+                    if __import__('random').random() < 0.005:  # 0.5% chance per week per senior employee
+                        rival_offer = int(emp.salary * random.uniform(1.3, 2.0))
+                        self.pending_headhunt_event = {
+                            "employee": emp,
+                            "rival_offer": rival_offer
+                        }
+                        if hasattr(self.audio, "play_sound"):
+                            self.audio.play_sound("error")
+                        if hasattr(self.audio, "speak"):
+                            self.audio.speak(f"Achtung! Ein Rivale versucht {emp.name} abzuwerben!")
+
         """Logik die jede Woche passiert (Gehalt, Zufallsereignisse)."""
         # Abo-Dienst aktualisieren
         self.update_subscription_service()
@@ -1213,6 +1288,18 @@ class GameState:
         self.hr_manager.tick()
         self.finance_manager.tick(is_new_month)
         self.marketing_manager.tick(is_new_month)
+        self.corporate_warfare.tick(self)
+        self.union_manager.tick(self)
+        self.stock_manager.tick(self)
+        self.subscription_manager.tick(self)
+        self.monetization_manager.tick(self)
+        self.publishing_manager.tick(self)
+        self.crypto_manager.tick(self)
+        self.monopoly_manager.tick(self)
+        self.global_event_manager.tick(self)
+        self.it_manager.tick(self)
+        self.convention_manager.tick(self)
+        self.real_estate_manager.tick(self)
         
         # Eigene Konsolenverkaeufe und Marktanteil
         if hasattr(self, "custom_consoles"):
@@ -1247,6 +1334,28 @@ class GameState:
                 if getattr(cc, 'hype', 0) > 0:
                     cc.hype = max(0, cc.hype - 0.5)
 
+        # Metaverse Bubble Logic
+        if getattr(self, "metaverse_investment", 0) > 0 and not getattr(self, "metaverse_burst", False):
+            self.metaverse_weeks_active = getattr(self, "metaverse_weeks_active", 0) + 1
+            growth = random.uniform(0.01, 0.05)
+            self.metaverse_land_value *= (1 + growth)
+            
+            if self.metaverse_weeks_active > 24:
+                risk = 0.005 + (self.metaverse_weeks_active - 24) * 0.001
+                if random.random() < risk:
+                    self.metaverse_burst = True
+                    # Bug fix: don't track expense here, because money was spent during investment
+                    self.metaverse_land_value = 0
+                    self.hype = max(0, self.hype - 30)
+                    for e in self.employees:
+                        e.morale = max(0, e.morale - 20)
+                    self.active_events.append({
+                        "name": "AudioVerse-Blase geplatzt!",
+                        "effect": "none",
+                        "multiplier": 1.0,
+                        "duration": 4
+                    })
+
         # Zufallsereignisse prüfen
         self.check_random_event()
         
@@ -1263,7 +1372,7 @@ class GameState:
 
                 # Projektfortschritt für alle aktiven Projekte
         for ap in list(self.active_projects):
-            if getattr(self, 'strike_weeks_left', 0) > 0:
+            if getattr(self, 'strike_weeks_left', 0) > 0 or (hasattr(self, 'union_manager') and self.union_manager.is_striking):
                 continue
             proj = ap["project"]
             
@@ -1275,12 +1384,17 @@ class GameState:
                 
                 active_emps = self._active_employees(proj)
                 for emp in active_emps:
-                    points_added += emp.skills.get(skill_name, 50) / 10.0
+                    base_points = emp.skills.get(skill_name, 50) / 10.0
+                    if 'Agile Coach' in getattr(emp, 'talents', []):
+                        base_points *= 1.2
+                    points_added += base_points
                 
                 if not active_emps:
                     points_added = 5.0
                     
                 points_added *= getattr(self, "dev_speed_multiplier", 1.0)
+                if hasattr(self, 'union_manager') and self.union_manager.ai_tools_active:
+                    points_added *= 2.0
                 proj.current_points = min(proj.target_points, proj.current_points + points_added)
                 
                 if proj.current_points >= proj.target_points:
@@ -1294,12 +1408,19 @@ class GameState:
                         morale_loss = int(random.randint(2, 5) * break_mod)
                         if getattr(emp, "personality", None) == "workaholic":
                             morale_loss = int(morale_loss * 1.5)
-                        emp.morale = max(0, emp.morale - morale_loss)
+                        if 'Crunch-Survivor' in getattr(emp, 'talents', []):
+                            emp.morale = 100
+                        else:
+                            emp.morale = max(0, emp.morale - morale_loss)
                 else:
                     for emp in active_emps:
                         if getattr(emp, "personality", None) == "workaholic":
+                            if 'Crunch-Survivor' in getattr(emp, 'talents', []):
+                                emp.morale = 100
+                            else:
+                                emp.morale = max(0, emp.morale - 1)
+                        else:
                             emp.morale = max(0, emp.morale - 1)
-                            
                 continue
 
             boost = 2 if ap.get("crunch") else 1
@@ -1321,6 +1442,8 @@ class GameState:
                 boost *= 1.8 # Fast doppelte Geschwindigkeit
             
             boost *= self.dev_speed_multiplier
+            if hasattr(self, 'union_manager') and self.union_manager.ai_tools_active:
+                boost *= 2.0
             if getattr(self, 'office_perks', []):
                 boost *= (1.0 + len(self.office_perks) * 0.02)
                 
@@ -1333,6 +1456,8 @@ class GameState:
                         boost *= 0.4 # Sehr langsam, wenn das Team nicht hochqualifiziert ist
                     elif avg_skill < 4.5:
                         boost *= 0.7
+                        
+            boost *= self.global_event_manager.get_development_speed_modifier()
                     
             ap["progress"] += boost
             
@@ -1345,13 +1470,25 @@ class GameState:
                     morale_loss = int(random.randint(2, 5) * break_mod)
                     if getattr(emp, "personality", None) == "workaholic":
                         morale_loss = int(morale_loss * 1.5)
-                    emp.morale = max(0, emp.morale - morale_loss)
+                    if 'Crunch-Survivor' in getattr(emp, 'talents', []):
+
+                        emp.morale = 100
+
+                    else:
+
+                        emp.morale = max(0, emp.morale - morale_loss)
             else:
                 # Kein Crunch: Workaholics verlieren wöchentlich 1 Moralpunkt durch harte Arbeit
                 active_emps = self._active_employees(proj)
                 for emp in active_emps:
                     if getattr(emp, "personality", None) == "workaholic":
-                        emp.morale = max(0, emp.morale - 1)
+                        if 'Crunch-Survivor' in getattr(emp, 'talents', []):
+
+                            emp.morale = 100
+
+                        else:
+
+                            emp.morale = max(0, emp.morale - 1)
                     
                 # Bug-Zuwachs
                 base_bugs = random.randint(1, 3)
@@ -1420,21 +1557,31 @@ class GameState:
             if self.console_progress >= getattr(self, 'console_total_weeks', 100):
                 self.is_developing_console = False
                 c = self.current_console_draft
-                new_console = CustomConsole(
-                    name=c['name'],
-                    architecture=c.get('architecture', 'RISC'),
-                    performance=c.get('performance', 1),
-                    marketing_budget=c.get('marketing_budget', 0),
-                    dev_cost=c['cost'],
-                    release_week=self.week
-                )
+                if isinstance(c, dict):
+                    new_console = CustomConsole(
+                        name=c['name'],
+                        architecture=c.get('architecture', 'RISC'),
+                        performance=c.get('performance', 1),
+                        marketing_budget=c.get('marketing_budget', 0),
+                        dev_cost=c['cost'],
+                        release_week=self.week
+                    )
+                else:
+                    new_console = CustomConsole(
+                        name=c.name,
+                        architecture=c.architecture,
+                        performance=c.performance,
+                        marketing_budget=c.marketing_budget,
+                        dev_cost=c.dev_cost,
+                        release_week=self.week
+                    )
                 if not hasattr(self, "custom_consoles"):
                     self.custom_consoles = []
                 self.custom_consoles.append(new_console)
                 self.emails.insert(0, Email(
                     sender=self.get_text('sender_hardware'),
                     subject=self.get_text('subject_console_done'),
-                    body=self.get_text('body_console_done', name=c['name']),
+                    body=self.get_text('body_console_done', name=c['name'] if isinstance(c, dict) else c.name),
                     date_week=self.week
                 ))
                 self.current_console_draft = None
@@ -1548,10 +1695,15 @@ class GameState:
                     
                 digital_sold = new_sales - physical_sold
                 
+                # DDoS Check
+                is_ddos = any(e.get("type") == "ddos" for e in getattr(self, "active_cyber_effects", []))
+                if is_ddos:
+                    digital_sold = 0 # No digital sales during DDoS
+                
                 physical_rev = physical_sold * getattr(g, "physical_price", 45)
                 digital_rev = digital_sold * price
                 
-                g.sales += new_sales
+                g.sales += physical_sold + digital_sold
                 total_rev = int((digital_rev + physical_rev) * self.profit_multiplier)
                 g.revenue += total_rev
                 
@@ -1618,15 +1770,23 @@ class GameState:
         for mmo in self.active_mmos:
             if mmo.game.is_active:
                 mmo.weeks_active += 1
-                rev = int(mmo.weekly_revenue * self.profit_multiplier)
-                self.track_income("mmo", rev)
+                
+                is_ddos = any(e.get("type") == "ddos" for e in getattr(self, "active_cyber_effects", []))
+                
+                if not is_ddos:
+                    rev = int(mmo.weekly_revenue * self.profit_multiplier)
+                    self.track_income("mmo", rev)
+                    mmo.game.revenue += rev
+                else:
+                    rev = 0
+
                 self.track_expense("mmo", mmo.weekly_cost)
-                mmo.game.revenue += rev
                 
                 if getattr(mmo.game, "has_mtx", False):
-                    mtx_rev = int(mmo.players * 1.5)
-                    self.track_income("other", mtx_rev)
-                    mmo.game.revenue += mtx_rev
+                    if not is_ddos:
+                        mtx_rev = int(mmo.players * 1.5)
+                        self.track_income("other", mtx_rev)
+                        mmo.game.revenue += mtx_rev
                     mmo.players = int(mmo.players * 0.95) # players leave faster due to MTX
                 
                 # Cheater-Wellen Logic
@@ -1820,7 +1980,6 @@ class GameState:
         self._process_sponsorships()
         if week_in_year == WEEKS_PER_YEAR:
             self._check_goty()
-        self._check_shareholder_meeting()
 
     def calculate_hype(self, project):
         """Berechnet den Hype für ein Spiel basierend auf Marketing, Lizenzen und Events."""
@@ -2069,18 +2228,7 @@ class GameState:
             self.money += total_passive_income
             self.track_income("esports", total_passive_income)
 
-    def _check_shareholder_meeting(self):
-        year = self.get_calendar_year()
-        if not hasattr(self, 'last_shareholder_year'):
-            self.last_shareholder_year = year - 1
-        if getattr(self, 'is_public_company', False) and year > self.last_shareholder_year:
-            self.last_shareholder_year = year
-            self.shareholder_target_met = self.money >= self.shareholder_target
-            if not self.shareholder_target_met:
-                self.share_value = max(10, getattr(self, 'share_value', 100) - 20)
-            else:
-                self.share_value = getattr(self, 'share_value', 100) + 10
-            self.pending_shareholder_meeting = True
+
 
     def _check_goty(self):
         """Ermittelt das Spiel des Jahres."""
@@ -3887,6 +4035,15 @@ class GameState:
             "high_score": self.high_score,
             "games_made": self.games_made,
             "total_revenue": self.total_revenue,
+            "corporate_warfare": self.corporate_warfare.to_dict(),
+            "union_manager": self.union_manager.to_dict(),
+            "stock_manager": self.stock_manager.to_dict(),
+            "subscription_manager": self.subscription_manager.to_dict(),
+            "monetization_manager": self.monetization_manager.to_dict(),
+            "publishing_manager": self.publishing_manager.to_dict(),
+            "crypto_manager": self.crypto_manager.to_dict(),
+            "monopoly_manager": self.monopoly_manager.to_dict(),
+            "global_event_manager": self.global_event_manager.to_dict(),
             "office_level": self.office_level,
             "last_event_week": self.last_event_week,
             "last_trend_week": self.last_trend_week,
@@ -3967,6 +4124,9 @@ class GameState:
             "active_custom_console": getattr(self, "active_custom_console").to_dict() if getattr(self, "active_custom_console", None) else None,
             "active_jingles": [{"jingle": j.to_dict(), "weeks_left": getattr(j, "weeks_left", 4)} for j in getattr(self, "active_jingles", [])],
             "unlocked_hardware_tech": getattr(self, "unlocked_hardware_tech", []),
+            "it_upgrades": getattr(self, "it_upgrades", []),
+            "active_cyber_effects": getattr(self, "active_cyber_effects", []),
+            "current_convention_booking": getattr(self, "current_convention_booking", None),
             "active_personality_event": getattr(self, "active_personality_event", None),
             "active_personality_employee_name": self.active_personality_employee.name if getattr(self, "active_personality_employee", None) else None,
             "temp_dev_speed_penalty": getattr(self, "temp_dev_speed_penalty", 1.0),
@@ -4018,8 +4178,47 @@ class GameState:
             "console_progress": getattr(self, "console_progress", 0),
             "console_total_weeks": getattr(self, "console_total_weeks", 48)
         }
+        json_str = json.dumps(data, indent=2, ensure_ascii=False)
         with open(filepath, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
+            f.write(json_str)
+            
+        # --- ANTI-CHEAT ---
+        import hashlib, ctypes
+        try:
+            bak_path = f"save_slot_{slot}.bak"
+            if os.path.exists(bak_path):
+                ctypes.windll.kernel32.SetFileAttributesW(bak_path, 128) # 128 = NORMAL
+            expected_hash = hashlib.sha256((json_str + "SuperSecretAntiCheatSalt123").encode("utf-8")).hexdigest()
+            with open(bak_path, "w", encoding="utf-8") as f:
+                json.dump({"hash": expected_hash}, f)
+            ctypes.windll.kernel32.SetFileAttributesW(bak_path, 2)
+        except Exception as e:
+            print(f"Anti-Cheat Save Error: {e}")
+            
+        return True
+
+    def delete_save_game(self, slot=1):
+        """Löscht einen Spielstand und dessen Anti-Cheat Backup restlos."""
+        filepath = f"save_slot_{slot}.json"
+        bak_path = f"save_slot_{slot}.bak"
+        
+        # Lösche Haupt-Savegame
+        if os.path.exists(filepath):
+            try:
+                os.remove(filepath)
+            except Exception:
+                pass
+                
+        # Lösche verstecktes Backup
+        if os.path.exists(bak_path):
+            import ctypes
+            try:
+                # Schreibschutz/Hidden-Flag aufheben, um Datei löschen zu können
+                ctypes.windll.kernel32.SetFileAttributesW(bak_path, 128) # FILE_ATTRIBUTE_NORMAL
+                os.remove(bak_path)
+            except Exception:
+                pass
+        
         return True
 
     def get_save_slots_info(self):
@@ -4045,7 +4244,22 @@ class GameState:
             return False
 
         with open(filepath, "r", encoding="utf-8") as f:
-            data = json.load(f)
+            json_str = f.read()
+            data = json.loads(json_str)
+
+        # --- ANTI-CHEAT ---
+        bak_path = f"save_slot_{slot}.bak"
+        if os.path.exists(bak_path):
+            import hashlib
+            try:
+                with open(bak_path, "r", encoding="utf-8") as f:
+                    bak_data = json.load(f)
+                expected_hash = hashlib.sha256((json_str + "SuperSecretAntiCheatSalt123").encode("utf-8")).hexdigest()
+                if bak_data.get("hash") != expected_hash:
+                    print(f"[Anti-Cheat] Manipulation detected! Expected: {bak_data.get('hash')}, Got: {expected_hash}")
+                    return False
+            except Exception:
+                return False
 
         self.company_name = data["company_name"]
         self.money = data["money"]
@@ -4054,11 +4268,37 @@ class GameState:
         self.high_score = data["high_score"]
         self.games_made = data["games_made"]
         self.total_revenue = data["total_revenue"]
+        if "corporate_warfare" in data:
+            self.corporate_warfare.from_dict(data["corporate_warfare"])
+        if "union_manager" in data:
+            self.union_manager.from_dict(data["union_manager"])
+        if "stock_manager" in data:
+            self.stock_manager.from_dict(data["stock_manager"])
+        if "subscription_manager" in data:
+            self.subscription_manager.from_dict(data["subscription_manager"])
+        if "monetization_manager" in data:
+            self.monetization_manager.from_dict(data["monetization_manager"])
+        if "publishing_manager" in data:
+            self.publishing_manager.from_dict(data["publishing_manager"])
+        if "crypto_manager" in data:
+            self.crypto_manager.from_dict(data["crypto_manager"])
+        if "monopoly_manager" in data:
+            self.monopoly_manager.from_dict(data["monopoly_manager"])
+        if "global_event_manager" in data:
+            self.global_event_manager.from_dict(data["global_event_manager"])
         self.office_level = data["office_level"]
         self.last_event_week = data.get("last_event_week", 0)
         self.last_trend_week = data.get("last_trend_week", 0)
         self.current_trend = data.get("current_trend")
         self.active_events = data.get("active_events", [])
+        self.metaverse_land_value = data.get("metaverse_land_value", 0.0)
+        self.metaverse_investment = data.get("metaverse_investment", 0.0)
+        self.metaverse_weeks_active = data.get("metaverse_weeks_active", 0)
+        self.metaverse_burst = data.get("metaverse_burst", False)
+        self.metaverse_land_value = data.get("metaverse_land_value", 0.0)
+        self.metaverse_investment = data.get("metaverse_investment", 0.0)
+        self.metaverse_weeks_active = data.get("metaverse_weeks_active", 0)
+        self.metaverse_burst = data.get("metaverse_burst", False)
         self.has_presswerk = data.get("has_presswerk", False)
         self.storage_capacity = data.get("storage_capacity", 0)
         self.used_storage = data.get("used_storage", 0)
@@ -4385,6 +4625,9 @@ class GameState:
             self.active_jingles.append(j)
             
         self.unlocked_hardware_tech = data.get("unlocked_hardware_tech", [])
+        self.it_upgrades = data.get("it_upgrades", [])
+        self.active_cyber_effects = data.get("active_cyber_effects", [])
+        self.current_convention_booking = data.get("current_convention_booking", None)
         self.active_personality_event = data.get("active_personality_event", None)
         
         emp_name = data.get("active_personality_employee_name")
@@ -4863,6 +5106,9 @@ class GameState:
 
     def track_expense(self, category, amount):
         """Trackt Ausgaben in einer Kategorie."""
+        if category in ["production", "hardware"] and hasattr(self, "global_event_manager"):
+            amount = int(amount * self.global_event_manager.get_hardware_cost_modifier())
+            
         if not hasattr(self, "current_week_balance"):
             self.money -= amount
             return
@@ -4928,6 +5174,7 @@ class GameState:
             
             income = int(cg.subscribers * (cg.price / 4.0)) # weekly
             server_cost = int(cg.subscribers * (cg.server_cost_per_sub / 4.0))
+            server_cost = int(server_cost * self.global_event_manager.get_server_cost_modifier())
             
             self.track_income("other", income)
             self.track_expense("server_costs", server_cost)
@@ -5056,6 +5303,7 @@ class GameState:
             
         # Serverkosten (0.05€ pro Abonnent pro Woche + Grundgebühr pro Spiel)
         server_costs = int(self.subscription_subscribers * 0.05) + (game_count * 200)
+        server_costs = int(server_costs * self.global_event_manager.get_server_cost_modifier())
         if server_costs > 0:
             self.track_expense("server_costs", server_costs)
 
@@ -5127,7 +5375,7 @@ class GameState:
         import game_data
         year = (self.week - 1) // game_data.WEEKS_PER_YEAR + game_data.START_YEAR
         # Dynamische Monatsberechnung (1 bis 12)
-        month_index = int(((self.week - 1) % game_data.WEEKS_PER_YEAR) * 12 / game_data.WEEKS_PER_YEAR) + 1
+        int(((self.week - 1) % game_data.WEEKS_PER_YEAR) * 12 / game_data.WEEKS_PER_YEAR) + 1
         
         # NEU: Steuern berechnen (vom monatlichen Gewinn)
         taxes = 0
@@ -5135,7 +5383,7 @@ class GameState:
         total_expense = sum(self.accrued_expenses.values())
         profit = total_income - total_expense
         if profit > 0:
-            taxes = int(profit * self.tax_rate)
+            taxes = max(0, int(profit * max(0.0, self.tax_rate)))
             self.track_expense("taxes", taxes)
             
         statement = BankStatement(

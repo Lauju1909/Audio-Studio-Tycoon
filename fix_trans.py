@@ -1,4 +1,3 @@
-import os
 with open('translations.py', 'r', encoding='utf-8') as f:
     content = f.read()
 

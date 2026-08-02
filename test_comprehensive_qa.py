@@ -1,6 +1,4 @@
-import pytest
 from logic import GameState
-from models import GameProject
 
 def test_100_weeks_stability():
     logic = GameState()

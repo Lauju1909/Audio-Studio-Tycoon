@@ -1,4 +1,4 @@
-﻿import logic
+import logic
 state = logic.GameState()
 state.time_speed = 1
 from models import GameProject, Employee

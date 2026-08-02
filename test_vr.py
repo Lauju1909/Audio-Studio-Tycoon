@@ -62,7 +62,7 @@ class TestVRSystem(unittest.TestCase):
         })
         
         # Mock logic.update_tick internal behavior
-        old_progress = self.state.active_projects[0]["progress"]
+        self.state.active_projects[0]["progress"]
         
         # We manually step `_on_new_week` but we can't easily because progress is done every tick.
         # Let's just run update_tick for 1 week (15000 ms)

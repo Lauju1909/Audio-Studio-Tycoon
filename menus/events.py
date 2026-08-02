@@ -57,9 +57,9 @@ class SoundConMenu(Menu):
                 ('groß',    gs.get_text('soundcon_tier_gross')),
                 ('keynote', gs.get_text('soundcon_tier_keynote')),
             ]:
-                cost = gs.get_text('soundcon_tier_cost',
+                _ = gs.get_text('soundcon_tier_cost',
                                    tier=tier_data,
-                                   cost=SoundtrackLabel.RADIO_STATIONS[0]["cost"])
+                                   _ = SoundtrackLabel.RADIO_STATIONS[0]["cost"])
                 # Kosten direkt aus Modell
                 from models import SoundConEvent
                 booth_cost = SoundConEvent.BOOTH_TIERS[tier_key]["cost"]
@@ -67,7 +67,7 @@ class SoundConMenu(Menu):
                 opts.append({
                     'text': gs.get_text('soundcon_booth_option',
                                         tier=tier_data,
-                                        cost=booth_cost,
+                                        _ = booth_cost,
                                         affordable=affordable),
                     'action': f'soundcon_book_{tier_key}'
                 })
@@ -331,7 +331,7 @@ class SoundtrackLabelMenu(Menu):
         if label is None:
             # Label noch nicht gegründet
             opts.append({
-                'text': gs.get_text('label_opt_found', cost=30_000),
+                'text': gs.get_text('label_opt_found', _ = 30_000),
                 'action': 'label_found'
             })
         else:
@@ -354,11 +354,11 @@ class SoundtrackLabelMenu(Menu):
                 'action': 'label_add_game'
             })
             opts.append({
-                'text': gs.get_text('label_opt_compilation', cost=25_000),
+                'text': gs.get_text('label_opt_compilation', _ = 25_000),
                 'action': 'label_compilation'
             })
             opts.append({
-                'text': gs.get_text('label_opt_concert', cost=100_000),
+                'text': gs.get_text('label_opt_concert', _ = 100_000),
                 'action': 'label_concert'
             })
 
@@ -376,7 +376,7 @@ class SoundtrackLabelMenu(Menu):
                                      + len(label.catalogued_games) * 50, 0
                                  ))
         else:
-            intro = gs.get_text('label_menu_intro_none', cost=30_000)
+            intro = gs.get_text('label_menu_intro_none', _ = 30_000)
         self.audio.speak(intro)
         if self.options:
             self.speak_current(interrupt=False)
@@ -408,7 +408,7 @@ class SoundtrackLabelMenu(Menu):
                     self.audio.speak(gs.get_text('label_compilation_fail_games'))
                 elif gs.money < 25000:
                     self.audio.play_sound('error')
-                    self.audio.speak(gs.get_text('label_compilation_fail_money', cost=25_000))
+                    self.audio.speak(gs.get_text('label_compilation_fail_money', _ = 25_000))
                 else:
                     gs.track_expense("other", 25000)
                     gs.soundtrack_label.compilation_albums_released += 1
@@ -433,7 +433,7 @@ class SoundtrackLabelMenu(Menu):
                     self.audio.speak(gs.get_text('label_concert_fail_games'))
                 elif gs.money < 100000:
                     self.audio.play_sound('error')
-                    self.audio.speak(gs.get_text('label_concert_fail_money', cost=100_000))
+                    self.audio.speak(gs.get_text('label_concert_fail_money', _ = 100_000))
                 else:
                     gs.track_expense("other", 100000)
                     import random
@@ -491,7 +491,7 @@ class LabelNameInputMenu(TextInputMenu):
             if gs.soundtrack_label:
                 self.audio.speak(gs.get_text('label_already_exists'))
             else:
-                self.audio.speak(gs.get_text('label_not_enough_money', cost=30_000))
+                self.audio.speak(gs.get_text('label_not_enough_money', _ = 30_000))
             return 'label_menu'
 
     def _on_cancel(self):
@@ -591,7 +591,7 @@ class LabelRadioMenu(Menu):
             options.append({
                 'text': gs.get_text('label_radio_option',
                                      name=station["name"],
-                                     cost=station["cost"],
+                                     _ = station["cost"],
                                      royalties=station["royalties"],
                                      weeks=station["weeks"],
                                      hype=station["hype"],
@@ -637,7 +637,7 @@ class LabelRadioMenu(Menu):
                         return 'label_radio_menu'  # Neu aufbauen
                     else:
                         self.audio.play_sound('error')
-                        self.audio.speak(gs.get_text('label_not_enough_money', cost=station["cost"]))
+                        self.audio.speak(gs.get_text('label_not_enough_money', _ = station["cost"]))
 
             elif action == 'label_menu':
                 return 'label_menu'

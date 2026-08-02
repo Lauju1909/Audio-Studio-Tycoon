@@ -62,13 +62,26 @@ class GameMenu(Menu):
             {'text': self.game_state.get_text('office_menu'), 'action': lambda: "office_menu"},
             {'text': self.game_state.get_text('email_inbox_status', total=total_emails, unread=unread_emails), 'action': lambda: "email_inbox"},
             {'text': self.game_state.get_text('community_menu_title'), 'action': lambda: "community_menu"},
-            {'text': self.game_state.get_text('hardware_menu_title'), 'action': lambda: "hardware_menu"},
-            {'text': self.game_state.get_text('esports_menu_title', default='E-Sports Zentrale'), 'action': lambda: "esports_menu"},
-            {'text': self.game_state.get_text('soundcon_menu_title', default='SoundCon Messe'), 'action': lambda: "soundcon_menu"},
-            {'text': self.game_state.get_text('label_menu_title', default='Soundtrack-Label'), 'action': lambda: "label_menu"},
-            {'text': self.game_state.get_text('merch_menu_title', default='Merchandising'), 'action': lambda: "merch_menu"},
-            {'text': self.game_state.get_text('creator_menu_title', default='Content Creators Sponsern'), 'action': lambda: "creator_menu"},
-            {'text': self.game_state.get_text('streaming_platform_menu_title', default='Streaming-Plattform'), 'action': lambda: "streaming_platform_menu"},
+            {'text': self.game_state.get_text('hardware_menu_title'), 'action': lambda: "hardware_menu"}
+        ])
+        
+        # Locked features
+        def add_locked_feature(feature_id, text, action):
+            if self.game_state.is_feature_unlocked(feature_id):
+                options.append({'text': text, 'action': action})
+            else:
+                from game_data import FEATURE_UNLOCKS
+                if feature_id in FEATURE_UNLOCKS:
+                    options.append({'text': f"{text} (Ab {FEATURE_UNLOCKS[feature_id].get('year', '???')})", 'action': lambda: None})
+                
+        add_locked_feature("esports", self.game_state.get_text('esports_menu_title', default='E-Sports Zentrale'), lambda: "esports_menu")
+        add_locked_feature("soundcon", self.game_state.get_text('soundcon_menu_title', default='SoundCon Messe'), lambda: "soundcon_menu")
+        add_locked_feature("soundtrack_label", self.game_state.get_text('label_menu_title', default='Soundtrack-Label'), lambda: "label_menu")
+        add_locked_feature("merch", self.game_state.get_text('merch_menu_title', default='Merchandising'), lambda: "merch_menu")
+        add_locked_feature("creator_sponsorship", self.game_state.get_text('creator_menu_title', default='Content Creators Sponsern'), lambda: "creator_menu")
+        add_locked_feature("streaming_platform", self.game_state.get_text('streaming_platform_menu_title', default='Streaming-Plattform'), lambda: "streaming_platform_menu")
+        
+        options.extend([
             {'text': self.game_state.get_text('jingle_menu_title'), 'action': lambda: "jingle_name_input"},
             {'text': self.game_state.get_text('bank_menu'), 'action': lambda: "bank_menu"},
             {'text': self.game_state.get_text('service_menu'), 'action': lambda: "service_menu"},
@@ -505,10 +518,18 @@ class DevProgressMenu(Menu):
             is_engine = getattr(ap["project"], "is_engine_project", False) or ap["project"].__class__.__name__ == "EngineProject"
             
             if not getattr(ap["project"], "used_ai_assets", False) and not is_engine:
-                self.options.append({
-                    'text': self.game_state.get_text('use_ai_assets', default="KI-Assets generieren (Risikoreich!)"),
-                    'action': self._use_ai_assets
-                })
+                if self.game_state.is_feature_unlocked("ai_tools"):
+                    self.options.append({
+                        'text': self.game_state.get_text('use_ai_assets', default="KI-Assets generieren (Risikoreich!)"),
+                        'action': self._use_ai_assets
+                    })
+                else:
+                    from game_data import FEATURE_UNLOCKS
+                    if "ai_tools" in FEATURE_UNLOCKS:
+                        self.options.append({
+                            'text': f"{self.game_state.get_text('use_ai_assets', default='KI-Assets generieren (Risikoreich!)')} (Ab {FEATURE_UNLOCKS['ai_tools'].get('year', '???')})",
+                            'action': lambda: None
+                        })
 
             if "KI-Soundtrack Generation" in self.game_state.unlocked_technologies and not getattr(ap["project"], "used_ai_soundtrack", False) and not is_engine:
                 self.options.append({
@@ -978,41 +999,7 @@ class GameDetailsMenu(Menu):
             self.current_index = 0
         return None
 
-    def _start_patch(self):
-        game = getattr(self.game_state, '_pending_game_details', None)
-        if game:
-            if self.game_state.start_update_project(game.name, "Patch", name="Patch"):
-                self.audio.play_sound("confirm")
-                self.audio.speak(self.game_state.get_text("patch_started", default="Patch-Entwicklung gestartet."))
-                return "active_games_menu"
-            else:
-                self.audio.play_sound("error")
-                self.audio.speak(self.game_state.get_text("not_enough_money"))
-        return None
 
-    def _start_content_update(self):
-        game = getattr(self.game_state, '_pending_game_details', None)
-        if game:
-            if self.game_state.start_update_project(game.name, "Content", name="Content-Update"):
-                self.audio.play_sound("confirm")
-                self.audio.speak(self.game_state.get_text("content_started", default="Content-Update gestartet."))
-                return "active_games_menu"
-            else:
-                self.audio.play_sound("error")
-                self.audio.speak(self.game_state.get_text("not_enough_money"))
-        return None
-
-    def _start_dlc(self):
-        game = getattr(self.game_state, '_pending_game_details', None)
-        if game:
-            if self.game_state.start_update_project(game.name, "DLC", name="DLC"):
-                self.audio.play_sound("confirm")
-                self.audio.speak(self.game_state.get_text("dlc_started", default="DLC-Entwicklung gestartet."))
-                return "active_games_menu"
-            else:
-                self.audio.play_sound("error")
-                self.audio.speak(self.game_state.get_text("not_enough_money"))
-        return None
 
 class AAADevEventMenu(Menu):
     """Zeigt Entwicklungs-Events (AAA und allgemein) mit Entscheidungsoptionen."""

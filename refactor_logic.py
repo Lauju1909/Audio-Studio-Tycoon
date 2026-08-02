@@ -1,4 +1,3 @@
-import re
 
 def main():
     with open('logic.py', 'r', encoding='utf-8') as f:

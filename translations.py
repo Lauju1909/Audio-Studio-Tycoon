@@ -6,7 +6,6 @@ Only German is stored, other languages are translated on-the-fly.
 Translations for Audio Studio Tycoon.
 Only German is stored, other languages are translated on-the-fly.
 """
-import sys
 import os
 import json
 import urllib.request
@@ -81,7 +80,7 @@ def background_translate(text, target_lang, cache_key, source_lang="de"):
         save_cache()
         
         TRANSLATIONS_UPDATED = True
-    except Exception as e:
+    except Exception:
         pass
     finally:
         PENDING_TRANSLATIONS -= 1
@@ -152,6 +151,26 @@ def get_text(text_key, **kwargs):
 
 TRANSLATIONS = {
     "en": {
+        "sender_union": "GDA (Union)",
+        "subject_strike_started": "STRIKE!",
+        "body_strike_started": "The employees are furious about working conditions and AI usage. Development has stopped!",
+        "subject_strike_ended": "Strike ended",
+        "body_strike_ended": "The employees have resumed work.",
+        "union_negotiation_success": "Demands accepted. Salaries increased, AI banned.",
+        "union_compromise_success": "Compromise found! Bonus of ${cost} paid.",
+        "union_busting_success": "Union busted! The employees are silent... for now.",
+        "union_busting_fail": "SCANDAL! Union busting exposed. PR disaster and ${penalty} fine.",
+        "union_menu": "Union Headquarters",
+        "union_anger": "Anger: {anger}%",
+        "union_striking": "STRIKE ACTIVE",
+        "union_not_striking": "Working",
+        "union_busted_title": "Union Busted",
+        "disable_ai_tools": "DISABLE AI Tools (Morale rises slowly)",
+        "enable_ai_tools": "ENABLE AI Tools (Faster dev, morale drops)",
+        "union_accept_demands": "Accept demands (+20% salary, ban AI)",
+        "union_compromise": "Negotiate compromise (Pay one-time bonus)",
+        "union_bust": "Union Busting ($500k - Illegal, high risk!)",
+        "ai_tools_status": "AI Tools Status: {status}",
         "console_opt_develop": "Develop custom console",
         "console_active_stats": "{name}: {users} Users | Profit: ",
         "console_in_dev": "Console {name} in development ({progress}%)",

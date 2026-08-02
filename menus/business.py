@@ -9,9 +9,18 @@ class ServiceMenu(Menu):
         self.game_state = game_state
         title = self.game_state.get_text('service_menu')
         options = []
-        if self.game_state.get_calendar_year() >= 2000:
-            options.append({'text': self.game_state.get_text('service_manage_subscription'), 'action': lambda: "subscription_service_menu"})
-            options.append({'text': self.game_state.get_text('cloud_gaming_title', default="Cloud Gaming Service"), 'action': lambda: "cloud_gaming_menu"})
+        
+        def add_locked_feature(feature_id, text, action):
+            if self.game_state.is_feature_unlocked(feature_id):
+                options.append({'text': text, 'action': action})
+            else:
+                from game_data import FEATURE_UNLOCKS
+                if feature_id in FEATURE_UNLOCKS:
+                    options.append({'text': f"{text} (Ab {FEATURE_UNLOCKS[feature_id].get('year', '???')})", 'action': lambda: None})
+        
+        add_locked_feature("subscription_vault", self.game_state.get_text('service_manage_subscription'), lambda: "subscription_service_menu")
+        add_locked_feature("cloud_gaming", self.game_state.get_text('cloud_gaming_title', default="Cloud Gaming Service"), lambda: "cloud_gaming_menu")
+        
         options.extend([
             {'text': self.game_state.get_text('game_service_options'), 'action': lambda: "game_service_options"},
             {'text': self.game_state.get_text('contract_work_menu_title', default="Auftragsarbeiten"), 'action': lambda: "contract_work_menu"},
@@ -279,7 +288,12 @@ class BankMenu(Menu):
             {'text': self.game_state.get_text('menu_monetization'), 'action': lambda: "monetization_menu"}
         ]
         if not getattr(self.game_state, 'is_public_company', False) and self.game_state.money >= 10000000 and self.game_state.fans >= 1000000:
-            options.insert(1, {'text': self.game_state.get_text('ipo_option', default='Boersengang (IPO) planen'), 'action': lambda: "ipo_menu"})
+            if self.game_state.is_feature_unlocked("ipo"):
+                options.insert(1, {'text': self.game_state.get_text('ipo_option', default='Boersengang (IPO) planen'), 'action': lambda: "ipo_menu"})
+            else:
+                from game_data import FEATURE_UNLOCKS
+                if "ipo" in FEATURE_UNLOCKS:
+                    options.insert(1, {'text': f"{self.game_state.get_text('ipo_option', default='Boersengang (IPO) planen')} (Ab {FEATURE_UNLOCKS['ipo'].get('year', '???')}, Level {FEATURE_UNLOCKS['ipo'].get('office_level', '?')})", 'action': lambda: None})
             
         options.append({'text': self.game_state.get_text('back'), 'action': lambda: "game_menu"})
         super().__init__(title, options, audio, game_state)
@@ -1914,3 +1928,157 @@ class CloudGamingMenu(Menu):
         else:
             self.audio.speak(self.game_state.get_text('not_enough_money'))
         return "cloud_gaming_menu"
+
+
+class MetaverseMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__("AudioVerse", [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        self.options = []
+        gs = self.game_state
+        
+        if getattr(gs, 'metaverse_burst', False):
+            self.title = "AudioVerse (OFFLINE)"
+            self.options.append({'text': "Das AudioVerse ist gecrasht. Geld ist weg.", 'action': lambda: "service_menu"})
+            return
+            
+        self.title = f"AudioVerse (Investiert: ${gs.metaverse_investment:,.0f} | Wert: ${gs.metaverse_land_value:,.0f})"
+        
+        # Investieren
+        if gs.money >= 500000:
+            self.options.append({'text': "Investiere $500k in AudioVerse-Land", 'action': self._invest})
+        
+        # Verkaufen
+        if gs.metaverse_land_value > 0:
+            self.options.append({'text': f"Alles verkaufen (Gewinn mitnehmen)", 'action': self._sell})
+            
+        self.options.append({'text': gs.get_text('back'), 'action': lambda: "service_menu"})
+
+    def _invest(self):
+        gs = self.game_state
+        if gs.money >= 500000:
+            gs.money -= 500000
+            gs.track_expense("metaverse", 500000)
+            gs.metaverse_investment += 500000
+            gs.metaverse_land_value += 500000
+            self.audio.play_sound("buy")
+            self._update_options()
+        return "metaverse_menu"
+
+    def _sell(self):
+        gs = self.game_state
+        if gs.metaverse_land_value > 0:
+            gs.money += gs.metaverse_land_value
+            gs.metaverse_investment = 0
+            gs.metaverse_land_value = 0
+            gs.metaverse_weeks_active = 0
+            self.audio.play_sound("money")
+            self._update_options()
+        return "metaverse_menu"
+
+
+class TransmediaMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__("Transmedia Empire (Film & Serien)", [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        self.options.clear()
+        
+        # Only show games with IP rating > 40 and no existing movie deal
+        eligible_games = [g for g in self.game_state.game_history if g.ip_rating >= 40 and not getattr(g, "has_movie_deal", False)]
+        
+        for g in eligible_games:
+            self.options.append({
+                'text': f"{g.name} (IP: {g.ip_rating})",
+                'action': lambda game=g: self._select_game(game)
+            })
+            
+        if not eligible_games:
+            self.options.append({
+                'text': "Keine geeigneten IPs (IP-Rating > 40 & noch keine Adaption) verfuegbar.",
+                'action': lambda: None
+            })
+            
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "business_menu"})
+
+    def _select_game(self, game):
+        # We need to set up the deal context
+        self.game_state.selected_transmedia_game = game
+        return "transmedia_deal_menu"
+
+class TransmediaDealMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        game = getattr(self.game_state, "selected_transmedia_game", None)
+        title = f"Transmedia Deal für {game.name}" if game else "Transmedia Deal"
+        super().__init__(title, [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        self.options.clear()
+        game = getattr(self.game_state, "selected_transmedia_game", None)
+        
+        if not game:
+            self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "transmedia_menu"})
+            return
+            
+        import random
+        
+        # Movie Deal
+        movie_offer = 5000000 + (game.ip_rating * 100000)
+        self.options.append({
+            'text': f"Kino-Film Deal ({movie_offer:,} EUR Vorschuss)",
+            'action': lambda: self._sign_deal(game, movie_offer, "Kino")
+        })
+        
+        # Series Deal (Netflix style) unlocks later (2012)
+        if self.game_state.get_calendar_year() >= 2012:
+            series_offer = 3000000 + (game.ip_rating * 150000)
+            self.options.append({
+                'text': f"Streaming-Serie Deal ({series_offer:,} EUR Vorschuss)",
+                'action': lambda: self._sign_deal(game, series_offer, "Streaming")
+            })
+            
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "transmedia_menu"})
+
+    def _sign_deal(self, game, upfront, deal_type):
+        import random
+        
+        self.game_state.money += upfront
+        game.has_movie_deal = True
+        
+        # Simulate massive sales boost based on deal type
+        hit_chance = 0.7 if deal_type == "Streaming" else 0.5
+        
+        if random.random() < hit_chance:
+            # Massive Hit! Reactivate game if inactive, or just boost stats massively
+            bonus_sales = random.randint(500000, 2000000)
+            bonus_revenue = bonus_sales * 25 # Assuming 25 per copy
+            game.sales += bonus_sales
+            game.revenue += bonus_revenue
+            game.ip_rating += random.randint(10, 30)
+            
+            # Optionally reactivate the game
+            game.is_active = True
+            game.weeks_on_market = max(1, game.weeks_on_market)
+            
+            self.audio.play_sound('cash')
+            self.audio.speak(f"Ein gigantischer Hit! Die {deal_type}-Adaption treibt die Verkufe von {game.name} durch die Decke! (+{bonus_sales:,} Sales)")
+        else:
+            # Flop, just minor boost
+            bonus_sales = random.randint(10000, 50000)
+            game.sales += bonus_sales
+            game.revenue += bonus_sales * 25
+            game.ip_rating -= random.randint(1, 5)
+            self.audio.play_sound('error')
+            self.audio.speak(f"Die {deal_type}-Adaption war ein Flop bei den Kritikern. Die Fans sind enttuscht. (+{bonus_sales:,} Sales)")
+            
+        return "transmedia_menu"

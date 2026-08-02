@@ -2,7 +2,6 @@ import sys
 import traceback
 
 from logic import GameState
-from models import GameProject
 
 def run_bot():
     print("Starte Bot-Test für 100 Runden...")
@@ -56,7 +55,7 @@ def run_bot():
                 
             state.finalize_game(ap)
             print(f"Runde {r} abgeschlossen: {ap['project'].name} veröffentlicht. Fans: {state.fans}")
-        except Exception as e:
+        except Exception:
             print(f"Fehler in Runde {r}:")
             traceback.print_exc()
             sys.exit(1)

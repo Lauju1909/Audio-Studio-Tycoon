@@ -1,4 +1,3 @@
-import sys
 
 content = open("managers/hr.py", "r", encoding="utf-8").read()
 

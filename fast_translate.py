@@ -25,7 +25,7 @@ def translate(text, target_lang="de", source_lang="en"):
                 token_pattern = re.compile(token.replace("_", r"_?\s*"))
                 translated = token_pattern.sub(f"{{{ph}}}", translated)
             return translated
-    except Exception as e:
+    except Exception:
         return text
 
 sys.path.append('.')

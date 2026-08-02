@@ -274,7 +274,6 @@ class ConsoleSpecsMenu(Menu):
             self.options = [{'text': self.game_state.get_text('back'), 'action': lambda: "hardware_dev_menu"}]
             return
             
-        archs = ["RISC", "x86", "Cell", "ARM"]
         
         self.options = [
             {'text': f"{self.game_state.get_text('console_arch', default='Architektur')}: {draft['architecture']}", 'action': self._cycle_arch},

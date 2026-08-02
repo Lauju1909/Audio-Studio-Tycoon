@@ -1,4 +1,3 @@
-import sys
 
 with open('test_cloud_gaming.py', 'r') as f:
     data = f.read()

@@ -41,6 +41,7 @@ from menus import (
     BankruptcyMenu, EmailInboxMenu, EmailDetailMenu, ServiceMenu,
     GameServiceOptionsMenu, AddMtxMenu, MovieDealMenu, AntiCheatMenu, BankMenu, LoanMenu, StockMarketMenu,
     DonationMenu, MonetizationMenu,
+    UnionMenu,
     DifficultyMenu, SubGenreMenu, SequelMenu, ProjectTypeMenu, RemakeSelectMenu, ChartMenu,
     LicenseShopMenu, LicenseSelectMenu, AddonMenu, AddonNameMenu,
     BundleMenu, BundleNameMenu, ProductionMenu, ProductionAmountMenu,
@@ -63,7 +64,6 @@ from menus import (
 def setup_router(audio, state):
     """Initialisiert den MenuRouter und registriert alle Menüs."""
     from ui.router import MenuRouter
-    import menus.publisher_system # Löst @register_menu aus
     router = MenuRouter(audio, state)
     
     routes = {
@@ -95,6 +95,7 @@ def setup_router(audio, state):
         "dev_progress_menu": lambda: DevProgressMenu(audio, state),
         "review_result": lambda: ReviewResultMenu(audio, state),
         "hr_menu": lambda: HRMenu(audio, state),
+        "union_menu": lambda: __import__('menus.union', fromlist=['']).UnionMenu(audio, state),
         "vacation_menu": lambda: __import__('menus.office', fromlist=['']).VacationMenu(audio, state),
         "office_perks_menu": lambda: OfficePerksMenu(audio, state),
         "headhunting_event_menu": lambda: HeadhuntingEventMenu(audio, state),
@@ -159,6 +160,10 @@ def setup_router(audio, state):
         "esports_manage_league_menu": lambda: __import__('menus.business', fromlist=['']).ESportsManageLeagueMenu(audio, state),
         "esports_championship_menu": lambda: __import__('menus.business', fromlist=['']).ESportsChampionshipMenu(audio, state),
         "acquisition_menu": lambda: AcquisitionMenu(audio, state),
+        "transmedia_menu": lambda: __import__('menus.business', fromlist=['']).TransmediaMenu(audio, state),
+        "transmedia_deal_menu": lambda: __import__('menus.business', fromlist=['']).TransmediaDealMenu(audio, state),
+        "talent_tree_menu": lambda: __import__('menus.office', fromlist=['']).TalentTreeMenu(audio, state),
+        "employee_talent_menu": lambda: __import__('menus.office', fromlist=['']).EmployeeTalentMenu(audio, state),
         "subsidiary_manage_menu": lambda: __import__('menus.business', fromlist=['']).SubsidiaryManagementMenu(audio, state),
         "engine_licensing_menu": lambda: __import__('menus', fromlist=['']).EngineLicensingMenu(audio, state),
         "engine_license_fee_menu": lambda: __import__('menus', fromlist=['']).EngineLicenseFeeMenu(audio, state),
@@ -168,7 +173,16 @@ def setup_router(audio, state):
         "addon_name_input": lambda: AddonNameMenu(audio, state),
         "bundle_name_input": lambda: BundleNameMenu(audio, state),
         "co_dev_partner_menu": lambda: __import__('menus.gameplay', fromlist=['']).CoDevPartnerMenu(audio, state),
-        "subscription_service_menu": lambda: __import__('menus.business', fromlist=['']).SubscriptionServiceMenu(audio, state),
+        "subscription_service_menu": lambda: __import__('menus.subscription', fromlist=['']).SubscriptionMenu(audio, state),
+        "sub_add_own_game_menu": lambda: __import__('menus.subscription', fromlist=['']).SubAddOwnGameMenu(audio, state),
+        "sub_third_party_menu": lambda: __import__('menus.subscription', fromlist=['']).SubThirdPartyMenu(audio, state),
+        "live_service_menu": lambda: __import__('menus.live_service', fromlist=['']).LiveServiceMenu(audio, state),
+        "publishing_menu": lambda: __import__('menus.publishing', fromlist=['']).PublishingMenu(audio, state),
+        "publishing_pitches_menu": lambda: __import__('menus.publishing', fromlist=['']).PublishingPitchesMenu(audio, state),
+        "crypto_menu": lambda: __import__('menus.crypto', fromlist=['']).CryptoMenu(audio, state),
+        "monopoly_menu": lambda: __import__('menus.monopoly', fromlist=['']).MonopolyMenu(audio, state),
+        "sell_subsidiary_menu": lambda: __import__('menus.monopoly', fromlist=['']).SellSubsidiaryMenu(audio, state),
+        "global_events_menu": lambda: __import__('menus.global_events', fromlist=['']).GlobalEventsMenu(audio, state),
         "cloud_gaming_menu": lambda: __import__('menus.business', fromlist=['']).CloudGamingMenu(audio, state),
         "support_gift_card_type_menu": lambda: __import__('menus.business', fromlist=['']).SupportGiftCardTypeMenu(audio, state),
         "espionage_menu": lambda: __import__('menus.business', fromlist=['']).EspionageMenu(audio, state),
@@ -213,6 +227,7 @@ def setup_router(audio, state):
         "fan_mail_detail": lambda: FanMailDetailMenu(audio, state),
         "office_event_menu": lambda: OfficeEventMenu(audio, state),
         "hardware_menu": lambda: HardwareLabMenu(audio, state),
+        "hardware_type_select": lambda: HardwareTypeSelectMenu(audio, state),
         "hardware_licensing": lambda: HardwareLicensingMenu(audio, state),
         "hardware_create_name": lambda: SoundCardCreateMenu(audio, state),
         "hardware_project_features": lambda: SoundCardFeaturesMenu(audio, state),

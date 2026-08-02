@@ -10,7 +10,6 @@ Release-Kanäle:
 
 import json
 import os
-import subprocess
 import threading
 import urllib.request
 import hashlib
@@ -91,7 +90,7 @@ def _extract_release_info(release: dict) -> tuple:
     d_url, e_hash = None, None
     for asset in release.get("assets", []):
         name = asset.get("name", "").lower()
-        if name.endswith(".zip"):
+        if name.endswith(".exe"):
             d_url = asset.get("browser_download_url")
         elif "checksum" in name or "sha256" in name:
             try:
@@ -100,7 +99,7 @@ def _extract_release_info(release: dict) -> tuple:
                 ) as h_res:
                     lines = h_res.read().decode("utf-8").split("\n")
                     e_hash = next(
-                        (line.split()[0] for line in lines if ".zip" in line.lower()), None
+                        (line.split()[0] for line in lines if ".exe" in line.lower()), None
                     )
             except Exception:  # pylint: disable=broad-exception-caught
                 pass
@@ -197,23 +196,18 @@ def download_and_apply_update(
     progress_callback: Optional[Callable[[int, int], None]] = None
 ) -> bool:
     """
-    Lädt das Update-ZIP herunter, validiert es und startet das Batch-Install-Skript.
-
-    Args:
-        url: Download-URL des ZIPs.
-        expected_hash: Erwarteter SHA-256-Hash (oder None um Überprüfung zu überspringen).
-        progress_callback: Optional fn(bytes_done, bytes_total) für Fortschrittsanzeige.
-
-    Returns:
-        True wenn erfolgreich gestartet, False bei Fehler.
+    Lädt die neue .exe herunter, wendet den .old Trick an und startet neu.
+    Kein Entpacken mehr nötig!
     """
-    zip_path = "update.zip"
+    import os, sys, subprocess
+
+    new_exe_name = "update_new.exe"
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "AST-Updater/3.2"})
         with urllib.request.urlopen(req, timeout=120) as res:
             total = int(res.headers.get("Content-Length", 0))
             downloaded = 0
-            with open(zip_path, "wb") as f_out:
+            with open(new_exe_name, "wb") as f_out:
                 while True:
                     chunk = res.read(65536)  # 64 KB Chunks
                     if not chunk:
@@ -227,83 +221,48 @@ def download_and_apply_update(
 
     except Exception as err:
         print(f"[Updater] Download-Fehler: {err}")
-        _cleanup(zip_path)
+        _cleanup(new_exe_name)
         return False
 
     # SHA-256-Validierung
     if expected_hash:
-        if not verify_file_hash(zip_path, expected_hash):
+        if not verify_file_hash(new_exe_name, expected_hash):
             print("[Updater] FEHLER: Hash-Verifizierung fehlgeschlagen!")
-            _cleanup(zip_path)
+            _cleanup(new_exe_name)
             return False
         print("[Updater] Hash-Verifikation erfolgreich.")
     else:
         print("[Updater] Warnung: Keine Checksum verfügbar – Verifizierung übersprungen.")
 
-    # Batch-Skript schreiben und starten
-    bat_content = r"""@echo off
-setlocal enabledelayedexpansion
-cd /d "%~dp0"
-title Audio Studio Tycoon - Update
-echo =============================================
-echo   Audio Studio Tycoon - Automatisches Update
-echo =============================================
-echo.
-echo Warte auf Spielende...
-timeout /t 3 /nobreak >nul
+    print("[Updater] Installiere neues Update...")
+    is_frozen = getattr(sys, "frozen", False)
+    
+    if is_frozen:
+        exe_path = sys.executable
+        old_path = exe_path + ".old"
+        
+        # Alte .old entfernen
+        if os.path.exists(old_path):
+            try: os.remove(old_path)
+            except Exception: pass
+            
+        # Aktuelle exe umbenennen
+        os.rename(exe_path, old_path)
+        
+        # Neue exe an den Platz der alten setzen
+        os.rename(new_exe_name, exe_path)
+        new_exe = exe_path
+    else:
+        # Running as python script, just use the new exe
+        new_exe = "Audio_Studio_Tycoon.exe"
+        if os.path.exists(new_exe):
+            try: os.remove(new_exe)
+            except Exception: pass
+        os.rename(new_exe_name, new_exe)
 
-if exist "temp_update" rmdir /s /q "temp_update"
-mkdir "temp_update"
-
-echo Entpacke Update...
-powershell -Command "Expand-Archive -Force -Path 'update.zip' -DestinationPath 'temp_update'"
-if errorlevel 1 (
-    echo FEHLER: Entpacken fehlgeschlagen!
-    pause
-    exit /b 1
-)
-del "update.zip"
-
-echo Installiere Dateien...
-set "SOURCE_DIR=temp_update"
-for /d %%D in ("temp_update\*") do (
-    if exist "%%D\main.py" set "SOURCE_DIR=%%D"
-    if exist "%%D\Audio_Studio_Tycoon*.exe" set "SOURCE_DIR=%%D"
-)
-
-:: Bereinige alte Versionen im Hauptverzeichnis, um Namenskonflikte zu vermeiden
-if not "!SOURCE_DIR!" == "temp_update" (
-    del /q "Audio_Studio_Tycoon_v*.exe" 2>nul
-)
-
-xcopy /s /e /y /c "!SOURCE_DIR!\*" "."
-rmdir /s /q "temp_update"
-
-echo.
-echo Update abgeschlossen! Starte Spiel...
-set "NEW_EXE=main.py"
-for /f "delims=" %%I in ('dir /b Audio_Studio_Tycoon_v*.exe 2^>nul') do (
-    set "NEW_EXE=%%I"
-)
-
-if "!NEW_EXE!" == "main.py" (
-    start "" /d "%~dp0" python main.py
-) else (
-    start "" /d "%~dp0" "!NEW_EXE!"
-)
-del "%~f0"
-"""
-    try:
-        with open("apply_update.bat", "w", encoding="cp1252") as f_bat:
-            f_bat.write(bat_content)
-        subprocess.Popen(
-            ["cmd.exe", "/c", "apply_update.bat"],
-            creationflags=subprocess.CREATE_NEW_CONSOLE
-        )
-        os._exit(0)  # Sofortiger Spielabbruch für den Update-Prozess
-    except Exception as err:
-        print(f"[Updater] Fehler beim Starten des Update-Skripts: {err}")
-        return False
+    print("[Updater] Update abgeschlossen! Starte neu...")
+    subprocess.Popen([new_exe])
+    os._exit(0)
     return True
 
 

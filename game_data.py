@@ -2079,3 +2079,28 @@ CONTENT_CREATORS = [
     {"id": "medium_streamer", "name_key": "creator_medium", "cost": 50000, "boost": 1.5, "duration": 4},
     {"id": "large_streamer", "name_key": "creator_large", "cost": 250000, "boost": 2.5, "duration": 4},
 ]
+
+
+# ============================================================
+# PROGRESSION UNLOCKS
+# ============================================================
+FEATURE_UNLOCKS = {
+    "esports": {"year": 2005, "name": "E-Sports"},
+    "vr_headset": {"year": 2016, "name": "VR Hardware Labor"},
+    "metaverse": {"year": 2018, "name": "Das AudioVerse (Metaverse)"},
+    "transmedia": {"year": 2000, "name": "Filmrechte & Transmedia"},
+    "ipo": {"year": 1995, "office_level": 3, "name": "Boersengang (IPO)"},
+    "darknet": {"year": 2000, "name": "Cyber-Attacken / Darknet"},
+    "cloud_gaming": {"year": 2010, "name": "Cloud Gaming"},
+    "merch": {"year": 1990, "name": "Merchandising"},
+    "ai_tools": {"year": 2020, "name": "KI-Tools"},
+    "streaming_platform": {"year": 2005, "name": "Streaming-Plattform"},
+    "creator_sponsorship": {"year": 2010, "name": "Content Creators Sponsern"},
+    "acquisition": {"year": 2000, "office_level": 3, "name": "Studio-Akquise"},
+    "soundcon": {"year": 1995, "name": "SoundCon Messe"},
+    "soundtrack_label": {"year": 1985, "name": "Soundtrack-Label"},
+    "subscription_vault": {"year": 1995, "name": "Abo-Modell"},
+    "live_services": {"year": 2012, "name": "Live-Services (Lootboxen)"},
+    "publishing_label": {"year": 2005, "name": "Publishing Label (Indie-Fund)"},
+    "crypto_scam": {"year": 2019, "name": "Web3 & Blockchain-Games"}
+}

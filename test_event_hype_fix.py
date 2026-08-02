@@ -11,7 +11,7 @@ import pygame
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from logic import GameState, GameProject
-from game_data import RANDOM_EVENTS, YEAR_EVENTS
+from game_data import RANDOM_EVENTS
 
 class MockAudio:
     def speak(self, msg, interrupt=False):

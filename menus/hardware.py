@@ -2,6 +2,30 @@ from .base import Menu, TextInputMenu
 import random
 from game_data import HARDWARE_TECH_LIST
 
+
+class HardwareTypeSelectMenu(Menu):
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__("Hardware-Art wählen", [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        self.options = [
+            {'text': "Soundkarte", 'action': self._select_soundcard}
+        ]
+        if self.game_state.is_feature_unlocked("vr_headset"):
+            self.options.append({'text': "VR-Brille", 'action': self._select_vr})
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "hardware_menu"})
+        
+    def _select_soundcard(self):
+        self.game_state.temp_hw_type = "soundcard"
+        return "hardware_create_name"
+        
+    def _select_vr(self):
+        self.game_state.temp_hw_type = "vr"
+        return "hardware_create_name"
+
 class HardwareLabMenu(Menu):
     def __init__(self, audio, game_state):
         self.audio = audio
@@ -35,7 +59,7 @@ class HardwareLabMenu(Menu):
             else:
                 self.options.append({'text': txt, 'action': self._active_proj_action})
         else:
-            self.options.append({'text': gs.get_text('hardware_opt_develop'), 'action': lambda: "hardware_create_name"})
+            self.options.append({'text': gs.get_text('hardware_opt_develop'), 'action': lambda: "hardware_type_select" if gs.is_feature_unlocked('vr_headset') else "hardware_create_name"})
             
         # 2. Option: Sound-Technologie lizenzieren
         self.options.append({'text': gs.get_text('hardware_opt_license'), 'action': lambda: "hardware_licensing"})
@@ -168,9 +192,15 @@ class SoundCardCreateMenu(TextInputMenu):
 
     def generate_random_name(self):
         # Generiert echte Retro-Soundkarten-Namen
-        prefixes = ["Sound Blaster", "Gravis UltraSound", "AdLib", "Sound Canvas", "AWE", "Covox Speech", "WaveBlaster"]
-        suffixes = ["1.0", "2.0", "Pro", "16", "32", "64", "Gold", "Classic", "Max", "Ultra"]
-        return f"{random.choice(prefixes)} {random.choice(suffixes)}"
+        hw_type = getattr(self.game_state, 'temp_hw_type', 'soundcard')
+        if hw_type == "vr":
+            prefixes = ["Oculus", "Vive", "Index", "Quest", "PSVR", "Gear"]
+            suffixes = ["Rift", "Pro", "2", "3", "S", "Elite"]
+            return f"{random.choice(prefixes)} {random.choice(suffixes)}"
+        else:
+            prefixes = ["Sound Blaster", "Gravis UltraSound", "AdLib", "Sound Canvas", "AWE", "Covox Speech", "WaveBlaster"]
+            suffixes = ["1.0", "2.0", "Pro", "16", "32", "64", "Gold", "Classic", "Max", "Ultra"]
+            return f"{random.choice(prefixes)} {random.choice(suffixes)}"
 
     def _on_confirm(self, name):
         self.game_state.temp_sound_card_name = name
@@ -195,7 +225,7 @@ class SoundCardFeaturesMenu(Menu):
     def _update_options(self):
         self.options = []
         gs = self.game_state
-        name = getattr(gs, 'temp_sound_card_name', "Soundkarte")
+        getattr(gs, 'temp_sound_card_name', "Soundkarte")
         
         # Nur freigeschaltete Lizenzen auflisten
         unlocked = getattr(gs, 'unlocked_hardware_tech', [])

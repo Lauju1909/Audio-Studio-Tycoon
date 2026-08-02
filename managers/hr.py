@@ -1,5 +1,4 @@
 import random
-from models import Email
 
 class HRManager:
     def __init__(self, state):

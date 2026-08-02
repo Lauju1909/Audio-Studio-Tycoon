@@ -9,27 +9,33 @@ from .office import (
 from .research import (
     ResearchMenu, FeatureResearchMenu, GenreResearchMenu, TopicResearchMenu, 
     AudienceResearchMenu, TechnologyResearchMenu, EngineCreateNameMenu, 
-    EngineFeatureSelectMenu, HardwareDevMenu, ConsoleNameInput, ConsoleSpecsMenu, ConsoleOverviewMenu, ConsoleDetailMenu
+    EngineFeatureSelectMenu, HardwareDevMenu, ConsoleNameInput, ConsoleSpecsMenu
 )
 from .business import (
-     MonetizationMenu, SupportGiftCardTypeMenu, 
-    ServiceMenu, GameServiceOptionsMenu, AddMtxMenu, MovieDealMenu, AntiCheatMenu, BankMenu, LoanMenu, StockMarketMenu, StockRivalDetailMenu,
-    SubscriptionVaultMenu, CreatorSponsorshipMenu,
-    DonationMenu, ContractWorkMenu,
-    LicenseShopMenu, LicenseSelectMenu, AddonMenu, AddonNameMenu, BundleMenu, BundleNameMenu,
-    ProductionMenu, ProductionAmountMenu, MMOPaymentMenu, MMOManagementMenu, MMOOptionsMenu, 
-    PublisherDealsMenu, PublisherDealDetailsMenu, MerchMenu, MerchAmountMenu,
-    ESportsMenu, ESportsCreateLeagueMenu, ESportsManageLeagueMenu, ESportsChampionshipMenu, ESportsSponsorMenu, AcquisitionMenu, EngineLicensingMenu, EngineLicenseFeeMenu, GamePortingMenu, PortPlatformMenu, IPOMenu,
-    CloudGamingMenu
+     MonetizationMenu, ServiceMenu, 
+    GameServiceOptionsMenu, BankMenu, LoanMenu, StockMarketMenu, StockRivalDetailMenu, SubscriptionVaultMenu, CreatorSponsorshipMenu, DonationMenu, ContractWorkMenu,
+    LicenseShopMenu, LicenseSelectMenu,
+    AddonMenu, AddonNameMenu,
+    BundleMenu, BundleNameMenu, ProductionMenu, ProductionAmountMenu, MMOPaymentMenu, MMOManagementMenu,
+    MMOOptionsMenu, PublisherDealsMenu, PublisherDealDetailsMenu, MerchMenu, MerchAmountMenu, 
+    ESportsMenu, AcquisitionMenu, EngineLicensingMenu, EngineLicenseFeeMenu,
+    GamePortingMenu, PortPlatformMenu, CloudGamingMenu, AddMtxMenu, MovieDealMenu, AntiCheatMenu
 )
+from .subscription import SubscriptionMenu, SubAddOwnGameMenu, SubThirdPartyMenu
+from .live_service import LiveServiceMenu
+from .publishing import PublishingMenu, PublishingPitchesMenu
+from .crypto import CryptoMenu
+from .monopoly import MonopolyMenu, SellSubsidiaryMenu
+from .global_events import GlobalEventsMenu
+from .union import UnionMenu
 from .gameplay import (
     MainMenu, CompanyNameMenu, GameMenu, TopicMenu, GenreMenu, PlatformMenu, 
     AudienceMenu, GameSizeMenu, MarketingMenu, EngineSelectMenu, ProjectTeamSelectMenu, GameNameMenu, 
     DevelopmentSliderMenu, DevProgressMenu, ReviewResultMenu, RemasterSelectMenu, 
-    PublisherMenu, ExpoMenu, GOTYMenu, ShareholderMenu, DifficultyMenu, SubGenreMenu, SequelMenu, 
-    ProjectTypeMenu, RemakeSelectMenu,
-    ChartMenu, AAADevEventMenu, InfluencerEventMenu, UnionEventMenu, CreditsMenu, ActiveGamesMenu, DeveloperMenu,
-    CoDevPartnerMenu, DRMChoiceMenu, CrowdfundingChoiceMenu, GameDetailsMenu
+    PublisherMenu, ExpoMenu, GOTYMenu, DifficultyMenu, SubGenreMenu, SequelMenu, ProjectTypeMenu, 
+    RemakeSelectMenu, ChartMenu,
+    AAADevEventMenu, InfluencerEventMenu, UnionEventMenu, CreditsMenu, ActiveGamesMenu, DeveloperMenu, CoDevPartnerMenu,
+    DRMChoiceMenu, CrowdfundingChoiceMenu, GameDetailsMenu, ShareholderMenu
 )
 
 from .phase_g import BuildMenu, TeambuildingMenu, ModPortalMenu, ModBrowserListMenu
@@ -46,7 +52,6 @@ from .events import (
 from .community import CommunityMenu, AccessibilityLabMenu, FanMailInboxMenu, FanMailDetailMenu, OfficeEventMenu
 from .hardware import HardwareLabMenu, HardwareLicensingMenu, SoundCardCreateMenu, SoundCardFeaturesMenu, SoundCardOverviewMenu
 
-from .hardware import ConsoleCreateMenu, ConsoleComponentsMenu
 from .marketing_jingle import JingleNameInputMenu, JingleGeneratorMenu, JingleMusicMenu, JingleVoiceMenu, JingleSFXMenu
 
 __all__ = [
@@ -65,7 +70,10 @@ __all__ = [
     "ProductionMenu", "ProductionAmountMenu", "MMOPaymentMenu", "MMOManagementMenu",
     "MMOOptionsMenu", "PublisherDealsMenu", "PublisherDealDetailsMenu",
     "MerchMenu", "MerchAmountMenu", "SubscriptionVaultMenu", "CreatorSponsorshipMenu", "ESportsMenu", "AcquisitionMenu", "MainMenu",
-    "CloudGamingMenu",
+    "CloudGamingMenu", "ITSecurityMenu", "FirewallUpgradeMenu", "ServerUpgradeMenu",
+    "SubscriptionMenu", "SubAddOwnGameMenu", "SubThirdPartyMenu",
+    "LiveServiceMenu", "PublishingMenu", "PublishingPitchesMenu",
+    "CryptoMenu", "MonopolyMenu", "SellSubsidiaryMenu", "GlobalEventsMenu",
     "CompanyNameMenu", "GameMenu", "TopicMenu", "GenreMenu", "PlatformMenu",
     "AudienceMenu", "GameSizeMenu", "MarketingMenu", "EngineSelectMenu", "ProjectTeamSelectMenu",
     "GameNameMenu", "DevelopmentSliderMenu", "DevProgressMenu", "ReviewResultMenu",
@@ -82,6 +90,7 @@ __all__ = [
     # NEU: Expansion MenÃ¼s
     "CommunityMenu", "AccessibilityLabMenu", "FanMailInboxMenu", "FanMailDetailMenu", "OfficeEventMenu",
     "HardwareLabMenu", "HardwareLicensingMenu", "SoundCardCreateMenu", "SoundCardFeaturesMenu", "SoundCardOverviewMenu",
-    "JingleNameInputMenu", "JingleGeneratorMenu", "JingleMusicMenu", "JingleVoiceMenu", "JingleSFXMenu"
+    "JingleNameInputMenu", "JingleGeneratorMenu", "JingleMusicMenu", "JingleVoiceMenu", "JingleSFXMenu",
+    "UnionMenu", "AddMtxMenu", "MovieDealMenu", "AntiCheatMenu", "ShareholderMenu"
 ]
 

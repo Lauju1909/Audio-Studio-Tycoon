@@ -1,6 +1,6 @@
 import unittest
 from logic import GameState
-from models import Employee, GameProject
+from models import Employee
 
 class TestCrowdfundingSystem(unittest.TestCase):
     def setUp(self):

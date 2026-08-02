@@ -1,5 +1,4 @@
 import random
-from models import Email
 from game_data import WEEKS_PER_YEAR
 
 class FinanceManager:

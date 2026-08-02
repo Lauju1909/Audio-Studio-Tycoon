@@ -161,10 +161,15 @@ class ModManager:
                         print(f"[{mod_id}] Fehler beim Hinzufügen von Publishern: {e}")
                         
                 # Asset Overrides (Audio, Bilder) hinzufügen
+                base_mods_dir = os.path.abspath(self.mods_path)
                 if "replace_assets" in mod:
                     try:
                         for orig_asset, mod_asset in mod["replace_assets"].items():
                             mod_asset_path = os.path.join(self.mods_path, mod_folder, mod_asset)
+                            real_asset_path = os.path.abspath(mod_asset_path)
+                            if not os.path.commonpath([base_mods_dir, real_asset_path]) == base_mods_dir:
+                                print(f"[{mod_id}] Pfadsicherheitswarnung: Versuchter Ausbruch bei Asset '{mod_asset}'")
+                                continue
                             if os.path.exists(mod_asset_path):
                                 game_data.ASSET_OVERRIDES[orig_asset] = mod_asset_path
                             else:
@@ -177,6 +182,10 @@ class ModManager:
                     try:
                         for script_file in mod["custom_scripts"]:
                             script_path = os.path.join(self.mods_path, mod_folder, script_file)
+                            real_script_path = os.path.abspath(script_path)
+                            if not os.path.commonpath([base_mods_dir, real_script_path]) == base_mods_dir:
+                                print(f"[{mod_id}] Pfadsicherheitswarnung: Versuchter Ausbruch bei Script '{script_file}'")
+                                continue
                             if os.path.exists(script_path):
                                 try:
                                     with open(script_path, "r", encoding="utf-8") as sf:

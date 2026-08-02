@@ -1,5 +1,4 @@
 import ast
-import os
 
 def check_file(filepath):
     with open(filepath, 'r', encoding='utf-8') as f:

@@ -14,7 +14,7 @@ class ai_reviewer:
         is_masterpiece = score >= 9.0
         is_good = score >= 7.0
         is_average = score >= 5.0
-        is_bad = score < 5.0
+        score < 5.0
         
         # Select components
         intro_keys = ['review_intro_1', 'review_intro_2', 'review_intro_3', 'review_intro_4', 'review_intro_5']
