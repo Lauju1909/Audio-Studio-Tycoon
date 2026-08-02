@@ -1,6 +1,6 @@
 {
-    "version": "4.1.1",
+    "version": "4.1.2",
     "channel": "release",
-    "notes": "v4.1.1: Hotfix for missing imports causing startup crash.",
+    "notes": "v4.1.2: Core stability, security hardening, menu import fixes, and path traversal protection.",
     "min_launcher_version": "1.0.0"
 }
