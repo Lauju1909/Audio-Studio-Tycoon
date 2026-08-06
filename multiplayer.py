@@ -78,10 +78,10 @@ class MultiplayerManager:
 
     def send_message(self, data):
         """Sendet eine Nachricht an den Server."""
-        if self.is_connected and self.websocket:
+        if self.is_connected and self.websocket and self._loop:
             asyncio.run_coroutine_threadsafe(
                 self.websocket.send(json.dumps(data)),
-                asyncio.get_event_loop()
+                self._loop
             )
 
     def create_room(self, room_name):

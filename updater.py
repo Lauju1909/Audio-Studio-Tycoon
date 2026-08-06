@@ -20,7 +20,7 @@ UPDATE_TIMEOUT = 10  # Sekunden für den Update-Check
 
 
 def _parse_version(v_str: str) -> tuple:
-    """Wandelt '3.2.0-beta.1' in ([3, 2, 0], 'beta.1') um für korrekten Vergleich."""
+    """Wandelt '3.2.0-beta.1' in ([3, 2, 0], tuple) um für korrekten Vergleich."""
     try:
         v_str = v_str.strip().lstrip("v")
         if "-" in v_str:
@@ -32,9 +32,20 @@ def _parse_version(v_str: str) -> tuple:
         parts = [int(x) for x in core.split(".") if x.isdigit()]
         while len(parts) < 3:
             parts.append(0)
-        return (tuple(parts), suffix)
+            
+        suffix_parts = []
+        if suffix != "z_stable":
+            for part in suffix.split("."):
+                if part.isdigit():
+                    suffix_parts.append((0, int(part)))
+                else:
+                    suffix_parts.append((1, part))
+        else:
+            suffix_parts = [(2, "z_stable")]
+
+        return (tuple(parts), tuple(suffix_parts))
     except Exception:  # pylint: disable=broad-exception-caught
-        return ((0, 0, 0), "")
+        return ((0, 0, 0), ())
 
 
 def _fetch_releases(timeout: int = UPDATE_TIMEOUT) -> Optional[list]:
@@ -207,6 +218,7 @@ def download_and_apply_update(
         with urllib.request.urlopen(req, timeout=120) as res:
             total = int(res.headers.get("Content-Length", 0))
             downloaded = 0
+            last_reported_pct = 0
             with open(new_exe_name, "wb") as f_out:
                 while True:
                     chunk = res.read(65536)  # 64 KB Chunks
@@ -214,8 +226,13 @@ def download_and_apply_update(
                         break
                     f_out.write(chunk)
                     downloaded += len(chunk)
-                    if progress_callback and total > 0:
-                        progress_callback(downloaded, total)
+                    if total > 0:
+                        pct = int((downloaded / total) * 100)
+                        if pct >= last_reported_pct + 25:
+                            last_reported_pct = (pct // 25) * 25
+                            print(f"[Updater] Download-Fortschritt: {last_reported_pct}%")
+                        if progress_callback:
+                            progress_callback(downloaded, total)
 
         print(f"[Updater] Download abgeschlossen: {downloaded:,} Bytes.")
 

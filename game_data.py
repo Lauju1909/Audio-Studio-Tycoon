@@ -529,6 +529,14 @@ RESEARCHABLE_TECHNOLOGIES = [
     {"name": "Dekorations-Wahn 2",            "cost": 50000,  "unlock_year": 1963, "research_weeks": 4, "description": "Schaltet Pokal-Vitrinen und Lava-Lampen frei."},
     {"name": "Dekorations-Wahn 3",            "cost": 90000,  "unlock_year": 1980, "research_weeks": 5, "description": "Schaltet Neon-Schilder, Teppiche und Globen frei."},
     {"name": "KI-Soundtrack Generation",      "cost": 150000, "unlock_year": 2023, "research_weeks": 8, "description": "Ermöglicht die Generierung kompletter Soundtracks durch KI."},
+    {"name": "Neural-Engine Grafik-Rendering", "cost": 250000, "unlock_year": 2027, "research_weeks": 8, "description": "Schaltet voll-neuronale Echtzeit-Grafik für Spiele-Engines frei."},
+    {"name": "Quanten-Physik-Engine",          "cost": 450000, "unlock_year": 2030, "research_weeks": 10, "description": "Vollständige physikalische Mikrosimulation in Echtzeit."},
+    {"name": "Holodeck-Immersions-Engine",    "cost": 650000, "unlock_year": 2035, "research_weeks": 12, "description": "Schaltet holografische 3D-Spielumgebungen frei."},
+    {"name": "Gedanken-Steuerungs-Engine",    "cost": 850000, "unlock_year": 2040, "research_weeks": 14, "description": "Erlaubt direkte Spielsteuerung per Gehirnschnittstelle (BCI)."},
+    {"name": "Next-Gen Testlabor & QA",        "cost": 120000, "unlock_year": 1995, "research_weeks": 6, "description": "Schaltet ein modernes QA-Testzentrum im Studio frei."},
+    {"name": "Performance-Labor",             "cost": 180000, "unlock_year": 2005, "research_weeks": 6, "description": "Optimiert Spiele-Engine für schwächere Hardware."},
+    {"name": "Studio-Esports-Arena",          "cost": 400000, "unlock_year": 2015, "research_weeks": 8, "description": "Eigene E-Sports-Arena im Studio-Hauptgebäude."},
+    {"name": "KI-Entwickler-Zentrale",        "cost": 500000, "unlock_year": 2026, "research_weeks": 10, "description": "Integriertes KI-Studio für prozedurale Spielwelt-Generierung."},
 ]
 
 # ============================================================

@@ -2545,6 +2545,10 @@ class GameState:
         
         # QA Bonus
         qa_bonus = 0.7 if self.has_office_bonus("qa_tools") else 1.0
+        if "Next-Gen Testlabor & QA" in self.unlocked_technologies:
+            qa_bonus *= 0.6
+        if "Performance-Labor" in self.unlocked_technologies:
+            qa_bonus *= 0.8
         
         return avg_mod * trait_avg * qa_bonus * pers_avg
 
@@ -3078,6 +3082,20 @@ class GameState:
         )
         # Schwierigkeits-Standard (steigt über die Jahre)
         base_score *= random_factor * trend_bonus
+
+        # Game Dev Tech-Bonus
+        tech_bonus = 0.0
+        if "Neural-Engine Grafik-Rendering" in self.unlocked_technologies:
+            tech_bonus += 0.05
+        if "Quanten-Physik-Engine" in self.unlocked_technologies:
+            tech_bonus += 0.05
+        if "Holodeck-Immersions-Engine" in self.unlocked_technologies:
+            tech_bonus += 0.08
+        if "Gedanken-Steuerungs-Engine" in self.unlocked_technologies:
+            tech_bonus += 0.10
+        if "KI-Entwickler-Zentrale" in self.unlocked_technologies:
+            tech_bonus += 0.05
+        base_score *= (1.0 + tech_bonus)
 
         # Bug-Malus (Massiv wenn viele Bugs)
         bug_penalty = (bugs * 0.02) # 50 Bugs = -1.0 (10 Punkte auf 10er Skala)
