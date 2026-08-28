@@ -70,7 +70,7 @@ __all__ = [
     "ProductionMenu", "ProductionAmountMenu", "MMOPaymentMenu", "MMOManagementMenu",
     "MMOOptionsMenu", "PublisherDealsMenu", "PublisherDealDetailsMenu",
     "MerchMenu", "MerchAmountMenu", "SubscriptionVaultMenu", "CreatorSponsorshipMenu", "ESportsMenu", "AcquisitionMenu", "MainMenu",
-    "CloudGamingMenu", "ITSecurityMenu", "FirewallUpgradeMenu", "ServerUpgradeMenu",
+    "CloudGamingMenu",
     "SubscriptionMenu", "SubAddOwnGameMenu", "SubThirdPartyMenu",
     "LiveServiceMenu", "PublishingMenu", "PublishingPitchesMenu",
     "CryptoMenu", "MonopolyMenu", "SellSubsidiaryMenu", "GlobalEventsMenu",

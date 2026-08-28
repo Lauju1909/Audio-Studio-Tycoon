@@ -760,7 +760,7 @@ class GOTYMenu(Menu):
         # Verarbeite anstehende Ergebnisse
         
         if getattr(self.game_state, "pending_shareholder_meeting", False):
-            return "shareholder_meeting"
+            pass
         if getattr(self.game_state, "pending_goty_results", None):
             res = self.game_state.pending_goty_results
             winner_text = "Niemand"

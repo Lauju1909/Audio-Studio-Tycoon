@@ -1,6 +1,6 @@
 {
-    "version": "4.1.8",
+    "version": "4.2.0",
     "channel": "release",
-    "notes": "v4.1.8: Core stability, security hardening, menu import fixes, and path traversal protection.",
+    "notes": "v4.2.0: Major stability and logic overhaul. Fixed CustomConsole save loading, Language update routing, GOTYMenu return behavior, StreamingPlatformMenu constructor, ZeroDivisionError safeguards across calculations, dynamic menu imports, translation fixes (Engine vs Motor, SFX volume, DRM status), and cleaned up obsolete patch/fix scripts.",
     "min_launcher_version": "1.0.0"
 }

@@ -1694,8 +1694,8 @@ class ESportsSponsorMenu(Menu):
         return None
 
 class StreamingPlatformMenu(Menu):
-    def __init__(self, app, state):
-        super().__init__(app, state)
+    def __init__(self, audio, state):
+        super().__init__(state.get_text('streaming_platform_menu_title'), [], audio, state)
         self.title = state.get_text('streaming_platform_menu_title')
         self.options = []
 

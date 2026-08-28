@@ -1032,7 +1032,7 @@ class GameState:
             # Kostet mehr, bringt aber Einnahmen
             dev_cost = 50000
             total_weeks = 8
-        elif update.update_type == "Language":
+        elif update_type == "Language":
             # Fügt neue Sprachen hinzu
             langs = selected_languages or []
             dev_cost = len(langs) * 10000
@@ -1451,7 +1451,7 @@ class GameState:
             if "(VR)" in getattr(proj, "platform", ""):
                 active_emps = self._active_employees(proj)
                 if active_emps:
-                    avg_skill = sum(e.skill_level for e in active_emps) / len(active_emps)
+                    avg_skill = sum(e.skill_level for e in active_emps) / len(active_emps) if active_emps else 0
                     if avg_skill < 3.5:
                         boost *= 0.4 # Sehr langsam, wenn das Team nicht hochqualifiziert ist
                     elif avg_skill < 4.5:
@@ -2491,7 +2491,7 @@ class GameState:
                     b *= (1.0 + val)
             bonuses.append(b)
             
-        return sum(bonuses) / len(bonuses)
+        return sum(bonuses) / len(bonuses) if bonuses else 0
 
     def get_team_speed_modifier(self, project=None):
         active = self._active_employees(project)
@@ -2499,7 +2499,7 @@ class GameState:
             return 1.0
         
         # Durchschnittlicher Speed-Skill (50 = 1.0)
-        avg_speed = sum(e.speed for e in active) / len(active)
+        avg_speed = sum(e.speed for e in active) / len(active) if active else 0
         
         # Trait-Modifikatoren (Robust gegen alte Strings oder fehlende Keys)
         trait_mods = []
@@ -2509,11 +2509,11 @@ class GameState:
                 if e.trait.get("effect") == "speed":
                     val = e.trait.get("value", 1.0)
             trait_mods.append(val)
-        trait_avg = sum(trait_mods) / len(trait_mods)
+        trait_avg = sum(trait_mods) / len(trait_mods) if trait_mods else 0
         
         # NEU: Persönlichkeits-Modifikatoren (workaholic: +20% Speed)
         pers_mods = [1.20 if getattr(e, 'personality', None) == 'workaholic' else 1.0 for e in active]
-        pers_avg = sum(pers_mods) / len(pers_mods)
+        pers_avg = sum(pers_mods) / len(pers_mods) if pers_mods else 0
         
         # NEU: Temporäre Event-Mali
         temp_penalty = getattr(self, "temp_dev_speed_penalty", 1.0)
@@ -2527,7 +2527,7 @@ class GameState:
             return 1.0
             
         # Durchschnittlicher Bug-Modifier der Mitarbeiter
-        avg_mod = sum(e.bug_modifier for e in active) / len(active)
+        avg_mod = sum(e.bug_modifier for e in active) / len(active) if active else 0
         
         # Trait-Modifikatoren
         trait_mods = []
@@ -2537,11 +2537,11 @@ class GameState:
                 if e.trait.get("effect") == "bugs":
                     val = e.trait.get("value", 1.0)
             trait_mods.append(val)
-        trait_avg = sum(trait_mods) / len(trait_mods)
+        trait_avg = sum(trait_mods) / len(trait_mods) if trait_mods else 0
         
         # NEU: Persönlichkeits-Modifikatoren (chaotic: +15% Bugs)
         pers_mods = [1.15 if getattr(e, 'personality', None) == 'chaotic' else 1.0 for e in active]
-        pers_avg = sum(pers_mods) / len(pers_mods)
+        pers_avg = sum(pers_mods) / len(pers_mods) if pers_mods else 0
         
         # QA Bonus
         qa_bonus = 0.7 if self.has_office_bonus("qa_tools") else 1.0
@@ -2560,12 +2560,11 @@ class GameState:
         
         # NEU: Persönlichkeits-Modifikatoren (perfectionist: +15% Qualität)
         pers_mods = [1.15 if getattr(e, 'personality', None) == 'perfectionist' else 1.0 for e in active]
-        pers_avg = sum(pers_mods) / len(pers_mods)
+        pers_avg = sum(pers_mods) / len(pers_mods) if pers_mods else 0
         
         # NEU: Temporärer Event-Bonus
         temp_boost = getattr(self, "temp_quality_boost", 0.0)
-        
-        return (sum(mods) / len(mods)) * pers_avg * (1.0 + temp_boost)
+        return (sum(mods) / len(mods) if mods else 0.0) * pers_avg * (1.0 + temp_boost)
 
     def get_status_text(self):
         """Gibt einen vollständigen Statustext für den Screenreader aus."""
@@ -3870,7 +3869,7 @@ class GameState:
         # Fortschrittsgeschwindigkeit
         active_emps = self._active_employees()
         if active_emps:
-            avg_speed = sum(e.speed for e in active_emps) / len(active_emps)
+            avg_speed = sum(e.speed for e in active_emps) / len(active_emps) if active_emps else 0
         else:
             avg_speed = 30.0 # Standard
             
@@ -4472,7 +4471,14 @@ class GameState:
         self.custom_consoles = []
         if "custom_consoles" in data:
             for c_data in data["custom_consoles"]:
-                cc = CustomConsole(c_data["name"], c_data["tech_level"], c_data["dev_cost"], c_data["release_week"])
+                cc = CustomConsole(
+                    c_data["name"],
+                    c_data.get("architecture", "Custom"),
+                    c_data.get("performance", c_data.get("tech_level", 5)),
+                    c_data.get("marketing_budget", 1000000),
+                    c_data["dev_cost"],
+                    c_data["release_week"]
+                )
                 cc.market_share = c_data.get("market_share", 0.05)
                 self.custom_consoles.append(cc)
 

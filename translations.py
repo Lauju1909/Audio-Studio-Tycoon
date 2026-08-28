@@ -1,4 +1,4 @@
-"""
+﻿"""
 Translations for Audio Studio Tycoon.
 Only German is stored, other languages are translated on-the-fly.
 """
@@ -172,11 +172,11 @@ TRANSLATIONS = {
         "union_bust": "Union Busting ($500k - Illegal, high risk!)",
         "ai_tools_status": "AI Tools Status: {status}",
         "console_opt_develop": "Develop custom console",
-        "console_active_stats": "{name}: {users} Users | Profit: ",
+        "console_active_stats": "{name}: {users} Users | Profit: {revenue}€",
         "console_in_dev": "Console {name} in development ({progress}%)",
         "console_name_prompt": "Console Name:",
         "console_comp_title": "Select Console Components",
-        "console_tier_opt": "{tier} (Cost: , Price: , Tech: +{tech})",
+        "console_tier_opt": "{tier} (Cost: {cost}€, Price: {price}€, Tech: +{tech})",
         "console_started": "Started development of console {name}!",
         "console_finished": "The console {name} is finished and now on the market!",
         "hardware_dev": "Hardware Lab",
@@ -225,7 +225,7 @@ TRANSLATIONS = {
         "subject_burnout_quit": "Resignation due to Burnout!",
         "body_burnout_quit": "Boss, {name} suffered a severe burnout from constant crunching and resigned immediately. We urgently need an HR department or therapists!",
         "drm_choice_title": "Select Copy Protection (DRM)",
-        "drm_none": "No DRM",
+        "drm_none": "Kein DRM",
         "drm_standard": "Standard DRM",
         "drm_aggressive": "Aggressive DRM",
         "cf_choice_title": "Start Development or Crowdfunding Campaign?",
@@ -1871,8 +1871,8 @@ TRANSLATIONS = {
         "subscription_price_up": "Raise monthly price (Current: {price} EUR)",
         "subscription_server_costs_label": "Server costs: {cost:,} EUR / week",
         "subscription_start": "Start subscription service",
-        "subscription_status_active": "Active",
-        "subscription_status_inactive": "Inactive",
+        "subscription_status_active": "Aktiv",
+        "subscription_status_inactive": "Inaktiv",
         "subscription_stop": "Stop subscription service",
         "subscription_subscribers_label": "Subscribers: {count:,}",
         "subscription_trend_label": "Trend: {trend}",
@@ -1891,7 +1891,7 @@ TRANSLATIONS = {
         "team_member_status": "{name} ({role}) - {status}",
         "team_none_selected_error": "You must assign at least one employee!",
         "team_select_prompt": "Choose who should work on this project. Enter to toggle. Last option to confirm.",
-        "team_status_assigned": "Assigned",
+        "team_status_assigned": "Zugewiesen",
         "team_status_not_assigned": "Not assigned",
         "teambuilding_party": "Office Party (2,000 EUR)",
         "teambuilding_pizza": "Pizza Night (500 EUR)",
@@ -1968,7 +1968,7 @@ TRANSLATIONS = {
         "upgrade_security": "Security Service",
         "volume_music": "Music Volume",
         "volume_settings": "Volume Settings",
-        "volume_sfx": "SFX Volume",
+        "volume_sfx": "SFX-Lautst�rke",
         "volume_speech": "Speech Volume",
         "wall": "Wall",
         "watch_ad": "Watch ad video (+5,000 EUR)",
@@ -2120,7 +2120,7 @@ TRANSLATIONS = {
         "subject_burnout_quit": "KÃ¼ndigung wegen Burnout!",
         "body_burnout_quit": "Chef, {name} hat einen schweren Burnout durch den stÃ¤ndigen Crunch erlitten und sofort gekÃ¼ndigt. Wir brauchen dringend eine HR-Abteilung oder Therapeuten!",
         "drm_choice_title": "Kopierschutz (DRM) wÃ¤hlen",
-        "drm_none": "No DRM",
+        "drm_none": "Kein DRM",
         "drm_standard": "Standard-DRM",
         "drm_aggressive": "Aggressives DRM",
         "cf_choice_title": "Entwicklung starten oder Crowdfunding Kampagne?",
@@ -2229,8 +2229,8 @@ TRANSLATIONS = {
         "subscription_price_up": "Monatlichen Preis erhöhen (Aktuell: {price}EUR)",
         "subscription_server_costs_label": "Serverkosten: {cost:,}EUR / Woche",
         "subscription_start": "Abonnementdienst starten",
-        "subscription_status_active": "Active",
-        "subscription_status_inactive": "Inactive",
+        "subscription_status_active": "Aktiv",
+        "subscription_status_inactive": "Inaktiv",
         "subscription_stop": "Stoppen Sie den Abonnementdienst",
         "subscription_subscribers_label": "Abonnenten: {count:,}",
         "subscription_trend_label": "Trend: {trend}",
@@ -2249,7 +2249,7 @@ TRANSLATIONS = {
         "team_member_status": "{name}({role}) - {status}",
         "team_none_selected_error": "Sie müssen mindestens einen Mitarbeiter zuweisen!",
         "team_select_prompt": "Wählen Sie aus, wer an diesem Projekt arbeiten soll. Zum Umschalten Enter eingeben. Letzte Option zur Bestätigung.",
-        "team_status_assigned": "Assigned",
+        "team_status_assigned": "Zugewiesen",
         "team_status_not_assigned": "Nicht zugewiesen",
         "teambuilding_party": "Büroparty (2.000 EUR)",
         "teambuilding_pizza": "Pizzaabend (500 EUR)",
@@ -2326,7 +2326,7 @@ TRANSLATIONS = {
         "upgrade_security": "Sicherheitsdienst",
         "volume_music": "Musiklautstärke",
         "volume_settings": "Lautstärkeeinstellungen",
-        "volume_sfx": "SFX Volume",
+        "volume_sfx": "SFX-Lautst�rke",
         "volume_speech": "Sprachlautstärke",
         "wall": "Wall",
         "watch_ad": "Werbevideo ansehen (+5.000 EUR)",
@@ -2354,7 +2354,7 @@ TRANSLATIONS = {
         "wiki_hr_text": "PERSONAL: Stellen Sie Mitarbeiter ein, um größere Spiele zu entwickeln. Jeder Mitarbeiter hat eine Hauptrolle (Programmierer, Grafiker, Sounddesigner, Unterstützer) und gibt seinem Bereich einen Bonus. Spezialisierungen wie Sound Genius oder Bug Hunter geben zusätzliche Boni. Schulen Sie Mitarbeiter regelmäßig, damit ihr Niveau steigt. Achten Sie auf die Moral: Sinkt sie unter 30 Prozent, arbeitet das Team langsamer und produziert mehr Bugs. Teambuilding-Maßnahmen (Pizza, Party, Ausflug) helfen.",
         "wiki_mods_text": "MODS ERSTELLEN: Das Spiel unterstützt lokale Mods ohne Internet! So erstellen Sie einen Mod: Schritt 1: Öffnen Sie den Mods-Ordner im Spielverzeichnis. Schritt 2: Erstellen Sie darin einen neuen Unterordner, zum Beispiel my_mod. Schritt 3: Erstellen Sie in diesem Ordner eine Datei mit dem Namen mod.json. Schritt 4: Füllen Sie die Datei mit folgendem Inhalt: geschweifte Klammer öffnen. id: eindeutige ID in Anführungszeichen (z. B. my_mod). name: Name des Mods in Anführungszeichen. Autor: Ihr Name in Anführungszeichen. Ausführung: z.B. 1,0. Beschreibung: Kurzbeschreibung. Unterstreichungsthemen hinzufügen: eckige Klammer öffnen. Offener Name in geschweiften Klammern: „Ihr Thema“, Trend-Unterstrichtext: „Ihr Thema boomt gerade!“ geschweifte Klammer schließen. eckige Klammer schließen. Unterstrich hinzufügen Genres: analog. geschweifte Klammer schließen. Schritt 5: Starten Sie das Spiel, gehen Sie zum Local Mod Manager und aktivieren Sie den Mod mit Enter. Ab dem nächsten Spielstart sind die neuen Themen und Genres verfügbar!",
         "wiki_money_text": "GELD & FINANZEN: Nehmen Sie Kredite nur auf, wenn Sie diese sicher zurückzahlen können. Der Kredit wird jede Woche automatisch zurückgezahlt. An der Börse können Sie Anteile konkurrierender Studios kaufen und von Dividenden profitieren. Lizenzen (Filme, Anime, Sportligen) geben Hype-Boni für Ihr nächstes Spiel. Bundles und Add-Ons sind günstige Möglichkeiten, mit fertigen Spielen zusätzliche Einnahmen zu erzielen.",
-        "wiki_research_text": "FORSCHUNG: Recherchieren Sie neue Themen, Genres, Zielgruppen und Engine-Funktionen. Erstellen Sie dann Ihre eigenen Engines aus den recherchierten Funktionen. Je höher das technische Niveau Ihrer Engine ist, desto besser sind die Bewertungen Ihrer Spiele. Für große und AAA-Spiele benötigen Sie spezielle Technologien wie den digitalen Vertrieb oder ein Hardware-Labor. Halten Sie immer mindestens einen Motor mit dem aktuellen technischen Stand bereit.",
+        "wiki_research_text": "FORSCHUNG: Recherchieren Sie neue Themen, Genres, Zielgruppen und Engine-Funktionen. Erstellen Sie dann Ihre eigenen Engines aus den recherchierten Funktionen. Je höher das technische Niveau Ihrer Engine ist, desto besser sind die Bewertungen Ihrer Spiele. Für große und AAA-Spiele benötigen Sie spezielle Technologien wie den digitalen Vertrieb oder ein Hardware-Labor. Halten Sie immer mindestens eine Engine mit dem aktuellen technischen Stand bereit.",
         "wiki_tutorial_text": "SCHRITT-FÜR-SCHRITT-ANLEITUNG: 1. Wählen Sie „Neues Spiel entwickeln“. 2. Wählen Sie ein Thema und ein Genre (z. B. Fantasy und Rollenspiel). 3. Wählen Sie eine Plattform und Zielgruppe aus. 4. Verteilen Sie die Schieberegler passend zum Genre (Tipp: Action braucht viel Gameplay, RPG viel Story). 5. Bestätigen Sie mit Enter und warten Sie auf die Entwicklung. 6. Veröffentlichen Sie das Spiel. 7. Nutzen Sie den Gewinn für Forschung oder neues Personal. WICHTIG: Drücken Sie jederzeit im Spiel „S“, um eine Statusübersicht (Geld, Datum, Forschung) und „F“ für Ihre Finanzen anzuzeigen. Fertigkeitspunkte verbessern die Qualität Ihrer Spiele und steigern sich durch Training oder Erfahrung.",
         "wiki_welcome": "Willkommen im Wiki. Wählen Sie ein Thema.",
         "wiki_welcome_new": "Willkommen im Wiki & Hilfesystem! Wählen Sie mit den Pfeiltasten ein Kapitel aus und drücken Sie die Eingabetaste, um es vorlesen zu lassen.",
@@ -3917,3 +3917,5 @@ TRANSLATIONS = {
         "streaming_monthly_report_body": "Abonnenten: {subs}\nEinnahmen: {rev} EUR\nKosten: {cost} EUR\nHardware-Boost durch Cross-Promo aktiv!"
     }
 }
+
+
