@@ -1,4 +1,5 @@
-import subprocess, types, sys
+import subprocess, types, sys, pathlib
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 old_src = subprocess.check_output(["git", "show", "pre-rebuild-backup:game_data.py"]).decode("utf-8-sig")
 old = types.ModuleType("old"); exec(compile(old_src, "old", "exec"), old.__dict__)
 import game_data as new

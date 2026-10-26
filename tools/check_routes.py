@@ -22,7 +22,11 @@ pattern = re.compile(r'(?:return\s+[\'"]([a-z0-9_]+)[\'"]|lambda\s*:\s*[\'"]([a-
 all_found = set()
 
 # Special non-route return strings or actions
-ignored = {"quit", "error", "buy", "sell", "confirm", "cash", "fanfare", "bump", "click", "soundcon_menu", "soundcon_finish_confirm", "soundcon_result_menu", "soundcon_history_menu", "soundcon_qa"}
+ignored = {
+    "quit", "error", "buy", "sell", "confirm", "cash", "fanfare", "bump", "click",
+    "soundcon_menu", "soundcon_finish_confirm", "soundcon_result_menu", "soundcon_history_menu", "soundcon_qa",
+    "finish_no", "finish_yes", "label_add_game", "label_compilation", "label_concert", "label_found", "label_radio", "label_status"
+}
 
 for root, _, files in os.walk(menu_dir):
     for f in files:
@@ -36,7 +40,7 @@ for root, _, files in os.walk(menu_dir):
 
 missing = []
 for r, filename in sorted(all_found):
-    if r in ignored or r.startswith("soundcon_"):
+    if r in ignored or r.startswith("soundcon_") or r.startswith("label_"):
         continue
     # Filter out obvious false positives like sounds or keywords
     if r in ["self", "none", "true", "false", "game_name", "genre", "topic", "audience", "platform"]:
@@ -48,3 +52,19 @@ print(f"Total registered routes: {len(registered_routes)}")
 print(f"Missing routes found in menus:")
 for r, filename in missing:
     print(f"  {r} (in {filename})")
+
+# Test instantiating each registered route
+instantiation_errors = []
+for name, factory in router.dynamic_routes.items():
+    try:
+        menu = factory()
+        if menu is None:
+            instantiation_errors.append((name, "Factory returned None"))
+    except Exception as e:
+        instantiation_errors.append((name, str(e)))
+
+print(f"Route instantiation errors: {len(instantiation_errors)}")
+for name, err in instantiation_errors:
+    print(f"  {name}: {err}")
+
+sys.exit(1 if missing or instantiation_errors else 0)

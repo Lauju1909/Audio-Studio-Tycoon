@@ -18,12 +18,14 @@ def test_calendar():
     
     # Week 1
     assert gs.get_calendar_year() == 1930, f"Expected 1930, got {gs.get_calendar_year()}"
-    assert "1930, KW 1" in gs.get_calendar_text()
+    cal1 = gs.get_calendar_text()
+    assert "1930" in cal1 and f"{gs.get_text('calendar_week')} 1" in cal1, f"Unexpected cal1: {cal1}"
     
     # Week 49 (Year 2)
     gs.week = 49
     assert gs.get_calendar_year() == 1931, f"Expected 1931, got {gs.get_calendar_year()}"
-    assert "1931, KW 1" in gs.get_calendar_text()
+    cal49 = gs.get_calendar_text()
+    assert "1931" in cal49 and f"{gs.get_text('calendar_week')} 1" in cal49, f"Unexpected cal49: {cal49}"
     
     # Week (48 * 2) + 1 = 97 (Year 3)
     gs.week = 97
@@ -60,13 +62,13 @@ def test_features():
     features_w1 = get_available_features(1)
     f_names_w1 = [f["name"] for f in features_w1]
     assert "Papier-Logik" in f_names_w1
-    assert "Vakuumröhren" not in f_names_w1
+    assert "Vakuum-Röhren" not in f_names_w1
     
     # 1941 (Week 529 roughly)
     # (1941 - 1930) * 48 + 1 = 11 * 48 + 1 = 528 + 1 = 529
     features_1941 = get_available_features(529)
     f_names_1941 = [f["name"] for f in features_1941]
-    assert "Vakuumröhren" in f_names_1941
+    assert "Vakuum-Röhren" in f_names_1941
     
     print("Engine Feature Logic: OK")
 
@@ -88,20 +90,22 @@ def test_platforms():
 
 def test_events():
     print("Testing Historical Events...")
+    from translations import get_text
     
     # 1930 event
     evt_1930 = get_year_event(1930)
     assert evt_1930 is not None
-    assert "Logik-Spiele" in evt_1930["text"]
+    assert "Billig-Logik" in get_text(evt_1930["text"])
     
     # 1969 event
     evt_1969 = get_year_event(1969)
     assert evt_1969 is not None
-    assert "Mondlandung" in evt_1969["text"]
+    assert "Apollo 11" in get_text(evt_1969["text"])
     
     print("Historical Events: OK")
 
 if __name__ == "__main__":
+    import traceback
     try:
         test_calendar()
         test_topics()
@@ -111,4 +115,6 @@ if __name__ == "__main__":
         print("\nALL HISTORICAL LOGIC TESTS PASSED!")
     except Exception as e:
         print(f"\nTEST FAILED: {e}")
+        traceback.print_exc()
+        sys.exit(1)
         sys.exit(1)
