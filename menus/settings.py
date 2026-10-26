@@ -49,6 +49,7 @@ class SettingsMenu(Menu):
             {'text': f"{self.game_state.get_text('release_channel')}: {channel_name}", 'action': self._toggle_channel},
             {'text': f"{self.game_state.get_text('menu_numbering')}: {self.game_state.get_text('on') if s.get('menu_numbering_enabled', True) else self.game_state.get_text('off')}", 'action': self._toggle_menu_numbering},
             {'text': self.game_state.get_text('keybindings'), 'action': self._goto_keybindings},
+            {'text': "Feedback an Lauju senden" if current_lang == 'de' else "Send Feedback to Lauju", 'action': self._open_feedback},
             {'text': self.game_state.get_text('check_update'), 'action': self._check_update},
             {'text': self.game_state.get_text('back'), 'action': self.on_back}
         ]
@@ -96,6 +97,14 @@ class SettingsMenu(Menu):
         self._update_options()
         self.speak_current(interrupt=False)
         
+    def _open_feedback(self):
+        try:
+            from tools.feedback_dialog import open_feedback_dialog
+            lang = self.game_state.settings.get('language', 'de')
+            open_feedback_dialog("tycoon", "4.2.0", self.audio, lang)
+        except Exception as e:
+            print("Feedback dialog error:", e)
+
     def _check_update(self):
         from updater import check_for_updates
         import json
