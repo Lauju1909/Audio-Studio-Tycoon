@@ -1497,7 +1497,7 @@ class ESportsMenu(Menu):
         super().__init__(game_state.get_text('esports_menu_title', default='E-Sports Zentrale'), [], audio, game_state)
     def announce_entry(self):
         self.options = []
-        if self.game_state.year < 2010:
+        if self.game_state.get_calendar_year() < 2010:
             self.options.append({'text': self.game_state.get_text('esports_locked', default='E-Sports (Gesperrt bis 2010)'), 'action': lambda: None})
         else:
             self.options.append({'text': self.game_state.get_text('esports_create_league', default='Neue Liga gruenden (5.000.000 EUR)'), 'action': lambda: "esports_create_league_menu"})
@@ -1570,8 +1570,14 @@ class ESportsChampionshipMenu(Menu):
         super().__init__("Championships & Sponsoren", [], audio, game_state)
     def announce_entry(self):
         self.options = []
-        idx = self.game_state.ui_context.get('selected_league_idx', 0)
-        self.league = self.game_state.esports_leagues[idx]
+        leagues = getattr(self.game_state, 'esports_leagues', [])
+        idx = getattr(self.game_state, 'ui_context', {}).get('selected_league_idx', 0)
+        if not leagues or idx < 0 or idx >= len(leagues):
+            self.title = "Keine Liga gewählt"
+            self.options = [{'text': self.game_state.get_text('back'), 'action': lambda: "esports_menu"}]
+            super().announce_entry()
+            return
+        self.league = leagues[idx]
         
         self.title = self.game_state.get_text('esports_champ_title', game=self.league.game_name, default=f"Liga: {self.league.game_name}")
         
@@ -1672,8 +1678,13 @@ class ESportsSponsorMenu(Menu):
         super().__init__("Sponsoren", [], audio, game_state)
     def announce_entry(self):
         self.options = []
-        idx = self.game_state.ui_context.get('selected_league_idx', 0)
-        league = self.game_state.esports_leagues[idx]
+        leagues = getattr(self.game_state, 'esports_leagues', [])
+        idx = getattr(self.game_state, 'ui_context', {}).get('selected_league_idx', 0)
+        if not leagues or idx < 0 or idx >= len(leagues):
+            self.options = [{'text': self.game_state.get_text('back'), 'action': lambda: "esports_menu"}]
+            super().announce_entry()
+            return
+        league = leagues[idx]
         
         from models import EsportsLeague
         for st in EsportsLeague.SPONSOR_TIERS:

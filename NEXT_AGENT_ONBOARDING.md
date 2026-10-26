@@ -28,7 +28,7 @@ Welche Option oder welches Feature möchtest du als erstes angehen?
 Das entscheidende Alleinstellungsmerkmal: **Es ist von Grund auf für blinde und sehbehinderte Spieler konzipiert und optimiert (100% Accessible-First).**
 
 ### ♿ Barrierefreiheits-Design & Regeln
-1. **Screenreader-Integration:** Die Sprachausgabe erfolgt über die Bibliothek `Tolk` (in `audio.py`), die installierte Screenreader (wie NVDA oder JAWS) automatisch erkennt und anspricht. Steht kein Screenreader zur Verfügung, erfolgt ein Fallback auf das Microsoft SAPI-Sprachsystem (TTS).
+1. **Screenreader-Integration:** Die Sprachausgabe erfolgt primär über die universelle Bibliothek `Prism` (`prism.dll` in `audio.py`), die installierte Screenreader (wie NVDA oder JAWS) automatisch erkennt und anspricht. Steht Prism nicht zur Verfügung, erfolgt ein sauberer Fallback auf `Tolk` (`Tolk.dll`) bzw. das Microsoft SAPI-Sprachsystem (TTS).
 2. **Keine visuellen Hindernisse:** Keine ANSI-Farbcodes, keine ASCII-Art-Rahmen und keine UI-Tabellen, die Screenreader irritieren könnten. Die UI besteht aus klaren, linear navigierbaren Menüs.
 3. **Akustisches Feedback (Bumper-Sounds):** Wenn ein Spieler in einem Menü an das obere oder untere Ende gelangt, ertönt ein kurzer, markanter Boundary-Sound (Bump-Ton).
 4. **Steuerung:** Ausschließlich über Tastatur (Pfeiltasten zur Navigation, Pfeiltasten Links/Rechts zum Einstellen von Slidern, Enter zum Bestätigen, Backspace/Esc zum Zurückgehen, dedizierte Hotkeys für Statusberichte).
@@ -115,7 +115,7 @@ Das Spiel wird als eigenständige Windows-Anwendung kompiliert.
 ### Build-Schritte:
 1. Aktualisiere die Versionsnummer in `version.json` und im `README.md`.
 2. Starte [build_game.bat](file:///C:/Users/lauri/.gemini/antigravity/scratch/Audio_Studio_Tycoon/build_game.bat). Dieses Skript nutzt **PyInstaller** mit der passenden `.spec`-Datei, um die portable `.exe` zu bauen.
-3. Führe [create_release.py](file:///C:/Users/lauri/.gemini/antigravity/scratch/Audio_Studio_Tycoon/create_release.py) aus, welches die `.exe`, DLLs (`Tolk.dll`, `nvdaControllerClient64.dll`), Assets und Übersetzungen in ein ZIP-Archiv verpackt.
+3. Führe [create_release.py](file:///C:/Users/lauri/.gemini/antigravity/scratch/Audio_Studio_Tycoon/create_release.py) aus, welches die `.exe`, DLLs (`prism.dll`, `Tolk.dll`, `nvdaControllerClient64.dll`), Assets und Übersetzungen in ein ZIP-Archiv verpackt.
 4. Pushe das ZIP-Archiv und den Tag auf GitHub.
 
 ---

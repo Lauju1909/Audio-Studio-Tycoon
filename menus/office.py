@@ -9,6 +9,7 @@ class HRMenu(Menu):
         options = [
             {'text': self.game_state.get_text('hire_employee'), 'action': lambda: "hire_menu"},
             {'text': self.game_state.get_text('menu_employee_overview'), 'action': lambda: "employee_overview_menu"},
+            {'text': self.game_state.get_text('vacation_menu_title', default="Mitarbeiter in den Urlaub schicken"), 'action': lambda: "vacation_menu"},
             {'text': self.game_state.get_text('fire_employee'), 'action': lambda: "fire_menu"},
             {'text': self.game_state.get_text('training_employee'), 'action': lambda: "training_employee_select"},
             {'text': self.game_state.get_text('menu_teambuilding'), 'action': lambda: "teambuilding_menu"},
@@ -98,9 +99,12 @@ class EmployeeOverviewMenu(Menu):
                 status = self.game_state.get_text('training_status_tag', weeks=emp.training_weeks_left)
             elif getattr(emp, 'is_sick', False):
                 status = self.game_state.get_text('sick_status_tag', weeks=emp.sick_weeks_left)
+            elif getattr(emp, 'vacation_weeks_left', 0) > 0:
+                status = f"Urlaub ({emp.vacation_weeks_left} W)"
             else:
                 status = "OK"
 
+            fatigue = int(getattr(emp, 'fatigue', 0))
             txt = self.game_state.get_text('employee_detail_summary',
                                           name=emp.name,
                                           role=role_name,
@@ -108,8 +112,49 @@ class EmployeeOverviewMenu(Menu):
                                           salary=emp.salary,
                                           morale=int(emp.morale),
                                           status=status)
+            if fatigue > 0:
+                txt += f" (Erschöpfung: {fatigue}%)"
             self.options.append({'text': txt, 'action': None})
         self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "hr_menu"})
+
+class VacationMenu(Menu):
+    """Menü um Mitarbeiter in den Erholungsurlaub zu schicken und Burnout vorzubeugen."""
+    def __init__(self, audio, game_state):
+        self.audio = audio
+        self.game_state = game_state
+        super().__init__(self.game_state.get_text('vacation_menu_title', default="Mitarbeiter in den Urlaub schicken"), [], audio, game_state)
+        self._update_options()
+
+    def _update_options(self):
+        self.options = []
+        available_count = 0
+        for emp in self.game_state.employees:
+            if getattr(emp, 'is_ceo', False):
+                continue
+            if getattr(emp, 'is_training', False) or getattr(emp, 'is_sick', False):
+                continue
+            if getattr(emp, 'vacation_weeks_left', 0) > 0:
+                txt = f"{emp.name} (Bereits im Urlaub: {emp.vacation_weeks_left} Wochen verbleibend)"
+                self.options.append({'text': txt, 'action': lambda: None})
+                available_count += 1
+                continue
+
+            available_count += 1
+            fatigue = int(getattr(emp, 'fatigue', 0))
+            txt = self.game_state.get_text('vacation_employee_option', name=emp.name, fatigue=fatigue, default=f"{emp.name} (Erschöpfung: {fatigue}%)")
+            self.options.append({'text': txt, 'action': lambda e=emp: self._send_on_vacation(e)})
+
+        if available_count == 0:
+            self.options.append({'text': self.game_state.get_text('vacation_none_available', default="Keine Mitarbeiter verfügbar."), 'action': lambda: None})
+
+        self.options.append({'text': self.game_state.get_text('back'), 'action': lambda: "hr_menu"})
+
+    def _send_on_vacation(self, emp):
+        emp.vacation_weeks_left = 4
+        self.audio.play_sound("confirm")
+        self.audio.speak(self.game_state.get_text('vacation_success', name=emp.name, default=f"{emp.name} ist nun für 4 Wochen im Erholungsurlaub."))
+        self._update_options()
+        return "vacation_menu"
 
 class TrainingEmployeeSelectMenu(Menu):
     def __init__(self, audio, game_state):
@@ -131,6 +176,9 @@ class TrainingEmployeeSelectMenu(Menu):
                 weeks_left = getattr(emp, 'sick_weeks_left', 0)
                 status = self.game_state.get_text('sick_status_tag', weeks=weeks_left)
                 txt = f"[K] {emp.name} ({role_name}) — {status}"
+            elif getattr(emp, 'vacation_weeks_left', 0) > 0:
+                weeks_left = emp.vacation_weeks_left
+                txt = f"[U] {emp.name} ({role_name}) — Urlaub ({weeks_left} W)"
             else:
                 txt = f"{emp.name} ({role_name})"
             self.options.append({'text': txt, 'action': lambda idx=i: self._select(idx)})
@@ -145,6 +193,10 @@ class TrainingEmployeeSelectMenu(Menu):
         if getattr(emp, 'is_sick', False):
             self.audio.play_sound("error")
             self.audio.speak(self.game_state.get_text('training_sick_blocked'))
+            return None
+        if getattr(emp, 'vacation_weeks_left', 0) > 0:
+            self.audio.play_sound("error")
+            self.audio.speak(self.game_state.get_text('training_vacation_blocked', default=f"{emp.name} ist im Urlaub und kann nicht fortgebildet werden."))
             return None
         self.game_state.selected_training_employee_idx = idx
         return "training_option_select"
@@ -539,7 +591,7 @@ class OfficePerksMenu(Menu):
             else:
                 self.audio.play_sound('error')
         self._update_options()
-        return "stay"
+        return None
 
 class HeadhuntingEventMenu(Menu):
     def __init__(self, audio, game_state):

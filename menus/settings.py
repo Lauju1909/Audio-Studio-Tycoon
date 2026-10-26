@@ -373,7 +373,14 @@ class LanguageMenu(Menu):
 
 class CustomLanguageInputMenu(TextInputMenu):
     def __init__(self, audio, game_state):
-        super().__init__(game_state.get_text('custom_language_prompt'), audio, game_state)
+        super().__init__(
+            title='custom_language',
+            prompt='custom_language_prompt',
+            audio=audio,
+            game_state=game_state,
+            on_confirm=self.on_submit,
+            on_cancel=lambda: "language_menu"
+        )
 
     def on_submit(self, text):
         if text.strip():

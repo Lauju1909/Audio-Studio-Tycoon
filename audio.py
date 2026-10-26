@@ -44,6 +44,11 @@ def resource_path(relative_path):
 
 class AudioManager:
     def __init__(self):
+        self.prism = None
+        self.prism_ctx = None
+        self.prism_backend = None
+        self.prism_active = False
+        self.prism_backend_name_str = None
         self.tolk = None
         self.tolk_active = False
         self.linux_speech = None
@@ -59,50 +64,14 @@ class AudioManager:
         self.is_linux = sys.platform.startswith('linux')
 
         if self.is_windows:
-            # --- STUFE 1: Tolk-Ausgabe für Windows (bevorzugt: NVDA/JAWS) ---
-            try:
-                # Suche Tolk.dll an verschiedenen Orten
-                possible_paths = [
-                    os.path.join(os.path.abspath("."), "Tolk.dll"),
-                    resource_path("Tolk.dll"),
-                    os.path.join(os.path.dirname(sys.executable), "Tolk.dll") if getattr(sys, 'frozen', False) else ""
-                ]
-                
-                dll_path = None
-                for p in possible_paths:
-                    if p and os.path.exists(p):
-                        dll_path = p
-                        break
-                    
-                if dll_path:
-                    print(f"[Audio] Lade Tolk von: {dll_path}")
-                    self.tolk = ctypes.windll.LoadLibrary(dll_path)
-                    self.tolk.Tolk_Load()
-                    self.tolk_active = bool(self.tolk.Tolk_IsLoaded())
-                    if self.tolk_active:
-                        # SAPI als Fallback in Tolk aktivieren
-                        self.tolk.Tolk_TrySAPI(True)
-                        
-                        # Prüfe ob wirklich ein Screenreader erkannt wurde
-                        has_sr = False
-                        try:
-                            has_sr = bool(self.tolk.Tolk_HasSpeech())
-                        except Exception:
-                            pass
-                        
-                        if has_sr:
-                            print("[Audio] Tolk: Screenreader erkannt und aktiv.")
-                        else:
-                            print("[Audio] Tolk geladen, aber kein Screenreader erkannt. Nutze SAPI über Tolk.")
-                else:
-                    print("[Audio Fehler]: Tolk.dll wurde an keinem Ort gefunden.")
-            except Exception as e:
-                print(f"[Audio Exception]: Tolk-Init fehlgeschlagen: {e}")
-                self.tolk = None
-                self.tolk_active = False
+            # --- STUFE 1: Prism Universal Screenreader & Speech Abstraction (bevorzugt) ---
+            self._init_prism()
 
-            # --- STUFE 2: Windows SAPI Direktfallback (wenn Tolk versagt) ---
-            # Immer SAPI initialisieren als Sicherheitsnetz
+            # --- STUFE 2: Tolk-Ausgabe für Windows (Fallback wenn Prism nicht aktiv) ---
+            if not self.prism_active:
+                self._init_tolk()
+
+            # --- STUFE 3: Windows SAPI Direktfallback (wenn Prism und Tolk versagen) ---
             self._init_sapi()
 
         elif self.is_linux:
@@ -139,6 +108,125 @@ class AudioManager:
         # Worker Thread starten
         self.worker_thread = threading.Thread(target=self._speech_worker, daemon=True)
         self.worker_thread.start()
+
+    def _init_prism(self):
+        """Initialisiert die moderne Prism-Bibliothek für universelle Screenreader- & TTS-Ausgabe (NVDA, JAWS, OneCore, SAPI)."""
+        try:
+            possible_paths = [
+                os.path.join(os.path.abspath("."), "prism.dll"),
+                resource_path("prism.dll"),
+                os.path.join(os.path.dirname(sys.executable), "prism.dll") if getattr(sys, 'frozen', False) else ""
+            ]
+            dll_path = None
+            for p in possible_paths:
+                if p and os.path.exists(p):
+                    dll_path = p
+                    break
+
+            if not dll_path:
+                print("[Audio] prism.dll wurde an keinem Ort gefunden.")
+                return
+
+            print(f"[Audio] Lade Prism von: {dll_path}")
+            self.prism = ctypes.CDLL(dll_path)
+
+            self.prism.prism_init.restype = ctypes.c_void_p
+            self.prism.prism_init.argtypes = [ctypes.c_void_p]
+
+            self.prism.prism_shutdown.argtypes = [ctypes.c_void_p]
+
+            self.prism.prism_registry_count.restype = ctypes.c_size_t
+            self.prism.prism_registry_count.argtypes = [ctypes.c_void_p]
+
+            self.prism.prism_registry_name.restype = ctypes.c_char_p
+            self.prism.prism_registry_name.argtypes = [ctypes.c_void_p, ctypes.c_uint64]
+
+            self.prism.prism_registry_id_at.restype = ctypes.c_uint64
+            self.prism.prism_registry_id_at.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
+
+            self.prism.prism_registry_create.restype = ctypes.c_void_p
+            self.prism.prism_registry_create.argtypes = [ctypes.c_void_p, ctypes.c_uint64]
+
+            self.prism.prism_registry_create_best.restype = ctypes.c_void_p
+            self.prism.prism_registry_create_best.argtypes = [ctypes.c_void_p]
+
+            self.prism.prism_backend_name.restype = ctypes.c_char_p
+            self.prism.prism_backend_name.argtypes = [ctypes.c_void_p]
+
+            self.prism.prism_backend_initialize.restype = ctypes.c_int
+            self.prism.prism_backend_initialize.argtypes = [ctypes.c_void_p]
+
+            self.prism.prism_backend_speak.restype = ctypes.c_int
+            self.prism.prism_backend_speak.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_bool]
+
+            self.prism.prism_backend_stop.restype = ctypes.c_int
+            self.prism.prism_backend_stop.argtypes = [ctypes.c_void_p]
+
+            self.prism.prism_backend_braille.restype = ctypes.c_int
+            self.prism.prism_backend_braille.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
+
+            self.prism.prism_backend_get_features.restype = ctypes.c_uint64
+            self.prism.prism_backend_get_features.argtypes = [ctypes.c_void_p]
+
+            self.prism.prism_backend_free.argtypes = [ctypes.c_void_p]
+
+            self.prism_ctx = self.prism.prism_init(None)
+            if not self.prism_ctx:
+                print("[Audio Fehler]: prism_init lieferte keinen Kontext.")
+                self.prism = None
+                return
+
+            self.prism_backend = self.prism.prism_registry_create_best(self.prism_ctx)
+            if self.prism_backend:
+                self.prism.prism_backend_initialize(self.prism_backend)
+                b_name = self.prism.prism_backend_name(self.prism_backend)
+                self.prism_backend_name_str = b_name.decode('utf-8', errors='ignore') if b_name else "Unknown"
+                self.prism_active = True
+                print(f"[Audio] Prism: Screenreader/TTS initialisiert mit Backend: {self.prism_backend_name_str}")
+            else:
+                print("[Audio] Prism geladen, aber kein Backend aktiv.")
+        except Exception as e:
+            print(f"[Audio Exception]: Prism-Init fehlgeschlagen: {e}")
+            self.prism = None
+            self.prism_ctx = None
+            self.prism_backend = None
+            self.prism_active = False
+
+    def _init_tolk(self):
+        """Initialisiert Tolk als Fallback-Screenreader-Schnittstelle."""
+        try:
+            possible_paths = [
+                os.path.join(os.path.abspath("."), "Tolk.dll"),
+                resource_path("Tolk.dll"),
+                os.path.join(os.path.dirname(sys.executable), "Tolk.dll") if getattr(sys, 'frozen', False) else ""
+            ]
+            dll_path = None
+            for p in possible_paths:
+                if p and os.path.exists(p):
+                    dll_path = p
+                    break
+            if dll_path:
+                print(f"[Audio] Lade Tolk von: {dll_path}")
+                self.tolk = ctypes.windll.LoadLibrary(dll_path)
+                self.tolk.Tolk_Load()
+                self.tolk_active = bool(self.tolk.Tolk_IsLoaded())
+                if self.tolk_active:
+                    self.tolk.Tolk_TrySAPI(True)
+                    has_sr = False
+                    try:
+                        has_sr = bool(self.tolk.Tolk_HasSpeech())
+                    except Exception:
+                        pass
+                    if has_sr:
+                        print("[Audio] Tolk: Screenreader erkannt und aktiv.")
+                    else:
+                        print("[Audio] Tolk geladen, aber kein Screenreader erkannt. Nutze SAPI über Tolk.")
+            else:
+                print("[Audio Fehler]: Tolk.dll wurde an keinem Ort gefunden.")
+        except Exception as e:
+            print(f"[Audio Exception]: Tolk-Init fehlgeschlagen: {e}")
+            self.tolk = None
+            self.tolk_active = False
 
     def _init_sapi(self):
         """Initialisiert Windows SAPI als Direktfallback über win32com oder pyttsx3."""
@@ -247,24 +335,49 @@ class AudioManager:
 
                 spoken = False
 
-                # Prüfe ob ein echter Screenreader (NVDA/JAWS) über Tolk aktiv ist
-                tolk_has_sr = False
-                if self.tolk_active and self.tolk:
+                # === STUFE 1: Prism Universal Screenreader & TTS ===
+                if self.prism_active and self.prism and self.prism_backend:
+                    try:
+                        if interrupt:
+                            try:
+                                self.prism.prism_backend_stop(self.prism_backend)
+                            except Exception:
+                                pass
+                        res = self.prism.prism_backend_speak(
+                            self.prism_backend,
+                            text.encode('utf-8', errors='replace'),
+                            ctypes.c_bool(interrupt)
+                        )
+                        # Braille-Ausgabe mitsenden
+                        try:
+                            self.prism.prism_backend_braille(
+                                self.prism_backend,
+                                text.encode('utf-8', errors='replace')
+                            )
+                        except Exception:
+                            pass
+                        spoken = (res == 0)
+                    except Exception as e:
+                        print(f"[Prism Speak Fehler]: {e}")
+                        spoken = False
+
+                # === STUFE 2: Tolk-Ausgabe (Fallback) ===
+                if not spoken and self.tolk_active and self.tolk:
+                    tolk_has_sr = False
                     try:
                         tolk_has_sr = bool(self.tolk.Tolk_HasSpeech())
                     except Exception:
                         tolk_has_sr = False
 
-                if tolk_has_sr:
-                    # === SCREENREADER-MODUS: NUR TOLK (NVDA/JAWS) ===
-                    # Kein SAPI! Sonst hört man alles doppelt.
-                    try:
-                        self.tolk.Tolk_Output(ctypes.c_wchar_p(text), ctypes.c_bool(interrupt))
-                        spoken = True
-                    except Exception as e:
-                        print(f"[Tolk SR Fehler]: {e}")
-                else:
-                    # === KEIN SCREENREADER: NUR SAPI DIREKT ===
+                    if tolk_has_sr:
+                        try:
+                            self.tolk.Tolk_Output(ctypes.c_wchar_p(text), ctypes.c_bool(interrupt))
+                            spoken = True
+                        except Exception as e:
+                            print(f"[Tolk SR Fehler]: {e}")
+                
+                # === STUFE 3: SAPI Direktfallback ===
+                if not spoken:
                     if thread_sapi is not None and self.is_windows:
                         try:
                             SVSFlagsAsync = 1
@@ -334,6 +447,41 @@ class AudioManager:
     def update_tts_engine(self, engine_mode):
         """Wechselt den TTS-Modus: auto, nvda, sapi"""
         self.tts_engine = engine_mode
+
+        # Prism Backend-Umschaltung
+        if self.prism_active and self.prism and self.prism_ctx:
+            try:
+                target_backend = None
+                if engine_mode == "auto":
+                    target_backend = self.prism.prism_registry_create_best(self.prism_ctx)
+                else:
+                    cnt = self.prism.prism_registry_count(self.prism_ctx)
+                    for i in range(cnt):
+                        bid = self.prism.prism_registry_id_at(self.prism_ctx, i)
+                        bname = self.prism.prism_registry_name(self.prism_ctx, bid)
+                        name_str = bname.decode('utf-8', errors='ignore').lower() if bname else ""
+                        if engine_mode == "nvda" and ("nvda" in name_str or "jaws" in name_str):
+                            target_backend = self.prism.prism_registry_create(self.prism_ctx, bid)
+                            break
+                        elif engine_mode == "sapi" and ("sapi" in name_str or "onecore" in name_str):
+                            target_backend = self.prism.prism_registry_create(self.prism_ctx, bid)
+                            break
+
+                if target_backend:
+                    if self.prism_backend:
+                        try:
+                            self.prism.prism_backend_stop(self.prism_backend)
+                            self.prism.prism_backend_free(self.prism_backend)
+                        except Exception:
+                            pass
+                    self.prism_backend = target_backend
+                    self.prism.prism_backend_initialize(self.prism_backend)
+                    b_name = self.prism.prism_backend_name(self.prism_backend)
+                    self.prism_backend_name_str = b_name.decode('utf-8', errors='ignore') if b_name else "Unknown"
+                    print(f"[Audio] Prism Backend gewechselt zu: {self.prism_backend_name_str}")
+            except Exception as e:
+                print(f"[Prism Mode Change Fehler]: {e}")
+
         if not self.tolk_active or not self.tolk:
             return
             
@@ -461,6 +609,22 @@ class AudioManager:
             except Exception:
                 pass
                 
+        if self.prism_active and self.prism:
+            try:
+                if self.prism_backend:
+                    try:
+                        self.prism.prism_backend_stop(self.prism_backend)
+                    except Exception:
+                        pass
+                    self.prism.prism_backend_free(self.prism_backend)
+                    self.prism_backend = None
+                if self.prism_ctx:
+                    self.prism.prism_shutdown(self.prism_ctx)
+                    self.prism_ctx = None
+                self.prism_active = False
+            except Exception as e:
+                print(f"[Prism Cleanup Fehler]: {e}")
+
         if self.tolk_active and self.tolk:
             try:
                 self.tolk.Tolk_Unload()

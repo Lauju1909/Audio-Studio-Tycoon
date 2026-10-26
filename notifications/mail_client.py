@@ -19,6 +19,7 @@ class MailClient:
         dispatcher.add_listener("strike_ended", self.on_strike_ended)
         dispatcher.add_listener("training_done", self.on_training_done)
         dispatcher.add_listener("burnout", self.on_burnout)
+        dispatcher.add_listener("vacation_ended", self.on_vacation_ended)
         dispatcher.add_listener("sick_recovered", self.on_sick_recovered)
         dispatcher.add_listener("sick", self.on_sick)
         dispatcher.add_listener("burnout_quit", self.on_burnout_quit)
@@ -88,6 +89,14 @@ class MailClient:
             self.get_text('sender_hr'),
             self.get_text('subject_burnout', default='Mitarbeiter-Burnout!'),
             self.get_text('body_burnout', name=emp.name, default=f'{emp.name} hat einen Burnout erlitten und faellt fuer {emp.sick_weeks_left} Wochen aus!')
+        )
+
+    def on_vacation_ended(self, event: Event):
+        emp = event.data["emp"]
+        self._send_mail(
+            self.get_text('sender_hr'),
+            self.get_text('subject_vacation_ended', default='Urlaub beendet'),
+            self.get_text('body_vacation_ended', name=emp.name, default=f'{emp.name} ist erholt aus dem Urlaub zurückgekehrt und steht dem Studio wieder voll zur Verfügung.')
         )
 
     def on_sick_recovered(self, event: Event):

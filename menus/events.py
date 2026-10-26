@@ -140,7 +140,7 @@ class SoundConMenu(Menu):
                 return 'soundcon_history_menu'
 
             elif action == 'back_to_game':
-                return 'back_to_game'
+                return 'game_menu'
 
             elif action is None:
                 self.audio.play_sound('bump')
@@ -256,7 +256,7 @@ class SoundConResultMenu(Menu):
         if event.key == gs.key_confirm and self.options:
             action = self.options[self.current_index].get('action')
             if action == 'back_to_game':
-                return 'back_to_game'
+                return 'game_menu'
             elif action is None:
                 self.audio.play_sound('bump')
         return None
@@ -451,7 +451,7 @@ class SoundtrackLabelMenu(Menu):
                 return None
 
             elif action == 'back_to_game':
-                return 'back_to_game'
+                return 'game_menu'
 
             elif action is None:
                 self.audio.play_sound('bump')

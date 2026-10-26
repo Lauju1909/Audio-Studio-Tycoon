@@ -45,7 +45,7 @@ def build():
             raise Exception(f"EXE not found at {exe_path}")
             
         # Add essential files
-        essential_files = ["nvdaControllerClient64.dll", "Tolk.dll", "README.md", "version.json"]
+        essential_files = ["prism.dll", "nvdaControllerClient64.dll", "Tolk.dll", "README.md", "version.json"]
         for f in essential_files:
             if os.path.exists(f):
                 zf.write(f, f"{root_folder}/{f}")

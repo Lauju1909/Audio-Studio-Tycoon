@@ -1,4 +1,4 @@
-﻿"""
+"""
 Translations for Audio Studio Tycoon.
 Only German is stored, other languages are translated on-the-fly.
 """
@@ -151,6 +151,8 @@ def get_text(text_key, **kwargs):
 
 TRANSLATIONS = {
     "en": {
+        "custom_language": "Custom Language",
+        "custom_language_prompt": "Enter language code (e.g. es, fr, it, ja):",
         "sender_union": "GDA (Union)",
         "subject_strike_started": "STRIKE!",
         "body_strike_started": "The employees are furious about working conditions and AI usage. Development has stopped!",
@@ -2034,6 +2036,8 @@ TRANSLATIONS = {
         "streaming_monthly_report_body": "Subscribers: {subs}\nRevenue: {rev} EUR\nCosts: {cost} EUR\nHardware-Boost via Cross-Promo active!"
     },
     "de": {
+        "custom_language": "Eigene Sprache",
+        "custom_language_prompt": "Sprachcode eingeben (z. B. es, fr, it, ja):",
         "sender_union": "GDA (Gewerkschaft)",
         "subject_strike_started": "STREIK!",
         "body_strike_started": "Die Mitarbeiter sind wütend über die Arbeitsbedingungen und den KI-Einsatz. Die Entwicklung steht still!",

@@ -15,10 +15,12 @@ import json
 import ctypes
 
 # Fix for Windows console encoding issues
-if sys.platform == 'win32':
+if sys.platform == 'win32' and 'pytest' not in sys.modules:
     try:
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+        if hasattr(sys.stdout, 'buffer'):
+            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+        if hasattr(sys.stderr, 'buffer'):
+            sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
     except Exception:
         pass
 
@@ -237,6 +239,17 @@ def setup_router(audio, state):
         "jingle_select_music": lambda: JingleMusicMenu(audio, state),
         "jingle_select_voice": lambda: JingleVoiceMenu(audio, state),
         "jingle_select_sfx": lambda: JingleSFXMenu(audio, state),
+        "darknet_menu": lambda: __import__('menus.corporate', fromlist=['']).DarknetMenu(audio, state),
+        "darknet_target_select": lambda: __import__('menus.corporate', fromlist=['']).DarknetTargetSelectMenu(audio, state),
+        "darknet_takeover_select": lambda: __import__('menus.corporate', fromlist=['']).DarknetTakeoverSelectMenu(audio, state),
+        "darknet_takeover_bid": lambda: __import__('menus.corporate', fromlist=['']).DarknetTakeoverBidMenu(audio, state),
+        "esports_sponsor_menu": lambda: __import__('menus.business', fromlist=['']).ESportsSponsorMenu(audio, state),
+        "metaverse_menu": lambda: __import__('menus.business', fromlist=['']).MetaverseMenu(audio, state),
+        "console_create": lambda: __import__('menus.hardware', fromlist=['']).ConsoleCreateMenu(audio, state),
+        "console_components": lambda: __import__('menus.hardware', fromlist=['']).ConsoleComponentsMenu(audio, state),
+        "back_to_game": lambda: GameMenu(audio, state),
+        "subscription_menu": lambda: __import__('menus.subscription', fromlist=['']).SubscriptionMenu(audio, state),
+        "business_menu": lambda: ServiceMenu(audio, state),
     }
 
     for menu_id, factory in routes.items():

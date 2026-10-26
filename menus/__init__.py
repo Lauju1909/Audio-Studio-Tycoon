@@ -4,7 +4,7 @@ from .system import UpdateConfirmMenu, UpdateProgressMenu, BankruptcyMenu, SaveM
 from .office import (
     HRMenu, HireMenu, EmployeeOverviewMenu, FireMenu, TrainingEmployeeSelectMenu, 
     TrainingOptionMenu, OfficeMenu, EmailInboxMenu, EmailDetailMenu,
-    OfficeUpgradeMenu, OfficePerksMenu, HeadhuntingEventMenu
+    OfficeUpgradeMenu, OfficePerksMenu, HeadhuntingEventMenu, VacationMenu
 )
 from .research import (
     ResearchMenu, FeatureResearchMenu, GenreResearchMenu, TopicResearchMenu, 

@@ -287,6 +287,8 @@ class GameState:
         import pygame
         self.key_up = pygame.K_UP
         self.key_down = pygame.K_DOWN
+        self.key_left = pygame.K_LEFT
+        self.key_right = pygame.K_RIGHT
         self.key_confirm = pygame.K_RETURN
         self.key_cancel = pygame.K_ESCAPE
 
@@ -418,6 +420,8 @@ class GameState:
         import pygame
         self.key_up = self.settings.get("key_up", pygame.K_UP)
         self.key_down = self.settings.get("key_down", pygame.K_DOWN)
+        self.key_left = self.settings.get("key_left", pygame.K_LEFT)
+        self.key_right = self.settings.get("key_right", pygame.K_RIGHT)
         self.key_confirm = self.settings.get("key_confirm", pygame.K_RETURN)
         self.key_back = self.settings.get("key_back", pygame.K_BACKSPACE)
         self.key_home = self.settings.get("key_home", pygame.K_HOME)
@@ -429,6 +433,8 @@ class GameState:
         """Speichert globale Einstellungen ab."""
         self.settings["key_up"] = self.key_up
         self.settings["key_down"] = self.key_down
+        self.settings["key_left"] = self.key_left
+        self.settings["key_right"] = self.key_right
         self.settings["key_confirm"] = self.key_confirm
         self.settings["key_back"] = self.key_back
         self.settings["key_home"] = self.key_home
@@ -648,7 +654,7 @@ class GameState:
             if "assigned_employee_ids" in self.current_draft:
                 project.assigned_employee_ids = self.current_draft["assigned_employee_ids"]
             else:
-                project.assigned_employee_ids = [i for i, e in enumerate(self.employees) if not getattr(e, 'is_sick', False) and not getattr(e, 'is_training', False)]
+                project.assigned_employee_ids = [i for i, e in enumerate(self.employees) if not getattr(e, 'is_sick', False) and not getattr(e, 'is_training', False) and getattr(e, 'vacation_weeks_left', 0) <= 0]
             
             project.sequel_number = self.current_draft.get("sequel_number", 0)
             project.sub_genre = self.current_draft.get("sub_genre", None)
@@ -980,7 +986,7 @@ class GameState:
         port_weeks = max(2, int(base_weeks * 0.3))
         
         # Team zuweisen (alle verfuegbaren)
-        project.assigned_employee_ids = [i for i, e in enumerate(self.employees) if not getattr(e, 'is_sick', False) and not getattr(e, 'is_training', False)]
+        project.assigned_employee_ids = [i for i, e in enumerate(self.employees) if not getattr(e, 'is_sick', False) and not getattr(e, 'is_training', False) and getattr(e, 'vacation_weeks_left', 0) <= 0]
 
         new_active = {
             "project": project,
@@ -2432,8 +2438,8 @@ class GameState:
         return True
 
     def _active_employees(self, project=None):
-        """Liefert nur Mitarbeiter, die nicht krank und nicht in Training sind. Filtert nach Projekt-Team wenn angegeben."""
-        base = [e for e in self.employees if not getattr(e, 'is_sick', False) and not getattr(e, 'is_training', False)]
+        """Liefert nur Mitarbeiter, die nicht krank, nicht in Training und nicht im Urlaub sind. Filtert nach Projekt-Team wenn angegeben."""
+        base = [e for e in self.employees if not getattr(e, 'is_sick', False) and not getattr(e, 'is_training', False) and getattr(e, 'vacation_weeks_left', 0) <= 0]
         if project and hasattr(project, 'assigned_employee_ids') and project.assigned_employee_ids:
             # Nur Mitarbeiter, deren Index in der Liste ist
             return [e for i, e in enumerate(self.employees) if i in project.assigned_employee_ids and e in base]

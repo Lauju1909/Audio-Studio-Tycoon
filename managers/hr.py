@@ -104,8 +104,11 @@ class HRManager:
 
             if getattr(emp, 'vacation_weeks_left', 0) > 0:
                 emp.vacation_weeks_left -= 1
-                emp.fatigue = max(0, getattr(emp, 'fatigue', 0) - 20)
+                emp.fatigue = max(0, getattr(emp, 'fatigue', 0) - 25)
                 emp.morale = min(100, emp.morale + 10)
+                if emp.vacation_weeks_left <= 0:
+                    from notifications import dispatcher, Event
+                    dispatcher.dispatch(Event("vacation_ended", {"emp": emp}))
                 continue
 
             is_working = self.state.is_developing or getattr(self.state, 'active_custom_console', None) or len(getattr(self.state, 'active_ports', [])) > 0 or len(getattr(self.state, 'active_contract_works', [])) > 0

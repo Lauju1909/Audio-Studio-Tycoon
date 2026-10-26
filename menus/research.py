@@ -352,9 +352,15 @@ class ConsoleDetailMenu(Menu):
     def __init__(self, audio, game_state):
         self.audio = audio
         self.game_state = game_state
-        idx = self.game_state.ui_context.get('selected_console_idx', 0)
-        c = self.game_state.custom_consoles[idx]
+        consoles = getattr(self.game_state, 'custom_consoles', [])
+        idx = getattr(self.game_state, 'ui_context', {}).get('selected_console_idx', 0)
         
+        if not consoles or idx < 0 or idx >= len(consoles):
+            info = self.game_state.get_text('console_none_found', default="Keine Konsole gefunden.")
+            super().__init__(info, [{'text': self.game_state.get_text('back'), 'action': lambda: "console_overview_menu"}], audio, game_state)
+            return
+
+        c = consoles[idx]
         info = f"{c.name} - Architektur: {getattr(c, 'architecture', 'RISC')}, Leistung: {getattr(c, 'performance', getattr(c, 'tech_level', 1))}. "
         info += f"Verkaufte Einheiten: {getattr(c, 'units_sold', 0):,}. Marktanteil: {getattr(c, 'market_share', 0)*100:.1f}%."
         

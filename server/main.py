@@ -8,6 +8,20 @@ import os
 
 load_dotenv()
 
+# Supabase Client Initialisierung
+SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
+
+supabase = None
+try:
+    from supabase import create_client
+    if SUPABASE_URL and SUPABASE_KEY:
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+except ImportError:
+    print("[Server Warning] 'supabase' Python-Paket ist nicht installiert. DB-Funktionen deaktiviert.")
+except Exception as e:
+    print(f"[Server Warning] Supabase-Initialisierungsfehler: {e}")
+
 # Multiplayer State
 class ConnectionManager:
     def __init__(self):
@@ -63,14 +77,16 @@ class Mod(BaseModel):
 
 @app.get("/")
 def read_root():
-    return {"status": "online", "message": "Audio Studio Tycoon v3.0 API"}
+    return {"status": "online", "message": "Audio Studio Tycoon v3.0 API", "db_connected": supabase is not None}
 
 @app.post("/auth/login")
 def login(user: User):
+    if not supabase:
+        raise HTTPException(
+            status_code=503, 
+            detail="Supabase-Authentifizierung ist serverseitig nicht konfiguriert (SUPABASE_URL/SUPABASE_KEY fehlen)."
+        )
     try:
-        # Use email-based login for Supabase auth. Here we assume username represents an email for Supabase.
-        # Alternatively, you can use username if your Supabase schema is set up perfectly for it.
-        # We will map "username" directly to email login here to be simple.
         response = supabase.auth.sign_in_with_password({
             "email": user.username,
             "password": user.password
@@ -81,6 +97,8 @@ def login(user: User):
 
 @app.get("/mods", response_model=List[Mod])
 def list_mods():
+    if not supabase:
+        return []
     try:
         # Fetching all verified mods from Supabase
         response = supabase.table("mods").select("*").eq("is_verified", True).execute()

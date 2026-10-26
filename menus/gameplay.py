@@ -279,7 +279,7 @@ class ProjectTeamSelectMenu(Menu):
         self.game_state = game_state
         # Standard: Alle verfÃ¼gbaren Mitarbeiter sind ausgewÃ¤hlt
         if "assigned_employee_ids" not in self.game_state.current_draft:
-             self.game_state.current_draft["assigned_employee_ids"] = [i for i, e in enumerate(self.game_state.employees) if not getattr(e, 'is_sick', False) and not getattr(e, 'is_training', False)]
+             self.game_state.current_draft["assigned_employee_ids"] = [i for i, e in enumerate(self.game_state.employees) if not getattr(e, 'is_sick', False) and not getattr(e, 'is_training', False) and getattr(e, 'vacation_weeks_left', 0) <= 0]
         
         super().__init__(self.game_state.get_text('menu_team_select'), [], audio, game_state)
         self._update_options()
@@ -294,8 +294,8 @@ class ProjectTeamSelectMenu(Menu):
             busy_ids.extend(getattr(ap["project"], 'assigned_employee_ids', []))
 
         for i, emp in enumerate(self.game_state.employees):
-            # Kranke/Trainierende MA kÃ¶nnen nicht gewÃ¤hlt werden
-            if getattr(emp, 'is_sick', False) or getattr(emp, 'is_training', False):
+            # Kranke, trainierende oder beurlaubte MA können nicht gewählt werden
+            if getattr(emp, 'is_sick', False) or getattr(emp, 'is_training', False) or getattr(emp, 'vacation_weeks_left', 0) > 0:
                 continue
             
             # Bereits beschÃ¤ftigte MA (auÃŸer sie sind bereits diesem Projekt zugewiesen)
@@ -738,6 +738,9 @@ class ReviewResultMenu(Menu):
 
     def announce_entry(self):
         super().announce_entry()
+        if not self.game_state.game_history:
+            self.audio.speak(self.game_state.get_text('no_reviews_available', default="Keine Reviews verfügbar."), interrupt=False)
+            return
         game = self.game_state.game_history[-1]
         score = game.review.average if game.review else 0
         self.audio.speak(self.game_state.get_text('reviews_for', name=game.name, score=score), interrupt=False)
@@ -1176,7 +1179,8 @@ class UnionEventMenu(Menu):
     def __init__(self, audio, game_state):
         self.audio = audio
         self.game_state = game_state
-        self.event_data = getattr(game_state, 'pending_union_event', {"type": "formation"})
+        raw_event = getattr(game_state, 'pending_union_event', None)
+        self.event_data = raw_event if isinstance(raw_event, dict) else {"type": "formation"}
         
         if self.event_data.get("type", "formation") == "formation":
             title = self.game_state.get_text('union_form_title', default="GEWERKSCHAFTS-GRÃœNDUNG!")
