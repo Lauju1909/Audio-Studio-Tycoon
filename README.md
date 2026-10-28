@@ -24,6 +24,22 @@ Das Spiel wird komplett Ã¼ber die Tastatur gesteuert:
 | **Backspace / Esc** | ZurÃ¼ck zum vorherigen MenÃ¼ |
 | **S** | **Status-Ãœbersicht** (Forschungspunkte, Fans, Mitarbeiter) |
 | **F** | **Finanz-Check** (Kontostand, Gewinnberichte) |
+| **F8 / Strg + L** | **Sprache umschalten** (Deutsch <-> English) mit sofortiger Sprachausgabe & Menü-Aktualisierung |
+| **Leertaste / 0** | Zeit pausieren / fortsetzen |
+| **1, 2, 3** | Spielgeschwindigkeit (Normal, Schnell, Ultra) |
+
+### 🌐 Schnelle Sprachumschaltung & Tasten-Kombination (Language Switching)
+In **Audio Studio Tycoon** kannst du die Sprache des Spiels jederzeit blitzschnell wechseln:
+- **Tastenkombination / Hotkey:** Drücke **`F8`** oder **`Strg + L`** (bzw. **`Ctrl + L`**), um das Spiel sofort zwischen **Deutsch** und **Englisch** umzuschalten.
+- **Akustische Rückmeldung:** Die Sprachausgabe (NVDA, Tolk, SAPI) meldet sofort *"Sprache auf Deutsch umgestellt."* bzw. *"Language switched to English."* und liest das aktuelle Menü direkt in der neuen Sprache vor.
+- **Menü-Steuerung:** Alternativ lässt sich die Sprache über das Menü unter **Einstellungen (`Settings`) -> Sprache (`Language`)** auswählen.
+- **Anpassbare Tastenbelegung:** Unter **Einstellungen -> Tastenbelegung** kann die Taste für die Sprachumschaltung (`Sprache umschalten`) jederzeit frei konfiguriert werden.
+- **Dauerhafte Speicherung:** Die Spracheinstellung wird automatisch in `settings.json` gesichert und bleibt für zukünftige Spielstarts gespeichert.
+
+#### 🌐 English: Quick Language Switch
+- Press **`F8`** or **`Ctrl + L`** at any point in the game to immediately toggle between **English** and **German**.
+- The screen reader announces the switch instantly and refreshes all active menu labels.
+- The language selection is permanently saved to your settings.
 
 ## ðŸš€ Neue Features (v3.10.0-beta.1)
 - **Engine-Lizenzierung**: Du kannst deine selbst entwickelten Engines an andere Studios lizenzieren und wÃ¶chentliche Einnahmen generieren!

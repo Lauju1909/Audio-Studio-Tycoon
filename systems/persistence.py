@@ -60,6 +60,7 @@ class PersistenceMixin:
         self.key_back = self.settings.get("key_back", pygame.K_BACKSPACE)
         self.key_home = self.settings.get("key_home", pygame.K_HOME)
         self.key_end = self.settings.get("key_end", pygame.K_END)
+        self.key_toggle_language = self.settings.get("key_toggle_language", pygame.K_F8)
         
         return self.settings
 
@@ -73,6 +74,7 @@ class PersistenceMixin:
         self.settings["key_back"] = self.key_back
         self.settings["key_home"] = self.key_home
         self.settings["key_end"] = self.key_end
+        self.settings["key_toggle_language"] = getattr(self, "key_toggle_language", 1073741889)
         self.settings["completed_tutorials"] = self.completed_tutorials
         
         with open("settings.json", "w", encoding="utf-8") as f:

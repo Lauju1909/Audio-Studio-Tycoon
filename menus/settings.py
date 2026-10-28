@@ -183,6 +183,7 @@ class KeybindingMenu(Menu):
         self.audio = audio
         self.waiting_for_key = None
         super().__init__(self.game_state.get_text('keybindings_menu'), [], audio, game_state)
+        self._update_options()
 
     def _update_options(self):
         gs = self.game_state
@@ -198,6 +199,7 @@ class KeybindingMenu(Menu):
             {'text': f"{self.game_state.get_text('key_right')} ({_get_key_name(gs.key_right)})", 'action': lambda: self._start_bind('key_right')},
             {'text': f"{self.game_state.get_text('key_home')} ({_get_key_name(gs.key_home)})", 'action': lambda: self._start_bind('key_home')},
             {'text': f"{self.game_state.get_text('key_end')} ({_get_key_name(gs.key_end)})", 'action': lambda: self._start_bind('key_end')},
+            {'text': f"{self.game_state.get_text('key_toggle_language')} ({_get_key_name(getattr(gs, 'key_toggle_language', pygame.K_F8))})", 'action': lambda: self._start_bind('key_toggle_language')},
             {'text': self.game_state.get_text('back'), 'action': self._back}
         ]
         
@@ -358,18 +360,19 @@ class LanguageMenu(Menu):
         return "custom_lang_input_menu"
     def _set_language(self, new_lang, lang_display):
         import translations
-        self.game_state.settings['language'] = new_lang
-        self.game_state.save_global_settings()
+        self.game_state.set_language(new_lang)
         
-        if new_lang != 'de':
-            self.audio.speak(f"Lade Übersetzungen für {lang_display}...", interrupt=True)
+        if new_lang == 'de':
+            self.audio.speak(self.game_state.get_text('language_switched_de'), interrupt=True)
+        elif new_lang == 'en':
+            self.audio.speak(self.game_state.get_text('language_switched_en'), interrupt=True)
         else:
-            self.audio.speak(self.game_state.get_text('language') + " " + lang_display, interrupt=True)
+            self.audio.speak(f"Lade Übersetzungen für {lang_display}...", interrupt=True)
             
         translations.set_language(new_lang)
+        self.title = self.game_state.get_text('language')
         self._update_options()
-        if new_lang == 'de':
-            self.speak_current(interrupt=False)
+        self.speak_current(interrupt=False)
 
     def on_back(self):
         return "settings_menu"

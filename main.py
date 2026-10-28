@@ -382,17 +382,49 @@ def main():
                 continue
 
             elif event.type == pygame.KEYDOWN:
-                # Globale Geschwindigkeitssteuerung
-                if event.key == pygame.K_1:
+                # --- SCHNELLE SPRACHUMSCHALTUNG (F8 ODER STRG+L) ---
+                mods = getattr(event, 'mod', 0) | pygame.key.get_mods()
+                is_toggle_lang = (event.key == getattr(state, 'key_toggle_language', pygame.K_F8)) or \
+                                 (event.key == pygame.K_l and (mods & pygame.KMOD_CTRL))
+                if is_toggle_lang:
+                    new_lang = state.toggle_language()
+                    audio.play_sound("confirm")
+                    old_idx = getattr(current_menu, 'current_index', 0)
+                    try:
+                        if router.has_menu(current_key):
+                            current_menu = router.get_menu(current_key)
+                            if hasattr(current_menu, 'current_index'):
+                                max_idx = max(0, len(getattr(current_menu, 'options', [])) - 1)
+                                current_menu.current_index = min(old_idx, max_idx)
+                    except Exception:
+                        if hasattr(current_menu, '_update_options'):
+                            current_menu._update_options()
+
+                    if new_lang == 'en':
+                        msg = state.get_text("language_switched_en")
+                    else:
+                        msg = state.get_text("language_switched_de")
+
+                    audio.speak(msg, interrupt=True)
+                    if hasattr(current_menu, 'speak_current'):
+                        current_menu.speak_current(interrupt=False)
+                    elif hasattr(current_menu, 'announce_entry'):
+                        current_menu.announce_entry()
+                    continue
+
+                is_typing = getattr(current_menu, 'is_text_input', False)
+
+                # Globale Geschwindigkeitssteuerung (nur wenn keine Texteingabe aktiv ist)
+                if not is_typing and event.key == pygame.K_1:
                     state.time_speed = 1.0
                     audio.speak(get_text("speed_normal"))
-                elif event.key == pygame.K_2:
+                elif not is_typing and event.key == pygame.K_2:
                     state.time_speed = 2.0
                     audio.speak(get_text("speed_fast"))
-                elif event.key == pygame.K_3:
+                elif not is_typing and event.key == pygame.K_3:
                     state.time_speed = 4.0
                     audio.speak(get_text("speed_ultra"))
-                elif event.key == pygame.K_SPACE or event.key == pygame.K_0:
+                elif not is_typing and (event.key == pygame.K_SPACE or event.key == pygame.K_0):
                     if state.time_speed > 0:
                         state.last_speed = state.time_speed
                         state.time_speed = 0
@@ -401,11 +433,11 @@ def main():
                         state.time_speed = getattr(state, "last_speed", 1.0)
                         audio.speak(state.get_speed_text())
                 
-                # --- NEUE GLOBALE HOTKEYS ---
-                elif event.key == pygame.K_f:
+                # --- GLOBALE STATUS- UND FINANZ-HOTKEYS ---
+                elif not is_typing and event.key == pygame.K_f:
                     # Finanzen abfragen
                     audio.speak(state.get_financial_summary())
-                elif event.key == pygame.K_s:
+                elif not is_typing and event.key == pygame.K_s:
                     # Status abfragen (RP, Mitarbeiter, Fans)
                     audio.speak(state.get_status_summary())
                 elif event.key == pygame.K_d and (pygame.key.get_mods() & pygame.KMOD_CTRL) and (pygame.key.get_mods() & pygame.KMOD_SHIFT):
@@ -415,7 +447,7 @@ def main():
                         audio.speak("Entwickler-Modus aktiviert. Drücke D im Hauptmenü oder Ingame-Menü für Optionen.")
                     else:
                         audio.speak("Entwickler-Modus deaktiviert.")
-                elif event.key == pygame.K_d and state.developer_mode:
+                elif not is_typing and event.key == pygame.K_d and state.developer_mode:
                     # Direkter Sprung ins Dev-Menü
                     result = "developer_menu"
                     current_key = result

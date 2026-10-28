@@ -431,6 +431,20 @@ class GameState(SimulationMixin, HRMixin, SoundconMixin, RivalsMixin, DevMixin, 
     # ------------------------------------------------------------------ #
 
 
+    def set_language(self, lang):
+        """Setzt die Sprache persistent und synchronisiert translations.py."""
+        self.settings["language"] = lang
+        self.save_global_settings()
+        from translations import set_language as t_set_language
+        t_set_language(lang)
+        return lang
+
+    def toggle_language(self):
+        """Wechselt blitzschnell zwischen Deutsch ('de') und Englisch ('en')."""
+        curr = self.settings.get("language", "de")
+        new_lang = "en" if curr == "de" else "de"
+        return self.set_language(new_lang)
+
     def get_text(self, text_key, **kwargs):
         """Holt einen übersetzten Text basierend auf dem aktuellen Sprach-Setting."""
         from translations import get_text as t_get_text, set_language

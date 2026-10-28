@@ -1,5 +1,5 @@
 {
-    "language": "de",
+    "language": "en",
     "music_enabled": true,
     "music_volume": 50,
     "speech_volume": 100,
@@ -15,5 +15,6 @@
     "key_back": 8,
     "key_home": 1073741898,
     "key_end": 1073741901,
+    "key_toggle_language": 1073741889,
     "completed_tutorials": []
 }
