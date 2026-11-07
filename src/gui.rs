@@ -563,7 +563,9 @@ pub fn run_gui_app(mut state: GameState, mut audio: AudioManager) {
                             menu.handle_input(KeyInput::Right, &mut state, &mut audio);
                         } else if vk == VK_RETURN {
                             menu.handle_input(KeyInput::Enter, &mut state, &mut audio);
-                        } else if vk == VK_ESCAPE || vk == VK_BACK {
+                        } else if vk == VK_ESCAPE {
+                            menu.handle_input(KeyInput::Escape, &mut state, &mut audio);
+                        } else if vk == VK_BACK {
                             menu.handle_input(KeyInput::Back, &mut state, &mut audio);
                         } else if !menu.is_text_input {
                             match vk {

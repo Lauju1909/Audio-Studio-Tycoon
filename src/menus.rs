@@ -86,6 +86,7 @@ pub enum KeyInput {
     Right,
     Enter,
     Back,
+    Escape,
     Char(char),
     ToggleLang,
     SpeedPauseToggle,
@@ -601,21 +602,36 @@ impl MenuController {
                         format!("Lizenz: {} Euro", p.license_fee)
                     };
                     self.options.push(MenuOption {
-                        text: format!(
-                            "{} [{}] - Markt x{:.1}",
-                            p.name, status, p.market_multi
-                        ),
+                        text: if is_en {
+                            format!(
+                                "{} [{}] - Market x{:.1}",
+                                p.name, status, p.market_multi
+                            )
+                        } else {
+                            format!(
+                                "{} [{}] - Markt x{:.1}",
+                                p.name, status, p.market_multi
+                            )
+                        },
                         speech_hint: p.audio_capabilities.to_string(),
                         action: MenuAction::SelectPlatform(p.name.to_string()),
                     });
                 }
                 for cc in &state.custom_consoles {
                     self.options.push(MenuOption {
-                        text: format!(
-                            "{} [Eigene Konsole] - Marktanteil {:.0}%",
-                            cc.name,
-                            cc.market_share * 100.0
-                        ),
+                        text: if is_en {
+                            format!(
+                                "{} [Custom Console] - Market Share {:.0}%",
+                                cc.name,
+                                cc.market_share * 100.0
+                            )
+                        } else {
+                            format!(
+                                "{} [Eigene Konsole] - Marktanteil {:.0}%",
+                                cc.name,
+                                cc.market_share * 100.0
+                            )
+                        },
                         speech_hint: String::new(),
                         action: MenuAction::SelectPlatform(cc.name.clone()),
                     });
@@ -729,12 +745,28 @@ impl MenuController {
                     speech_hint: String::new(),
                     action: MenuAction::ApplyIdealSliders,
                 });
+                let slider_labels_en = [
+                    "Gameplay",
+                    "Graphics",
+                    "Sound",
+                    "Story",
+                    "AI",
+                    "World",
+                ];
                 for (i, sname) in SLIDER_NAMES.iter().enumerate() {
+                    let label = if is_en { slider_labels_en[i] } else { *sname };
                     self.options.push(MenuOption {
-                        text: format!(
-                            "{}: {} / 10 (Empfehlung für {}: {}) [Links/Rechts]",
-                            sname, state.current_draft.sliders[i], state.current_draft.genre, ideal[i]
-                        ),
+                        text: if is_en {
+                            format!(
+                                "{}: {} / 10 (Recommended for {}: {}) [Left/Right]",
+                                label, state.current_draft.sliders[i], state.current_draft.genre, ideal[i]
+                            )
+                        } else {
+                            format!(
+                                "{}: {} / 10 (Empfehlung für {}: {}) [Links/Rechts]",
+                                label, state.current_draft.sliders[i], state.current_draft.genre, ideal[i]
+                            )
+                        },
                         speech_hint: String::new(),
                         action: MenuAction::AdjustSlider { idx: i },
                     });
@@ -821,16 +853,33 @@ impl MenuController {
                                 action: MenuAction::FinishProject(i),
                             });
                         } else {
-                            let crunch_label = if ap.crunch_active { "AN" } else { "AUS" };
+                            let crunch_label = if ap.crunch_active {
+                                if is_en { "ON" } else { "AN" }
+                            } else if is_en {
+                                "OFF"
+                            } else {
+                                "AUS"
+                            };
                             self.options.push(MenuOption {
-                                text: format!(
-                                    "'{}' - {}% ({}) | Bugs: {} | Überstunden/Crunch: {}",
-                                    ap.project.name,
-                                    ap.percent(),
-                                    ap.current_phase_name(is_en),
-                                    ap.bugs,
-                                    crunch_label
-                                ),
+                                text: if is_en {
+                                    format!(
+                                        "'{}' - {}% ({}) | Bugs: {} | Crunch Mode: {}",
+                                        ap.project.name,
+                                        ap.percent(),
+                                        ap.current_phase_name(is_en),
+                                        ap.bugs,
+                                        crunch_label
+                                    )
+                                } else {
+                                    format!(
+                                        "'{}' - {}% ({}) | Bugs: {} | Überstunden/Crunch: {}",
+                                        ap.project.name,
+                                        ap.percent(),
+                                        ap.current_phase_name(is_en),
+                                        ap.bugs,
+                                        crunch_label
+                                    )
+                                },
                                 speech_hint: if is_en {
                                     "Press Enter to toggle Crunch mode".to_string()
                                 } else {
@@ -849,36 +898,40 @@ impl MenuController {
                 // Post-release support for recent games on the market
                 for (idx, g) in state.game_history.iter().enumerate().rev().take(4) {
                     let avg = g.review.as_ref().map(|r| r.average()).unwrap_or(0.0);
-                    self.options.push(MenuOption {
-                        text: if is_en {
-                            format!(
-                                "Release Patch for '{}' (Score: {:.1}/10, Sales: {}, Bugs: {}) - 2,000 EUR",
-                                g.name, avg, g.sales, g.bugs
-                            )
-                        } else {
-                            format!(
-                                "Patch veröffentlichen für '{}' (Wertung: {:.1}/10, Verkäufe: {}, Bugs: {}) - 2.000 Euro",
-                                g.name, avg, g.sales, g.bugs
-                            )
-                        },
-                        speech_hint: String::new(),
-                        action: MenuAction::ReleasePatch(idx),
-                    });
-                    self.options.push(MenuOption {
-                        text: if is_en {
-                            format!(
-                                "Produce Addon/DLC for '{}' (DLCs: {}) - 6,000 EUR",
-                                g.name, g.dlc_count
-                            )
-                        } else {
-                            format!(
-                                "Addon/DLC produzieren für '{}' (DLCs: {}) - 6.000 Euro",
-                                g.name, g.dlc_count
-                            )
-                        },
-                        speech_hint: String::new(),
-                        action: MenuAction::ReleaseDlc(idx),
-                    });
+                    if g.bugs > 0 {
+                        self.options.push(MenuOption {
+                            text: if is_en {
+                                format!(
+                                    "Release Patch for '{}' (Score: {:.1}/10, Sales: {}, Bugs: {}) - 2,000 EUR",
+                                    g.name, avg, g.sales, g.bugs
+                                )
+                            } else {
+                                format!(
+                                    "Patch veröffentlichen für '{}' (Wertung: {:.1}/10, Verkäufe: {}, Bugs: {}) - 2.000 Euro",
+                                    g.name, avg, g.sales, g.bugs
+                                )
+                            },
+                            speech_hint: String::new(),
+                            action: MenuAction::ReleasePatch(idx),
+                        });
+                    }
+                    if g.dlc_count < 2 {
+                        self.options.push(MenuOption {
+                            text: if is_en {
+                                format!(
+                                    "Produce Addon/DLC for '{}' (DLCs: {}/2) - 6,000 EUR",
+                                    g.name, g.dlc_count
+                                )
+                            } else {
+                                format!(
+                                    "Addon/DLC produzieren für '{}' (DLCs: {}/2) - 6.000 Euro",
+                                    g.name, g.dlc_count
+                                )
+                            },
+                            speech_hint: String::new(),
+                            action: MenuAction::ReleaseDlc(idx),
+                        });
+                    }
                 }
                 self.options.push(MenuOption {
                     text: tr(lang, "menu_back"),
@@ -901,10 +954,17 @@ impl MenuController {
                     };
                     if let Some(r) = rev {
                         self.options.push(MenuOption {
-                            text: format!(
-                                "Wertungen: [{} / 10], [{} / 10], [{} / 10], [{} / 10] -> {:.1} / 10",
-                                r.scores[0], r.scores[1], r.scores[2], r.scores[3], avg
-                            ),
+                            text: if is_en {
+                                format!(
+                                    "Scores: [{} / 10], [{} / 10], [{} / 10], [{} / 10] -> {:.1} / 10",
+                                    r.scores[0], r.scores[1], r.scores[2], r.scores[3], avg
+                                )
+                            } else {
+                                format!(
+                                    "Wertungen: [{} / 10], [{} / 10], [{} / 10], [{} / 10] -> {:.1} / 10",
+                                    r.scores[0], r.scores[1], r.scores[2], r.scores[3], avg
+                                )
+                            },
                             speech_hint: String::new(),
                             action: MenuAction::NoOp,
                         });
@@ -1039,10 +1099,17 @@ impl MenuController {
                     if !state.unlocked_genres.iter().any(|ug| ug == g.name) && year >= g.unlock_year
                     {
                         self.options.push(MenuOption {
-                            text: format!(
-                                "[Genre] {} ({} EUR, {} Wochen)",
-                                g.name, g.cost, g.weeks
-                            ),
+                            text: if is_en {
+                                format!(
+                                    "[Genre] {} ({} EUR, {} weeks)",
+                                    g.name, g.cost, g.weeks
+                                )
+                            } else {
+                                format!(
+                                    "[Genre] {} ({} EUR, {} Wochen)",
+                                    g.name, g.cost, g.weeks
+                                )
+                            },
                             speech_hint: if is_en {
                                 g.desc_en.to_string()
                             } else {
@@ -1056,10 +1123,17 @@ impl MenuController {
                     if !state.unlocked_topics.iter().any(|ut| ut == t.name) && year >= t.unlock_year
                     {
                         self.options.push(MenuOption {
-                            text: format!(
-                                "[Thema] {} ({} EUR, {} Wochen)",
-                                t.name, t.cost, t.weeks
-                            ),
+                            text: if is_en {
+                                format!(
+                                    "[Topic] {} ({} EUR, {} weeks)",
+                                    t.name, t.cost, t.weeks
+                                )
+                            } else {
+                                format!(
+                                    "[Thema] {} ({} EUR, {} Wochen)",
+                                    t.name, t.cost, t.weeks
+                                )
+                            },
                             speech_hint: if is_en {
                                 t.desc_en.to_string()
                             } else {
@@ -1074,10 +1148,17 @@ impl MenuController {
                         && year >= f.unlock_year
                     {
                         self.options.push(MenuOption {
-                            text: format!(
-                                "[Engine-Feature] {} ({}, {} EUR)",
-                                f.name, f.category, f.cost
-                            ),
+                            text: if is_en {
+                                format!(
+                                    "[Engine Feature] {} ({}, {} EUR)",
+                                    f.name, f.category, f.cost
+                                )
+                            } else {
+                                format!(
+                                    "[Engine-Feature] {} ({}, {} EUR)",
+                                    f.name, f.category, f.cost
+                                )
+                            },
                             speech_hint: String::new(),
                             action: MenuAction::ResearchFeature(i),
                         });
@@ -1091,10 +1172,17 @@ impl MenuController {
                         && year >= tech.unlock_year
                     {
                         self.options.push(MenuOption {
-                            text: format!(
-                                "[Studio-Technologie] {} ({} EUR, {} Wochen)",
-                                tech.name, tech.cost, tech.weeks
-                            ),
+                            text: if is_en {
+                                format!(
+                                    "[Studio Tech] {} ({} EUR, {} weeks)",
+                                    tech.name, tech.cost, tech.weeks
+                                )
+                            } else {
+                                format!(
+                                    "[Studio-Technologie] {} ({} EUR, {} Wochen)",
+                                    tech.name, tech.cost, tech.weeks
+                                )
+                            },
                             speech_hint: if is_en {
                                 tech.desc_en.to_string()
                             } else {
@@ -1123,7 +1211,11 @@ impl MenuController {
                     self.text_buffer.clone()
                 };
                 self.options.push(MenuOption {
-                    text: format!("Engine erstellen: '{}' (Enter)", preview),
+                    text: if is_en {
+                        format!("Build Engine: '{}' (Enter)", preview)
+                    } else {
+                        format!("Engine erstellen: '{}' (Enter)", preview)
+                    },
                     speech_hint: String::new(),
                     action: MenuAction::ConfirmCustomEngine,
                 });
@@ -1138,17 +1230,34 @@ impl MenuController {
                 );
                 for (i, emp) in state.employees.iter().enumerate() {
                     let status = if emp.vacation_weeks_left > 0 {
-                        format!("Urlaub ({} Wo.)", emp.vacation_weeks_left)
+                        if is_en {
+                            format!("Vacation ({} wk)", emp.vacation_weeks_left)
+                        } else {
+                            format!("Urlaub ({} Wo.)", emp.vacation_weeks_left)
+                        }
                     } else if emp.training_weeks_left > 0 {
-                        format!("Schulung ({} Wo.)", emp.training_weeks_left)
+                        if is_en {
+                            format!("Training ({} wk)", emp.training_weeks_left)
+                        } else {
+                            format!("Schulung ({} Wo.)", emp.training_weeks_left)
+                        }
+                    } else if is_en {
+                        "Ready".to_string()
                     } else {
                         "Einsatzbereit".to_string()
                     };
                     self.options.push(MenuOption {
-                        text: format!(
-                            "[Team] {} ({}, St.{}) | Sound:{} Code:{} Story:{} | Erschöpfung:{}% | {} -> Enter: Fortbildung (5.000 EUR)",
-                            emp.name, emp.role, emp.level, emp.skill_sound, emp.skill_code, emp.skill_story, emp.fatigue, status
-                        ),
+                        text: if is_en {
+                            format!(
+                                "[Team] {} ({}, Lv.{}) | Sound:{} Code:{} Story:{} | Fatigue:{}% | {} -> Enter: Training (5,000 EUR)",
+                                emp.name, emp.role, emp.level, emp.skill_sound, emp.skill_code, emp.skill_story, emp.fatigue, status
+                            )
+                        } else {
+                            format!(
+                                "[Team] {} ({}, St.{}) | Sound:{} Code:{} Story:{} | Erschöpfung:{}% | {} -> Enter: Fortbildung (5.000 EUR)",
+                                emp.name, emp.role, emp.level, emp.skill_sound, emp.skill_code, emp.skill_story, emp.fatigue, status
+                            )
+                        },
                         speech_hint: String::new(),
                         action: MenuAction::TrainEmployee(i),
                     });
@@ -1266,7 +1375,11 @@ impl MenuController {
                 ];
                 for (id, de, en, cost) in perks {
                     let owned = state.office_upgrades.iter().any(|u| u == id);
-                    let status = if owned { " [Installiert]" } else { "" };
+                    let status = if owned {
+                        if is_en { " [Installed]" } else { " [Installiert]" }
+                    } else {
+                        ""
+                    };
                     self.options.push(MenuOption {
                         text: format!(
                             "{}{} ({} EUR)",
@@ -1308,7 +1421,11 @@ impl MenuController {
                         cost: 5_000,
                         hype_gain: 20.0,
                         fan_gain: 250,
-                        label: "Radio & Presse".to_string(),
+                        label: if is_en {
+                            "Radio & Press Spot".to_string()
+                        } else {
+                            "Radio & Presse".to_string()
+                        },
                     },
                 });
                 self.options.push(MenuOption {
@@ -1322,7 +1439,11 @@ impl MenuController {
                         cost: 25_000,
                         hype_gain: 65.0,
                         fan_gain: 1_500,
-                        label: "Rundfunk-Special".to_string(),
+                        label: if is_en {
+                            "Broadcast Special".to_string()
+                        } else {
+                            "Rundfunk-Special".to_string()
+                        },
                     },
                 });
                 self.options.push(MenuOption {
@@ -1342,9 +1463,15 @@ impl MenuController {
                 });
                 self.options.push(MenuOption {
                     text: if is_en {
-                        "Answer Community Fan Mail (+200 Fans, +5 Hype)".to_string()
+                        format!(
+                            "Answer Community Fan Mail (+200 Fans, +5 Hype | Unanswered: {})",
+                            state.unanswered_fan_mails
+                        )
                     } else {
-                        "Fanpost der Hörer-Community beantworten (+200 Fans, +5 Hype)".to_string()
+                        format!(
+                            "Fanpost der Hörer-Community beantworten (+200 Fans, +5 Hype | Offen: {})",
+                            state.unanswered_fan_mails
+                        )
                     },
                     speech_hint: String::new(),
                     action: MenuAction::AnswerFanMail,
@@ -1403,7 +1530,11 @@ impl MenuController {
                 });
                 for h in state.soundcon_history.iter().rev().take(5) {
                     self.options.push(MenuOption {
-                        text: format!("[Historie] {}", h),
+                        text: if is_en {
+                            format!("[History] {}", h)
+                        } else {
+                            format!("[Historie] {}", h)
+                        },
                         speech_hint: String::new(),
                         action: MenuAction::NoOp,
                     });
@@ -1446,7 +1577,11 @@ impl MenuController {
                     for (idx, g) in state.game_history.iter().enumerate() {
                         if !g.in_soundtrack_label {
                             self.options.push(MenuOption {
-                                text: format!("Soundtrack von '{}' ins Label aufnehmen", g.name),
+                                text: if is_en {
+                                    format!("Add '{}' Soundtrack to Label", g.name)
+                                } else {
+                                    format!("Soundtrack von '{}' ins Label aufnehmen", g.name)
+                                },
                                 speech_hint: String::new(),
                                 action: MenuAction::AddGameToLabel(idx),
                             });
@@ -1454,7 +1589,13 @@ impl MenuController {
                     }
                 }
 
-                let sub_status = if state.subscription_active { "AKTIV" } else { "INAKTIV" };
+                let sub_status = if state.subscription_active {
+                    if is_en { "ACTIVE" } else { "AKTIV" }
+                } else if is_en {
+                    "INACTIVE"
+                } else {
+                    "INAKTIV"
+                };
                 self.options.push(MenuOption {
                     text: if is_en {
                         format!(
@@ -1472,17 +1613,28 @@ impl MenuController {
                 });
                 if state.subscription_active {
                     self.options.push(MenuOption {
-                        text: format!(
-                            "Abo-Monatspreis anpassen: {:.2} Euro [Links/Rechts]",
-                            state.subscription_price
-                        ),
+                        text: if is_en {
+                            format!(
+                                "Adjust Monthly Subscription Price: {:.2} EUR [Left/Right]",
+                                state.subscription_price
+                            )
+                        } else {
+                            format!(
+                                "Abo-Monatspreis anpassen: {:.2} Euro [Links/Rechts]",
+                                state.subscription_price
+                            )
+                        },
                         speech_hint: String::new(),
                         action: MenuAction::AdjustSubscriptionPrice,
                     });
                     for (idx, g) in state.game_history.iter().enumerate() {
                         if !g.in_subscription_vault {
                             self.options.push(MenuOption {
-                                text: format!("'{}' in den AudioPass aufnehmen", g.name),
+                                text: if is_en {
+                                    format!("Add '{}' to AudioPass Vault", g.name)
+                                } else {
+                                    format!("'{}' in den AudioPass aufnehmen", g.name)
+                                },
                                 speech_hint: String::new(),
                                 action: MenuAction::AddGameToSubscription(idx),
                             });
@@ -1518,23 +1670,40 @@ impl MenuController {
                 });
                 for sc in &state.custom_soundcards {
                     self.options.push(MenuOption {
-                        text: format!(
-                            "[Soundkarte] {} ({}) - Verkauft: {}, Lizenz: +{} EUR/Woche",
-                            sc.name, sc.generation_year, sc.units_sold, sc.weekly_royalty
-                        ),
+                        text: if is_en {
+                            format!(
+                                "[Soundcard] {} ({}) - Sold: {}, Royalty: +{} EUR/week",
+                                sc.name, sc.generation_year, sc.units_sold, sc.weekly_royalty
+                            )
+                        } else {
+                            format!(
+                                "[Soundkarte] {} ({}) - Verkauft: {}, Lizenz: +{} EUR/Woche",
+                                sc.name, sc.generation_year, sc.units_sold, sc.weekly_royalty
+                            )
+                        },
                         speech_hint: String::new(),
                         action: MenuAction::NoOp,
                     });
                 }
                 for cc in &state.custom_consoles {
                     self.options.push(MenuOption {
-                        text: format!(
-                            "[Konsole] {} ({}) - Verkauft: {}, Marktanteil: {:.0}%",
-                            cc.name,
-                            cc.release_year,
-                            cc.units_sold,
-                            cc.market_share * 100.0
-                        ),
+                        text: if is_en {
+                            format!(
+                                "[Console] {} ({}) - Sold: {}, Market Share: {:.0}%",
+                                cc.name,
+                                cc.release_year,
+                                cc.units_sold,
+                                cc.market_share * 100.0
+                            )
+                        } else {
+                            format!(
+                                "[Konsole] {} ({}) - Verkauft: {}, Marktanteil: {:.0}%",
+                                cc.name,
+                                cc.release_year,
+                                cc.units_sold,
+                                cc.market_share * 100.0
+                            )
+                        },
                         speech_hint: String::new(),
                         action: MenuAction::NoOp,
                     });
@@ -1547,11 +1716,19 @@ impl MenuController {
             }
 
             MenuId::BankRivalsMenu => {
-                self.title = format!(
-                    "{} (Kredit: {} EUR)",
-                    tr(lang, "hub_bank_rivals"),
-                    state.bank_loan
-                );
+                self.title = if is_en {
+                    format!(
+                        "{} (Loan: {} EUR)",
+                        tr(lang, "hub_bank_rivals"),
+                        state.bank_loan
+                    )
+                } else {
+                    format!(
+                        "{} (Kredit: {} EUR)",
+                        tr(lang, "hub_bank_rivals"),
+                        state.bank_loan
+                    )
+                };
                 self.options.push(MenuOption {
                     text: if is_en {
                         "Take Bank Loan: +50,000 EUR (1% monthly interest)".to_string()
@@ -1573,16 +1750,27 @@ impl MenuController {
                 for (i, r) in state.rivals.iter().enumerate() {
                     if r.acquired_by_player {
                         self.options.push(MenuOption {
-                            text: format!("[Tochterstudio im Besitz] {}", r.name),
+                            text: if is_en {
+                                format!("[Owned Subsidiary] {}", r.name)
+                            } else {
+                                format!("[Tochterstudio im Besitz] {}", r.name)
+                            },
                             speech_hint: String::new(),
                             action: MenuAction::NoOp,
                         });
                     } else {
                         self.options.push(MenuOption {
-                            text: format!(
-                                "[Konkurrent übernehmen] {} (Reputation: {:.1}/10, Kaufpreis: {} EUR)",
-                                r.name, r.reputation, r.valuation
-                            ),
+                            text: if is_en {
+                                format!(
+                                    "[Acquire Rival] {} (Reputation: {:.1}/10, Price: {} EUR)",
+                                    r.name, r.reputation, r.valuation
+                                )
+                            } else {
+                                format!(
+                                    "[Konkurrent übernehmen] {} (Reputation: {:.1}/10, Kaufpreis: {} EUR)",
+                                    r.name, r.reputation, r.valuation
+                                )
+                            },
                             speech_hint: String::new(),
                             action: MenuAction::AcquireRival(i),
                         });
@@ -1612,36 +1800,59 @@ impl MenuController {
             }
 
             MenuId::ChartsGotyMenu => {
-                self.title = format!(
-                    "{} (Rekord: {:.1}/10, GOTY-Preise: {})",
-                    tr(lang, "hub_charts_goty"),
-                    state.high_score,
-                    state.goty_awards
-                );
+                self.title = if is_en {
+                    format!(
+                        "{} (Best Score: {:.1}/10, GOTY Awards: {})",
+                        tr(lang, "hub_charts_goty"),
+                        state.high_score,
+                        state.goty_awards
+                    )
+                } else {
+                    format!(
+                        "{} (Rekord: {:.1}/10, GOTY-Preise: {})",
+                        tr(lang, "hub_charts_goty"),
+                        state.high_score,
+                        state.goty_awards
+                    )
+                };
                 let era = state.current_era();
                 self.options.push(MenuOption {
-                    text: format!(
-                        "Aktuelle Ära: {} - {}",
-                        if is_en { era.name_en } else { era.name_de },
-                        if is_en { era.desc_en } else { era.desc_de }
-                    ),
+                    text: if is_en {
+                        format!("Current Era: {} - {}", era.name_en, era.desc_en)
+                    } else {
+                        format!("Aktuelle Ära: {} - {}", era.name_de, era.desc_de)
+                    },
                     speech_hint: String::new(),
                     action: MenuAction::NoOp,
                 });
                 for g in state.game_history.iter().rev() {
                     let avg = g.review.as_ref().map(|r| r.average()).unwrap_or(0.0);
                     self.options.push(MenuOption {
-                        text: format!(
-                            "{} ({}) - {} / {} auf {} | Wertung: {:.1}/10 | Verkäufe: {} | Gewinn: {} EUR",
-                            g.name,
-                            g.release_year,
-                            g.topic,
-                            g.genre,
-                            g.platform,
-                            avg,
-                            g.sales,
-                            g.profit()
-                        ),
+                        text: if is_en {
+                            format!(
+                                "{} ({}) - {} / {} on {} | Score: {:.1}/10 | Sales: {} | Profit: {} EUR",
+                                g.name,
+                                g.release_year,
+                                g.topic,
+                                g.genre,
+                                g.platform,
+                                avg,
+                                g.sales,
+                                g.profit()
+                            )
+                        } else {
+                            format!(
+                                "{} ({}) - {} / {} auf {} | Wertung: {:.1}/10 | Verkäufe: {} | Gewinn: {} EUR",
+                                g.name,
+                                g.release_year,
+                                g.topic,
+                                g.genre,
+                                g.platform,
+                                avg,
+                                g.sales,
+                                g.profit()
+                            )
+                        },
                         speech_hint: String::new(),
                         action: MenuAction::NoOp,
                     });
@@ -1757,38 +1968,70 @@ impl MenuController {
                     action: MenuAction::ToggleLanguage,
                 });
                 self.options.push(MenuOption {
-                    text: format!(
-                        "Hintergrundmusik: {} (Enter)",
-                        if state.settings.music_enabled {
-                            "AN"
-                        } else {
-                            "AUS"
-                        }
-                    ),
+                    text: if is_en {
+                        format!(
+                            "Background Music: {} (Enter)",
+                            if state.settings.music_enabled {
+                                "ON"
+                            } else {
+                                "OFF"
+                            }
+                        )
+                    } else {
+                        format!(
+                            "Hintergrundmusik: {} (Enter)",
+                            if state.settings.music_enabled {
+                                "AN"
+                            } else {
+                                "AUS"
+                            }
+                        )
+                    },
                     speech_hint: String::new(),
                     action: MenuAction::ToggleMusic,
                 });
                 self.options.push(MenuOption {
-                    text: format!(
-                        "Musik-Lautstärke: {}% [Links/Rechts]",
-                        state.settings.music_volume
-                    ),
+                    text: if is_en {
+                        format!(
+                            "Music Volume: {}% [Left/Right]",
+                            state.settings.music_volume
+                        )
+                    } else {
+                        format!(
+                            "Musik-Lautstärke: {}% [Links/Rechts]",
+                            state.settings.music_volume
+                        )
+                    },
                     speech_hint: String::new(),
                     action: MenuAction::AdjustMusicVolume,
                 });
                 self.options.push(MenuOption {
-                    text: format!(
-                        "Soundeffekt-Lautstärke (SFX): {}% [Links/Rechts]",
-                        state.settings.sfx_volume
-                    ),
+                    text: if is_en {
+                        format!(
+                            "Sound Effects Volume (SFX): {}% [Left/Right]",
+                            state.settings.sfx_volume
+                        )
+                    } else {
+                        format!(
+                            "Soundeffekt-Lautstärke (SFX): {}% [Links/Rechts]",
+                            state.settings.sfx_volume
+                        )
+                    },
                     speech_hint: String::new(),
                     action: MenuAction::AdjustSfxVolume,
                 });
                 self.options.push(MenuOption {
-                    text: format!(
-                        "Sprachausgabe-Lautstärke: {}% [Links/Rechts]",
-                        state.settings.speech_volume
-                    ),
+                    text: if is_en {
+                        format!(
+                            "Speech Output Volume: {}% [Left/Right]",
+                            state.settings.speech_volume
+                        )
+                    } else {
+                        format!(
+                            "Sprachausgabe-Lautstärke: {}% [Links/Rechts]",
+                            state.settings.speech_volume
+                        )
+                    },
                     speech_hint: String::new(),
                     action: MenuAction::AdjustSpeechVolume,
                 });
@@ -1816,7 +2059,11 @@ impl MenuController {
                         "Frei"
                     };
                     self.options.push(MenuOption {
-                        text: format!("Speicherplatz {} ({})", slot, status),
+                        text: if is_en {
+                            format!("Save Slot {} ({})", slot, status)
+                        } else {
+                            format!("Speicherplatz {} ({})", slot, status)
+                        },
                         speech_hint: String::new(),
                         action: MenuAction::SaveSlot(slot),
                     });
@@ -1845,7 +2092,11 @@ impl MenuController {
                         "Leer"
                     };
                     self.options.push(MenuOption {
-                        text: format!("Speicherplatz {} ({})", slot, status),
+                        text: if is_en {
+                            format!("Save Slot {} ({})", slot, status)
+                        } else {
+                            format!("Speicherplatz {} ({})", slot, status)
+                        },
                         speech_hint: String::new(),
                         action: MenuAction::LoadSlot(slot),
                     });
@@ -1861,8 +2112,13 @@ impl MenuController {
                 self.title = tr(lang, "menu_credits");
                 self.options.push(MenuOption {
                     text: "Audio Studio Tycoon v4.3.0 - Native Rust Edition".to_string(),
-                    speech_hint: "100% barrierefrei für Screenreader via 64-Bit Prism.dll & Tolk.dll FFI."
-                        .to_string(),
+                    speech_hint: if is_en {
+                        "100% accessible for screenreaders via 64-bit Prism.dll & Tolk.dll FFI."
+                            .to_string()
+                    } else {
+                        "100% barrierefrei für Screenreader via 64-Bit Prism.dll & Tolk.dll FFI."
+                            .to_string()
+                    },
                     action: MenuAction::NoOp,
                 });
                 self.options.push(MenuOption {
@@ -1873,24 +2129,40 @@ impl MenuController {
             }
 
             MenuId::DeveloperMenu => {
-                self.title = "Entwickler-Menü (Developer Mode)".to_string();
+                self.title = if is_en {
+                    "Developer Menu (Developer Mode)".to_string()
+                } else {
+                    "Entwickler-Menü (Developer Mode)".to_string()
+                };
                 self.options.push(MenuOption {
-                    text: "+100.000 Euro Sofortgeld".to_string(),
+                    text: if is_en {
+                        "+100,000 EUR Instant Cash".to_string()
+                    } else {
+                        "+100.000 Euro Sofortgeld".to_string()
+                    },
                     speech_hint: String::new(),
                     action: MenuAction::DevAddMoney,
                 });
                 self.options.push(MenuOption {
-                    text: "+10.000 Fans".to_string(),
+                    text: "+10,000 Fans".to_string(),
                     speech_hint: String::new(),
                     action: MenuAction::DevAddFans,
                 });
                 self.options.push(MenuOption {
-                    text: "+1 Jahr vorspringen (48 Wochen)".to_string(),
+                    text: if is_en {
+                        "Advance +1 Year (48 weeks)".to_string()
+                    } else {
+                        "+1 Jahr vorspringen (48 Wochen)".to_string()
+                    },
                     speech_hint: String::new(),
                     action: MenuAction::DevAdvanceYear,
                 });
                 self.options.push(MenuOption {
-                    text: "Alle Themen, Genres & Technologien freischalten".to_string(),
+                    text: if is_en {
+                        "Unlock All Topics, Genres & Technologies".to_string()
+                    } else {
+                        "Alle Themen, Genres & Technologien freischalten".to_string()
+                    },
                     speech_hint: String::new(),
                     action: MenuAction::DevUnlockAll,
                 });
@@ -1934,7 +2206,13 @@ impl MenuController {
             state.developer_mode = !state.developer_mode;
             audio.play_sound("confirm");
             audio.say_interrupt(if state.developer_mode {
-                "Entwickler-Modus aktiviert. Drücke D für das Entwickler-Menü."
+                if state.is_en() {
+                    "Developer Mode enabled. Press D for Developer Menu."
+                } else {
+                    "Entwickler-Modus aktiviert. Drücke D für das Entwickler-Menü."
+                }
+            } else if state.is_en() {
+                "Developer Mode disabled."
             } else {
                 "Entwickler-Modus deaktiviert."
             });
@@ -1953,11 +2231,27 @@ impl MenuController {
                     }
                     return;
                 }
+                KeyInput::Escape => {
+                    // Escape immediately cancels text input and returns to parent menu
+                    audio.play_sound("click");
+                    let back_target = match self.current_menu {
+                        MenuId::CompanyNameInput => MenuId::DifficultyMenu,
+                        MenuId::DevelopNameInput => MenuId::DevelopSlidersMenu,
+                        MenuId::CustomEngineNameInput => MenuId::ResearchMenu,
+                        _ => MenuId::GameMenu,
+                    };
+                    self.switch_to(back_target, state, audio);
+                    return;
+                }
                 KeyInput::Back => {
                     if let Some(removed) = self.text_buffer.pop() {
                         audio.play_sound("click");
                         self.rebuild(state);
-                        audio.say_interrupt(&format!("Gelöscht: {}", removed));
+                        if state.is_en() {
+                            audio.say_interrupt(&format!("Deleted: {}", removed));
+                        } else {
+                            audio.say_interrupt(&format!("Gelöscht: {}", removed));
+                        }
                     } else {
                         // Back out of text input menu if buffer is already empty
                         audio.play_sound("click");
@@ -2071,7 +2365,7 @@ impl MenuController {
                 self.handle_horizontal_adjust(delta, state, audio);
                 return;
             }
-            KeyInput::Back => {
+            KeyInput::Back | KeyInput::Escape => {
                 audio.play_sound("click");
                 let back_menu = match self.current_menu {
                     MenuId::MainMenu => return,
@@ -2110,12 +2404,32 @@ impl MenuController {
             MenuAction::AdjustSlider { idx } => {
                 let cur = state.current_draft.sliders[idx] as i32;
                 let rem = state.current_draft.remaining_points();
+                let slider_labels_en = [
+                    "Gameplay",
+                    "Graphics",
+                    "Sound",
+                    "Story",
+                    "AI",
+                    "World",
+                ];
+                let sname = if state.is_en() {
+                    slider_labels_en[idx]
+                } else {
+                    SLIDER_NAMES[idx]
+                };
                 if delta > 0 && (cur >= 10 || rem <= 0) {
                     audio.play_sound("bump");
-                    audio.say_interrupt(&format!(
-                        "{}: {} (Keine freien Punkte mehr oder Maximum erreicht)",
-                        SLIDER_NAMES[idx], cur
-                    ));
+                    if state.is_en() {
+                        audio.say_interrupt(&format!(
+                            "{}: {} (No remaining points or maximum reached)",
+                            sname, cur
+                        ));
+                    } else {
+                        audio.say_interrupt(&format!(
+                            "{}: {} (Keine freien Punkte mehr oder Maximum erreicht)",
+                            sname, cur
+                        ));
+                    }
                     return;
                 }
                 if delta < 0 && cur <= 0 {
@@ -2127,12 +2441,21 @@ impl MenuController {
                 let idx_keep = self.current_index;
                 self.rebuild(state);
                 self.current_index = idx_keep;
-                audio.say_interrupt(&format!(
-                    "{}: {}, freie Punkte: {}",
-                    SLIDER_NAMES[idx],
-                    state.current_draft.sliders[idx],
-                    state.current_draft.remaining_points()
-                ));
+                if state.is_en() {
+                    audio.say_interrupt(&format!(
+                        "{}: {}, remaining points: {}",
+                        sname,
+                        state.current_draft.sliders[idx],
+                        state.current_draft.remaining_points()
+                    ));
+                } else {
+                    audio.say_interrupt(&format!(
+                        "{}: {}, freie Punkte: {}",
+                        sname,
+                        state.current_draft.sliders[idx],
+                        state.current_draft.remaining_points()
+                    ));
+                }
             }
             MenuAction::AdjustMusicVolume => {
                 let next = (state.settings.music_volume as i32 + delta * 10).clamp(0, 100) as u8;
@@ -2297,11 +2620,19 @@ impl MenuController {
                 state.current_draft.sliders = get_ideal_sliders(&state.current_draft.genre);
                 audio.play_sound("confirm");
                 self.rebuild(state);
-                audio.say_interrupt(&format!(
-                    "Ideale Slider für {} gesetzt: {}",
-                    state.current_draft.genre,
-                    state.current_draft.slider_summary()
-                ));
+                if state.is_en() {
+                    audio.say_interrupt(&format!(
+                        "Ideal sliders set for {}: {}",
+                        state.current_draft.genre,
+                        state.current_draft.slider_summary()
+                    ));
+                } else {
+                    audio.say_interrupt(&format!(
+                        "Ideale Slider für {} gesetzt: {}",
+                        state.current_draft.genre,
+                        state.current_draft.slider_summary()
+                    ));
+                }
             }
             MenuAction::AdjustSlider { .. } => {
                 self.handle_horizontal_adjust(1, state, audio);
@@ -2336,71 +2667,64 @@ impl MenuController {
                     self.speak_current(audio, true);
                 }
             }
-            MenuAction::ReleasePatch(idx) => {
-                if state.money < 2_000 {
-                    audio.play_sound("error");
-                    audio.say_interrupt("Nicht genug Geld für einen Patch (2.000 Euro).");
-                    return;
-                }
-                if let Some(g) = state.game_history.get_mut(idx) {
-                    state.money -= 2_000;
-                    g.bugs = 0;
-                    g.patches_released += 1;
-                    g.weeks_on_market = g.weeks_on_market.saturating_sub(3);
-                    g.is_active = true;
-                    let name = g.name.clone();
+            MenuAction::ReleasePatch(idx) => match state.release_patch(idx) {
+                Ok(msg) => {
                     audio.play_sound("success");
                     self.rebuild(state);
-                    audio.say_interrupt(&format!(
-                        "Patch für '{}' veröffentlicht! Alle Bugs behoben und Verkäufe belebt.",
-                        name
-                    ));
+                    audio.say_interrupt(&msg);
                 }
-            }
-            MenuAction::ReleaseDlc(idx) => {
-                if state.money < 6_000 {
+                Err(e) => {
                     audio.play_sound("error");
-                    audio.say_interrupt("Nicht genug Geld für ein Addon/DLC (6.000 Euro).");
-                    return;
+                    audio.say_interrupt(&e);
                 }
-                if let Some(g) = state.game_history.get_mut(idx) {
-                    state.money -= 6_000;
-                    g.dlc_count += 1;
-                    let bonus_sales = (g.sales / 4).max(400);
-                    let bonus_rev = (bonus_sales as i64) * 15;
-                    g.sales += bonus_sales;
-                    g.revenue += bonus_rev;
-                    state.money += bonus_rev;
-                    state.total_revenue += bonus_rev;
-                    let name = g.name.clone();
+            },
+            MenuAction::ReleaseDlc(idx) => match state.release_dlc(idx) {
+                Ok(msg) => {
                     audio.play_sound("cash");
                     self.rebuild(state);
-                    audio.say_interrupt(&format!(
-                        "Addon für '{}' veröffentlicht! +{} Verkäufe, +{} Euro Umsatz!",
-                        name, bonus_sales, bonus_rev
-                    ));
+                    audio.say_interrupt(&msg);
                 }
-            }
+                Err(e) => {
+                    audio.play_sound("error");
+                    audio.say_interrupt(&e);
+                }
+            },
             MenuAction::AcceptContract(idx) => {
                 if state.active_contract.is_some() {
                     audio.play_sound("error");
-                    audio.say_interrupt("Es läuft bereits ein aktiver Auftrag!");
+                    audio.say_interrupt(if state.is_en() {
+                        "An active contract is already in progress!"
+                    } else {
+                        "Es läuft bereits ein aktiver Auftrag!"
+                    });
                     return;
                 }
                 if idx < state.available_contracts.len() {
                     let c = state.available_contracts.remove(idx);
-                    let name = c.name_de.clone();
+                    let name = if state.is_en() {
+                        c.name_en.clone()
+                    } else {
+                        c.name_de.clone()
+                    };
                     state.active_contract = Some(c);
                     audio.play_sound("confirm");
                     self.rebuild(state);
-                    audio.say_interrupt(&format!("Auftrag '{}' angenommen!", name));
+                    if state.is_en() {
+                        audio.say_interrupt(&format!("Contract '{}' accepted!", name));
+                    } else {
+                        audio.say_interrupt(&format!("Auftrag '{}' angenommen!", name));
+                    }
                 }
             }
             MenuAction::RefreshContracts => {
                 state.refresh_contracts();
                 audio.play_sound("confirm");
                 self.rebuild(state);
-                audio.say_interrupt("Neue Auftragsangebote geladen.");
+                audio.say_interrupt(if state.is_en() {
+                    "New contract offers loaded."
+                } else {
+                    "Neue Auftragsangebote geladen."
+                });
             }
             MenuAction::ResearchGenre(idx) => {
                 let item = &RESEARCHABLE_GENRES[idx];
@@ -2563,12 +2887,20 @@ impl MenuController {
             } => {
                 if state.office_upgrades.contains(&id) {
                     audio.play_sound("bump");
-                    audio.say_interrupt("Bereits installiert!");
+                    audio.say_interrupt(if state.is_en() {
+                        "Already installed!"
+                    } else {
+                        "Bereits installiert!"
+                    });
                     return;
                 }
                 if state.money < cost {
                     audio.play_sound("error");
-                    audio.say_interrupt("Nicht genug Geld!");
+                    audio.say_interrupt(if state.is_en() {
+                        "Not enough money!"
+                    } else {
+                        "Nicht genug Geld!"
+                    });
                     return;
                 }
                 state.money -= cost;
@@ -2593,7 +2925,11 @@ impl MenuController {
             } => {
                 if state.money < cost {
                     audio.play_sound("error");
-                    audio.say_interrupt("Nicht genug Geld für diese Kampagne!");
+                    audio.say_interrupt(if state.is_en() {
+                        "Not enough money for this campaign!"
+                    } else {
+                        "Nicht genug Geld für diese Kampagne!"
+                    });
                     return;
                 }
                 state.money -= cost;
@@ -2602,15 +2938,26 @@ impl MenuController {
                 state.fans += fan_gain;
                 audio.play_sound("cash");
                 self.rebuild(state);
-                audio.say_interrupt(&format!(
-                    "{} gestartet: +{:.0} Hype, +{} Fans!",
-                    label, eff_hype, fan_gain
-                ));
+                if state.is_en() {
+                    audio.say_interrupt(&format!(
+                        "{} launched: +{:.0} Hype, +{} Fans!",
+                        label, eff_hype, fan_gain
+                    ));
+                } else {
+                    audio.say_interrupt(&format!(
+                        "{} gestartet: +{:.0} Hype, +{} Fans!",
+                        label, eff_hype, fan_gain
+                    ));
+                }
             }
             MenuAction::ComposeJingle => {
                 if state.money < 3_000 {
                     audio.play_sound("error");
-                    audio.say_interrupt("Nicht genug Geld (3.000 Euro)!");
+                    audio.say_interrupt(if state.is_en() {
+                        "Not enough money (3,000 EUR)!"
+                    } else {
+                        "Nicht genug Geld (3.000 Euro)!"
+                    });
                     return;
                 }
                 state.money -= 3_000;
@@ -2618,33 +2965,54 @@ impl MenuController {
                 state.hype = (state.hype + 10.0).min(250.0);
                 audio.play_sound("success");
                 self.rebuild(state);
-                audio.say_interrupt(&format!(
-                    "Neuer Studio-Jingle produziert! Jingle-Bonus jetzt +{:.0}.",
-                    state.jingle_bonus
-                ));
+                if state.is_en() {
+                    audio.say_interrupt(&format!(
+                        "New studio jingle produced! Jingle bonus now +{:.0}.",
+                        state.jingle_bonus
+                    ));
+                } else {
+                    audio.say_interrupt(&format!(
+                        "Neuer Studio-Jingle produziert! Jingle-Bonus jetzt +{:.0}.",
+                        state.jingle_bonus
+                    ));
+                }
             }
-            MenuAction::AnswerFanMail => {
-                state.fans += 200;
-                state.hype = (state.hype + 5.0).min(250.0);
-                state.accessibility_reputation += 5;
-                audio.play_sound("confirm");
-                self.rebuild(state);
-                audio.say_interrupt("Fanpost herzlich beantwortet! +200 Fans und +5 Hype.");
-            }
+            MenuAction::AnswerFanMail => match state.answer_fan_mail() {
+                Ok(msg) => {
+                    audio.play_sound("confirm");
+                    self.rebuild(state);
+                    audio.say_interrupt(&msg);
+                }
+                Err(e) => {
+                    audio.play_sound("error");
+                    audio.say_interrupt(&e);
+                }
+            },
             MenuAction::ProduceMerch => {
                 if state.money < 5_000 {
                     audio.play_sound("error");
-                    audio.say_interrupt("Nicht genug Geld (5.000 Euro)!");
+                    audio.say_interrupt(if state.is_en() {
+                        "Not enough money (5,000 EUR)!"
+                    } else {
+                        "Nicht genug Geld (5.000 Euro)!"
+                    });
                     return;
                 }
                 state.money -= 5_000;
                 state.merch_stock += 500;
                 audio.play_sound("buy");
                 self.rebuild(state);
-                audio.say_interrupt(&format!(
-                    "500 Fan-Artikel produziert! Lagerbestand: {}.",
-                    state.merch_stock
-                ));
+                if state.is_en() {
+                    audio.say_interrupt(&format!(
+                        "500 fan merchandise items produced! Stock: {}.",
+                        state.merch_stock
+                    ));
+                } else {
+                    audio.say_interrupt(&format!(
+                        "500 Fan-Artikel produziert! Lagerbestand: {}.",
+                        state.merch_stock
+                    ));
+                }
             }
             MenuAction::AttendSoundCon(tier) => match state.attend_soundcon(tier) {
                 Ok(msg) => {
@@ -2660,12 +3028,20 @@ impl MenuController {
             MenuAction::FoundLabel => {
                 if state.calendar_year() < 1985 {
                     audio.play_sound("error");
-                    audio.say_interrupt("Das Soundtrack-Label ist erst ab dem Jahr 1985 verfügbar!");
+                    audio.say_interrupt(if state.is_en() {
+                        "The Soundtrack Label is only available from 1985!"
+                    } else {
+                        "Das Soundtrack-Label ist erst ab dem Jahr 1985 verfügbar!"
+                    });
                     return;
                 }
                 if state.money < 25_000 {
                     audio.play_sound("error");
-                    audio.say_interrupt("Nicht genug Geld (25.000 Euro)!");
+                    audio.say_interrupt(if state.is_en() {
+                        "Not enough money (25,000 EUR)!"
+                    } else {
+                        "Nicht genug Geld (25.000 Euro)!"
+                    });
                     return;
                 }
                 state.money -= 25_000;
@@ -2673,10 +3049,17 @@ impl MenuController {
                 state.label_name = format!("{} Records", state.company_name);
                 audio.play_sound("success");
                 self.rebuild(state);
-                audio.say_interrupt(&format!(
-                    "Soundtrack-Label '{}' erfolgreich gegründet!",
-                    state.label_name
-                ));
+                if state.is_en() {
+                    audio.say_interrupt(&format!(
+                        "Soundtrack Label '{}' founded successfully!",
+                        state.label_name
+                    ));
+                } else {
+                    audio.say_interrupt(&format!(
+                        "Soundtrack-Label '{}' erfolgreich gegründet!",
+                        state.label_name
+                    ));
+                }
             }
             MenuAction::AddGameToLabel(idx) => {
                 if let Some(g) = state.game_history.get_mut(idx) {
@@ -2684,16 +3067,27 @@ impl MenuController {
                     let name = g.name.clone();
                     audio.play_sound("confirm");
                     self.rebuild(state);
-                    audio.say_interrupt(&format!(
-                        "Soundtrack von '{}' ins Label aufgenommen!",
-                        name
-                    ));
+                    if state.is_en() {
+                        audio.say_interrupt(&format!(
+                            "Soundtrack of '{}' added to Label!",
+                            name
+                        ));
+                    } else {
+                        audio.say_interrupt(&format!(
+                            "Soundtrack von '{}' ins Label aufgenommen!",
+                            name
+                        ));
+                    }
                 }
             }
             MenuAction::OrganizeConcert => {
                 if state.money < 20_000 {
                     audio.play_sound("error");
-                    audio.say_interrupt("Nicht genug Geld (20.000 Euro)!");
+                    audio.say_interrupt(if state.is_en() {
+                        "Not enough money (20,000 EUR)!"
+                    } else {
+                        "Nicht genug Geld (20.000 Euro)!"
+                    });
                     return;
                 }
                 state.money -= 20_000;
@@ -2703,15 +3097,26 @@ impl MenuController {
                 state.fans += 1_200;
                 audio.play_sound("cash");
                 self.rebuild(state);
-                audio.say_interrupt(&format!(
-                    "Live-Konzert war ein Triumph! Einnahmen: {} Euro, +1.200 Fans!",
-                    ticket_rev
-                ));
+                if state.is_en() {
+                    audio.say_interrupt(&format!(
+                        "Live Concert was a triumph! Revenue: {} EUR, +1,200 Fans!",
+                        ticket_rev
+                    ));
+                } else {
+                    audio.say_interrupt(&format!(
+                        "Live-Konzert war ein Triumph! Einnahmen: {} Euro, +1.200 Fans!",
+                        ticket_rev
+                    ));
+                }
             }
             MenuAction::ToggleSubscription => {
                 if state.calendar_year() < 1995 {
                     audio.play_sound("error");
-                    audio.say_interrupt("Der AudioPass Abo-Dienst ist erst ab dem Jahr 1995 verfügbar!");
+                    audio.say_interrupt(if state.is_en() {
+                        "The AudioPass subscription service is only available from 1995!"
+                    } else {
+                        "Der AudioPass Abo-Dienst ist erst ab dem Jahr 1995 verfügbar!"
+                    });
                     return;
                 }
                 state.subscription_active = !state.subscription_active;
@@ -2721,7 +3126,13 @@ impl MenuController {
                 audio.play_sound("confirm");
                 self.rebuild(state);
                 audio.say_interrupt(if state.subscription_active {
-                    "AudioPass Abo-Dienst aktiviert!"
+                    if state.is_en() {
+                        "AudioPass subscription service activated!"
+                    } else {
+                        "AudioPass Abo-Dienst aktiviert!"
+                    }
+                } else if state.is_en() {
+                    "AudioPass subscription service paused."
                 } else {
                     "AudioPass Abo-Dienst pausiert."
                 });
@@ -2735,7 +3146,11 @@ impl MenuController {
                     let name = g.name.clone();
                     audio.play_sound("confirm");
                     self.rebuild(state);
-                    audio.say_interrupt(&format!("'{}' in den AudioPass aufgenommen!", name));
+                    if state.is_en() {
+                        audio.say_interrupt(&format!("'{}' added to AudioPass!", name));
+                    } else {
+                        audio.say_interrupt(&format!("'{}' in den AudioPass aufgenommen!", name));
+                    }
                 }
             }
             MenuAction::DevelopSoundcard => match state.develop_soundcard("") {
@@ -2787,10 +3202,17 @@ impl MenuController {
                     let price = state.rivals[idx].valuation;
                     if state.money < price {
                         audio.play_sound("error");
-                        audio.say_interrupt(&format!(
-                            "Nicht genug Geld für die Übernahme ({} Euro benötigt).",
-                            price
-                        ));
+                        if state.is_en() {
+                            audio.say_interrupt(&format!(
+                                "Not enough money for acquisition ({} EUR required).",
+                                price
+                            ));
+                        } else {
+                            audio.say_interrupt(&format!(
+                                "Nicht genug Geld für die Übernahme ({} Euro benötigt).",
+                                price
+                            ));
+                        }
                         return;
                     }
                     state.money -= price;
@@ -2799,10 +3221,17 @@ impl MenuController {
                     let rname = state.rivals[idx].name.clone();
                     audio.play_sound("success");
                     self.rebuild(state);
-                    audio.say_interrupt(&format!(
-                        "{} erfolgreich übernommen! +5.000 Fans!",
-                        rname
-                    ));
+                    if state.is_en() {
+                        audio.say_interrupt(&format!(
+                            "{} acquired successfully! +5,000 Fans!",
+                            rname
+                        ));
+                    } else {
+                        audio.say_interrupt(&format!(
+                            "{} erfolgreich übernommen! +5.000 Fans!",
+                            rname
+                        ));
+                    }
                 }
             }
             MenuAction::ReadEmail(idx) => {
@@ -2870,7 +3299,11 @@ impl MenuController {
                 self.current_index = keep.min(self.options.len().saturating_sub(1));
                 let cal = state.calendar_text();
                 if notes.is_empty() {
-                    audio.say_interrupt(&format!("{}. Kontostand: {} Euro.", cal, state.money));
+                    if state.is_en() {
+                        audio.say_interrupt(&format!("{}. Balance: {} EUR.", cal, state.money));
+                    } else {
+                        audio.say_interrupt(&format!("{}. Kontostand: {} Euro.", cal, state.money));
+                    }
                 } else {
                     audio.say_interrupt(&format!("{}. {}", cal, notes.join(" ")));
                 }
@@ -2878,7 +3311,11 @@ impl MenuController {
             MenuAction::DevAddMoney => {
                 state.money += 100_000;
                 audio.play_sound("cash");
-                audio.say_interrupt(&format!("Kontostand: {} Euro.", state.money));
+                if state.is_en() {
+                    audio.say_interrupt(&format!("Balance: {} EUR.", state.money));
+                } else {
+                    audio.say_interrupt(&format!("Kontostand: {} Euro.", state.money));
+                }
             }
             MenuAction::DevAddFans => {
                 state.fans += 10_000;
@@ -2891,7 +3328,11 @@ impl MenuController {
                 }
                 audio.play_sound("confirm");
                 self.rebuild(state);
-                audio.say_interrupt(&format!("Jahr vorgespult: {}", state.calendar_text()));
+                if state.is_en() {
+                    audio.say_interrupt(&format!("Year advanced: {}", state.calendar_text()));
+                } else {
+                    audio.say_interrupt(&format!("Jahr vorgespult: {}", state.calendar_text()));
+                }
             }
             MenuAction::DevUnlockAll => {
                 for g in GENRES {
@@ -2915,7 +3356,15 @@ impl MenuController {
                     }
                 }
                 audio.play_sound("success");
-                audio.say_interrupt("Alle Themen, Genres, Engine-Features und Technologien freigeschaltet!");
+                if state.is_en() {
+                    audio.say_interrupt(
+                        "All topics, genres, engine features and technologies unlocked!",
+                    );
+                } else {
+                    audio.say_interrupt(
+                        "Alle Themen, Genres, Engine-Features und Technologien freigeschaltet!",
+                    );
+                }
             }
             MenuAction::NoOp => {
                 self.speak_current(audio, true);

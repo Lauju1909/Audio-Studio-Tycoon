@@ -292,6 +292,17 @@ impl AudioManager {
             &assets_dir.join("success.wav"),
             &[(523.25, 60), (659.25, 60), (783.99, 100)],
         );
+        ensure_synthesized_wav(
+            &assets_dir.join("drumroll.wav"),
+            &[
+                (220.0, 40),
+                (246.94, 40),
+                (261.63, 40),
+                (293.66, 40),
+                (329.63, 55),
+                (392.0, 85),
+            ],
+        );
 
         let speech_log = Arc::new(Mutex::new(Vec::new()));
         let sound_log = Arc::new(Mutex::new(Vec::new()));

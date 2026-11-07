@@ -409,4 +409,201 @@ mod tests {
         state.tick_week();
         assert_eq!(state.calendar_year(), 1999);
     }
+
+    #[test]
+    fn test_fan_mail_and_dlc_exploit_prevention() {
+        let mut state = GameState::new(1, 1998);
+        state.money = 500_000;
+
+        // 1. Fan mail starts at 1 unanswered batch; 1st call succeeds, 2nd call in same week fails
+        assert_eq!(state.unanswered_fan_mails, 1);
+        let fans_before = state.fans;
+        assert!(state.answer_fan_mail().is_ok());
+        assert_eq!(state.unanswered_fan_mails, 0);
+        assert_eq!(state.fans, fans_before + 200);
+        assert!(
+            state.answer_fan_mail().is_err(),
+            "Spamming AnswerFanMail when unanswered_fan_mails == 0 must fail"
+        );
+        assert_eq!(state.fans, fans_before + 200);
+
+        // 2. Develop and release a game with 3 bugs
+        state.current_draft.name = "Exploit Test 98".to_string();
+        state.current_draft.topic = "Cyberpunk".to_string();
+        state.current_draft.genre = "RPG".to_string();
+        state.current_draft.sliders = get_ideal_sliders("RPG");
+        state.start_game_project().unwrap();
+        for _ in 0..8 {
+            state.tick_week();
+        }
+        state.active_projects[0].bugs = 3;
+        state.finish_ready_project(0).unwrap();
+
+        // 3. First patch fixes all bugs; second patch when bugs == 0 must fail
+        assert!(state.release_patch(0).is_ok());
+        assert_eq!(state.game_history[0].bugs, 0);
+        assert!(
+            state.release_patch(0).is_err(),
+            "Releasing a patch when bugs == 0 must fail"
+        );
+
+        // 4. Up to 2 DLCs per game succeed; 3rd DLC attempt must fail (preventing infinite compounding)
+        assert!(state.release_dlc(0).is_ok());
+        assert_eq!(state.game_history[0].dlc_count, 1);
+        assert!(state.release_dlc(0).is_ok());
+        assert_eq!(state.game_history[0].dlc_count, 2);
+        let sales_after_two_dlcs = state.game_history[0].sales;
+        assert!(
+            state.release_dlc(0).is_err(),
+            "Releasing more than 2 DLCs for the same game must fail"
+        );
+        assert_eq!(state.game_history[0].sales, sales_after_two_dlcs);
+    }
+
+    #[test]
+    fn test_studio_perks_and_office_level_boost_review_score() {
+        let mut base_state = GameState::new(1, 1985);
+        base_state.current_draft.name = "Synth Quest".to_string();
+        base_state.current_draft.topic = "Sci-Fi".to_string();
+        base_state.current_draft.genre = "Abenteuer".to_string();
+        base_state.current_draft.sliders = get_ideal_sliders("Abenteuer");
+        base_state.start_game_project().unwrap();
+        let test_proj = base_state.active_projects[0].project.clone();
+
+        let base_review = base_state.calculate_review(&test_proj, 0);
+
+        let mut upgraded_state = base_state.clone();
+        upgraded_state.office_level = 3;
+        upgraded_state.office_upgrades.push("mixing_desk".to_string());
+        upgraded_state.office_upgrades.push("foley_stage".to_string());
+        let upgraded_review = upgraded_state.calculate_review(&test_proj, 0);
+
+        assert!(
+            upgraded_review.average() > base_review.average(),
+            "Studio upgrades ('mixing_desk', 'foley_stage') and office_level must boost review score ({} vs {})",
+            upgraded_review.average(),
+            base_review.average()
+        );
+    }
+
+    #[test]
+    fn test_complete_save_load_and_legacy_python_save_migration() {
+        let mut state = GameState::new(1, 1996);
+        state.company_name = "Full State Studio".to_string();
+        state.office_upgrades = vec!["mixing_desk".to_string(), "foley_stage".to_string()];
+        state.jingle_bonus = 25.0;
+        state.unanswered_fan_mails = 4;
+        state.active_contract = state.available_contracts.pop();
+        state.soundcon_history.push("1996: SoundCon Stage".to_string());
+        state.tutorials_completed = vec!["ch1".to_string(), "ch2".to_string()];
+        state.developer_mode = true;
+
+        let json_val = state.to_json();
+        let restored = GameState::from_json(&json_val);
+        assert_eq!(restored.office_upgrades, state.office_upgrades);
+        assert_eq!(restored.jingle_bonus, 25.0);
+        assert_eq!(restored.unanswered_fan_mails, 4);
+        assert!(restored.active_contract.is_some());
+        assert_eq!(restored.soundcon_history, state.soundcon_history);
+        assert_eq!(
+            restored.tutorials_completed,
+            vec!["ch1".to_string(), "ch2".to_string()]
+        );
+        assert!(restored.developer_mode);
+
+        // Test legacy Python v3.x/v4.x save migration
+        let legacy_raw = r#"{
+            "company_name": "Legacy Python Studio",
+            "money": 120000,
+            "fans": 4500,
+            "week": 1,
+            "bought_platforms": ["PC (MS-DOS)"],
+            "unlocked_features": [
+                {"name": "16-Bit Stereo PCM", "category": "Sound", "cost": 25000, "tech_bonus": 15}
+            ],
+            "bank_loan": {"borrowed": 35000, "interest_rate": 0.01},
+            "soundtrack_label": {"founded": true, "name": "Legacy OST Records"},
+            "current_trend": {"topic": "Detektiv", "genre": "Abenteuer", "weeks_left": 10},
+            "soundcon_last_year": 1995,
+            "my_goty_wins": 3
+        }"#;
+        let legacy_parsed = parse_json(legacy_raw).expect("Should parse legacy Python save");
+        let migrated = GameState::from_json(&legacy_parsed);
+        assert_eq!(migrated.company_name, "Legacy Python Studio");
+        assert_eq!(migrated.bank_loan, 35_000);
+        assert!(migrated.label_active);
+        assert_eq!(migrated.label_name, "Legacy OST Records");
+        assert_eq!(migrated.trend_topic, "Detektiv");
+        assert_eq!(migrated.trend_genre, "Abenteuer");
+        assert_eq!(migrated.last_soundcon_year, 1995);
+        assert_eq!(migrated.goty_awards, 3);
+        assert_eq!(
+            migrated.unlocked_features,
+            vec!["16-Bit Stereo PCM".to_string()]
+        );
+        // Anachronistic 1930 "PC (MS-DOS)" from old Python saves must be migrated to "Radio-Sendernetz (AM)"
+        assert_eq!(
+            migrated.bought_platforms,
+            vec!["Radio-Sendernetz (AM)".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_escape_key_in_text_input_and_english_localization_completeness() {
+        let mut state = GameState::new(1, 1996);
+        let mut audio = AudioManager::new(true);
+        let mut ctrl = MenuController::new(&state);
+
+        // 1. Enter CompanyNameInput, type "Klang", verify Backspace deletes 1 char while Escape exits immediately
+        ctrl.switch_to(MenuId::CompanyNameInput, &state, &audio);
+        for ch in "Klang".chars() {
+            ctrl.handle_input(KeyInput::Char(ch), &mut state, &mut audio);
+        }
+        assert_eq!(ctrl.text_buffer, "Klang");
+
+        // Rapid F8 language toggle during text input must preserve text_buffer
+        ctrl.handle_input(KeyInput::ToggleLang, &mut state, &mut audio);
+        assert_eq!(state.lang(), Lang::En);
+        assert_eq!(ctrl.text_buffer, "Klang");
+
+        // Backspace deletes 'g', staying in CompanyNameInput
+        ctrl.handle_input(KeyInput::Back, &mut state, &mut audio);
+        assert_eq!(ctrl.current_menu, MenuId::CompanyNameInput);
+        assert_eq!(ctrl.text_buffer, "Klan");
+
+        // Escape cancels immediately back to DifficultyMenu even when text_buffer is non-empty
+        ctrl.handle_input(KeyInput::Escape, &mut state, &mut audio);
+        assert_eq!(ctrl.current_menu, MenuId::DifficultyMenu);
+
+        // 2. Verify all 30 menus in English mode contain no leftover German UI labels
+        assert_eq!(state.lang(), Lang::En);
+        let forbidden_german_labels = [
+            "Speicherplatz",
+            "Hintergrundmusik",
+            "Musik-Lautstärke",
+            "Empfehlung für",
+            "Entwickler-Menü",
+        ];
+        for &menu_id in ALL_MENU_IDS {
+            ctrl.switch_to(menu_id, &state, &audio);
+            for bad in forbidden_german_labels {
+                assert!(
+                    !ctrl.title.contains(bad),
+                    "English title of {:?} still contains German string '{}': {}",
+                    menu_id,
+                    bad,
+                    ctrl.title
+                );
+                for opt in &ctrl.options {
+                    assert!(
+                        !opt.text.contains(bad),
+                        "English option of {:?} still contains German string '{}': {}",
+                        menu_id,
+                        bad,
+                        opt.text
+                    );
+                }
+            }
+        }
+    }
 }

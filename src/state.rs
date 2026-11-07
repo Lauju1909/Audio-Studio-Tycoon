@@ -841,7 +841,7 @@ impl GameState {
             .map(|e| e.quality_bonus)
             .unwrap_or(0.08);
 
-        let mut tech_bonus = 0.0;
+        let mut tech_bonus = (self.office_level as f64) * 0.015;
         if self
             .unlocked_technologies
             .iter()
@@ -855,6 +855,12 @@ impl GameState {
             .any(|t| t == "Audio-Meisterschaft")
         {
             tech_bonus += 0.08;
+        }
+        if self.office_upgrades.iter().any(|u| u == "mixing_desk") {
+            tech_bonus += 0.04;
+        }
+        if self.office_upgrades.iter().any(|u| u == "foley_stage") {
+            tech_bonus += 0.05;
         }
         for sc in &self.custom_soundcards {
             tech_bonus += sc.sound_bonus * 0.25;
@@ -1009,6 +1015,7 @@ impl GameState {
         } else if avg < 4.5 {
             self.fans = self.fans.saturating_sub(50);
         }
+        self.unanswered_fan_mails = (self.unanswered_fan_mails + 2).min(10);
 
         self.last_finished_game = Some(proj.clone());
         self.game_history.push(proj.clone());
@@ -1420,6 +1427,9 @@ impl GameState {
             }
             if self.available_contracts.len() < 2 {
                 self.refresh_contracts();
+            }
+            if self.fans >= 100 {
+                self.unanswered_fan_mails = (self.unanswered_fan_mails + 1).min(10);
             }
         }
 
@@ -1950,6 +1960,125 @@ impl GameState {
 
     // --- Persistence (Save/Load JSON) ---
 
+    pub fn answer_fan_mail(&mut self) -> Result<String, String> {
+        if self.unanswered_fan_mails == 0 {
+            return Err(if self.is_en() {
+                "No unanswered fan mail right now. Release productions or wait a few weeks!"
+                    .to_string()
+            } else {
+                "Aktuell liegt keine neue Fanpost vor. Veröffentliche Produktionen oder warte einige Wochen!"
+                    .to_string()
+            });
+        }
+        self.unanswered_fan_mails -= 1;
+        self.fans += 200;
+        self.hype = (self.hype + 5.0).min(250.0);
+        self.accessibility_reputation += 5;
+        Ok(if self.is_en() {
+            format!(
+                "Answered community fan mail! +200 fans, +5 hype ({} remaining).",
+                self.unanswered_fan_mails
+            )
+        } else {
+            format!(
+                "Fanpost herzlich beantwortet! +200 Fans und +5 Hype (noch {} offen).",
+                self.unanswered_fan_mails
+            )
+        })
+    }
+
+    pub fn release_patch(&mut self, idx: usize) -> Result<String, String> {
+        let is_en = self.is_en();
+        if idx >= self.game_history.len() {
+            return Err(if is_en {
+                "Invalid game index.".to_string()
+            } else {
+                "Ungültiges Spiel.".to_string()
+            });
+        }
+        if self.game_history[idx].bugs == 0 {
+            return Err(if is_en {
+                "This production already has 0 bugs!".to_string()
+            } else {
+                "Diese Produktion ist bereits komplett fehlerfrei (0 Bugs)!".to_string()
+            });
+        }
+        if self.money < 2_000 {
+            return Err(if is_en {
+                "Not enough money for a patch (2,000 EUR).".to_string()
+            } else {
+                "Nicht genug Geld für einen Patch (2.000 Euro).".to_string()
+            });
+        }
+        self.money -= 2_000;
+        let g = &mut self.game_history[idx];
+        g.bugs = 0;
+        g.patches_released += 1;
+        g.weeks_on_market = g.weeks_on_market.saturating_sub(3);
+        g.is_active = true;
+        let name = g.name.clone();
+        Ok(if is_en {
+            format!(
+                "Released patch for '{}'! Fixed all bugs and refreshed market interest.",
+                name
+            )
+        } else {
+            format!(
+                "Patch für '{}' veröffentlicht! Alle Bugs behoben und Verkäufe belebt.",
+                name
+            )
+        })
+    }
+
+    pub fn release_dlc(&mut self, idx: usize) -> Result<String, String> {
+        let is_en = self.is_en();
+        if idx >= self.game_history.len() {
+            return Err(if is_en {
+                "Invalid game index.".to_string()
+            } else {
+                "Ungültiges Spiel.".to_string()
+            });
+        }
+        if self.game_history[idx].dlc_count >= 2 {
+            return Err(if is_en {
+                "Maximum of 2 Addons/DLCs already released for this production!".to_string()
+            } else {
+                "Für diese Produktion wurden bereits die maximal 2 Addons/DLCs veröffentlicht!"
+                    .to_string()
+            });
+        }
+        if self.money < 6_000 {
+            return Err(if is_en {
+                "Not enough money for an Addon/DLC (6,000 EUR).".to_string()
+            } else {
+                "Nicht genug Geld für ein Addon/DLC (6.000 Euro).".to_string()
+            });
+        }
+        self.money -= 6_000;
+        let g = &mut self.game_history[idx];
+        g.dlc_count += 1;
+        let bonus_sales = (g.sales / 5).clamp(300, 50_000);
+        let bonus_rev = (bonus_sales as i64) * 15;
+        g.sales += bonus_sales;
+        g.revenue += bonus_rev;
+        let name = g.name.clone();
+        self.money += bonus_rev;
+        self.total_revenue += bonus_rev;
+        Ok(if is_en {
+            format!(
+                "Released Addon/DLC for '{}'! +{} sales, +{} EUR revenue!",
+                name, bonus_sales, bonus_rev
+            )
+        } else {
+            format!(
+                "Addon für '{}' veröffentlicht! +{} Verkäufe, +{} Euro Umsatz!",
+                name, bonus_sales, bonus_rev
+            )
+        })
+    }
+
+    // --- Persistence (Save/Load JSON with full Rust roundtrip & Legacy Python migration) ---
+
     pub fn to_json(&self) -> JsonValue {
         let mut m = BTreeMap::new();
         m.insert(
@@ -1966,8 +2095,21 @@ impl GameState {
         );
         m.insert("time_speed".into(), JsonValue::Number(self.time_speed));
         m.insert(
+            "developer_mode".into(),
+            JsonValue::Bool(self.developer_mode),
+        );
+        m.insert(
             "office_level".into(),
             JsonValue::Number(self.office_level as f64),
+        );
+        m.insert(
+            "office_upgrades".into(),
+            JsonValue::Array(
+                self.office_upgrades
+                    .iter()
+                    .map(|s| JsonValue::Str(s.clone()))
+                    .collect(),
+            ),
         );
         m.insert(
             "bought_platforms".into(),
@@ -2045,6 +2187,9 @@ impl GameState {
             "active_projects".into(),
             JsonValue::Array(self.active_projects.iter().map(|p| p.to_json()).collect()),
         );
+        if let Some(ref lfg) = self.last_finished_game {
+            m.insert("last_finished_game".into(), lfg.to_json());
+        }
         m.insert(
             "game_history".into(),
             JsonValue::Array(self.game_history.iter().map(|g| g.to_json()).collect()),
@@ -2059,12 +2204,45 @@ impl GameState {
             JsonValue::Number(self.goty_awards as f64),
         );
         m.insert(
+            "available_contracts".into(),
+            JsonValue::Array(
+                self.available_contracts
+                    .iter()
+                    .map(|c| c.to_json())
+                    .collect(),
+            ),
+        );
+        if let Some(ref ac) = self.active_contract {
+            m.insert("active_contract".into(), ac.to_json());
+        }
+        m.insert(
+            "next_contract_id".into(),
+            JsonValue::Number(self.next_contract_id as f64),
+        );
+        m.insert(
             "employees".into(),
             JsonValue::Array(self.employees.iter().map(|e| e.to_json()).collect()),
         );
         m.insert(
+            "hire_candidates".into(),
+            JsonValue::Array(self.hire_candidates.iter().map(|e| e.to_json()).collect()),
+        );
+        m.insert(
+            "next_employee_id".into(),
+            JsonValue::Number(self.next_employee_id as f64),
+        );
+        m.insert(
             "last_soundcon_year".into(),
             JsonValue::Number(self.last_soundcon_year as f64),
+        );
+        m.insert(
+            "soundcon_history".into(),
+            JsonValue::Array(
+                self.soundcon_history
+                    .iter()
+                    .map(|s| JsonValue::Str(s.clone()))
+                    .collect(),
+            ),
         );
         m.insert("label_active".into(), JsonValue::Bool(self.label_active));
         m.insert("label_name".into(), JsonValue::Str(self.label_name.clone()));
@@ -2093,6 +2271,11 @@ impl GameState {
             "merch_stock".into(),
             JsonValue::Number(self.merch_stock as f64),
         );
+        m.insert("jingle_bonus".into(), JsonValue::Number(self.jingle_bonus));
+        m.insert(
+            "unanswered_fan_mails".into(),
+            JsonValue::Number(self.unanswered_fan_mails as f64),
+        );
         m.insert(
             "rivals".into(),
             JsonValue::Array(self.rivals.iter().map(|r| r.to_json()).collect()),
@@ -2100,6 +2283,24 @@ impl GameState {
         m.insert(
             "emails".into(),
             JsonValue::Array(self.emails.iter().map(|e| e.to_json()).collect()),
+        );
+        m.insert(
+            "event_log".into(),
+            JsonValue::Array(
+                self.event_log
+                    .iter()
+                    .map(|s| JsonValue::Str(s.clone()))
+                    .collect(),
+            ),
+        );
+        m.insert(
+            "tutorials_completed".into(),
+            JsonValue::Array(
+                self.tutorials_completed
+                    .iter()
+                    .map(|s| JsonValue::Str(s.clone()))
+                    .collect(),
+            ),
         );
         m.insert("settings".into(), self.settings.to_json());
         JsonValue::Object(m)
@@ -2113,17 +2314,35 @@ impl GameState {
         s.hype = v.get_f64("hype", 10.0);
         s.week = v.get_u32("week", 1).max(1);
         s.time_speed = v.get_f64("time_speed", 1.0);
+        s.developer_mode = v.get_bool("developer_mode", false);
         s.office_level = v.get_usize("office_level", 0).min(OFFICE_LEVELS.len() - 1);
 
         let str_list = |key: &str| -> Option<Vec<String>> {
             v.get(key).and_then(|a| a.as_array()).map(|arr| {
                 arr.iter()
-                    .filter_map(|x| x.as_str().map(|st| st.to_string()))
+                    .filter_map(|x| {
+                        if let Some(st) = x.as_str() {
+                            Some(st.to_string())
+                        } else {
+                            x.get("name").and_then(|n| n.as_str()).map(|st| st.to_string())
+                        }
+                    })
                     .collect()
             })
         };
 
-        if let Some(list) = str_list("bought_platforms") {
+        if let Some(list) = str_list("office_upgrades") {
+            s.office_upgrades = list;
+        }
+        if let Some(mut list) = str_list("bought_platforms") {
+            let cal_year = START_YEAR + (s.week.saturating_sub(1)) / WEEKS_PER_YEAR;
+            if cal_year < 1981 {
+                for p in &mut list {
+                    if p == "PC (MS-DOS)" {
+                        *p = "Radio-Sendernetz (AM)".to_string();
+                    }
+                }
+            }
             if !list.is_empty() {
                 s.bought_platforms = list;
             }
@@ -2151,8 +2370,15 @@ impl GameState {
             }
         }
         s.pending_research = v.get("pending_research").map(PendingResearch::from_json);
-        s.trend_topic = v.get_str("trend_topic", "Radio-Drama");
-        s.trend_genre = v.get_str("trend_genre", "Abenteuer");
+
+        if v.get("trend_topic").is_some() {
+            s.trend_topic = v.get_str("trend_topic", "Radio-Drama");
+            s.trend_genre = v.get_str("trend_genre", "Abenteuer");
+        } else if let Some(ct) = v.get("current_trend") {
+            s.trend_topic = ct.get_str("topic", "Radio-Drama");
+            s.trend_genre = ct.get_str("genre", "Abenteuer");
+        }
+
         s.sales_multiplier = v.get_f64("sales_multiplier", 1.0);
         s.marketing_efficiency = v.get_f64("marketing_efficiency", 1.0);
         s.accessibility_reputation = v.get_u32("accessibility_reputation", 25);
@@ -2160,12 +2386,21 @@ impl GameState {
         if let Some(arr) = v.get("active_projects").and_then(|a| a.as_array()) {
             s.active_projects = arr.iter().map(ActiveProject::from_json).collect();
         }
+        if let Some(lfg) = v.get("last_finished_game") {
+            s.last_finished_game = Some(GameProject::from_json(lfg));
+        }
         if let Some(arr) = v.get("game_history").and_then(|a| a.as_array()) {
             s.game_history = arr.iter().map(GameProject::from_json).collect();
         }
         s.high_score = v.get_f64("high_score", 0.0);
         s.total_revenue = v.get_i64("total_revenue", 0);
-        s.goty_awards = v.get_u32("goty_awards", 0);
+        s.goty_awards = v.get_u32("goty_awards", v.get_u32("my_goty_wins", 0));
+
+        if let Some(arr) = v.get("available_contracts").and_then(|a| a.as_array()) {
+            s.available_contracts = arr.iter().map(ContractProject::from_json).collect();
+        }
+        s.active_contract = v.get("active_contract").map(ContractProject::from_json);
+        s.next_contract_id = v.get_u32("next_contract_id", s.next_contract_id);
 
         if let Some(arr) = v.get("employees").and_then(|a| a.as_array()) {
             let parsed: Vec<Employee> = arr.iter().map(Employee::from_json).collect();
@@ -2173,21 +2408,76 @@ impl GameState {
                 s.employees = parsed;
             }
         }
-        s.last_soundcon_year = v.get_u32("last_soundcon_year", 0);
-        s.label_active = v.get_bool("label_active", false);
-        s.label_name = v.get_str("label_name", "");
+        if let Some(arr) = v.get("hire_candidates").and_then(|a| a.as_array()) {
+            let parsed: Vec<Employee> = arr.iter().map(Employee::from_json).collect();
+            if !parsed.is_empty() {
+                s.hire_candidates = parsed;
+            }
+        }
+        s.next_employee_id = v.get_u32("next_employee_id", s.next_employee_id);
+        s.last_soundcon_year =
+            v.get_u32("last_soundcon_year", v.get_u32("soundcon_last_year", 0));
+        if let Some(arr) = v.get("soundcon_history").and_then(|a| a.as_array()) {
+            s.soundcon_history = arr
+                .iter()
+                .filter_map(|item| {
+                    if let Some(st) = item.as_str() {
+                        Some(st.to_string())
+                    } else if item.as_object().is_some() {
+                        let yr = item.get_u32("year", 1995);
+                        let tier = item.get_str("booth_tier", "Standard");
+                        Some(format!("SoundCon {} ({})", yr, tier))
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+        }
+
+        if v.get("label_active").is_some() {
+            s.label_active = v.get_bool("label_active", false);
+            s.label_name = v.get_str("label_name", "");
+        } else if let Some(lbl_obj) = v.get("soundtrack_label").and_then(|l| l.as_object()) {
+            if !lbl_obj.is_empty() {
+                s.label_active = true;
+                s.label_name = v
+                    .get("soundtrack_label")
+                    .map(|l| {
+                        let fallback = l.get_str("name", &format!("{} Records", s.company_name));
+                        l.get_str("label_name", &fallback)
+                    })
+                    .unwrap_or_default();
+            }
+        }
+
         s.subscription_active = v.get_bool("subscription_active", false);
         s.subscription_price = v.get_f64("subscription_price", 9.99);
         s.subscription_subscribers = v.get_i64("subscription_subscribers", 0).max(0) as u64;
 
-        if let Some(arr) = v.get("custom_soundcards").and_then(|a| a.as_array()) {
+        if let Some(arr) = v
+            .get("custom_soundcards")
+            .or_else(|| v.get("sound_card_projects"))
+            .and_then(|a| a.as_array())
+        {
             s.custom_soundcards = arr.iter().map(CustomSoundCard::from_json).collect();
         }
         if let Some(arr) = v.get("custom_consoles").and_then(|a| a.as_array()) {
             s.custom_consoles = arr.iter().map(CustomConsole::from_json).collect();
         }
-        s.bank_loan = v.get_i64("bank_loan", 0);
+
+        if let Some(loan_val) = v.get("bank_loan") {
+            if let Some(n) = loan_val.as_f64() {
+                s.bank_loan = n.round() as i64;
+            } else if loan_val.as_object().is_some() {
+                s.bank_loan = loan_val.get_i64(
+                    "amount_remaining",
+                    loan_val.get_i64("amount_borrowed", loan_val.get_i64("borrowed", 0)),
+                );
+            }
+        }
         s.merch_stock = v.get_i64("merch_stock", 0).max(0) as u64;
+        s.jingle_bonus = v.get_f64("jingle_bonus", 0.0);
+        s.unanswered_fan_mails = v.get_u32("unanswered_fan_mails", 1);
 
         if let Some(arr) = v.get("rivals").and_then(|a| a.as_array()) {
             let parsed: Vec<RivalStudio> = arr.iter().map(RivalStudio::from_json).collect();
@@ -2197,6 +2487,12 @@ impl GameState {
         }
         if let Some(arr) = v.get("emails").and_then(|a| a.as_array()) {
             s.emails = arr.iter().map(Email::from_json).collect();
+        }
+        if let Some(list) = str_list("event_log") {
+            s.event_log = list;
+        }
+        if let Some(list) = str_list("tutorials_completed") {
+            s.tutorials_completed = list;
         }
         if let Some(sv) = v.get("settings") {
             s.settings = Settings::from_json(sv);

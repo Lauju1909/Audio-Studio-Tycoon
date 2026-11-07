@@ -255,12 +255,21 @@ impl ActiveProject {
             .get("project")
             .map(GameProject::from_json)
             .unwrap_or_else(|| GameProject::from_json(&JsonValue::Object(BTreeMap::new())));
+        let progress_weeks = v
+            .get("progress_weeks")
+            .and_then(|x| x.as_f64())
+            .unwrap_or_else(|| v.get_f64("progress", 0.0));
+        let crunch_active = if v.get("crunch_active").is_some() {
+            v.get_bool("crunch_active", false)
+        } else {
+            v.get_bool("crunch", false)
+        };
         Self {
             project: proj,
-            progress_weeks: v.get_f64("progress_weeks", 0.0),
+            progress_weeks,
             total_weeks: v.get_u32("total_weeks", 6).max(1),
             bugs: v.get_u32("bugs", 0),
-            crunch_active: v.get_bool("crunch_active", false),
+            crunch_active,
             ready_to_finish: v.get_bool("ready_to_finish", false),
         }
     }
@@ -376,20 +385,54 @@ impl Employee {
     }
 
     pub fn from_json(v: &JsonValue) -> Self {
+        let skills_obj = v.get("skills");
+        let s_sound = if v.get("skill_sound").is_some() {
+            v.get_u32("skill_sound", 55)
+        } else if let Some(sk) = skills_obj {
+            sk.get_u32("Sound", 55)
+        } else {
+            55
+        };
+        let s_code = if v.get("skill_code").is_some() {
+            v.get_u32("skill_code", 45)
+        } else if let Some(sk) = skills_obj {
+            sk.get_u32("Programmierung", sk.get_u32("Code", 45))
+        } else {
+            45
+        };
+        let s_story = if v.get("skill_story").is_some() {
+            v.get_u32("skill_story", 50)
+        } else if let Some(sk) = skills_obj {
+            sk.get_u32("Story", 50)
+        } else {
+            50
+        };
+        let s_gfx = if v.get("skill_graphics").is_some() {
+            v.get_u32("skill_graphics", 40)
+        } else if let Some(sk) = skills_obj {
+            sk.get_u32("Grafik", 40)
+        } else {
+            40
+        };
+        let trait_name = if v.get("trait_name").is_some() {
+            v.get_str("trait_name", "Perfektionist")
+        } else {
+            v.get_str("trait", "Perfektionist")
+        };
         Self {
             id: v.get_u32("id", 1),
             name: v.get_str("name", "Studio-Gründer (CEO)"),
             role: v.get_str("role", "Sound-Designer"),
-            trait_name: v.get_str("trait_name", "Perfektionist"),
-            skill_sound: v.get_u32("skill_sound", 55),
-            skill_code: v.get_u32("skill_code", 45),
-            skill_story: v.get_u32("skill_story", 50),
-            skill_graphics: v.get_u32("skill_graphics", 40),
+            trait_name,
+            skill_sound: s_sound,
+            skill_code: s_code,
+            skill_story: s_story,
+            skill_graphics: s_gfx,
             salary: v.get_i64("salary", 0),
             morale: v.get_u32("morale", 100).min(100),
             fatigue: v.get_u32("fatigue", 0).min(100),
             is_ceo: v.get_bool("is_ceo", false),
-            vacation_weeks_left: v.get_u32("vacation_weeks_left", 0),
+            vacation_weeks_left: v.get_u32("vacation_weeks_left", v.get_u32("vacation_weeks", 0)),
             training_weeks_left: v.get_u32("training_weeks_left", 0),
             level: v.get_u32("level", 1).max(1),
         }
@@ -436,22 +479,29 @@ impl Engine {
     }
 
     pub fn from_json(v: &JsonValue) -> Self {
-        let features = v
+        let features: Vec<String> = v
             .get("features")
             .and_then(|a| a.as_array())
             .map(|list| {
                 list.iter()
-                    .filter_map(|i| i.as_str().map(|s| s.to_string()))
+                    .filter_map(|i| {
+                        if let Some(s) = i.as_str() {
+                            Some(s.to_string())
+                        } else {
+                            i.get("name").and_then(|n| n.as_str()).map(|s| s.to_string())
+                        }
+                    })
                     .collect()
             })
             .unwrap_or_default();
+        let default_bonus = (0.05 + features.len() as f64 * 0.03).min(0.60);
         Self {
             name: v.get_str("name", "Basis-Tonstudio V1"),
-            features,
-            tech_level: v.get_u32("tech_level", 1),
-            quality_bonus: v.get_f64("quality_bonus", 0.05),
+            tech_level: v.get_u32("tech_level", (features.len() as u32 / 2).max(1)),
+            quality_bonus: v.get_f64("quality_bonus", default_bonus),
             license_fee: v.get_i64("license_fee", 10_000),
-            licensed_out: v.get_bool("licensed_out", false),
+            licensed_out: v.get_bool("licensed_out", v.get_bool("is_licensed", false)),
+            features,
         }
     }
 }
@@ -593,13 +643,15 @@ impl Email {
     }
 
     pub fn from_json(v: &JsonValue) -> Self {
+        let week = v.get_u32("week", v.get_u32("date_week", 1));
+        let default_year = 1930 + (week.saturating_sub(1)) / 48;
         Self {
             sender: v.get_str("sender", "System"),
             subject: v.get_str("subject", "Info"),
             body: v.get_str("body", ""),
-            week: v.get_u32("week", 1),
-            year: v.get_u32("year", 1930),
-            read: v.get_bool("read", false),
+            week,
+            year: v.get_u32("year", default_year),
+            read: v.get_bool("read", v.get_bool("is_read", false)),
         }
     }
 }
