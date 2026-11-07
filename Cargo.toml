@@ -1,0 +1,20 @@
+[package]
+name = "audio_studio_tycoon"
+version = "4.3.0"
+edition = "2021"
+authors = ["Laurin & Antigravity AI"]
+description = "Audio Studio Tycoon - 100% Accessible Audio & Game Studio Simulation in Rust"
+
+[lib]
+name = "audio_studio_tycoon"
+path = "src/lib.rs"
+
+[[bin]]
+name = "audio_studio_tycoon"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = false
