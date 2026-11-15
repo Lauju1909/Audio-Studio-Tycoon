@@ -2,39 +2,61 @@
 
 > [!IMPORTANT]
 > **100% Screenreader-optimiert & Nativ in Rust (64-Bit)!**
-> Dieses Spiel wurde komplett in **Rust** neu entwickelt, um maximale Geschwindigkeit (Simulation & Start in wenigen Millisekunden), absolute Absturzsicherheit und eine von Grund auf durchdachte, logische Spielmechanik von **1930 bis in die Zukunft (2035+)** zu bieten. Es nutzt direktes 64-Bit FFI für **Prism (`prism.dll`)** und **Tolk (`Tolk.dll`)** (NVDA, JAWS, Windows OneCore, SAPI, Braille) sowie native Win32/WinMM-Audioausgabe.
+> Dieses Spiel wurde komplett in **Rust** entwickelt, um maximale Geschwindigkeit (Simulation & Start in wenigen Millisekunden), hohe Stabilität und eine durchgängig logische Spielmechanik von **1930 bis in die Zukunft (2035+)** zu bieten. Es nutzt direktes 64-Bit-FFI für **Prism (`prism.dll`)** und **Tolk (`Tolk.dll`)** (NVDA, JAWS, Windows OneCore, SAPI, Braille) sowie native Win32/WinMM-Audioausgabe. Die Benutzeroberfläche und Sprachausgabe lassen sich jederzeit per `F8` oder `Strg+L` nahtlos zwischen **Deutsch** und **Englisch** umschalten.
 
 ---
 
-## Was ist neu in Version 4.3.0 (Rust-Überarbeitung)?
+## Was ist neu & welche Tycoon-Mechaniken stecken in Version 4.3.0?
 
-1. **Komplette Portierung auf Rust (Zero-Dependency Native 64-Bit Engine):**
-   - Sofortiger Programmstart ohne Python-/Pygame-Overhead.
-   - Native Win32-Oberfläche (`user32.dll` / `gdi32.dll` Double-Buffered High-Contrast Dark UI) und verzögerungsfreie WAV/MP3-Effekte über `winmm.dll`.
-   - Dedizierter Hintergrund-Thread für `prism.dll` und `Tolk.dll` verhindert jegliches Ruckeln bei der Sprachausgabe und beendet sich sauber (`stop -> free -> shutdown`).
+### 1. Native 64-Bit Rust Engine & Barrierefreiheit
+- Sofortiger Programmstart ohne Python- oder Pygame-Overhead.
+- Native Win32-Oberfläche (`user32.dll` / `gdi32.dll`, Double-Buffered High-Contrast Dark UI) und verzögerungsfreie WAV/MP3-Effekte über `winmm.dll`.
+- Dedizierter Hintergrund-Thread für `prism.dll` und `Tolk.dll` verhindert jegliches Ruckeln bei der Sprachausgabe und fährt beim Beenden sauber herunter (`stop -> free -> shutdown`).
+- Akustischer Grenz-Bump am Anfang und Ende jeder Liste, Sprach-Wiederholung/Statusabfragen (`F`, `S`, `H`) sowie persistente Speicherslots (`save_slot_*.json`) und Einstellungen (`settings.json`).
 
-2. **Überarbeitetes, 100% logisches Spieldesign ("Dass alles Sinn macht"):**
-   - **Historisch stimmige Zeitlinie (7 Ären von 1930 bis 2035+):**
-     - **1930–1949:** Goldene Radio- & Schellack-Ära (`Radio-Sendernetz (AM)`, `Schellack-Hörspielplatte (78 RPM)`, `Mechanischer Spielautomat`) — kein unlogischer Start mit MS-DOS im Jahr 1930 mehr!
-     - **1950–1969:** Transistor-, Vinyl-LP- & Mainframe-Ära (`Vinyl-LP`, `Früher Großrechner`, `Tonband-Kassette`).
-     - **1970–1982:** Frühe Arcade- & 8-Bit-Pionierzeit (`Arcade-Automat`, `Atari VCS`, `Commodore 64 (SID)`).
-     - **1983–1993:** 16-Bit Heimcomputer, FM-Synthese & Konsolen-Boom (`PC (MS-DOS / AdLib)`, `Commodore Amiga`, `NES`, `Game Boy`, `SNES`, `Sega Mega Drive`).
-     - **1994–2005:** CD-ROM, 3D-Audio & frühes Internet (`PC Windows CD-ROM`, `PlayStation`, `Nintendo 64`, `PlayStation 2`, `Xbox`).
-     - **2006–2017:** HD-Gaming, Digitaler Vertrieb & Mobile (`PC Digital / Steam`, `Xbox 360`, `PlayStation 3/4`, `Smartphone`, `Nintendo Switch`).
-     - **2018–2035+:** Spatial Audio, VR, Cloud & Neural-Gaming (`PlayStation 5 (Tempest 3D)`, `VR-Headset (Binaural)`, `Neural-Audio Interface`).
-   - **Sinnvolle Themen-Genre-Kompatibilitätsmatrix:**
-     - Alle 29 Themen und 11 Genres haben handgeprüfte, logische Synergien (0 bis 3 Sterne) statt Zufallszahlen.
-     - Beispiele: *Fantasy + RPG = 3/3 (Perfekt)*, *Rennwagen + Rennspiel = 3/3 (Perfekt)*, *Schach + Strategie/Puzzle = 3/3 (Perfekt)*, *Radio-Drama + Abenteuer/Horror = 3/3 (Perfekt)*, *Cyberpunk + RPG/Action = 3/3 (Perfekt)*.
-     - Im Genre-Auswahlmenü zeigt das Spiel die Synergie zum gewählten Thema direkt an!
-   - **Transparente Slider-Profile & Empfehlungsfunktion:**
-     - Jedes Genre hat ein klares, logisches Idealprofil über die 6 Studio-Slider (*Gameplay, Grafik/Kulisse, Sound & Musik, Story & Dialoge, KI & Spiellogik, Welt & Atmosphäre*, Summe = 30 Punkte).
-     - Auf Wunsch kann im Slider-Menü das empfohlene Genre-Profil direkt per Tastendruck geladen oder feinjustiert werden.
-   - **Strikte Jahres-Freischaltung (Year-Gating) aller Subsysteme:**
-     - **Hardware-Labor (Eigene Soundkarten & Konsolen):** ab **1975** (oder mit Forschung *Hardware-Labor*).
-     - **Eigenes Soundtrack-Label (OST-Alben & Live-Konzerte):** ab **1985**.
-     - **SoundCon Messe & AudioPass-Abo-Dienst:** ab **1995**.
-   - **Sinnvolles Personal-, Urlaubs- & Schulungssystem:**
-     - Mitarbeiter im Erholungsurlaub oder in einer Fortbildung werden aktiv aus `active_employees()` herausgefiltert und kehren nach Ablauf erholt bzw. höherstufig zurück.
+### 2. Historisch stimmige Zeitlinie (1930–2035+, 7 Ären & 38 Plattformen, 48 Wochen/Jahr)
+- **1930–1949 — Goldene Radio- & Schellack-Ära:** u. a. `Radio-Sendernetz (AM)`, `Schellack-Schallplatte (78 RPM)`, `Mechanischer Spielautomat`, `Zuse Z3 (Relais-Rechner)`, `ENIAC Röhrenrechner`.
+- **1950–1969 — Magnetband-, Stereo- & Mainframe-Ära:** u. a. `Vinyl-LP (33 RPM)`, `UNIVAC I Mainframe`, `UKW-Transistorradio (FM)`, `PDP-1 (Spacewar-System)`, `Kompaktkassette (MC Stereo)`, `IBM System/360`.
+- **1970–1979 — Arcade- & Analog-Synthesizer-Ära:** u. a. `Arcade-Automat (Münzspiel)`, `Magnavox Odyssey`, `Atari 2600 (VCS)`, `Apple II`.
+- **1980–1989 — 8-Bit Heimcomputer, FM-Synthese & CD-Ära:** u. a. `PC (MS-DOS / Soundkarte)`, `Commodore 64 (SID 6581)`, `ZX Spectrum`, `Famicom (NES)`, `Commodore Amiga (Paula)`, `Sega Genesis (Mega Drive)`, `Game Boy`.
+- **1990–1999 — 16/32-Bit Multimedia & 3D-Audio-Ära:** u. a. `SNES (Super Nintendo)`, `PlayStation 1`, `Nintendo 64`, `Dreamcast`.
+- **2000–2014 — Online-, Digitalvertrieb- & HD-Audio-Ära:** u. a. `PlayStation 2`, `PC (Digital / Steam)`, `Xbox 360`, `PlayStation 3`, `Smartphone (iOS / Android)`, `PlayStation 4`.
+- **2015–2035+ — Spatial Audio, VR, KI & Neural-Ära:** u. a. `VR-Headset (Spatial Audio)`, `Switch`, `PlayStation 5`, `Steam Deck`, `Neural-Box 1 (BCI Audio)`.
+- Jährliche historische Ereignisse aktualisieren dynamisch die aktuellen **Markttrends** (Trend-Thema & Trend-Genre).
+
+### 3. Tiefgehende Spielentwicklungs- & Publisher-Mechaniken
+- **Themen- & Genre-Kompatibilität (29 Themen, 11 Genres):**
+  - 8 Startthemen (+ 21 erforschbare) und 4 Startgenres (+ 7 erforschbare) mit handgeprüfter Synergie-Matrix (`0` bis `3` Sterne), die direkt in der Auswahl angezeigt wird.
+- **Zielgruppen-Kompatibilität (`Jeder`, `Jugendliche`, `Hardcore-Gamer`):**
+  - Jede Kombination aus Thema, Genre und Zielgruppe besitzt eine eigene Passungsstufe (`3/3 Perfekt` mit `+0,04` Qualitätsbonus & `1,20x` Verkaufsfaktor, `2/3 Passend` neutral, `1/3 Unpassend` mit `-0,07` Abzug & `0,65x` Verkaufsfaktor).
+- **Transparente 6-Slider-Profile & Empfehlungsfunktion:**
+  - Jedes Genre hat ein klares Idealprofil über die 6 Studio-Slider (*Gameplay, Grafik, Sound, Story, KI, Welt*; Summe = `30` Punkte, max. `10` pro Slider). Im Entwicklungsmenü lässt sich das empfohlene Genre-Profil direkt laden oder manuell verfeinern.
+- **Fortsetzungen & Franchise-System (Sequels):**
+  - Bestehende Titel können als Fortsetzung entwickelt werden (inkl. automatischer Nummerierung bei leerem Titel). Eine **neue eigene Custom-Audio-Engine** (höheres `tech_level`) bringt `+6%` Qualitätsbonus (`+0,06`), `+20` Hype und `1,25x` Verkaufsfaktor — das Wiederverwenden derselben oder einer älteren Engine führt dagegen zu `-4%` Franchise-Ermüdung.
+- **Vertrieb: Eigenvertrieb vs. Publisher-Verträge (5 Optionen):**
+  - **Eigenvertrieb:** `0 €` Vorschuss, `0%` Umsatzabzug, `1,0x` Reichweite.
+  - **4 Publisher** (*ÄtherWelle Verlag*, *Polyphonie Records*, *Global Sonic Interactive*, *OmniMedia Imperial*): gewähren einen direkten Cash-Vorschuss (`+8.000 €` bis `+150.000 €`) sowie höhere Marktreichweite (`1,25x` bis `2,15x`) gegen Umsatzbeteiligung (`25%` bis `40%`) und ein Review-Mindestziel (`5,5` bis `8,5`). Wird das Ziel erreicht, gibt es `+300` Fans & `+15` Hype; bei Verfehlen sinkt der Hype um `8`.
+- **Kreative Studio-Entscheidungen während der Produktion *(1× pro Projekt)*:**
+  - *Live-Foley- & Akustik-Session* (`3.000 €`): `+6%` Qualität, `+12` Hype.
+  - *Signal- & Code-Refactoring* (`0 €`): entfernt alle aktuellen Bugs, `+4%` Qualität, `+1` Woche Entwicklungszeit.
+  - *Community-Playtest* (`2.000 €`): `+5%` Qualität, `+250` Fans, `+15` Hype.
+- **Vor-Release QA-Feinschliff & Mastering:**
+  - Bis zu `3` Durchläufe für je `1.500 €`: behebt bis zu `4` Bugs und gewährt jeweils `+3%` Qualitätsbonus (`+0,03`).
+- **Post-Mortem Spielbericht & Post-Release-Support:**
+  - **Post-Mortem Analyse** *(1× pro veröffentlichtem Spiel)*: analysiert Thema-Genre-Synergie, Zielgruppen-Passung und die größte Slider-Abweichung vom Genre-Ideal, sendet eine Auswertungs-E-Mail und belohnt mit `+200` Fans, `+15` Hype sowie `+15` Studio-Know-How.
+  - **Patches (`2.000 €`)** bereinigen verbliebene Bugs und frischen die aktiven Verkaufswochen auf; bis zu **2 DLCs pro Titel** (je `6.000 €`) verlängern den Lebenszyklus.
+
+### 4. Studio-Ausbau, Auftragsarbeiten, Personal & Year-Gating
+- **4 Schwierigkeitsgrade** (Startkapital `25.000 €` bis `150.000 €`) und **5 Studio-Ausbaustufen** (Platz für `2`, `4`, `8`, `14` oder `24` Mitarbeiter) plus Studio-Perks (z. B. Mischpult, Foley-Studio).
+- **Auftragsarbeiten:** 4 ära-skalierte Vertragstypen für sichere Einnahmen bei pünktlichem Abschluss (oder Vertragsstrafe bei Fristüberschreitung).
+- **Personal, Fortbildung & Erholungsurlaub:**
+  - Fortbildungen (`5.000 €`, `2` Wochen) steigern alle Skills um `+6` und das Mitarbeiter-Level um `+1` (während Urlaub nicht startbar).
+  - Erholungsurlaub (`1.000 €`, `3` Wochen) regeneriert Moral & Ausdauer; beurlaubte oder fortgebildete Mitarbeiter werden aktiv aus `active_employees()` gefiltert.
+- **21 Engine-Features (1930–2026) & 10 Forschungstechnologien (1930–2022).**
+- **Strikte Jahres-Freischaltungen (Year-Gating):**
+  - **Hardware-Labor (Eigene Soundkarten & Konsolen):** ab **1975** (oder mit entsprechender Forschung).
+  - **Eigenes Soundtrack-Label:** ab **1985**.
+  - **SoundCon Messe & AudioPass-Abo-Dienst:** ab **1995**.
 
 ---
 
@@ -43,17 +65,18 @@
 | Taste | Funktion |
 | :--- | :--- |
 | **Pfeil Auf / Ab** | Navigation in Menüs und Listen (mit akustischem Grenz-Bump am Anfang/Ende) |
-| **Pfeil Links / Rechts** | Werte anpassen (6 Studio-Slider, Lautstärke, Abo-Preis) |
-| **Enter** | Auswahl bestätigen |
+| **Pfeil Links / Rechts** | Werte anpassen (6 Studio-Slider, Lautstärke, Abo-Preis, Auswahlfelder) |
+| **Enter** | Auswahl bestätigen / Aktion ausführen |
 | **Backspace / Esc** | Zurück zum vorherigen Menü |
 | **Leertaste / 0** | Spielzeit pausieren / fortsetzen |
-| **1, 2, 3** | Spielgeschwindigkeit (Normal, Schnell, Ultra) |
+| **1, 2, 3** | Spielgeschwindigkeit (`1x`, `2x`, Ultra `4x`) |
 | **W** | Eine Woche manuell voranschreiten |
 | **F** | **Finanz-Übersicht** (Kontostand, Gehälter, Miete, Kredit, Umsatz) sofort vorlesen |
 | **S** | **Studio-Status** (Datum, Ära, Fans, Hype, Team, aktives Projekt, Trend) sofort vorlesen |
-| **H / F1** | Tastenbelegung & Hilfe vorlesen |
-| **F8 / Strg+L** | **Sprache sofort umschalten** (Deutsch <-> Englisch) bei gleicher Cursor-Position |
-| **F9 / F10** | Entwickler-Modus umschalten / Entwickler-Menü öffnen |
+| **H** | Tastenbelegung & Hilfe vorlesen |
+| **F8 / Strg+L** | **Sprache sofort umschalten** (`Deutsch <-> Englisch`) bei gleicher Cursor-Position |
+| **Strg+Shift+D** | Entwickler-Modus ein-/ausschalten |
+| **D** | Entwickler-Menü öffnen (wenn Entwickler-Modus aktiv ist) |
 
 ---
 
@@ -65,10 +88,11 @@ Audio_Studio_Tycoon.exe
 ```
 oder über `run_game.bat` bzw. `cargo run --release`.
 
-### Automatisierte Tests & Release-Build ausführen
+### Automatisierte Tests, Headless-Verifikation & Release-Build
 ```bat
 cargo test
 cargo build --release
 Audio_Studio_Tycoon.exe --verify
 ```
-oder einfach per Doppelklick auf `build_game.bat`.
+oder einfach per Doppelklick auf `build_game.bat` (führt `cargo test`, `cargo build --release`, den Kopierschritt nach `Audio_Studio_Tycoon.exe` und `--verify` automatisch aus).
+Für eine schnelle CLI-Prüfung unterstützt die Executable außerdem `--version` (`-V`) und `--headless-demo`.

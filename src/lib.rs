@@ -606,4 +606,124 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn test_tycoon_core_loop_sequels_publishers_audience_polish_and_post_mortem() {
+        // 1. Target Audience Compatibility
+        assert_eq!(get_audience_compatibility("Horrorhaus", "Horror", "Jeder"), 1);
+        assert_eq!(
+            get_audience_compatibility("Horrorhaus", "Horror", "Hardcore-Gamer"),
+            3
+        );
+        assert_eq!(get_audience_compatibility("Freizeitpark", "Casual", "Jeder"), 3);
+        assert_eq!(
+            get_audience_compatibility("Freizeitpark", "Casual", "Hardcore-Gamer"),
+            1
+        );
+
+        // 2. Publisher advance enables cash-strapped / slightly overdrawn studio to fund production
+        let mut state = GameState::new(2, 1930);
+        state.money = 10_000;
+        // Unlicensed platform (Mechanischer Spielautomat = 8,000 EUR) + Small project (6,000 EUR) = 14,000 EUR > 10,000 EUR
+        state.current_draft.platform = "Mechanischer Spielautomat".to_string();
+        state.current_draft.publisher_idx = 0;
+        assert!(
+            state.start_game_project().is_err(),
+            "Must reject unlicensed platform + dev cost exceeding cash before mutating state"
+        );
+        assert!(
+            !state
+                .bought_platforms
+                .iter()
+                .any(|p| p == "Mechanischer Spielautomat"),
+            "Failed project start must not auto-buy platform license"
+        );
+        assert_eq!(state.money, 10_000);
+
+        state.current_draft.platform = "Radio-Sendernetz (AM)".to_string();
+        state.money = -1_000; // Overdrawn after monthly overhead; Small project costs 6,000 EUR
+        state.current_draft.name = "Aether Detective".to_string();
+        state.current_draft.topic = "Detektiv".to_string();
+        state.current_draft.genre = "Abenteuer".to_string();
+        state.current_draft.sliders = get_ideal_sliders("Abenteuer");
+        state.current_draft.publisher_idx = 0; // Self-publishing -> should fail with -1,000 EUR
+        assert!(state.start_game_project().is_err());
+
+        // Sign with AetherWave Publishing (+8,000 EUR advance) -> net cash becomes -1,000 - 6,000 + 8,000 = 1,000 EUR
+        state.current_draft.publisher_idx = 1;
+        state
+            .start_game_project()
+            .expect("Publisher advance should rescue overdrawn studio and fund project");
+        assert_eq!(state.money, 1_000);
+        assert_eq!(state.active_projects[0].project.publisher_idx, 1);
+
+        // 3. Mid-production creative studio decision & Pre-Release QA Polish
+        state.money = 50_000;
+        state.active_projects[0].bugs = 6;
+        assert!(state.apply_studio_decision(0, 0).is_ok());
+        assert!(
+            state.apply_studio_decision(0, 1).is_err(),
+            "Only one studio decision allowed per project"
+        );
+        assert!(state.polish_active_project(0).is_ok());
+        assert_eq!(state.active_projects[0].bugs, 2);
+        assert_eq!(state.active_projects[0].polish_passes, 1);
+
+        for _ in 0..6 {
+            state.tick_week();
+        }
+        state.active_projects[0].bugs = 0;
+        let finished = state.finish_ready_project(0).expect("Should finish project");
+        assert!(finished.review.unwrap().average() >= 7.0);
+
+        // 4. Post-Mortem Game Report (once per released game, syncs last_finished_game too)
+        let fans_before = state.fans;
+        let rep_before = state.accessibility_reputation;
+        assert!(state.analyze_post_mortem(0).is_ok());
+        assert!(state.game_history[0].post_mortem_done);
+        assert!(
+            state
+                .last_finished_game
+                .as_ref()
+                .map(|g| g.post_mortem_done)
+                .unwrap_or(false),
+            "last_finished_game must also mark post_mortem_done = true"
+        );
+        assert_eq!(state.fans, fans_before + 200);
+        assert_eq!(state.accessibility_reputation, rep_before + 15);
+        assert!(
+            state.analyze_post_mortem(0).is_err(),
+            "Post-Mortem must not be repeatable on the same game"
+        );
+
+        // 5. Sequel on an upgraded Custom Audio Engine + Save/Load Roundtrip
+        state.money = 200_000;
+        state.unlocked_features.push("Magnetband-Aufnahme".to_string());
+        state
+            .unlocked_features
+            .push("Vakuum-Röhren-Verstärker".to_string());
+        state.build_custom_engine("KlangEngine V2").unwrap();
+        state.current_draft.sequel_of = Some("Aether Detective".to_string());
+        state.current_draft.topic = "Detektiv".to_string();
+        state.current_draft.genre = "Abenteuer".to_string();
+        state.current_draft.sliders = get_ideal_sliders("Abenteuer");
+        let hype_before = state.hype;
+        state.start_game_project().expect("Should start sequel");
+        assert_eq!(state.active_projects[0].project.name, "Aether Detective 2");
+        assert_eq!(state.active_projects[0].project.sequel_number, 2);
+        assert!(
+            state.active_projects[0].project.quality_boost > 0.0,
+            "Sequel on newer engine must receive positive quality boost"
+        );
+        assert!(state.hype > hype_before);
+
+        // Verify JSON roundtrip preserves all new fields
+        let json = state.to_json();
+        let restored = GameState::from_json(&json);
+        assert!(restored.game_history[0].post_mortem_done);
+        assert_eq!(restored.game_history[0].publisher_idx, 1);
+        assert_eq!(restored.active_projects[0].project.name, "Aether Detective 2");
+        assert_eq!(restored.active_projects[0].project.sequel_number, 2);
+        assert!(restored.active_projects[0].project.quality_boost > 0.0);
+    }
 }

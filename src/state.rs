@@ -651,16 +651,51 @@ impl GameState {
 
     pub fn start_game_project(&mut self) -> Result<String, String> {
         let cost = self.current_draft.base_dev_cost();
-        if self.money < cost {
+        let pub_idx = self
+            .current_draft
+            .publisher_idx
+            .min(PUBLISHERS.len().saturating_sub(1));
+        let pub_spec = &PUBLISHERS[pub_idx];
+
+        let plat = self.current_draft.platform.clone();
+        let mut pending_license_fee = 0;
+        let is_licensed = self.bought_platforms.iter().any(|p| p == &plat)
+            || self.custom_consoles.iter().any(|c| c.name == plat);
+        if !is_licensed {
+            let year = self.calendar_year();
+            let spec = PLATFORMS
+                .iter()
+                .find(|p| p.name == plat)
+                .ok_or_else(|| "Unbekannte Plattform.".to_string())?;
+            if year < spec.unlock_year {
+                return Err(if self.is_en() {
+                    format!(
+                        "{} is not available until {}.",
+                        spec.name, spec.unlock_year
+                    )
+                } else {
+                    format!(
+                        "{} ist erst ab dem Jahr {} verfügbar.",
+                        spec.name, spec.unlock_year
+                    )
+                });
+            }
+            pending_license_fee = spec.license_fee;
+        }
+
+        let total_upfront_cost = cost + pending_license_fee;
+        let net_upfront_needed = (total_upfront_cost - pub_spec.advance).max(0);
+
+        if self.money - total_upfront_cost + pub_spec.advance < 0 {
             return Err(if self.is_en() {
                 format!(
-                    "Not enough money! Starting this project requires {} EUR.",
-                    cost
+                    "Not enough money! Starting this project requires {} EUR (after publisher advance of {} EUR).",
+                    net_upfront_needed, pub_spec.advance
                 )
             } else {
                 format!(
-                    "Nicht genug Geld! Der Projektstart kostet {} Euro.",
-                    cost
+                    "Nicht genug Geld! Der Projektstart erfordert {} Euro (nach Publisher-Vorschuss von {} Euro).",
+                    net_upfront_needed, pub_spec.advance
                 )
             });
         }
@@ -704,12 +739,11 @@ impl GameState {
         }
 
         // Auto-license platform if needed and affordable
-        let plat = self.current_draft.platform.clone();
-        if !self.bought_platforms.iter().any(|p| p == &plat) {
-            self.buy_platform_license(&plat)?;
+        if !is_licensed {
+            self.bought_platforms.push(plat.clone());
         }
 
-        self.money -= cost;
+        self.money = self.money - total_upfront_cost + pub_spec.advance;
 
         let mkt_hype = match self.current_draft.marketing.as_str() {
             "Kleine Kampagne" => 15.0,
@@ -720,35 +754,69 @@ impl GameState {
         self.hype = (self.hype + mkt_hype * self.marketing_efficiency + self.jingle_bonus)
             .clamp(0.0, 250.0);
 
-        let game_name = if self.current_draft.name.trim().is_empty() {
-            format!(
-                "{} {} #{}",
-                self.current_draft.topic,
-                self.current_draft.genre,
-                self.game_history.len() + self.active_projects.len() + 1
-            )
-        } else {
-            self.current_draft.name.trim().to_string()
-        };
-
-        let engine_name = self
+        let engine_obj = self
             .engines
             .get(self.current_draft.engine_idx)
             .or_else(|| self.engines.first())
+            .cloned();
+        let engine_name = engine_obj
+            .as_ref()
             .map(|e| e.name.clone())
             .unwrap_or_else(|| "Basis-Tonstudio V1".to_string());
+        let curr_engine_tech = engine_obj.as_ref().map(|e| e.tech_level).unwrap_or(1);
 
-        let sequel_number = if self.current_draft.sequel_of.is_some() {
-            (self
+        let mut sequel_number = 0;
+        let mut initial_quality_boost = 0.0;
+        if let Some(ref orig_name) = self.current_draft.sequel_of {
+            let matching_count = self
                 .game_history
                 .iter()
                 .filter(|g| {
-                    g.topic == self.current_draft.topic && g.genre == self.current_draft.genre
+                    &g.name == orig_name
+                        || (g.topic == self.current_draft.topic
+                            && g.genre == self.current_draft.genre)
                 })
-                .count() as u32)
-                + 1
+                .count() as u32;
+            sequel_number = matching_count.max(1) + 1;
+
+            if let Some(orig_game) = self
+                .game_history
+                .iter()
+                .rev()
+                .find(|g| &g.name == orig_name)
+            {
+                let orig_tech = self
+                    .engines
+                    .iter()
+                    .find(|e| e.name == orig_game.engine_name)
+                    .map(|e| e.tech_level)
+                    .unwrap_or(1);
+                if curr_engine_tech > orig_tech {
+                    initial_quality_boost += 0.06;
+                    self.hype = (self.hype + 20.0).clamp(0.0, 250.0);
+                } else {
+                    // Franchise fatigue when re-using the same or older engine tech level
+                    initial_quality_boost -= 0.04;
+                }
+            } else {
+                initial_quality_boost += 0.04;
+                self.hype = (self.hype + 12.0).clamp(0.0, 250.0);
+            }
+        }
+
+        let game_name = if self.current_draft.name.trim().is_empty() {
+            if let Some(ref orig_name) = self.current_draft.sequel_of {
+                format!("{} {}", orig_name, sequel_number)
+            } else {
+                format!(
+                    "{} {} #{}",
+                    self.current_draft.topic,
+                    self.current_draft.genre,
+                    self.game_history.len() + self.active_projects.len() + 1
+                )
+            }
         } else {
-            0
+            self.current_draft.name.trim().to_string()
         };
 
         let proj = GameProject {
@@ -776,6 +844,9 @@ impl GameState {
             in_soundtrack_label: false,
             in_subscription_vault: false,
             sequel_number,
+            publisher_idx: pub_idx,
+            post_mortem_done: false,
+            quality_boost: initial_quality_boost,
         };
 
         let total_weeks = self.current_draft.dev_weeks();
@@ -786,15 +857,30 @@ impl GameState {
             bugs: 0,
             crunch_active: false,
             ready_to_finish: false,
+            decision_made: false,
+            polish_passes: 0,
         });
 
         self.current_draft.name.clear();
         self.current_draft.sequel_of = None;
+        self.current_draft.publisher_idx = 0;
 
         Ok(if self.is_en() {
+            if pub_spec.advance > 0 {
+                format!(
+                    "Started production of '{}' ({} weeks, cost: {} EUR, publisher advance: +{} EUR).",
+                    game_name, total_weeks, cost, pub_spec.advance
+                )
+            } else {
+                format!(
+                    "Started production of '{}' ({} weeks, cost: {} EUR).",
+                    game_name, total_weeks, cost
+                )
+            }
+        } else if pub_spec.advance > 0 {
             format!(
-                "Started production of '{}' ({} weeks, cost: {} EUR).",
-                game_name, total_weeks, cost
+                "Produktion von '{}' gestartet (Dauer: {} Wochen, Kosten: {} Euro, Publisher-Vorschuss: +{} Euro).",
+                game_name, total_weeks, cost, pub_spec.advance
             )
         } else {
             format!(
@@ -867,7 +953,16 @@ impl GameState {
         }
         let access_bonus = (self.accessibility_reputation as f64 / 1000.0).min(0.06);
 
-        // 5. Trend Bonus
+        // 5. Target Audience Fit
+        let aud_compat =
+            get_audience_compatibility(&project.topic, &project.genre, &project.audience);
+        let aud_mod = match aud_compat {
+            3 => 0.04,
+            2 => 0.0,
+            _ => -0.07,
+        };
+
+        // 6. Trend Bonus
         let mut trend_multi = 1.0;
         if project.topic == self.trend_topic {
             trend_multi += 0.10;
@@ -876,7 +971,7 @@ impl GameState {
             trend_multi += 0.08;
         }
 
-        // 6. Difficulty modifier
+        // 7. Difficulty modifier
         let diff_mod = match self.difficulty {
             0 => 0.06,
             1 => 0.0,
@@ -890,6 +985,8 @@ impl GameState {
             + engine_bonus
             + tech_bonus
             + access_bonus
+            + aud_mod
+            + project.quality_boost
             + diff_mod)
             * trend_multi;
 
@@ -934,6 +1031,23 @@ impl GameState {
                         .to_string(),
                 );
             }
+            if aud_compat == 3 {
+                comments.push(format!(
+                    "Market Fit: Target audience '{}' is a perfect match for this production!",
+                    project.audience
+                ));
+            } else if aud_compat == 1 {
+                comments.push(format!(
+                    "Market Fit: Target audience '{}' does not match '{}' + '{}' well.",
+                    project.audience, project.topic, project.genre
+                ));
+            }
+            if project.sequel_number > 0 {
+                comments.push(format!(
+                    "Franchise: Sequel #{} builds on an established series!",
+                    project.sequel_number
+                ));
+            }
             if bugs > 3 {
                 comments.push(format!(
                     "Technical QA: {} noticeable audio/logic bugs hurt the score.",
@@ -972,6 +1086,23 @@ impl GameState {
                         .to_string(),
                 );
             }
+            if aud_compat == 3 {
+                comments.push(format!(
+                    "Zielgruppe: '{}' passt perfekt zu dieser Produktion!",
+                    project.audience
+                ));
+            } else if aud_compat == 1 {
+                comments.push(format!(
+                    "Zielgruppe: '{}' passt leider schlecht zu '{}' und '{}'.",
+                    project.audience, project.topic, project.genre
+                ));
+            }
+            if project.sequel_number > 0 {
+                comments.push(format!(
+                    "Fortsetzung: Teil {} führt eine bekannte Reihe fort!",
+                    project.sequel_number
+                ));
+            }
             if bugs > 3 {
                 comments.push(format!(
                     "Technik-Check: {} hörbare Fehler (Bugs) haben Punkte gekostet.",
@@ -1000,6 +1131,18 @@ impl GameState {
             self.high_score = avg;
         }
         proj.review = Some(review);
+
+        // Publisher contract target evaluation
+        let pub_idx = proj.publisher_idx.min(PUBLISHERS.len().saturating_sub(1));
+        if pub_idx > 0 {
+            let pub_spec = &PUBLISHERS[pub_idx];
+            if avg >= pub_spec.min_score as f64 {
+                self.fans += 300;
+                self.hype = (self.hype + 15.0).clamp(0.0, 250.0);
+            } else {
+                self.hype = (self.hype - 8.0).max(0.0);
+            }
+        }
 
         // Initial launch week sales
         let (launch_sales, launch_rev) = self.compute_weekly_game_sales(&proj, true);
@@ -1052,6 +1195,15 @@ impl GameState {
             _ => 25,
         };
 
+        let aud_compat = get_audience_compatibility(&proj.topic, &proj.genre, &proj.audience);
+        let aud_multi = match aud_compat {
+            3 => 1.20,
+            2 => 1.0,
+            _ => 0.65,
+        };
+        let sequel_multi = if proj.sequel_number > 0 { 1.25 } else { 1.0 };
+        let pub_spec = &PUBLISHERS[proj.publisher_idx.min(PUBLISHERS.len().saturating_sub(1))];
+
         // Exponential quality curve: 8+ hits sell dramatically better than 4/10
         let quality_factor = (avg / 5.5).powf(2.2);
         let hype_factor = 1.0 + (self.hype / 120.0);
@@ -1086,11 +1238,15 @@ impl GameState {
             * fan_factor
             * self.sales_multiplier
             * cd_bonus
+            * aud_multi
+            * sequel_multi
+            * pub_spec.reach_mult
             * decay;
 
         let units = raw_units.max(10.0).round() as u64;
-        let rev = (units as i64) * price;
-        (units, rev)
+        let gross_rev = (units as i64) * price;
+        let net_rev = (gross_rev * (100 - pub_spec.royalty_cut_pct as i64)) / 100;
+        (units, net_rev)
     }
 
     /// Simulates one full game week (`tick_week`), handling active projects, contracts,
@@ -2075,6 +2231,259 @@ impl GameState {
                 name, bonus_sales, bonus_rev
             )
         })
+    }
+
+    pub fn polish_active_project(&mut self, idx: usize) -> Result<String, String> {
+        let is_en = self.is_en();
+        if idx >= self.active_projects.len() {
+            return Err(if is_en {
+                "Invalid active project.".to_string()
+            } else {
+                "Ungültiges aktives Projekt.".to_string()
+            });
+        }
+        if self.active_projects[idx].polish_passes >= 3 && self.active_projects[idx].bugs == 0 {
+            return Err(if is_en {
+                "Maximum QA & Mastering passes (3/3) reached and 0 bugs remaining!".to_string()
+            } else {
+                "Maximale QA- & Mastering-Durchläufe (3/3) erreicht und 0 Bugs übrig!".to_string()
+            });
+        }
+        let cost = 1_500;
+        if self.money < cost {
+            return Err(if is_en {
+                "Not enough money for QA & Mastering Polish (1,500 EUR).".to_string()
+            } else {
+                "Nicht genug Geld für QA-Feinschliff & Mastering (1.500 Euro).".to_string()
+            });
+        }
+        self.money -= cost;
+        let ap = &mut self.active_projects[idx];
+        let fixed = ap.bugs.min(4);
+        ap.bugs = ap.bugs.saturating_sub(4);
+        if ap.polish_passes < 3 {
+            ap.polish_passes += 1;
+            ap.project.quality_boost += 0.03;
+        }
+        let name = ap.project.name.clone();
+        let rem_bugs = ap.bugs;
+        let passes = ap.polish_passes;
+        Ok(if is_en {
+            format!(
+                "QA & Mastering session on '{}': fixed {} bugs ({} remaining), quality polish {}/3!",
+                name, fixed, rem_bugs, passes
+            )
+        } else {
+            format!(
+                "QA-Feinschliff & Mastering für '{}': {} Bugs behoben (noch {} übrig), Qualitäts-Politur {}/3!",
+                name, fixed, rem_bugs, passes
+            )
+        })
+    }
+
+    pub fn apply_studio_decision(&mut self, idx: usize, option: usize) -> Result<String, String> {
+        let is_en = self.is_en();
+        if idx >= self.active_projects.len() {
+            return Err(if is_en {
+                "Invalid active project.".to_string()
+            } else {
+                "Ungültiges aktives Projekt.".to_string()
+            });
+        }
+        if self.active_projects[idx].decision_made {
+            return Err(if is_en {
+                "A creative studio decision has already been made for this project!".to_string()
+            } else {
+                "Für dieses Projekt wurde bereits eine kreative Studio-Entscheidung getroffen!"
+                    .to_string()
+            });
+        }
+        match option {
+            0 => {
+                let cost = 3_000;
+                if self.money < cost {
+                    return Err(if is_en {
+                        "Live Foley & Acoustic Session requires 3,000 EUR.".to_string()
+                    } else {
+                        "Die Live-Foley- & Akustik-Session kostet 3.000 Euro.".to_string()
+                    });
+                }
+                self.money -= cost;
+                let ap = &mut self.active_projects[idx];
+                ap.decision_made = true;
+                ap.project.quality_boost += 0.06;
+                let name = ap.project.name.clone();
+                self.hype = (self.hype + 12.0).clamp(0.0, 250.0);
+                Ok(if is_en {
+                    format!(
+                        "Recorded Live Foley & Acoustic Session for '{}'! +6% quality bonus, +12 hype!",
+                        name
+                    )
+                } else {
+                    format!(
+                        "Live-Foley- & Akustik-Session für '{}' aufgenommen! +6% Qualitätsbonus, +12 Hype!",
+                        name
+                    )
+                })
+            }
+            1 => {
+                let ap = &mut self.active_projects[idx];
+                ap.decision_made = true;
+                let fixed = ap.bugs;
+                ap.bugs = 0;
+                ap.total_weeks += 1;
+                if ap.ready_to_finish && ap.progress_weeks < ap.total_weeks as f64 {
+                    ap.ready_to_finish = false;
+                }
+                ap.project.quality_boost += 0.04;
+                let name = ap.project.name.clone();
+                Ok(if is_en {
+                    format!(
+                        "Signal & Code Refactoring on '{}': eliminated {} bugs, +4% quality (+1 week dev time)!",
+                        name, fixed
+                    )
+                } else {
+                    format!(
+                        "Signal- & Code-Refactoring für '{}': {} Bugs behoben, +4% Qualität (+1 Woche Dauer)!",
+                        name, fixed
+                    )
+                })
+            }
+            _ => {
+                let cost = 2_000;
+                if self.money < cost {
+                    return Err(if is_en {
+                        "Community Playtest Session requires 2,000 EUR.".to_string()
+                    } else {
+                        "Der Community-Fokus-Test kostet 2.000 Euro.".to_string()
+                    });
+                }
+                self.money -= cost;
+                let ap = &mut self.active_projects[idx];
+                ap.decision_made = true;
+                ap.project.quality_boost += 0.05;
+                let name = ap.project.name.clone();
+                self.fans += 250;
+                self.hype = (self.hype + 15.0).clamp(0.0, 250.0);
+                Ok(if is_en {
+                    format!(
+                        "Ran Community Playtest for '{}'! +5% quality, +250 fans, +15 hype!",
+                        name
+                    )
+                } else {
+                    format!(
+                        "Community-Fokus-Test für '{}' durchgeführt! +5% Qualität, +250 Fans, +15 Hype!",
+                        name
+                    )
+                })
+            }
+        }
+    }
+
+    pub fn analyze_post_mortem(&mut self, idx: usize) -> Result<String, String> {
+        let is_en = self.is_en();
+        if idx >= self.game_history.len() {
+            return Err(if is_en {
+                "Invalid game index.".to_string()
+            } else {
+                "Ungültiges Spiel.".to_string()
+            });
+        }
+        if self.game_history[idx].post_mortem_done {
+            return Err(if is_en {
+                "Post-Mortem analysis was already completed for this production!".to_string()
+            } else {
+                "Für diese Produktion wurde bereits ein Post-Mortem-Spielbericht erstellt!"
+                    .to_string()
+            });
+        }
+        self.game_history[idx].post_mortem_done = true;
+        let g = self.game_history[idx].clone();
+        if let Some(ref mut lfg) = self.last_finished_game {
+            if lfg.name == g.name {
+                lfg.post_mortem_done = true;
+            }
+        }
+        let compat = get_compatibility(&g.topic, &g.genre);
+        let aud_compat = get_audience_compatibility(&g.topic, &g.genre, &g.audience);
+        let ideal = get_ideal_sliders(&g.genre);
+
+        let mut biggest_gap = 0i32;
+        let mut gap_idx = 2usize;
+        for i in 0..6 {
+            let diff = ideal[i] as i32 - g.sliders[i] as i32;
+            if diff.abs() > biggest_gap.abs() {
+                biggest_gap = diff;
+                gap_idx = i;
+            }
+        }
+        let slider_hint = if biggest_gap == 0 {
+            if is_en {
+                "Sliders matched the genre profile perfectly!".to_string()
+            } else {
+                "Alle Slider trafen das Genre-Profil perfekt!".to_string()
+            }
+        } else if biggest_gap > 0 {
+            if is_en {
+                format!(
+                    "For '{}', increase '{}' (ideal: {}, used: {}).",
+                    g.genre, SLIDER_NAMES[gap_idx], ideal[gap_idx], g.sliders[gap_idx]
+                )
+            } else {
+                format!(
+                    "Für '{}' sollte '{}' höher gewichtet sein (Ideal: {}, gewählt: {}).",
+                    g.genre, SLIDER_NAMES[gap_idx], ideal[gap_idx], g.sliders[gap_idx]
+                )
+            }
+        } else if is_en {
+            format!(
+                "For '{}', reduce '{}' (ideal: {}, used: {}).",
+                g.genre, SLIDER_NAMES[gap_idx], ideal[gap_idx], g.sliders[gap_idx]
+            )
+        } else {
+            format!(
+                "Für '{}' war '{}' zu hoch angesetzt (Ideal: {}, gewählt: {}).",
+                g.genre, SLIDER_NAMES[gap_idx], ideal[gap_idx], g.sliders[gap_idx]
+            )
+        };
+
+        self.accessibility_reputation += 15;
+        self.fans += 200;
+        self.hype = (self.hype + 15.0).clamp(0.0, 250.0);
+
+        let report_msg = if is_en {
+            format!(
+                "Post-Mortem '{}': Topic+Genre Synergy: {}/3 stars | Audience Fit ('{}'): {}/3 | Insight: {} | Reward: +200 Fans, +15 Hype, +15 Studio Know-How!",
+                g.name, compat, g.audience, aud_compat, slider_hint
+            )
+        } else {
+            format!(
+                "Spielbericht (Post-Mortem) zu '{}': Thema+Genre-Synergie: {}/3 Sterne | Zielgruppe ('{}'): {}/3 | Erkenntnis: {} | Belohnung: +200 Fans, +15 Hype, +15 Studio-Know-How!",
+                g.name, compat, g.audience, aud_compat, slider_hint
+            )
+        };
+
+        self.emails.insert(
+            0,
+            Email {
+                sender: if is_en {
+                    "Studio Analytics".to_string()
+                } else {
+                    "Studio-Analyse".to_string()
+                },
+                subject: if is_en {
+                    format!("Post-Mortem Report: {}", g.name)
+                } else {
+                    format!("Post-Mortem Spielbericht: {}", g.name)
+                },
+                body: report_msg.clone(),
+                week: self.week,
+                year: self.calendar_year(),
+                read: false,
+            },
+        );
+
+        Ok(report_msg)
     }
 
     // --- Persistence (Save/Load JSON with full Rust roundtrip & Legacy Python migration) ---

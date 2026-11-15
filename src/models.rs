@@ -92,6 +92,9 @@ pub struct GameProject {
     pub in_soundtrack_label: bool,
     pub in_subscription_vault: bool,
     pub sequel_number: u32,
+    pub publisher_idx: usize,
+    pub post_mortem_done: bool,
+    pub quality_boost: f64,
 }
 
 impl GameProject {
@@ -150,6 +153,18 @@ impl GameProject {
             "sequel_number".into(),
             JsonValue::Number(self.sequel_number as f64),
         );
+        m.insert(
+            "publisher_idx".into(),
+            JsonValue::Number(self.publisher_idx as f64),
+        );
+        m.insert(
+            "post_mortem_done".into(),
+            JsonValue::Bool(self.post_mortem_done),
+        );
+        m.insert(
+            "quality_boost".into(),
+            JsonValue::Number(self.quality_boost),
+        );
         JsonValue::Object(m)
     }
 
@@ -185,6 +200,9 @@ impl GameProject {
             in_soundtrack_label: v.get_bool("in_soundtrack_label", false),
             in_subscription_vault: v.get_bool("in_subscription_vault", false),
             sequel_number: v.get_u32("sequel_number", 0),
+            publisher_idx: v.get_u32("publisher_idx", 0) as usize,
+            post_mortem_done: v.get_bool("post_mortem_done", false),
+            quality_boost: v.get_f64("quality_boost", 0.0),
         }
     }
 }
@@ -197,6 +215,8 @@ pub struct ActiveProject {
     pub bugs: u32,
     pub crunch_active: bool,
     pub ready_to_finish: bool,
+    pub decision_made: bool,
+    pub polish_passes: u32,
 }
 
 impl ActiveProject {
@@ -247,6 +267,11 @@ impl ActiveProject {
             "ready_to_finish".into(),
             JsonValue::Bool(self.ready_to_finish),
         );
+        m.insert("decision_made".into(), JsonValue::Bool(self.decision_made));
+        m.insert(
+            "polish_passes".into(),
+            JsonValue::Number(self.polish_passes as f64),
+        );
         JsonValue::Object(m)
     }
 
@@ -271,6 +296,8 @@ impl ActiveProject {
             bugs: v.get_u32("bugs", 0),
             crunch_active,
             ready_to_finish: v.get_bool("ready_to_finish", false),
+            decision_made: v.get_bool("decision_made", false),
+            polish_passes: v.get_u32("polish_passes", 0),
         }
     }
 }
@@ -669,6 +696,7 @@ pub struct GameDraft {
     pub engine_idx: usize,
     pub sliders: [u8; 6],
     pub sequel_of: Option<String>,
+    pub publisher_idx: usize,
 }
 
 impl Default for GameDraft {
@@ -686,6 +714,7 @@ impl Default for GameDraft {
             // Matches ideal profile of Abenteuer (sums to 30)
             sliders: [5, 4, 7, 8, 2, 4],
             sequel_of: None,
+            publisher_idx: 0,
         }
     }
 }

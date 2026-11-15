@@ -121,13 +121,18 @@ pub enum MenuAction {
     CycleGameSize,
     CycleMarketing,
     CycleEngine,
+    CyclePublisher,
+    CycleSequel,
     ApplyIdealSliders,
     AdjustSlider { idx: usize },
     ConfirmGameStart,
     FinishProject(usize),
+    PolishProject(usize),
+    StudioDecision { idx: usize, option: usize },
     ToggleCrunch(usize),
     ReleasePatch(usize),
     ReleaseDlc(usize),
+    AnalyzePostMortem(usize),
     AcceptContract(usize),
     RefreshContracts,
     ResearchTopic(usize),
@@ -645,16 +650,45 @@ impl MenuController {
 
             MenuId::DevelopSizeAudienceMenu => {
                 self.title = if is_en {
-                    "Step 4: Production Scope, Engine & Marketing".to_string()
+                    "Step 4: Production Scope, Audience, Publisher & Engine".to_string()
                 } else {
-                    "Schritt 4: Umfang, Zielgruppe, Engine & Marketing".to_string()
+                    "Schritt 4: Umfang, Zielgruppe, Publisher, Engine & Marketing".to_string()
                 };
                 let eng_name = state
                     .engines
                     .get(state.current_draft.engine_idx)
                     .or_else(|| state.engines.first())
-                    .map(|e| format!("{} (+{:.0}%)", e.name, e.quality_bonus * 100.0))
+                    .map(|e| format!("{} (Tech {}, +{:.0}%)", e.name, e.tech_level, e.quality_bonus * 100.0))
                     .unwrap_or_else(|| "Standard".to_string());
+
+                let aud_compat = get_audience_compatibility(
+                    &state.current_draft.topic,
+                    &state.current_draft.genre,
+                    &state.current_draft.audience,
+                );
+                let aud_badge = if is_en {
+                    match aud_compat {
+                        3 => "3/3 Perfect Fit!",
+                        2 => "2/3 Good Fit",
+                        _ => "1/3 Poor Fit",
+                    }
+                } else {
+                    match aud_compat {
+                        3 => "3/3 Perfekt!",
+                        2 => "2/3 Passend",
+                        _ => "1/3 Unpassend",
+                    }
+                };
+
+                let pub_spec = &PUBLISHERS[state
+                    .current_draft
+                    .publisher_idx
+                    .min(PUBLISHERS.len().saturating_sub(1))];
+                let pub_label = if is_en {
+                    pub_spec.name_en
+                } else {
+                    pub_spec.name_de
+                };
 
                 self.options.push(MenuOption {
                     text: if is_en {
@@ -667,13 +701,59 @@ impl MenuController {
                 });
                 self.options.push(MenuOption {
                     text: if is_en {
-                        format!("Target Audience: {} (Press Enter to cycle)", state.current_draft.audience)
+                        format!(
+                            "Target Audience: {} [{}] (Press Enter to cycle)",
+                            state.current_draft.audience, aud_badge
+                        )
                     } else {
-                        format!("Zielgruppe: {} (Enter zum Wechseln)", state.current_draft.audience)
+                        format!(
+                            "Zielgruppe: {} [{}] (Enter zum Wechseln)",
+                            state.current_draft.audience, aud_badge
+                        )
                     },
                     speech_hint: String::new(),
                     action: MenuAction::CycleAudience,
                 });
+                self.options.push(MenuOption {
+                    text: if is_en {
+                        format!("Distribution / Publisher: {} (Press Enter to cycle)", pub_label)
+                    } else {
+                        format!("Vertrieb / Publisher: {} (Enter zum Wechseln)", pub_label)
+                    },
+                    speech_hint: String::new(),
+                    action: MenuAction::CyclePublisher,
+                });
+                if !state.game_history.is_empty() {
+                    let seq_label = match state.current_draft.sequel_of {
+                        Some(ref orig) => {
+                            if is_en {
+                                format!("Sequel to '{}'", orig)
+                            } else {
+                                format!("Fortsetzung zu '{}'", orig)
+                            }
+                        }
+                        None => {
+                            if is_en {
+                                "New Original IP".to_string()
+                            } else {
+                                "Neue Original-Produktion".to_string()
+                            }
+                        }
+                    };
+                    self.options.push(MenuOption {
+                        text: if is_en {
+                            format!("Franchise / Sequel: {} (Press Enter to cycle)", seq_label)
+                        } else {
+                            format!("Reihe / Fortsetzung: {} (Enter zum Wechseln)", seq_label)
+                        },
+                        speech_hint: if is_en {
+                            "Developing a sequel on a newer custom engine grants a major Hype and Quality boost!".to_string()
+                        } else {
+                            "Eine Fortsetzung auf einer neueren Engine bringt starken Hype- und Qualitäts-Bonus!".to_string()
+                        },
+                        action: MenuAction::CycleSequel,
+                    });
+                }
                 self.options.push(MenuOption {
                     text: if is_en {
                         format!("Audio Engine: {} (Press Enter to cycle)", eng_name)
@@ -692,17 +772,18 @@ impl MenuController {
                     speech_hint: String::new(),
                     action: MenuAction::CycleMarketing,
                 });
+                let net_cost = (state.current_draft.base_dev_cost() - pub_spec.advance).max(0);
                 self.options.push(MenuOption {
                     text: if is_en {
                         format!(
-                            "Continue to Studio Sliders (Total Cost: {} EUR, {} weeks)",
-                            state.current_draft.base_dev_cost(),
+                            "Continue to Studio Sliders (Net Upfront Cost: {} EUR, {} weeks)",
+                            net_cost,
                             state.current_draft.dev_weeks()
                         )
                     } else {
                         format!(
-                            "Weiter zu den Studio-Slidern (Gesamtkosten: {} Euro, {} Wochen)",
-                            state.current_draft.base_dev_cost(),
+                            "Weiter zu den Studio-Slidern (Netto-Startkosten: {} Euro, {} Wochen)",
+                            net_cost,
                             state.current_draft.dev_weeks()
                         )
                     },
@@ -794,27 +875,58 @@ impl MenuController {
                     "Schritt 6: Projekttitel eingeben (oder direkt Enter für Vorschlag)".to_string()
                 };
                 let preview = if self.text_buffer.trim().is_empty() {
-                    format!(
-                        "{} {} #{}",
-                        state.current_draft.topic,
-                        state.current_draft.genre,
-                        state.game_history.len() + state.active_projects.len() + 1
-                    )
+                    if let Some(ref orig_name) = state.current_draft.sequel_of {
+                        let matching_count = state
+                            .game_history
+                            .iter()
+                            .filter(|g| {
+                                &g.name == orig_name
+                                    || (g.topic == state.current_draft.topic
+                                        && g.genre == state.current_draft.genre)
+                            })
+                            .count() as u32;
+                        let seq_num = matching_count.max(1) + 1;
+                        format!("{} {}", orig_name, seq_num)
+                    } else {
+                        format!(
+                            "{} {} #{}",
+                            state.current_draft.topic,
+                            state.current_draft.genre,
+                            state.game_history.len() + state.active_projects.len() + 1
+                        )
+                    }
                 } else {
                     self.text_buffer.clone()
                 };
+                let base_cost = state.current_draft.base_dev_cost();
+                let pub_idx = state
+                    .current_draft
+                    .publisher_idx
+                    .min(PUBLISHERS.len().saturating_sub(1));
+                let pub_spec = &PUBLISHERS[pub_idx];
+                let net_cost = (base_cost - pub_spec.advance).max(0);
                 self.options.push(MenuOption {
                     text: if is_en {
+                        if pub_spec.advance > 0 {
+                            format!(
+                                "Start Production: '{}' (Cost: {} EUR, Net after advance: {} EUR) [Press Enter]",
+                                preview, base_cost, net_cost
+                            )
+                        } else {
+                            format!(
+                                "Start Production: '{}' (Cost: {} EUR) [Press Enter]",
+                                preview, base_cost
+                            )
+                        }
+                    } else if pub_spec.advance > 0 {
                         format!(
-                            "Start Production: '{}' (Cost: {} EUR) [Press Enter]",
-                            preview,
-                            state.current_draft.base_dev_cost()
+                            "Produktion starten: '{}' (Kosten: {} Euro, Netto nach Vorschuss: {} Euro) [Enter drücken]",
+                            preview, base_cost, net_cost
                         )
                     } else {
                         format!(
                             "Produktion starten: '{}' (Kosten: {} Euro) [Enter drücken]",
-                            preview,
-                            state.current_draft.base_dev_cost()
+                            preview, base_cost
                         )
                     },
                     speech_hint: String::new(),
@@ -840,16 +952,24 @@ impl MenuController {
                             self.options.push(MenuOption {
                                 text: if is_en {
                                     format!(
-                                        "RELEASE NOW: '{}' (100% complete, {} bugs) [Press Enter]",
-                                        ap.project.name, ap.bugs
+                                        "RELEASE NOW: '{}' (100% complete, {} bugs, Polish {}/3) [Press Enter]",
+                                        ap.project.name, ap.bugs, ap.polish_passes
                                     )
                                 } else {
                                     format!(
-                                        "JETZT VERÖFFENTLICHEN: '{}' (100% fertig, {} Bugs) [Enter]",
-                                        ap.project.name, ap.bugs
+                                        "JETZT VERÖFFENTLICHEN: '{}' (100% fertig, {} Bugs, Feinschliff {}/3) [Enter]",
+                                        ap.project.name, ap.bugs, ap.polish_passes
                                     )
                                 },
-                                speech_hint: String::new(),
+                                speech_hint: if ap.bugs > 0 {
+                                    if is_en {
+                                        "Tip: Run QA & Mastering Polish below before releasing to eliminate bugs!".to_string()
+                                    } else {
+                                        "Tipp: Führe vor Release unten noch den QA-Feinschliff durch, um Bugs zu beheben!".to_string()
+                                    }
+                                } else {
+                                    String::new()
+                                },
                                 action: MenuAction::FinishProject(i),
                             });
                         } else {
@@ -863,20 +983,22 @@ impl MenuController {
                             self.options.push(MenuOption {
                                 text: if is_en {
                                     format!(
-                                        "'{}' - {}% ({}) | Bugs: {} | Crunch Mode: {}",
+                                        "'{}' - {}% ({}) | Bugs: {} | Polish: {}/3 | Crunch Mode: {}",
                                         ap.project.name,
                                         ap.percent(),
                                         ap.current_phase_name(is_en),
                                         ap.bugs,
+                                        ap.polish_passes,
                                         crunch_label
                                     )
                                 } else {
                                     format!(
-                                        "'{}' - {}% ({}) | Bugs: {} | Überstunden/Crunch: {}",
+                                        "'{}' - {}% ({}) | Bugs: {} | Feinschliff: {}/3 | Überstunden/Crunch: {}",
                                         ap.project.name,
                                         ap.percent(),
                                         ap.current_phase_name(is_en),
                                         ap.bugs,
+                                        ap.polish_passes,
                                         crunch_label
                                     )
                                 },
@@ -886,6 +1008,72 @@ impl MenuController {
                                     "Enter schaltet Überstunden-Modus (Crunch) um".to_string()
                                 },
                                 action: MenuAction::ToggleCrunch(i),
+                            });
+                        }
+
+                        if ap.polish_passes < 3 || ap.bugs > 0 {
+                            self.options.push(MenuOption {
+                                text: if is_en {
+                                    format!(
+                                        "QA & Mastering Polish for '{}' (Fixes up to 4 bugs & +3% quality, {}/3 passes) - 1,500 EUR",
+                                        ap.project.name, ap.polish_passes
+                                    )
+                                } else {
+                                    format!(
+                                        "QA-Feinschliff & Mastering für '{}' (Behebt bis zu 4 Bugs & +3% Qualität, {}/3) - 1.500 Euro",
+                                        ap.project.name, ap.polish_passes
+                                    )
+                                },
+                                speech_hint: String::new(),
+                                action: MenuAction::PolishProject(i),
+                            });
+                        }
+
+                        if !ap.decision_made {
+                            self.options.push(MenuOption {
+                                text: if is_en {
+                                    format!(
+                                        "[Creative Decision] '{}' -> Live Foley & Acoustic Session (+6% Quality, +12 Hype) - 3,000 EUR",
+                                        ap.project.name
+                                    )
+                                } else {
+                                    format!(
+                                        "[Studio-Entscheidung] '{}' -> Live-Foley- & Akustik-Session (+6% Qualität, +12 Hype) - 3.000 Euro",
+                                        ap.project.name
+                                    )
+                                },
+                                speech_hint: String::new(),
+                                action: MenuAction::StudioDecision { idx: i, option: 0 },
+                            });
+                            self.options.push(MenuOption {
+                                text: if is_en {
+                                    format!(
+                                        "[Creative Decision] '{}' -> Signal & Code Refactoring (Eliminate all bugs, +4% Quality, +1 week)",
+                                        ap.project.name
+                                    )
+                                } else {
+                                    format!(
+                                        "[Studio-Entscheidung] '{}' -> Signal- & Code-Refactoring (Alle Bugs beheben, +4% Qualität, +1 Woche)",
+                                        ap.project.name
+                                    )
+                                },
+                                speech_hint: String::new(),
+                                action: MenuAction::StudioDecision { idx: i, option: 1 },
+                            });
+                            self.options.push(MenuOption {
+                                text: if is_en {
+                                    format!(
+                                        "[Creative Decision] '{}' -> Community Playtest (+5% Quality, +250 Fans, +15 Hype) - 2,000 EUR",
+                                        ap.project.name
+                                    )
+                                } else {
+                                    format!(
+                                        "[Studio-Entscheidung] '{}' -> Community-Fokus-Test (+5% Qualität, +250 Fans, +15 Hype) - 2.000 Euro",
+                                        ap.project.name
+                                    )
+                                },
+                                speech_hint: String::new(),
+                                action: MenuAction::StudioDecision { idx: i, option: 2 },
                             });
                         }
                     }
@@ -898,6 +1086,23 @@ impl MenuController {
                 // Post-release support for recent games on the market
                 for (idx, g) in state.game_history.iter().enumerate().rev().take(4) {
                     let avg = g.review.as_ref().map(|r| r.average()).unwrap_or(0.0);
+                    if !g.post_mortem_done {
+                        self.options.push(MenuOption {
+                            text: if is_en {
+                                format!(
+                                    "Run Post-Mortem Game Report on '{}' (Score: {:.1}/10 -> Insights, +200 Fans, +15 Hype)",
+                                    g.name, avg
+                                )
+                            } else {
+                                format!(
+                                    "Post-Mortem Spielbericht erstellen für '{}' (Wertung: {:.1}/10 -> Erkenntnisse, +200 Fans, +15 Hype)",
+                                    g.name, avg
+                                )
+                            },
+                            speech_hint: String::new(),
+                            action: MenuAction::AnalyzePostMortem(idx),
+                        });
+                    }
                     if g.bugs > 0 {
                         self.options.push(MenuOption {
                             text: if is_en {
@@ -991,6 +1196,19 @@ impl MenuController {
                         speech_hint: String::new(),
                         action: MenuAction::NoOp,
                     });
+                    if let Some(last_idx) = state.game_history.len().checked_sub(1) {
+                        if !state.game_history[last_idx].post_mortem_done {
+                            self.options.push(MenuOption {
+                                text: if is_en {
+                                    "Run Post-Mortem Game Report (+200 Fans, +15 Hype & Genre Insights)".to_string()
+                                } else {
+                                    "Post-Mortem Spielbericht erstellen (+200 Fans, +15 Hype & Genre-Erkenntnisse)".to_string()
+                                },
+                                speech_hint: String::new(),
+                                action: MenuAction::AnalyzePostMortem(last_idx),
+                            });
+                        }
+                    }
                 } else {
                     self.title = "Review".to_string();
                 }
@@ -2539,11 +2757,17 @@ impl MenuController {
                 self.switch_to(MenuId::GameMenu, state, audio);
             }
             MenuAction::SelectTopic(topic) => {
+                if state.current_draft.topic != topic {
+                    state.current_draft.sequel_of = None;
+                }
                 state.current_draft.topic = topic;
                 audio.play_sound("confirm");
                 self.switch_to(MenuId::DevelopGenreMenu, state, audio);
             }
             MenuAction::SelectGenre(genre) => {
+                if state.current_draft.genre != genre {
+                    state.current_draft.sequel_of = None;
+                }
                 state.current_draft.sliders = get_ideal_sliders(&genre);
                 state.current_draft.genre = genre;
                 audio.play_sound("confirm");
@@ -2616,6 +2840,48 @@ impl MenuController {
                 self.current_index = keep;
                 self.speak_current(audio, true);
             }
+            MenuAction::CyclePublisher => {
+                state.current_draft.publisher_idx =
+                    (state.current_draft.publisher_idx + 1) % PUBLISHERS.len();
+                audio.play_sound("click");
+                let keep = self.current_index;
+                self.rebuild(state);
+                self.current_index = keep;
+                self.speak_current(audio, true);
+            }
+            MenuAction::CycleSequel => {
+                if state.game_history.is_empty() {
+                    audio.play_sound("bump");
+                    return;
+                }
+                let next_seq = match state.current_draft.sequel_of {
+                    None => Some(0usize),
+                    Some(ref curr_name) => {
+                        let pos = state
+                            .game_history
+                            .iter()
+                            .position(|g| &g.name == curr_name);
+                        match pos {
+                            Some(idx) if idx + 1 < state.game_history.len() => Some(idx + 1),
+                            _ => None,
+                        }
+                    }
+                };
+                if let Some(idx) = next_seq {
+                    let orig = state.game_history[idx].clone();
+                    state.current_draft.sequel_of = Some(orig.name);
+                    state.current_draft.topic = orig.topic;
+                    state.current_draft.genre = orig.genre.clone();
+                    state.current_draft.sliders = get_ideal_sliders(&orig.genre);
+                } else {
+                    state.current_draft.sequel_of = None;
+                }
+                audio.play_sound("click");
+                let keep = self.current_index;
+                self.rebuild(state);
+                self.current_index = keep;
+                self.speak_current(audio, true);
+            }
             MenuAction::ApplyIdealSliders => {
                 state.current_draft.sliders = get_ideal_sliders(&state.current_draft.genre);
                 audio.play_sound("confirm");
@@ -2657,6 +2923,34 @@ impl MenuController {
                     self.switch_to(MenuId::ReviewResultMenu, state, audio);
                 }
             }
+            MenuAction::PolishProject(idx) => match state.polish_active_project(idx) {
+                Ok(msg) => {
+                    audio.play_sound("success");
+                    let keep = self.current_index;
+                    self.rebuild(state);
+                    self.current_index = keep.min(self.options.len().saturating_sub(1));
+                    audio.say_interrupt(&msg);
+                }
+                Err(e) => {
+                    audio.play_sound("error");
+                    audio.say_interrupt(&e);
+                }
+            },
+            MenuAction::StudioDecision { idx, option } => {
+                match state.apply_studio_decision(idx, option) {
+                    Ok(msg) => {
+                        audio.play_sound("success");
+                        let keep = self.current_index;
+                        self.rebuild(state);
+                        self.current_index = keep.min(self.options.len().saturating_sub(1));
+                        audio.say_interrupt(&msg);
+                    }
+                    Err(e) => {
+                        audio.play_sound("error");
+                        audio.say_interrupt(&e);
+                    }
+                }
+            }
             MenuAction::ToggleCrunch(idx) => {
                 if let Some(ap) = state.active_projects.get_mut(idx) {
                     ap.crunch_active = !ap.crunch_active;
@@ -2682,6 +2976,19 @@ impl MenuController {
                 Ok(msg) => {
                     audio.play_sound("cash");
                     self.rebuild(state);
+                    audio.say_interrupt(&msg);
+                }
+                Err(e) => {
+                    audio.play_sound("error");
+                    audio.say_interrupt(&e);
+                }
+            },
+            MenuAction::AnalyzePostMortem(idx) => match state.analyze_post_mortem(idx) {
+                Ok(msg) => {
+                    audio.play_sound("success");
+                    let keep = self.current_index;
+                    self.rebuild(state);
+                    self.current_index = keep.min(self.options.len().saturating_sub(1));
                     audio.say_interrupt(&msg);
                 }
                 Err(e) => {

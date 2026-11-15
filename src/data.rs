@@ -866,6 +866,147 @@ pub fn get_ideal_sliders(genre: &str) -> [u8; 6] {
     }
 }
 
+/// Evaluates how well the chosen Target Audience ("Jeder", "Jugendliche", "Hardcore-Gamer")
+/// matches the Topic and Genre:
+/// - 3 = Perfekte Zielgruppe! (+Bonus on Review & Sales)
+/// - 2 = Passende Zielgruppe (Neutral/Good)
+/// - 1 = Unpassende Zielgruppe (Penalty on Review & Sales)
+pub fn get_audience_compatibility(topic: &str, genre: &str, audience: &str) -> u8 {
+    match audience {
+        "Jeder" => {
+            if genre == "Horror"
+                || matches!(
+                    topic,
+                    "Horrorhaus" | "Zombies" | "Cyberpunk" | "Spionage" | "Kryptografie"
+                )
+            {
+                1
+            } else if matches!(genre, "Casual" | "Sport" | "Rennspiel" | "Puzzle" | "Abenteuer")
+                || matches!(
+                    topic,
+                    "Swing-Musik"
+                        | "Rock 'n' Roll"
+                        | "Abenteuer-Reise"
+                        | "Eisenbahn"
+                        | "Freizeitpark"
+                        | "Sandbox/Voxel"
+                        | "Sport"
+                        | "Rennwagen"
+                )
+            {
+                3
+            } else {
+                2
+            }
+        }
+        "Jugendliche" => {
+            if matches!(topic, "Schach" | "Krankenhaus" | "Eisenbahn") && genre == "Simulation" {
+                2
+            } else if matches!(
+                genre,
+                "Action" | "Abenteuer" | "RPG" | "Kampfspiel" | "Rennspiel" | "Sport" | "Horror"
+            ) || matches!(
+                topic,
+                "Sci-Fi"
+                    | "Fantasy"
+                    | "Piraten"
+                    | "Kung-Fu"
+                    | "Cyberpunk"
+                    | "Rock 'n' Roll"
+                    | "Synthesizer"
+                    | "Mars-Invasion"
+                    | "Weltraum"
+                    | "E-Sport"
+                    | "Zombies"
+            ) {
+                3
+            } else {
+                2
+            }
+        }
+        "Hardcore-Gamer" => {
+            if genre == "Casual"
+                || matches!(topic, "Swing-Musik" | "Freizeitpark")
+            {
+                1
+            } else if matches!(
+                genre,
+                "Strategie" | "RPG" | "Simulation" | "Horror" | "Action" | "Kampfspiel"
+            ) || matches!(
+                topic,
+                "Kryptografie"
+                    | "Schach"
+                    | "U-Boot"
+                    | "Spionage"
+                    | "Horrorhaus"
+                    | "Zombies"
+                    | "Cyberpunk"
+                    | "KI-Utopie"
+                    | "Neural-Link"
+                    | "E-Sport"
+            ) {
+                3
+            } else {
+                2
+            }
+        }
+        _ => 2,
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct PublisherSpec {
+    pub name_de: &'static str,
+    pub name_en: &'static str,
+    pub advance: i64,
+    pub royalty_cut_pct: u8,
+    pub min_score: f32,
+    pub reach_mult: f64,
+}
+
+pub const PUBLISHERS: &[PublisherSpec] = &[
+    PublisherSpec {
+        name_de: "Eigenvertrieb (100% Einnahmen, 0 EUR Vorschuss)",
+        name_en: "Self-Publishing (100% revenue, 0 EUR advance)",
+        advance: 0,
+        royalty_cut_pct: 0,
+        min_score: 0.0,
+        reach_mult: 1.0,
+    },
+    PublisherSpec {
+        name_de: "ÄtherWelle Verlag (+8.000 EUR Vorschuss, 25% Abgabe, Ziel >= 5.5)",
+        name_en: "AetherWave Publishing (+8,000 EUR advance, 25% cut, target >= 5.5)",
+        advance: 8_000,
+        royalty_cut_pct: 25,
+        min_score: 5.5,
+        reach_mult: 1.25,
+    },
+    PublisherSpec {
+        name_de: "Polyphonie Records (+22.000 EUR Vorschuss, 30% Abgabe, Ziel >= 6.8)",
+        name_en: "Polyphony Records (+22,000 EUR advance, 30% cut, target >= 6.8)",
+        advance: 22_000,
+        royalty_cut_pct: 30,
+        min_score: 6.8,
+        reach_mult: 1.45,
+    },
+    PublisherSpec {
+        name_de: "Global Sonic Interactive (+60.000 EUR Vorschuss, 35% Abgabe, Ziel >= 7.8)",
+        name_en: "Global Sonic Interactive (+60,000 EUR advance, 35% cut, target >= 7.8)",
+        advance: 60_000,
+        royalty_cut_pct: 35,
+        min_score: 7.8,
+        reach_mult: 1.75,
+    },
+    PublisherSpec {
+        name_de: "OmniMedia Imperial (+150.000 EUR Vorschuss, 40% Abgabe, Ziel >= 8.5)",
+        name_en: "OmniMedia Imperial (+150,000 EUR advance, 40% cut, target >= 8.5)",
+        advance: 150_000,
+        royalty_cut_pct: 40,
+        min_score: 8.5,
+        reach_mult: 2.15,
+    },
+];
+
 #[derive(Debug, Clone)]
 pub struct EngineFeatureSpec {
     pub name: &'static str,
