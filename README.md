@@ -26,14 +26,16 @@
 - **Zeitstrahl & Epochen-Chronik (`1930–2026`):** Übersicht in der Charts-/GOTY-Ansicht über aktuelle Ära, aktive Plattformen, freigeschaltete Meilensteine (`1975`, `1985`, `1995`, `2026`) und die jüngsten Chronik-Einträge.
 
 ### 3. Tiefgehende Spielentwicklungs- & Publisher-Mechaniken
-- **Themen- & Genre-Kompatibilität (29 Themen, 11 Genres):**
+- **Themen-, Genre- & Sub-Genre-Kompatibilität (29 Themen, 11 Genres, 8 Sub-Genres):**
   - 8 Startthemen (+ 21 erforschbare) und 4 Startgenres (+ 7 erforschbare) mit handgeprüfter Synergie-Matrix (`0` bis `3` Sterne), die direkt in der Auswahl angezeigt wird.
+  - **8 Sub-Genres** (*Klassisch*, *Story-Fokus*, *Rhythmus & Musik*, *Taktik & Runden*, *Wirtschaft & Aufbau*, *Arcade & Tempo*, *Survival & Atmosphäre*, *Open World & Sandbox*) mit eigener `1–3` Sterne-Synergie (`★★★ [3/3]` gibt `+3%` Qualität, `★☆☆ [1/3]` gibt `-3%`).
 - **Zielgruppen-Kompatibilität (`Jeder`, `Jugendliche`, `Hardcore-Gamer`):**
   - Jede Kombination aus Thema, Genre und Zielgruppe besitzt eine eigene Passungsstufe (`3/3 Perfekt` mit `+0,04` Qualitätsbonus & `1,20x` Verkaufsfaktor, `2/3 Passend` neutral, `1/3 Unpassend` mit `-0,07` Abzug & `0,65x` Verkaufsfaktor).
 - **Transparente 6-Slider-Profile & Empfehlungsfunktion:**
   - Jedes Genre hat ein klares Idealprofil über die 6 Studio-Slider (*Gameplay, Grafik, Sound, Story, KI, Welt*; Summe = `30` Punkte, max. `10` pro Slider). Im Entwicklungsmenü lässt sich das empfohlene Genre-Profil direkt laden oder manuell verfeinern.
-- **Fortsetzungen & Franchise-System (Sequels):**
+- **Fortsetzungen, Franchise-System & Klassiker-Remasters:**
   - Bestehende Titel können als Fortsetzung entwickelt werden (inkl. automatischer Nummerierung bei leerem Titel). Eine **neue eigene Custom-Audio-Engine** (höheres `tech_level`) bringt `+6%` Qualitätsbonus (`+0,06`), `+20` Hype und `1,25x` Verkaufsfaktor — das Wiederverwenden derselben oder einer älteren Engine führt dagegen zu `-4%` Franchise-Ermüdung.
+  - **Klassiker-Remasters:** Eigene Titel ab `3` Jahren nach Erstveröffentlichung (sofern noch kein Remaster existiert) lassen sich für `50%` der Entwicklungskosten und `60%` der Entwicklungszeit auf der besten aktiven Plattform oder eigenen Konsole neu auflegen (`+4%` Qualität, `+15` Hype).
 - **Vertrieb: Eigenvertrieb vs. Publisher-Verträge (5 Optionen):**
   - **Eigenvertrieb:** `0 €` Vorschuss, `0%` Umsatzabzug, `1,0x` Reichweite.
   - **4 Publisher** (*ÄtherWelle Verlag*, *Polyphonie Records*, *Global Sonic Interactive*, *OmniMedia Imperial*): gewähren einen direkten Cash-Vorschuss (`+8.000 €` bis `+150.000 €`) sowie höhere Marktreichweite (`1,25x` bis `2,15x`) gegen Umsatzbeteiligung (`25%` bis `40%`) und ein Review-Mindestziel (`5,5` bis `8,5`). Wird das Ziel erreicht, gibt es `+300` Fans & `+15` Hype; bei Verfehlen sinkt der Hype um `8`.
@@ -55,6 +57,8 @@
   - Erholungsurlaub (`1.000 €`, `3` Wochen) regeneriert Moral & Ausdauer; beurlaubte oder fortgebildete Mitarbeiter werden aktiv aus `active_employees()` gefiltert.
 - **21 Engine-Features (1930–2026), 10 Forschungstechnologien (1930–2022) & Eigene Engine-Lizenzierung:** Selbst entwickelte Custom-Audio-Engines (ab Index 1; die Starter-Engine `Basis-Tonstudio V1` ist nicht lizenzierbar) können im Forschungsmenü an Drittstudios lizenziert werden und bringen wöchentliche Royalties (`Tech-Level * 350 €`/Woche).
 - **Best Audio Design Award („Goldenes Mikrofon“):** Zum Jahreswechsel erhalten Spiele des Vorjahres mit hohem Sound-Fokus (`Sound >= 7`) und starker Wertung (`>= 7,5`) die Auszeichnung „Goldenes Mikrofon“ (`+15.000 €`, `+400` Fans, `+15` Hype).
+- **Konkurrenz-Übernahmen & Tochterstudio-Dividenden:** Übernommene Konkurrenzstudios im Bank-/Rivalenmenü schütten wöchentlich Tochterstudio-Dividenden (`max(Wert / 250, 400) €`/Woche) direkt in die Studiokasse und den Gesamtumsatz aus.
+- **12 Studio-Erfolge & Meilensteine (1930–2026):** 12 Meilensteine über die gesamte Studiohistorie (vom ersten Release über *8.0+ Hit*, *Hardware-Pionier*, *Musiklabel-Mogul*, *SoundCon-Bühnenstar*, *Branchen-Konsolidierer*, *Goldenes Mikrofon* bis *Jahrhundert-Legende ab 2026*) inklusive Geld-, Fan- & Hype-Prämien sowie Übersicht in der Charts-/GOTY-Ansicht.
 - **Strikte Jahres-Freischaltungen (Year-Gating):**
   - **Hardware-Labor (Eigene Soundkarten & Konsolen):** ab **1975** (oder mit entsprechender Forschung).
   - **Eigenes Soundtrack-Label:** ab **1985**.
@@ -96,5 +100,5 @@ cargo test
 cargo build --release
 Audio_Studio_Tycoon.exe --verify
 ```
-oder einfach per Doppelklick auf `build_game.bat` (führt die **24 automatisierten Unit- & Integrationstests** per `cargo test`, `cargo build --release`, den Kopierschritt nach `Audio_Studio_Tycoon.exe` und `--verify` automatisch aus).
+oder einfach per Doppelklick auf `build_game.bat` (führt die **31 automatisierten Unit- & Integrationstests** per `cargo test`, `cargo build --release`, den Kopierschritt nach `Audio_Studio_Tycoon.exe` und `--verify` automatisch aus).
 Für eine schnelle CLI-Prüfung unterstützt die Executable außerdem `--version` (`-V`) und `--headless-demo`.

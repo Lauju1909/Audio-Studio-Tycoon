@@ -1050,14 +1050,23 @@ mod tests {
         assert!(on_msg.contains("SonicForge V2"));
         assert!(on_msg.contains(&expected_royalty.to_string()));
 
-        // Tick week 1 -> week 2 (same month_index 0, no monthly expenses, no other passive sources)
+        // Tick week 1 -> week 2 (same month_index 0; triggers one-time "custom_engine" achievement + weekly royalty)
+        let custom_engine_ach_bonus = ACHIEVEMENTS
+            .iter()
+            .find(|a| a.id == "custom_engine")
+            .expect("custom_engine achievement must exist")
+            .reward_money;
         let money_before = state.money;
         let rev_before = state.total_revenue;
         state.tick_week();
+        assert!(
+            state.tutorials_completed.iter().any(|t| t == "ach:custom_engine"),
+            "Custom engine creation must unlock ach:custom_engine during tick_week()"
+        );
         assert_eq!(
             state.money,
-            money_before + expected_royalty,
-            "Licensed custom engine must pay tech_level * 350 EUR/week"
+            money_before + expected_royalty + custom_engine_ach_bonus,
+            "Licensed custom engine must pay tech_level * 350 EUR/week plus one-time custom_engine reward"
         );
         assert_eq!(state.total_revenue, rev_before + expected_royalty);
 
@@ -1167,13 +1176,41 @@ mod tests {
         let fans_before = state.fans;
         let notes = state.tick_week();
 
+        // Transition triggers Goldenes Mikrofon (+15,000 EUR, +400 fans, +15 hype) and unlocks
+        // first_release, hit_8_plus, and golden_mic studio achievements in tick_week().
+        let mut expected_ach_money = 0i64;
+        let mut expected_ach_fans = 0u64;
+        let mut expected_ach_hype = 0.0f64;
+        for id in ["first_release", "hit_8_plus", "golden_mic"] {
+            assert!(
+                state
+                    .tutorials_completed
+                    .iter()
+                    .any(|t| t == &format!("ach:{}", id)),
+                "Expected ach:{} to unlock during year-end tick",
+                id
+            );
+            let spec = ACHIEVEMENTS
+                .iter()
+                .find(|a| a.id == id)
+                .expect("Expected achievement spec");
+            expected_ach_money += spec.reward_money;
+            expected_ach_fans += spec.reward_fans;
+            expected_ach_hype += spec.reward_hype;
+        }
+
         assert_eq!(state.calendar_year(), 1996);
         assert_eq!(state.goty_awards, 0);
         assert_eq!(state.audio_awards, 1);
         // Monthly rent in Garage is 200 EUR, award prize is +15,000 EUR
-        assert_eq!(state.money, money_before - 200 + 15_000);
-        assert_eq!(state.fans, fans_before + 400);
-        assert!((state.hype - (hype_before_transition + 26.0 + 15.0)).abs() < 1e-6);
+        assert_eq!(
+            state.money,
+            money_before - 200 + 15_000 + expected_ach_money
+        );
+        assert_eq!(state.fans, fans_before + 400 + expected_ach_fans);
+        assert!(
+            (state.hype - (hype_before_transition + 26.0 + 15.0 + expected_ach_hype)).abs() < 1e-6
+        );
         assert!(
             notes
                 .iter()
@@ -1479,5 +1516,734 @@ mod tests {
         let loaded = GameState::from_json(&legacy);
         assert_eq!(loaded.audio_awards, 0);
         assert!(!loaded.engines[0].licensed_out);
+    }
+
+    #[test]
+    fn test_sub_genre_compatibility_matrix_and_review_score_impact() {
+        assert_eq!(SUB_GENRES.len(), 8);
+        let unique_sub: HashSet<&&str> = SUB_GENRES.iter().collect();
+        assert_eq!(unique_sub.len(), SUB_GENRES.len());
+
+        let mut all_genres: Vec<&str> = START_GENRES.to_vec();
+        all_genres.extend(RESEARCHABLE_GENRES.iter().map(|g| g.name));
+        assert_eq!(all_genres.len(), 11);
+
+        // Every (genre, sub_genre) pair must return 1, 2, or 3; every genre needs >= 1 peak (3) and
+        // >= 1 niche (1); "Klassisch" must never suffer a compatibility penalty (< 2).
+        for g in &all_genres {
+            let mut has_3 = false;
+            let mut has_1 = false;
+            for sg in SUB_GENRES {
+                let c = get_sub_genre_compatibility(g, sg);
+                assert!((1..=3).contains(&c), "Invalid compat {} for {} / {}", c, g, sg);
+                if c == 3 {
+                    has_3 = true;
+                }
+                if c == 1 {
+                    has_1 = true;
+                }
+            }
+            assert!(has_3, "Genre '{}' must have at least one 3/3 sub-genre", g);
+            assert!(has_1, "Genre '{}' must have at least one 1/3 sub-genre", g);
+            assert!(
+                get_sub_genre_compatibility(g, "Klassisch") >= 2,
+                "Default sub-genre 'Klassisch' must remain >= 2 for '{}'",
+                g
+            );
+        }
+        assert_eq!(get_sub_genre_compatibility("UnknownGenre", "Klassisch"), 2);
+
+        // Verify calculate_review applies +0.03 / 0.0 / -0.03 and DE/EN comments
+        let mut state = GameState::new(1, 1985);
+        state.settings.language = "de".to_string();
+        let make_proj = |sub_genre: &str| GameProject {
+            name: format!("SG Test {}", sub_genre),
+            topic: "Sci-Fi".to_string(),
+            genre: "RPG".to_string(),
+            sub_genre: sub_genre.to_string(),
+            platform: "PC (MS-DOS / Soundkarte)".to_string(),
+            audience: "Jugendliche".to_string(),
+            size: "Mittel".to_string(),
+            marketing: "Keine Kampagne".to_string(),
+            engine_name: "Basis-Tonstudio V1".to_string(),
+            sliders: get_ideal_sliders("RPG"),
+            review: None,
+            sales: 0,
+            revenue: 0,
+            dev_cost: 18_000,
+            release_week: 1,
+            release_year: 1985,
+            weeks_on_market: 0,
+            is_active: true,
+            bugs: 0,
+            patches_released: 0,
+            dlc_count: 0,
+            in_soundtrack_label: false,
+            in_subscription_vault: false,
+            sequel_number: 0,
+            publisher_idx: 0,
+            post_mortem_done: false,
+            quality_boost: 0.0,
+        };
+
+        let rev_best = state.calculate_review(&make_proj("Story-Fokus"), 5); // compat 3 (+0.03)
+        let rev_mid = state.calculate_review(&make_proj("Klassisch"), 5); // compat 2 (0.0)
+        let rev_worst = state.calculate_review(&make_proj("Wirtschaft & Aufbau"), 5); // compat 1 (-0.03)
+
+        assert!(
+            rev_best.average() > rev_worst.average(),
+            "3/3 sub-genre must outscore 1/3 sub-genre ({} vs {})",
+            rev_best.average(),
+            rev_worst.average()
+        );
+        assert!(rev_best.average() >= rev_mid.average() && rev_mid.average() >= rev_worst.average());
+        assert!(rev_best
+            .comments
+            .iter()
+            .any(|c| c.contains("ergänzt 'RPG' hervorragend")));
+        assert!(rev_worst
+            .comments
+            .iter()
+            .any(|c| c.contains("passt nur bedingt zu 'RPG'")));
+        assert!(!rev_mid.comments.iter().any(|c| c.starts_with("Sub-Genre:")));
+
+        state.settings.language = "en".to_string();
+        let rev_best_en = state.calculate_review(&make_proj("Story-Fokus"), 5);
+        let rev_worst_en = state.calculate_review(&make_proj("Wirtschaft & Aufbau"), 5);
+        assert!(rev_best_en
+            .comments
+            .iter()
+            .any(|c| c.contains("elevates 'RPG' brilliantly")));
+        assert!(rev_worst_en
+            .comments
+            .iter()
+            .any(|c| c.contains("feels awkward with 'RPG'")));
+    }
+
+    #[test]
+    fn test_develop_remaster_eligibility_costs_and_completion() {
+        let mut state = GameState::new(1, 1985);
+        state.money = 300_000;
+        // Own an already-retired legacy platform AND an active licensed 1985 platform + custom engine
+        state.bought_platforms.push("Radio-Sendernetz (AM)".to_string());
+        state.buy_platform_license("Commodore Amiga (Paula)").unwrap();
+        state.build_custom_engine("RemasterCore V2").unwrap();
+
+        state.game_history.push(GameProject {
+            name: "Sonic Quest".to_string(),
+            topic: "Sci-Fi".to_string(),
+            genre: "RPG".to_string(),
+            sub_genre: "Story-Fokus".to_string(),
+            platform: "Radio-Sendernetz (AM)".to_string(),
+            audience: "Jugendliche".to_string(),
+            size: "Mittel".to_string(),
+            marketing: "Keine Kampagne".to_string(),
+            engine_name: "Basis-Tonstudio V1".to_string(),
+            sliders: get_ideal_sliders("RPG"),
+            review: Some(ReviewScore::new([8, 8, 9, 8], vec![])),
+            sales: 2500,
+            revenue: 60_000,
+            dev_cost: 18_000,
+            release_week: 5,
+            release_year: 1985,
+            weeks_on_market: 12,
+            is_active: false,
+            bugs: 0,
+            patches_released: 0,
+            dlc_count: 0,
+            in_soundtrack_label: false,
+            in_subscription_vault: false,
+            sequel_number: 0,
+            publisher_idx: 0,
+            post_mortem_done: false,
+            quality_boost: 0.0,
+        });
+
+        // Invalid index rejected
+        assert!(state.develop_remaster(99).is_err());
+
+        // Advance to 1987 (< release_year + 3 = 1988) -> rejected in both DE & EN
+        state.week = (1987 - START_YEAR) * WEEKS_PER_YEAR + 1;
+        assert!(state.develop_remaster(0).unwrap_err().contains("1988"));
+        state.settings.language = "en".to_string();
+        assert!(state.develop_remaster(0).unwrap_err().contains("1988"));
+        state.settings.language = "de".to_string();
+
+        // Advance to 1988 -> check insufficient funds first
+        state.week = (1988 - START_YEAR) * WEEKS_PER_YEAR + 1;
+        let saved_money = state.money;
+        state.money = 1_000;
+        let fund_err = state.develop_remaster(0).unwrap_err();
+        assert!(fund_err.contains("9000"));
+        state.money = saved_money;
+
+        // Start remaster: 50% of 18,000 = 9,000 EUR, 60% of 6 weeks = 4 weeks, +15 hype, +0.04 quality_boost
+        state.hype = 10.0;
+        let ok_msg = state.develop_remaster(0).unwrap();
+        assert!(ok_msg.contains("Sonic Quest (Remaster)"));
+        assert!(ok_msg.contains("Commodore Amiga (Paula)"));
+        assert_eq!(state.money, saved_money - 9_000);
+        assert!((state.hype - 25.0).abs() < 1e-6);
+        assert_eq!(state.active_projects.len(), 1);
+
+        let ap = &state.active_projects[0];
+        assert_eq!(ap.project.name, "Sonic Quest (Remaster)");
+        assert_eq!(ap.project.platform, "Commodore Amiga (Paula)");
+        assert_eq!(ap.project.engine_name, "RemasterCore V2");
+        assert_eq!(ap.total_weeks, 4);
+        assert_eq!(ap.project.dev_cost, 9_000);
+        assert!((ap.project.quality_boost - 0.04).abs() < 1e-9);
+
+        // Cannot start duplicate remaster while active
+        assert!(state.develop_remaster(0).is_err());
+
+        // Advance 4 weeks and finish release
+        for _ in 0..4 {
+            state.tick_week();
+        }
+        assert!(state.active_projects[0].ready_to_finish);
+        let finished = state.finish_ready_project(0).expect("Remaster should release");
+        assert_eq!(finished.name, "Sonic Quest (Remaster)");
+        assert_eq!(state.game_history.len(), 2);
+
+        // Cannot remaster original again after release, nor remaster a remaster
+        assert!(state.develop_remaster(0).is_err());
+        assert!(state.develop_remaster(1).is_err());
+        state.settings.language = "en".to_string();
+        assert!(state
+            .develop_remaster(1)
+            .unwrap_err()
+            .contains("already a remaster"));
+    }
+
+    #[test]
+    fn test_develop_remaster_custom_console_fallback_cost_and_json_roundtrip() {
+        let mut state = GameState::new(0, 1995);
+        state.money = 500_000;
+        state.develop_console("AetherStation 95").unwrap();
+        // Custom console market_multi = 8.0 + market_share * 10.0 = 17.0 (beats standard platforms)
+        state.custom_consoles[0].market_share = 0.90;
+
+        state.game_history.push(GameProject {
+            name: "Legacy Symphony".to_string(),
+            topic: "Mittelalter".to_string(),
+            genre: "Abenteuer".to_string(),
+            sub_genre: "Klassisch".to_string(),
+            platform: "Radio-Sendernetz (AM)".to_string(),
+            audience: "Jeder".to_string(),
+            size: "AAA".to_string(),
+            marketing: "Keine Kampagne".to_string(),
+            engine_name: "Basis-Tonstudio V1".to_string(),
+            sliders: get_ideal_sliders("Abenteuer"),
+            review: Some(ReviewScore::new([9, 8, 9, 9], vec![])),
+            sales: 4000,
+            revenue: 120_000,
+            dev_cost: 0, // force size-based fallback: AAA 180,000 / 2 = 90,000 EUR
+            release_week: 1,
+            release_year: 1980,
+            weeks_on_market: 20,
+            is_active: false,
+            bugs: 0,
+            patches_released: 0,
+            dlc_count: 0,
+            in_soundtrack_label: false,
+            in_subscription_vault: false,
+            sequel_number: 0,
+            publisher_idx: 0,
+            post_mortem_done: false,
+            quality_boost: 0.0,
+        });
+
+        let money_before = state.money;
+        state.settings.language = "en".to_string();
+        let msg = state.develop_remaster(0).unwrap();
+        assert!(msg.contains("AetherStation 95"));
+        assert!(msg.contains("8 weeks")); // 14 * 0.6 = 8.4 -> 8
+        assert!(msg.contains("90000 EUR"));
+        assert_eq!(state.money, money_before - 90_000);
+        assert_eq!(state.active_projects[0].project.platform, "AetherStation 95");
+        assert_eq!(state.active_projects[0].total_weeks, 8);
+
+        let restored = GameState::from_json(&state.to_json());
+        assert_eq!(restored.active_projects.len(), 1);
+        assert_eq!(
+            restored.active_projects[0].project.name,
+            "Legacy Symphony (Remaster)"
+        );
+    }
+
+    #[test]
+    fn test_acquired_rival_weekly_subsidiary_dividends() {
+        let mut state = GameState::new(1, 1990);
+        state.week = (1990 - START_YEAR) * WEEKS_PER_YEAR + 1; // week 1 of Jan 1990 (month_index 0)
+        state.money = 100_000;
+
+        // Rival 0: low valuation 50,000 -> 50,000 / 250 = 200 -> clamped to floor 400 EUR/week
+        // Rival 1: high valuation 250,000 -> 250,000 / 250 = 1,000 EUR/week
+        // Rivals 2 & 3: unacquired (0 EUR/week)
+        state.rivals[0].valuation = 50_000;
+        state.rivals[0].acquired_by_player = true;
+        state.rivals[1].valuation = 250_000;
+        state.rivals[1].acquired_by_player = true;
+        state.rivals[2].acquired_by_player = false;
+        state.rivals[3].acquired_by_player = false;
+
+        let expected_weekly_dividend = 400 + 1_000;
+        let rival_ach_reward = ACHIEVEMENTS
+            .iter()
+            .find(|a| a.id == "rival_acquirer")
+            .unwrap()
+            .reward_money;
+
+        // First tick: month stays 0 (no monthly payroll/rent), pays dividend + unlocks rival_acquirer
+        let rev_before = state.total_revenue;
+        let money_before = state.money;
+        state.tick_week();
+        assert!(state
+            .tutorials_completed
+            .iter()
+            .any(|t| t == "ach:rival_acquirer"));
+        assert_eq!(
+            state.money,
+            money_before + expected_weekly_dividend + rival_ach_reward
+        );
+        assert_eq!(state.total_revenue, rev_before + expected_weekly_dividend);
+
+        // Second tick: same month, no achievement repeat, clean exact dividend payout
+        let money_w2 = state.money;
+        let rev_w2 = state.total_revenue;
+        state.tick_week();
+        assert_eq!(state.money, money_w2 + expected_weekly_dividend);
+        assert_eq!(state.total_revenue, rev_w2 + expected_weekly_dividend);
+
+        // evaluate_annual_goty must skip acquired rivals when updating best_year_score
+        state.rivals[0].best_year_score = 4.2;
+        let prev_unacquired_rep = state.rivals[2].reputation;
+        let _ = state.evaluate_annual_goty(1990);
+        assert!((state.rivals[0].best_year_score - 4.2).abs() < 1e-6);
+        assert!(
+            (state.rivals[2].best_year_score - (prev_unacquired_rep + 0.3).clamp(5.0, 9.2)).abs()
+                < 1e-6
+        );
+
+        // JSON persistence preserves acquired_by_player flags
+        let loaded = GameState::from_json(&state.to_json());
+        assert!(loaded.rivals[0].acquired_by_player);
+        assert!(loaded.rivals[1].acquired_by_player);
+        assert!(!loaded.rivals[2].acquired_by_player);
+        assert!(!loaded.rivals[3].acquired_by_player);
+    }
+
+    #[test]
+    fn test_achievements_all_12_definitions_unlocking_and_persistence() {
+        assert_eq!(ACHIEVEMENTS.len(), 12);
+        let expected_ids = [
+            "first_release",
+            "hit_8_plus",
+            "masterpiece_9_plus",
+            "millionaire",
+            "fans_10k",
+            "custom_engine",
+            "hardware_pioneer",
+            "label_mogul",
+            "soundcon_keynote",
+            "rival_acquirer",
+            "golden_mic",
+            "timeline_veteran",
+        ];
+        let mut seen_ids = HashSet::new();
+        for (spec, expected_id) in ACHIEVEMENTS.iter().zip(expected_ids.iter()) {
+            assert_eq!(spec.id, *expected_id);
+            assert!(seen_ids.insert(spec.id));
+            assert!(!spec.title_de.trim().is_empty() && !spec.title_en.trim().is_empty());
+            assert!(!spec.desc_de.trim().is_empty() && !spec.desc_en.trim().is_empty());
+            assert!(spec.reward_money > 0 && spec.reward_fans > 0 && spec.reward_hype > 0.0);
+        }
+
+        // Fresh studio in week 48 of 2025 -> zero achievements met initially
+        let mut state = GameState::new(1, 2025);
+        state.week = (2025 - START_YEAR) * WEEKS_PER_YEAR + WEEKS_PER_YEAR;
+        state.money = 300_000;
+        state.fans = 100;
+        state.hype = 5.0;
+        assert!(state.check_and_unlock_achievements().is_empty());
+
+        // 1-3: first_release + hit_8_plus + masterpiece_9_plus
+        state.game_history.push(GameProject {
+            name: "Magnum Audio".to_string(),
+            topic: "Neural-Link".to_string(),
+            genre: "RPG".to_string(),
+            sub_genre: "Story-Fokus".to_string(),
+            platform: "PC (Digital / Steam)".to_string(),
+            audience: "Hardcore-Gamer".to_string(),
+            size: "Groß".to_string(),
+            marketing: "Keine Kampagne".to_string(),
+            engine_name: "Basis-Tonstudio V1".to_string(),
+            sliders: get_ideal_sliders("RPG"),
+            review: Some(ReviewScore::new([9, 9, 10, 9], vec![])),
+            sales: 1000,
+            revenue: 30_000,
+            dev_cost: 55_000,
+            release_week: 20,
+            release_year: 2025,
+            weeks_on_market: 4,
+            is_active: false,
+            bugs: 0,
+            patches_released: 0,
+            dlc_count: 0,
+            in_soundtrack_label: false,
+            in_subscription_vault: false,
+            sequel_number: 0,
+            publisher_idx: 0,
+            post_mortem_done: false,
+            quality_boost: 0.0,
+        });
+        let unlocked_1 = state.check_and_unlock_achievements();
+        assert_eq!(unlocked_1.len(), 3);
+        assert!(unlocked_1.iter().any(|m| m.contains("Erste Veröffentlichung")));
+        assert!(unlocked_1.iter().any(|m| m.contains("Kritikerliebling")));
+        assert!(unlocked_1.iter().any(|m| m.contains("Klang-Meisterwerk")));
+
+        // 4: custom_engine
+        state.build_custom_engine("Wave2Engine").unwrap();
+        let unlocked_2 = state.check_and_unlock_achievements();
+        assert_eq!(unlocked_2.len(), 1);
+        assert!(unlocked_2[0].contains("Eigener Klangkern"));
+
+        // 5: hardware_pioneer via soundcard (and separately confirm custom console triggers it too)
+        state.develop_soundcard("Wave2DSP").unwrap();
+        let unlocked_3 = state.check_and_unlock_achievements();
+        assert_eq!(unlocked_3.len(), 1);
+        assert!(unlocked_3[0].contains("Hardware-Pionier"));
+
+        let mut console_state = GameState::new(0, 1995);
+        console_state.money = 500_000;
+        console_state.develop_console("ConsoleAch").unwrap();
+        assert!(console_state
+            .check_and_unlock_achievements()
+            .iter()
+            .any(|m| m.contains("Hardware-Pionier")));
+
+        // 6-9 in EN: label_mogul, soundcon_keynote, rival_acquirer, golden_mic
+        state.settings.language = "en".to_string();
+        state.label_active = true;
+        state.last_soundcon_year = 2025;
+        state.rivals[0].acquired_by_player = true;
+        state.audio_awards = 1;
+        // Keep below millionaire & fans_10k boundaries before unlocking those two explicitly
+        state.money = 100_000;
+        state.fans = 500;
+        let unlocked_4 = state.check_and_unlock_achievements();
+        assert_eq!(unlocked_4.len(), 4);
+        assert!(unlocked_4.iter().any(|m| m.contains("Soundtrack Label Mogul")));
+        assert!(unlocked_4.iter().any(|m| m.contains("SoundCon Keynote")));
+        assert!(unlocked_4.iter().any(|m| m.contains("Rival Acquirer")));
+        assert!(unlocked_4.iter().any(|m| m.contains("Golden Microphone Winner")));
+
+        // 10-11: boundary below (999_999 EUR, 9_999 fans) must NOT unlock; threshold unlocks both
+        state.money = 999_999;
+        state.fans = 9_999;
+        assert!(state.check_and_unlock_achievements().is_empty());
+
+        state.money = 1_000_000;
+        state.fans = 10_000;
+        let m_before = state.money;
+        let f_before = state.fans;
+        let unlocked_5 = state.check_and_unlock_achievements();
+        assert_eq!(unlocked_5.len(), 2);
+        assert_eq!(state.money, m_before + 100_000 + 25_000);
+        assert_eq!(state.fans, f_before + 2_500 + 2_000);
+        assert!(state.emails.iter().any(|e| e.subject.contains("Studio Achievement:")));
+
+        // 12: timeline_veteran unlocks automatically in tick_week() when crossing 2025 -> 2026
+        let notes_2026 = state.tick_week();
+        assert_eq!(state.calendar_year(), 2026);
+        assert!(notes_2026
+            .iter()
+            .any(|n| n.contains("Century Timeline Veteran")));
+
+        // All 12 persisted in tutorials_completed, idempotent, and preserved across JSON roundtrip
+        for id in expected_ids {
+            assert!(
+                state
+                    .tutorials_completed
+                    .iter()
+                    .any(|t| t == &format!("ach:{}", id)),
+                "Missing ach:{} in tutorials_completed",
+                id
+            );
+        }
+        assert!(state.check_and_unlock_achievements().is_empty());
+
+        let reloaded = GameState::from_json(&state.to_json());
+        for id in expected_ids {
+            assert!(reloaded
+                .tutorials_completed
+                .iter()
+                .any(|t| t == &format!("ach:{}", id)));
+        }
+    }
+
+    #[test]
+    fn test_wave2_menus_subgenre_remaster_dividends_and_achievements_de_en() {
+        // 1. Check all 6 new Wave 2 i18n keys in DE & EN
+        let de = build_dictionary(Lang::De);
+        let en = build_dictionary(Lang::En);
+        for k in [
+            "subgenre_compat_3",
+            "subgenre_compat_2",
+            "subgenre_compat_1",
+            "achievements_section_title",
+            "achievement_unlocked",
+            "achievement_locked",
+        ] {
+            let dv = de.get(k).unwrap_or_else(|| panic!("Missing DE key {}", k));
+            let ev = en.get(k).unwrap_or_else(|| panic!("Missing EN key {}", k));
+            assert!(!dv.trim().is_empty() && !ev.trim().is_empty());
+        }
+
+        // 2. DevelopSubGenreMenu routing, stars & DE/EN localization
+        let mut state = GameState::new(1, 1988);
+        state.money = 300_000;
+        let mut audio = AudioManager::new(true);
+        let mut ctrl = MenuController::new(&state);
+
+        ctrl.switch_to(MenuId::DevelopGenreMenu, &state, &audio);
+        let genre_idx = ctrl
+            .options
+            .iter()
+            .position(|o| matches!(&o.action, MenuAction::SelectGenre(g) if g == "Abenteuer"))
+            .expect("Abenteuer missing in DevelopGenreMenu");
+        ctrl.current_index = genre_idx;
+        ctrl.handle_input(KeyInput::Enter, &mut state, &mut audio);
+        assert_eq!(ctrl.current_menu, MenuId::DevelopSubGenreMenu);
+        assert!(ctrl.title.contains("Sub-Genre"));
+        assert!(ctrl
+            .options
+            .iter()
+            .any(|o| o.text.contains("Story-Fokus ★★★ [3/3] - Traum-Kombination")));
+        assert!(ctrl
+            .options
+            .iter()
+            .any(|o| o.text.contains("Wirtschaft & Aufbau ★☆☆ [1/3] - Nischen-Mix")));
+
+        let story_idx = ctrl
+            .options
+            .iter()
+            .position(|o| matches!(&o.action, MenuAction::SelectSubGenre(s) if s == "Story-Fokus"))
+            .expect("Story-Fokus option missing");
+        ctrl.current_index = story_idx;
+        ctrl.handle_input(KeyInput::Enter, &mut state, &mut audio);
+        assert_eq!(ctrl.current_menu, MenuId::DevelopPlatformMenu);
+        assert_eq!(state.current_draft.sub_genre, "Story-Fokus");
+
+        // Back navigation: DevelopPlatformMenu -> DevelopSubGenreMenu -> DevelopGenreMenu
+        ctrl.handle_input(KeyInput::Back, &mut state, &mut audio);
+        assert_eq!(ctrl.current_menu, MenuId::DevelopSubGenreMenu);
+        ctrl.handle_input(KeyInput::Back, &mut state, &mut audio);
+        assert_eq!(ctrl.current_menu, MenuId::DevelopGenreMenu);
+
+        // Verify EN DevelopSubGenreMenu
+        state.settings.language = "en".to_string();
+        state.current_draft.genre = "Abenteuer".to_string();
+        ctrl.switch_to(MenuId::DevelopSubGenreMenu, &state, &audio);
+        assert!(ctrl.title.contains("Choose Sub-Genre (Abenteuer Synergy)"));
+        assert!(ctrl
+            .options
+            .iter()
+            .any(|o| o.text.contains("Story-Fokus ★★★ [3/3] - Dream Combo")));
+        assert!(ctrl
+            .options
+            .iter()
+            .any(|o| o.text.contains("Wirtschaft & Aufbau ★☆☆ [1/3] - Niche Mix")));
+
+        // 3. ActiveProjectsMenu: eligible 1985 classic shows [Remaster], 1987 & existing (Remaster) hidden
+        let base_proj = |name: &str, yr: u32| GameProject {
+            name: name.to_string(),
+            topic: "Sci-Fi".to_string(),
+            genre: "RPG".to_string(),
+            sub_genre: "Story-Fokus".to_string(),
+            platform: "PC (MS-DOS / Soundkarte)".to_string(),
+            audience: "Jugendliche".to_string(),
+            size: "Mittel".to_string(),
+            marketing: "Keine Kampagne".to_string(),
+            engine_name: "Basis-Tonstudio V1".to_string(),
+            sliders: get_ideal_sliders("RPG"),
+            review: Some(ReviewScore::new([8, 8, 8, 8], vec![])),
+            sales: 1000,
+            revenue: 25_000,
+            dev_cost: 18_000,
+            release_week: 5,
+            release_year: yr,
+            weeks_on_market: 0,
+            is_active: false,
+            bugs: 0,
+            patches_released: 0,
+            dlc_count: 0,
+            in_soundtrack_label: false,
+            in_subscription_vault: false,
+            sequel_number: 0,
+            publisher_idx: 0,
+            post_mortem_done: false,
+            quality_boost: 0.0,
+        };
+        state.game_history.push(base_proj("Classic 85", 1985));
+        state.game_history.push(base_proj("Recent 87", 1987));
+        state
+            .game_history
+            .push(base_proj("Old Title (Remaster)", 1980));
+
+        // EN ActiveProjectsMenu
+        ctrl.switch_to(MenuId::ActiveProjectsMenu, &state, &audio);
+        let remaster_opts_en: Vec<_> = ctrl
+            .options
+            .iter()
+            .filter(|o| matches!(o.action, MenuAction::DevelopRemaster(_)))
+            .collect();
+        assert_eq!(remaster_opts_en.len(), 1);
+        assert!(remaster_opts_en[0]
+            .text
+            .contains("[Remaster] Classic 85 (1985)"));
+        assert!(remaster_opts_en[0].text.contains("Cost: 9000 EUR"));
+
+        // DE ActiveProjectsMenu + execute DevelopRemaster(0) via Enter
+        state.settings.language = "de".to_string();
+        ctrl.switch_to(MenuId::ActiveProjectsMenu, &state, &audio);
+        let remaster_pos = ctrl
+            .options
+            .iter()
+            .position(|o| {
+                matches!(o.action, MenuAction::DevelopRemaster(0))
+                    && o.text.contains("[Remaster entwickeln] Classic 85 (1985)")
+                    && o.text.contains("Kosten: 9000 EUR")
+            })
+            .expect("DE Remaster option for Classic 85 missing");
+        ctrl.current_index = remaster_pos;
+        ctrl.handle_input(KeyInput::Enter, &mut state, &mut audio);
+        assert_eq!(state.active_projects.len(), 1);
+        assert_eq!(state.active_projects[0].project.name, "Classic 85 (Remaster)");
+        assert!(
+            !ctrl
+                .options
+                .iter()
+                .any(|o| matches!(o.action, MenuAction::DevelopRemaster(0))),
+            "Active remaster must remove duplicate DevelopRemaster option"
+        );
+
+        // 4. ChartsGotyMenu: 12-item ACHIEVEMENTS checklist in DE & EN
+        state
+            .tutorials_completed
+            .push("ach:first_release".to_string());
+        state.tutorials_completed.push("ach:hit_8_plus".to_string());
+        ctrl.switch_to(MenuId::ChartsGotyMenu, &state, &audio);
+        assert!(ctrl
+            .options
+            .iter()
+            .any(|o| o.text.contains("--- Erfolge & Meilensteine (2/12) ---")));
+        assert_eq!(
+            ctrl.options
+                .iter()
+                .filter(|o| o.text.starts_with("[Freigeschaltet]"))
+                .count(),
+            2
+        );
+        assert_eq!(
+            ctrl.options
+                .iter()
+                .filter(|o| o.text.starts_with("[Offen]"))
+                .count(),
+            10
+        );
+
+        state.settings.language = "en".to_string();
+        ctrl.switch_to(MenuId::ChartsGotyMenu, &state, &audio);
+        assert!(ctrl
+            .options
+            .iter()
+            .any(|o| o.text.contains("--- Achievements & Milestones (2/12) ---")));
+        assert_eq!(
+            ctrl.options
+                .iter()
+                .filter(|o| o.text.starts_with("[Unlocked]"))
+                .count(),
+            2
+        );
+        assert_eq!(
+            ctrl.options
+                .iter()
+                .filter(|o| o.text.starts_with("[Locked]"))
+                .count(),
+            10
+        );
+        for opt in &ctrl.options {
+            assert!(!opt.text.contains("[Freigeschaltet]"));
+            assert!(!opt.text.contains("[Offen]"));
+        }
+
+        // 5. BankRivalsMenu: acquired rival shows subsidiary weekly dividends in EN & DE
+        state.rivals[0].valuation = 300_000; // 300,000 / 250 = 1,200 EUR/week
+        state.rivals[0].acquired_by_player = true;
+        ctrl.switch_to(MenuId::BankRivalsMenu, &state, &audio);
+        assert!(ctrl.options.iter().any(|o| o
+            .text
+            .contains("[Owned Subsidiary]")
+            && o.text.contains("Weekly Dividend: 1200 EUR/week")));
+
+        state.settings.language = "de".to_string();
+        ctrl.switch_to(MenuId::BankRivalsMenu, &state, &audio);
+        assert!(ctrl.options.iter().any(|o| o
+            .text
+            .contains("[Tochterstudio im Besitz]")
+            && o.text.contains("Dividende: 1200 EUR/Woche")));
+    }
+
+    #[test]
+    fn test_acquire_rival_via_bank_menu_and_remaster_market_synergy() {
+        let mut state = GameState::new(1, 1995);
+        state.money = 2_000_000;
+        let rival_price = state.rivals[0].valuation;
+        let expected_div = (rival_price / 250).max(400);
+        let fans_before = state.fans;
+
+        let mut audio = AudioManager::new(true);
+        let mut ctrl = MenuController::new(&state);
+        ctrl.switch_to(MenuId::BankRivalsMenu, &state, &audio);
+        let acq_idx = ctrl
+            .options
+            .iter()
+            .position(|o| matches!(o.action, MenuAction::AcquireRival(0)))
+            .expect("AcquireRival(0) missing in BankRivalsMenu");
+        ctrl.current_index = acq_idx;
+        ctrl.handle_input(KeyInput::Enter, &mut state, &mut audio);
+
+        assert!(state.rivals[0].acquired_by_player);
+        assert_eq!(state.money, 2_000_000 - rival_price);
+        assert_eq!(state.fans, fans_before + 5_000);
+        assert!(ctrl
+            .options
+            .iter()
+            .any(|o| o.text.contains("[Tochterstudio im Besitz]")
+                && o.text.contains(&format!("Dividende: {} EUR/Woche", expected_div))));
+
+        // Ensure tick_week pays the dividend and unlocks rival_acquirer
+        let ach_money = ACHIEVEMENTS
+            .iter()
+            .filter(|a| a.id == "rival_acquirer" || a.id == "millionaire")
+            .fold(0i64, |acc, a| {
+                if a.id == "millionaire" && state.money < 1_000_000 {
+                    acc
+                } else {
+                    acc + a.reward_money
+                }
+            });
+        let money_before_tick = state.money;
+        let rev_before_tick = state.total_revenue;
+        state.tick_week();
+        assert_eq!(state.total_revenue, rev_before_tick + expected_div);
+        assert_eq!(state.money, money_before_tick + expected_div + ach_money);
+        assert!(state
+            .tutorials_completed
+            .iter()
+            .any(|t| t == "ach:rival_acquirer"));
     }
 }

@@ -153,6 +153,13 @@ pub fn build_dictionary(lang: Lang) -> BTreeMap<&'static str, &'static str> {
         ("timeline_milestones_prefix", "Meilensteine", "Milestones"),
         ("timeline_no_events", "Noch keine historischen Ereignisse protokolliert.", "No historical events logged yet."),
         ("audio_awards_label", "Audio-Preise", "Audio Awards"),
+        // Wave 2: Sub-Genres & Achievements
+        ("subgenre_compat_3", "Traum-Kombination", "Dream Combo"),
+        ("subgenre_compat_2", "Solide Wahl", "Solid Choice"),
+        ("subgenre_compat_1", "Nischen-Mix", "Niche Mix"),
+        ("achievements_section_title", "Erfolge & Meilensteine", "Achievements & Milestones"),
+        ("achievement_unlocked", "[Freigeschaltet]", "[Unlocked]"),
+        ("achievement_locked", "[Offen]", "[Locked]"),
     ];
 
     for &(k, de_val, en_val) in pairs {

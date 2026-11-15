@@ -1101,6 +1101,14 @@ impl GameState {
             _ => -0.07,
         };
 
+        // 5b. Sub-Genre Compatibility
+        let sub_compat = get_sub_genre_compatibility(&project.genre, &project.sub_genre);
+        let sub_mod = match sub_compat {
+            3 => 0.03,
+            1 => -0.03,
+            _ => 0.0,
+        };
+
         // 6. Trend Bonus
         let mut trend_multi = 1.0;
         if project.topic == self.trend_topic {
@@ -1125,6 +1133,7 @@ impl GameState {
             + tech_bonus
             + access_bonus
             + aud_mod
+            + sub_mod
             + project.quality_boost
             + diff_mod)
             * trend_multi;
@@ -1181,6 +1190,17 @@ impl GameState {
                     project.audience, project.topic, project.genre
                 ));
             }
+            if sub_compat == 3 {
+                comments.push(format!(
+                    "Sub-Genre: '{}' elevates '{}' brilliantly!",
+                    project.sub_genre, project.genre
+                ));
+            } else if sub_compat == 1 {
+                comments.push(format!(
+                    "Sub-Genre: '{}' feels awkward with '{}'.",
+                    project.sub_genre, project.genre
+                ));
+            }
             if project.sequel_number > 0 {
                 comments.push(format!(
                     "Franchise: Sequel #{} builds on an established series!",
@@ -1234,6 +1254,17 @@ impl GameState {
                 comments.push(format!(
                     "Zielgruppe: '{}' passt leider schlecht zu '{}' und '{}'.",
                     project.audience, project.topic, project.genre
+                ));
+            }
+            if sub_compat == 3 {
+                comments.push(format!(
+                    "Sub-Genre: '{}' ergänzt '{}' hervorragend!",
+                    project.sub_genre, project.genre
+                ));
+            } else if sub_compat == 1 {
+                comments.push(format!(
+                    "Sub-Genre: '{}' passt nur bedingt zu '{}'.",
+                    project.sub_genre, project.genre
                 ));
             }
             if project.sequel_number > 0 {
@@ -1685,6 +1716,15 @@ impl GameState {
             }
         }
 
+        // Acquired rival studio subsidiary weekly dividends
+        for r in &self.rivals {
+            if r.acquired_by_player {
+                let dividend = (r.valuation / 250).max(400);
+                self.money += dividend;
+                self.total_revenue += dividend;
+            }
+        }
+
         // Merchandising sales
         if self.merch_stock > 0 && self.fans > 0 {
             let sold = (self.fans / 50).max(5).min(self.merch_stock);
@@ -1758,6 +1798,10 @@ impl GameState {
             self.refresh_contracts();
             self.refresh_hire_candidates();
         }
+
+        // 9. Studio Achievements
+        let achievement_notes = self.check_and_unlock_achievements();
+        notifications.extend(achievement_notes);
 
         notifications
     }
@@ -2742,6 +2786,285 @@ impl GameState {
         );
 
         Ok(report_msg)
+    }
+
+    /// Start a modernized remaster of an eligible classic from `game_history`.
+    pub fn develop_remaster(&mut self, history_idx: usize) -> Result<String, String> {
+        let is_en = self.is_en();
+        if history_idx >= self.game_history.len() {
+            return Err(if is_en {
+                "Invalid game index.".to_string()
+            } else {
+                "Ungültiges Spiel.".to_string()
+            });
+        }
+        let orig = self.game_history[history_idx].clone();
+        if orig.name.contains("(Remaster)") {
+            return Err(if is_en {
+                format!("'{}' is already a remaster!", orig.name)
+            } else {
+                format!("'{}' ist bereits ein Remaster!", orig.name)
+            });
+        }
+        let remaster_title = format!("{} (Remaster)", orig.name);
+        if self
+            .active_projects
+            .iter()
+            .any(|ap| ap.project.name == remaster_title)
+            || self.game_history.iter().any(|g| g.name == remaster_title)
+        {
+            return Err(if is_en {
+                format!("A remaster of '{}' already exists or is in production!", orig.name)
+            } else {
+                format!("Für '{}' existiert oder entsteht bereits ein Remaster!", orig.name)
+            });
+        }
+
+        let year = self.calendar_year();
+        if year < orig.release_year + 3 {
+            return Err(if is_en {
+                format!(
+                    "'{}' is too recent for a remaster (available from {}).",
+                    orig.name,
+                    orig.release_year + 3
+                )
+            } else {
+                format!(
+                    "'{}' ist noch zu neu für ein Remaster (erst ab {} möglich).",
+                    orig.name,
+                    orig.release_year + 3
+                )
+            });
+        }
+
+        let base_size_cost = match orig.size.as_str() {
+            "Klein" => 6_000,
+            "Mittel" => 18_000,
+            "Groß" => 55_000,
+            "AAA" => 180_000,
+            "MMO" => 350_000,
+            _ => 12_000,
+        };
+        let cost = if orig.dev_cost > 0 {
+            ((orig.dev_cost as f64) * 0.5).round() as i64
+        } else {
+            base_size_cost / 2
+        };
+        if self.money < cost {
+            return Err(if is_en {
+                format!(
+                    "Not enough money! Remastering '{}' requires {} EUR.",
+                    orig.name, cost
+                )
+            } else {
+                format!(
+                    "Nicht genug Geld! Das Remaster von '{}' kostet {} Euro.",
+                    orig.name, cost
+                )
+            });
+        }
+
+        let base_weeks = match orig.size.as_str() {
+            "Klein" => 4,
+            "Mittel" => 6,
+            "Groß" => 10,
+            "AAA" => 14,
+            "MMO" => 18,
+            _ => 6,
+        };
+        let total_weeks = ((base_weeks as f64) * 0.6).round().max(1.0) as u32;
+
+        let avail_plats = get_available_platforms(year);
+        let best_standard = avail_plats
+            .iter()
+            .filter(|p| self.bought_platforms.iter().any(|bp| bp == p.name))
+            .max_by(|a, b| {
+                a.market_multi
+                    .partial_cmp(&b.market_multi)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            });
+        let best_custom = self.custom_consoles.iter().max_by(|a, b| {
+            a.market_share
+                .partial_cmp(&b.market_share)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+        let platform = match (best_standard, best_custom) {
+            (Some(std_p), Some(cust_p)) => {
+                let cust_multi = 8.0 + cust_p.market_share * 10.0;
+                if cust_multi > std_p.market_multi {
+                    cust_p.name.clone()
+                } else {
+                    std_p.name.to_string()
+                }
+            }
+            (Some(std_p), None) => std_p.name.to_string(),
+            (None, Some(cust_p)) => cust_p.name.clone(),
+            (None, None) => avail_plats
+                .iter()
+                .filter(|p| p.license_fee == 0)
+                .max_by(|a, b| {
+                    a.market_multi
+                        .partial_cmp(&b.market_multi)
+                        .unwrap_or(std::cmp::Ordering::Equal)
+                })
+                .or_else(|| avail_plats.first())
+                .map(|p| p.name.to_string())
+                .unwrap_or_else(|| orig.platform.clone()),
+        };
+
+        let engine_name = self
+            .engines
+            .iter()
+            .max_by(|a, b| {
+                a.tech_level.cmp(&b.tech_level).then_with(|| {
+                    a.quality_bonus
+                        .partial_cmp(&b.quality_bonus)
+                        .unwrap_or(std::cmp::Ordering::Equal)
+                })
+            })
+            .map(|e| e.name.clone())
+            .unwrap_or_else(|| orig.engine_name.clone());
+
+        self.money -= cost;
+        self.hype = (self.hype + 15.0).clamp(0.0, 250.0);
+
+        let proj = GameProject {
+            name: remaster_title.clone(),
+            topic: orig.topic,
+            genre: orig.genre,
+            sub_genre: orig.sub_genre,
+            platform: platform.clone(),
+            audience: orig.audience,
+            size: orig.size,
+            marketing: "Keine Kampagne".to_string(),
+            engine_name,
+            sliders: orig.sliders,
+            review: None,
+            sales: 0,
+            revenue: 0,
+            dev_cost: cost,
+            release_week: 0,
+            release_year: year,
+            weeks_on_market: 0,
+            is_active: true,
+            bugs: 0,
+            patches_released: 0,
+            dlc_count: 0,
+            in_soundtrack_label: false,
+            in_subscription_vault: false,
+            sequel_number: 0,
+            publisher_idx: 0,
+            post_mortem_done: false,
+            quality_boost: 0.04,
+        };
+
+        self.active_projects.push(ActiveProject {
+            project: proj,
+            progress_weeks: 0.0,
+            total_weeks,
+            bugs: 0,
+            crunch_active: false,
+            ready_to_finish: false,
+            decision_made: false,
+            polish_passes: 0,
+        });
+
+        Ok(if is_en {
+            format!(
+                "Started remaster '{}' for {} ({} weeks, cost: {} EUR, +15 hype, +4% quality)!",
+                remaster_title, platform, total_weeks, cost
+            )
+        } else {
+            format!(
+                "Remaster '{}' für {} gestartet ({} Wochen, Kosten: {} Euro, +15 Hype, +4% Qualität)!",
+                remaster_title, platform, total_weeks, cost
+            )
+        })
+    }
+
+    /// Evaluate and unlock studio milestone achievements, persisting `"ach:<id>"` in `tutorials_completed`.
+    pub fn check_and_unlock_achievements(&mut self) -> Vec<String> {
+        let is_en = self.is_en();
+        let curr_year = self.calendar_year();
+        let has_score_at_least = |threshold: f64| -> bool {
+            self.high_score >= threshold
+                || self.game_history.iter().any(|g| {
+                    g.review
+                        .as_ref()
+                        .map(|r| r.average() >= threshold)
+                        .unwrap_or(false)
+                })
+        };
+
+        let mut unlocked_msgs = Vec::new();
+        for spec in ACHIEVEMENTS {
+            let key = format!("ach:{}", spec.id);
+            if self.tutorials_completed.iter().any(|t| t == &key) {
+                continue;
+            }
+            let met = match spec.id {
+                "first_release" => !self.game_history.is_empty(),
+                "hit_8_plus" => has_score_at_least(8.0),
+                "masterpiece_9_plus" => has_score_at_least(9.0),
+                "millionaire" => self.money >= 1_000_000,
+                "fans_10k" => self.fans >= 10_000,
+                "custom_engine" => self.engines.len() >= 2,
+                "hardware_pioneer" => {
+                    !self.custom_soundcards.is_empty() || !self.custom_consoles.is_empty()
+                }
+                "label_mogul" => self.label_active,
+                "soundcon_keynote" => {
+                    self.last_soundcon_year >= 1995 || !self.soundcon_history.is_empty()
+                }
+                "rival_acquirer" => self.rivals.iter().any(|r| r.acquired_by_player),
+                "golden_mic" => self.audio_awards >= 1,
+                "timeline_veteran" => curr_year >= 2026,
+                _ => false,
+            };
+            if met {
+                self.tutorials_completed.push(key);
+                self.money += spec.reward_money;
+                self.fans += spec.reward_fans;
+                self.hype = (self.hype + spec.reward_hype).clamp(0.0, 250.0);
+
+                let (title, desc) = if is_en {
+                    (spec.title_en, spec.desc_en)
+                } else {
+                    (spec.title_de, spec.desc_de)
+                };
+                let msg = if is_en {
+                    format!(
+                        "Achievement Unlocked: {}! (+{} EUR, +{} fans, +{:.0} hype)",
+                        title, spec.reward_money, spec.reward_fans, spec.reward_hype
+                    )
+                } else {
+                    format!(
+                        "Erfolg freigeschaltet: {}! (+{} Euro, +{} Fans, +{:.0} Hype)",
+                        title, spec.reward_money, spec.reward_fans, spec.reward_hype
+                    )
+                };
+                self.emails.insert(
+                    0,
+                    Email {
+                        sender: tr(self.lang(), "sender_awards"),
+                        subject: if is_en {
+                            format!("Studio Achievement: {}", title)
+                        } else {
+                            format!("Studio-Meilenstein: {}", title)
+                        },
+                        body: format!("{}\n{}", desc, msg),
+                        week: self.week,
+                        year: curr_year,
+                        read: false,
+                    },
+                );
+                if self.emails.len() > 40 {
+                    self.emails.truncate(40);
+                }
+                unlocked_msgs.push(msg);
+            }
+        }
+        unlocked_msgs
     }
 
     // --- Persistence (Save/Load JSON with full Rust roundtrip & Legacy Python migration) ---

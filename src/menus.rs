@@ -19,6 +19,7 @@ pub enum MenuId {
     GameMenu,
     DevelopTopicMenu,
     DevelopGenreMenu,
+    DevelopSubGenreMenu,
     DevelopPlatformMenu,
     DevelopSizeAudienceMenu,
     DevelopSlidersMenu,
@@ -52,6 +53,7 @@ pub const ALL_MENU_IDS: &[MenuId] = &[
     MenuId::GameMenu,
     MenuId::DevelopTopicMenu,
     MenuId::DevelopGenreMenu,
+    MenuId::DevelopSubGenreMenu,
     MenuId::DevelopPlatformMenu,
     MenuId::DevelopSizeAudienceMenu,
     MenuId::DevelopSlidersMenu,
@@ -116,6 +118,7 @@ pub enum MenuAction {
     ConfirmCompanyName,
     SelectTopic(String),
     SelectGenre(String),
+    SelectSubGenre(String),
     SelectPlatform(String),
     CycleAudience,
     CycleGameSize,
@@ -133,6 +136,7 @@ pub enum MenuAction {
     ReleasePatch(usize),
     ReleaseDlc(usize),
     AnalyzePostMortem(usize),
+    DevelopRemaster(usize),
     AcceptContract(usize),
     RefreshContracts,
     ResearchTopic(usize),
@@ -603,6 +607,49 @@ impl MenuController {
                 });
             }
 
+            MenuId::DevelopSubGenreMenu => {
+                self.title = if is_en {
+                    format!(
+                        "Step 2b: Choose Sub-Genre ({} Synergy)",
+                        state.current_draft.genre
+                    )
+                } else {
+                    format!(
+                        "Schritt 2b: Sub-Genre wählen ({}-Synergie)",
+                        state.current_draft.genre
+                    )
+                };
+                for sg in SUB_GENRES {
+                    let compat = get_sub_genre_compatibility(&state.current_draft.genre, sg);
+                    let stars = match compat {
+                        3 => "★★★",
+                        2 => "★★☆",
+                        _ => "★☆☆",
+                    };
+                    let compat_key = match compat {
+                        3 => "subgenre_compat_3",
+                        2 => "subgenre_compat_2",
+                        _ => "subgenre_compat_1",
+                    };
+                    self.options.push(MenuOption {
+                        text: format!(
+                            "{} {} [{}/3] - {}",
+                            sg,
+                            stars,
+                            compat,
+                            tr(lang, compat_key)
+                        ),
+                        speech_hint: String::new(),
+                        action: MenuAction::SelectSubGenre(sg.to_string()),
+                    });
+                }
+                self.options.push(MenuOption {
+                    text: tr(lang, "menu_back"),
+                    speech_hint: String::new(),
+                    action: MenuAction::Navigate(MenuId::DevelopGenreMenu),
+                });
+            }
+
             MenuId::DevelopPlatformMenu => {
                 let year = state.calendar_year();
                 self.title = if is_en {
@@ -681,7 +728,7 @@ impl MenuController {
                 self.options.push(MenuOption {
                     text: tr(lang, "menu_back"),
                     speech_hint: String::new(),
-                    action: MenuAction::Navigate(MenuId::DevelopGenreMenu),
+                    action: MenuAction::Navigate(MenuId::DevelopSubGenreMenu),
                 });
             }
 
@@ -1173,6 +1220,50 @@ impl MenuController {
                             speech_hint: String::new(),
                             action: MenuAction::ReleaseDlc(idx),
                         });
+                    }
+                }
+                let current_year = state.calendar_year();
+                for (idx, g) in state.game_history.iter().enumerate().rev() {
+                    if current_year >= g.release_year + 3 && !g.name.contains("(Remaster)") {
+                        let remaster_title = format!("{} (Remaster)", g.name);
+                        let already_remastered = state
+                            .active_projects
+                            .iter()
+                            .any(|p| p.project.name == remaster_title)
+                            || state
+                                .game_history
+                                .iter()
+                                .any(|h| h.name == remaster_title);
+                        if !already_remastered {
+                            let est_cost = if g.dev_cost > 0 {
+                                ((g.dev_cost as f64) * 0.5).round() as i64
+                            } else {
+                                let base = match g.size.as_str() {
+                                    "Klein" => 6_000,
+                                    "Mittel" => 18_000,
+                                    "Groß" => 55_000,
+                                    "AAA" => 180_000,
+                                    "MMO" => 350_000,
+                                    _ => 12_000,
+                                };
+                                base / 2
+                            };
+                            self.options.push(MenuOption {
+                                text: if is_en {
+                                    format!(
+                                        "[Remaster] {} ({}) - {} -> Cost: {} EUR",
+                                        g.name, g.release_year, g.platform, est_cost
+                                    )
+                                } else {
+                                    format!(
+                                        "[Remaster entwickeln] {} ({}) - {} -> Kosten: {} EUR",
+                                        g.name, g.release_year, g.platform, est_cost
+                                    )
+                                },
+                                speech_hint: String::new(),
+                                action: MenuAction::DevelopRemaster(idx),
+                            });
+                        }
                     }
                 }
                 self.options.push(MenuOption {
@@ -2049,11 +2140,18 @@ impl MenuController {
                 });
                 for (i, r) in state.rivals.iter().enumerate() {
                     if r.acquired_by_player {
+                        let dividend = (r.valuation / 250).max(400);
                         self.options.push(MenuOption {
                             text: if is_en {
-                                format!("[Owned Subsidiary] {}", r.name)
+                                format!(
+                                    "[Owned Subsidiary] {} (Weekly Dividend: {} EUR/week, Valuation: {} EUR)",
+                                    r.name, dividend, r.valuation
+                                )
                             } else {
-                                format!("[Tochterstudio im Besitz] {}", r.name)
+                                format!(
+                                    "[Tochterstudio im Besitz] {} (Dividende: {} EUR/Woche, Wert: {} EUR)",
+                                    r.name, dividend, r.valuation
+                                )
                             },
                             speech_hint: String::new(),
                             action: MenuAction::NoOp,
@@ -2198,6 +2296,45 @@ impl MenuController {
                             action: MenuAction::NoOp,
                         });
                     }
+                }
+                let unlocked_count = ACHIEVEMENTS
+                    .iter()
+                    .filter(|ach| {
+                        let key = format!("ach:{}", ach.id);
+                        state.tutorials_completed.iter().any(|t| t == &key)
+                    })
+                    .count();
+                self.options.push(MenuOption {
+                    text: format!(
+                        "--- {} ({}/{}) ---",
+                        tr(lang, "achievements_section_title"),
+                        unlocked_count,
+                        ACHIEVEMENTS.len()
+                    ),
+                    speech_hint: String::new(),
+                    action: MenuAction::NoOp,
+                });
+                for ach in ACHIEVEMENTS {
+                    let key = format!("ach:{}", ach.id);
+                    let is_unlocked = state.tutorials_completed.iter().any(|t| t == &key);
+                    let badge = if is_unlocked {
+                        tr(lang, "achievement_unlocked")
+                    } else {
+                        tr(lang, "achievement_locked")
+                    };
+                    let (title, desc) = if is_en {
+                        (ach.title_en, ach.desc_en)
+                    } else {
+                        (ach.title_de, ach.desc_de)
+                    };
+                    self.options.push(MenuOption {
+                        text: format!(
+                            "{} {} - {} (+{} EUR, +{} Fans, +{:.0} Hype)",
+                            badge, title, desc, ach.reward_money, ach.reward_fans, ach.reward_hype
+                        ),
+                        speech_hint: String::new(),
+                        action: MenuAction::NoOp,
+                    });
                 }
                 for g in state.game_history.iter().rev() {
                     let avg = g.review.as_ref().map(|r| r.average()).unwrap_or(0.0);
@@ -2748,7 +2885,8 @@ impl MenuController {
                     }
                     MenuId::SettingsMenu => self.settings_return_menu,
                     MenuId::DevelopGenreMenu => MenuId::DevelopTopicMenu,
-                    MenuId::DevelopPlatformMenu => MenuId::DevelopGenreMenu,
+                    MenuId::DevelopSubGenreMenu => MenuId::DevelopGenreMenu,
+                    MenuId::DevelopPlatformMenu => MenuId::DevelopSubGenreMenu,
                     MenuId::DevelopSizeAudienceMenu => MenuId::DevelopPlatformMenu,
                     MenuId::DevelopSlidersMenu => MenuId::DevelopSizeAudienceMenu,
                     _ => MenuId::GameMenu,
@@ -2926,6 +3064,11 @@ impl MenuController {
                 }
                 state.current_draft.sliders = get_ideal_sliders(&genre);
                 state.current_draft.genre = genre;
+                audio.play_sound("confirm");
+                self.switch_to(MenuId::DevelopSubGenreMenu, state, audio);
+            }
+            MenuAction::SelectSubGenre(sub_genre) => {
+                state.current_draft.sub_genre = sub_genre;
                 audio.play_sound("confirm");
                 self.switch_to(MenuId::DevelopPlatformMenu, state, audio);
             }
@@ -3140,6 +3283,19 @@ impl MenuController {
                 }
             },
             MenuAction::AnalyzePostMortem(idx) => match state.analyze_post_mortem(idx) {
+                Ok(msg) => {
+                    audio.play_sound("success");
+                    let keep = self.current_index;
+                    self.rebuild(state);
+                    self.current_index = keep.min(self.options.len().saturating_sub(1));
+                    audio.say_interrupt(&msg);
+                }
+                Err(e) => {
+                    audio.play_sound("error");
+                    audio.say_interrupt(&e);
+                }
+            },
+            MenuAction::DevelopRemaster(idx) => match state.develop_remaster(idx) {
                 Ok(msg) => {
                     audio.play_sound("success");
                     let keep = self.current_index;

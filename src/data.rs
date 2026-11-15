@@ -637,6 +637,17 @@ pub const GENRES: &[&str] = &[
 
 pub const START_GENRES: &[&str] = &["Abenteuer", "Puzzle", "Casual", "Strategie"];
 
+pub const SUB_GENRES: &[&str] = &[
+    "Klassisch",
+    "Story-Fokus",
+    "Rhythmus & Musik",
+    "Taktik & Runden",
+    "Wirtschaft & Aufbau",
+    "Arcade & Tempo",
+    "Survival & Atmosphäre",
+    "Open World & Sandbox",
+];
+
 #[derive(Debug, Clone)]
 pub struct ResearchableItem {
     pub name: &'static str,
@@ -1099,6 +1110,197 @@ pub fn get_audience_compatibility(topic: &str, genre: &str, audience: &str) -> u
         _ => 2,
     }
 }
+
+pub fn get_sub_genre_compatibility(genre: &str, sub_genre: &str) -> u8 {
+    match (genre, sub_genre) {
+        ("Abenteuer", "Klassisch" | "Story-Fokus" | "Open World & Sandbox") => 3,
+        ("Abenteuer", "Rhythmus & Musik" | "Taktik & Runden" | "Survival & Atmosphäre") => 2,
+        ("Abenteuer", "Wirtschaft & Aufbau" | "Arcade & Tempo") => 1,
+
+        ("Puzzle", "Klassisch" | "Rhythmus & Musik" | "Taktik & Runden") => 3,
+        ("Puzzle", "Story-Fokus" | "Wirtschaft & Aufbau" | "Arcade & Tempo") => 2,
+        ("Puzzle", "Survival & Atmosphäre" | "Open World & Sandbox") => 1,
+
+        ("Casual", "Klassisch" | "Rhythmus & Musik" | "Arcade & Tempo") => 3,
+        ("Casual", "Story-Fokus" | "Wirtschaft & Aufbau" | "Open World & Sandbox") => 2,
+        ("Casual", "Taktik & Runden" | "Survival & Atmosphäre") => 1,
+
+        ("Strategie", "Taktik & Runden" | "Wirtschaft & Aufbau") => 3,
+        (
+            "Strategie",
+            "Klassisch" | "Story-Fokus" | "Survival & Atmosphäre" | "Open World & Sandbox",
+        ) => 2,
+        ("Strategie", "Rhythmus & Musik" | "Arcade & Tempo") => 1,
+
+        ("Simulation", "Wirtschaft & Aufbau" | "Open World & Sandbox") => 3,
+        (
+            "Simulation",
+            "Klassisch" | "Rhythmus & Musik" | "Taktik & Runden" | "Survival & Atmosphäre",
+        ) => 2,
+        ("Simulation", "Story-Fokus" | "Arcade & Tempo") => 1,
+
+        ("RPG", "Story-Fokus" | "Taktik & Runden" | "Open World & Sandbox") => 3,
+        ("RPG", "Klassisch" | "Rhythmus & Musik" | "Survival & Atmosphäre") => 2,
+        ("RPG", "Wirtschaft & Aufbau" | "Arcade & Tempo") => 1,
+
+        ("Action", "Rhythmus & Musik" | "Arcade & Tempo" | "Open World & Sandbox") => 3,
+        ("Action", "Klassisch" | "Story-Fokus" | "Survival & Atmosphäre") => 2,
+        ("Action", "Taktik & Runden" | "Wirtschaft & Aufbau") => 1,
+
+        ("Sport", "Rhythmus & Musik" | "Wirtschaft & Aufbau" | "Arcade & Tempo") => 3,
+        ("Sport", "Klassisch" | "Story-Fokus" | "Taktik & Runden") => 2,
+        ("Sport", "Survival & Atmosphäre" | "Open World & Sandbox") => 1,
+
+        ("Rennspiel", "Arcade & Tempo" | "Open World & Sandbox") => 3,
+        ("Rennspiel", "Klassisch" | "Rhythmus & Musik" | "Wirtschaft & Aufbau") => 2,
+        ("Rennspiel", "Story-Fokus" | "Taktik & Runden" | "Survival & Atmosphäre") => 1,
+
+        ("Horror", "Story-Fokus" | "Survival & Atmosphäre") => 3,
+        ("Horror", "Klassisch" | "Rhythmus & Musik" | "Open World & Sandbox") => 2,
+        ("Horror", "Taktik & Runden" | "Wirtschaft & Aufbau" | "Arcade & Tempo") => 1,
+
+        ("Kampfspiel", "Rhythmus & Musik" | "Arcade & Tempo") => 3,
+        ("Kampfspiel", "Klassisch" | "Story-Fokus" | "Taktik & Runden") => 2,
+        ("Kampfspiel", "Wirtschaft & Aufbau" | "Survival & Atmosphäre" | "Open World & Sandbox") => 1,
+
+        _ => 2,
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct AchievementSpec {
+    pub id: &'static str,
+    pub title_de: &'static str,
+    pub title_en: &'static str,
+    pub desc_de: &'static str,
+    pub desc_en: &'static str,
+    pub reward_money: i64,
+    pub reward_fans: u64,
+    pub reward_hype: f64,
+}
+
+pub const ACHIEVEMENTS: &[AchievementSpec] = &[
+    AchievementSpec {
+        id: "first_release",
+        title_de: "Erste Veröffentlichung",
+        title_en: "First Release",
+        desc_de: "Bringe dein allererstes Audioprodukt oder Spiel auf den Markt.",
+        desc_en: "Release your very first audio production or game onto the market.",
+        reward_money: 5_000,
+        reward_fans: 250,
+        reward_hype: 5.0,
+    },
+    AchievementSpec {
+        id: "hit_8_plus",
+        title_de: "Kritikerliebling (8.0+)",
+        title_en: "Critical Hit (8.0+)",
+        desc_de: "Erziele mit einer Veröffentlichung mindestens eine Wertung von 8.0.",
+        desc_en: "Achieve a review score of at least 8.0 on a released title.",
+        reward_money: 15_000,
+        reward_fans: 1_000,
+        reward_hype: 10.0,
+    },
+    AchievementSpec {
+        id: "masterpiece_9_plus",
+        title_de: "Klang-Meisterwerk (9.0+)",
+        title_en: "Audio Masterpiece (9.0+)",
+        desc_de: "Erschaffe ein zeitloses Meisterwerk mit mindestens 9.0 Punkten.",
+        desc_en: "Create a timeless masterpiece scoring at least 9.0 out of 10.",
+        reward_money: 50_000,
+        reward_fans: 5_000,
+        reward_hype: 20.0,
+    },
+    AchievementSpec {
+        id: "millionaire",
+        title_de: "Studio-Millionär",
+        title_en: "Studio Millionaire",
+        desc_de: "Erreiche ein Studio-Guthaben von mindestens 1.000.000 Dollar.",
+        desc_en: "Accumulate a studio balance of at least $1,000,000.",
+        reward_money: 100_000,
+        reward_fans: 2_500,
+        reward_hype: 12.0,
+    },
+    AchievementSpec {
+        id: "fans_10k",
+        title_de: "Goldene Hörerschaft",
+        title_en: "10,000 Dedicated Fans",
+        desc_de: "Begeistere weltweit mindestens 10.000 treue Fans für dein Studio.",
+        desc_en: "Build a worldwide following of at least 10,000 loyal fans.",
+        reward_money: 25_000,
+        reward_fans: 2_000,
+        reward_hype: 15.0,
+    },
+    AchievementSpec {
+        id: "custom_engine",
+        title_de: "Eigener Klangkern",
+        title_en: "Custom Audio Engine",
+        desc_de: "Entwickle eine eigene Audio- oder Spiel-Engine für zukünftige Projekte.",
+        desc_en: "Build a custom audio or game engine to power future releases.",
+        reward_money: 20_000,
+        reward_fans: 1_200,
+        reward_hype: 8.0,
+    },
+    AchievementSpec {
+        id: "hardware_pioneer",
+        title_de: "Hardware-Pionier",
+        title_en: "Hardware Pioneer",
+        desc_de: "Entwirf ab 1975 eine eigene Soundkarte oder Spielkonsole im Labor.",
+        desc_en: "Design a custom soundcard or console in your hardware lab (1975+).",
+        reward_money: 75_000,
+        reward_fans: 4_000,
+        reward_hype: 15.0,
+    },
+    AchievementSpec {
+        id: "label_mogul",
+        title_de: "Musiklabel-Mogul",
+        title_en: "Soundtrack Label Mogul",
+        desc_de: "Gründe ab 1985 dein eigenes Musik- & Soundtrack-Label.",
+        desc_en: "Found your own music and soundtrack publishing label (1985+).",
+        reward_money: 60_000,
+        reward_fans: 3_500,
+        reward_hype: 12.0,
+    },
+    AchievementSpec {
+        id: "soundcon_keynote",
+        title_de: "SoundCon-Bühnenstar",
+        title_en: "SoundCon Keynote",
+        desc_de: "Präsentiere ab 1995 ein Studio-Highlight auf der internationalen SoundCon.",
+        desc_en: "Showcase a studio production on the SoundCon stage (1995+).",
+        reward_money: 40_000,
+        reward_fans: 4_500,
+        reward_hype: 18.0,
+    },
+    AchievementSpec {
+        id: "rival_acquirer",
+        title_de: "Branchen-Konsolidierer",
+        title_en: "Rival Acquirer",
+        desc_de: "Übernimm ein konkurrierendes Audio- oder Entwicklungsstudio.",
+        desc_en: "Acquire a competing audio or game development studio.",
+        reward_money: 150_000,
+        reward_fans: 6_000,
+        reward_hype: 15.0,
+    },
+    AchievementSpec {
+        id: "golden_mic",
+        title_de: "Goldenes Mikrofon",
+        title_en: "Golden Microphone Winner",
+        desc_de: "Gewinne mindestens eine Auszeichnung beim Goldenen Mikrofon.",
+        desc_en: "Win at least one prestigious Golden Microphone industry award.",
+        reward_money: 80_000,
+        reward_fans: 5_000,
+        reward_hype: 20.0,
+    },
+    AchievementSpec {
+        id: "timeline_veteran",
+        title_de: "Jahrhundert-Legende",
+        title_en: "Century Timeline Veteran",
+        desc_de: "Führe dein Studio erfolgreich bis in die moderne Ära ab 2026.",
+        desc_en: "Guide your studio through history all the way into 2026 and beyond.",
+        reward_money: 250_000,
+        reward_fans: 15_000,
+        reward_hype: 25.0,
+    },
+];
 
 #[derive(Debug, Clone)]
 pub struct PublisherSpec {
