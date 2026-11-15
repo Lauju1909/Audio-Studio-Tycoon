@@ -52,6 +52,7 @@ pub fn build_dictionary(lang: Lang) -> BTreeMap<&'static str, &'static str> {
         ("menu_credits", "Mitwirkende & Architektur-Info", "Credits & Architecture Info"),
         ("menu_quit", "Spiel beenden", "Quit Game"),
         ("menu_back", "Zurück", "Back"),
+        ("menu_main_menu_return", "Zurück zum Hauptmenü", "Return to Main Menu"),
         (
             "language_switched_de",
             "Sprache auf Deutsch umgestellt.",
@@ -137,6 +138,21 @@ pub fn build_dictionary(lang: Lang) -> BTreeMap<&'static str, &'static str> {
         ("sender_press", "Fachpresse & Kritik", "Industry Press & Critics"),
         ("sender_awards", "Preis-Komitee", "Awards Committee"),
         ("sender_community", "Fan-Community", "Fan Community"),
+        // Platforms & Era Status
+        ("platform_licensed", "Lizenziert", "Licensed"),
+        ("platform_retro_retired", "Retro / Eingestellt (0,55x Markt)", "Retro / Retired (0.55x Market)"),
+        ("platform_market_label", "Markt", "Market"),
+        ("platform_custom_console", "Eigene Konsole", "Custom Console"),
+        // Engine Third-Party Licensing
+        ("engine_status_licensed", "Lizenziert", "Licensed"),
+        ("engine_status_private", "Privat", "Private"),
+        ("engine_starter_label", "Basis-Engine (Nicht lizenzierbar)", "Starter Engine (Non-licensable)"),
+        // Timeline & Era Chronicle
+        ("timeline_chronicle_title", "Zeitstrahl & Epochen-Chronik (1930–2026)", "Timeline & Era Chronicle (1930–2026)"),
+        ("timeline_active_platforms", "Aktive Plattformen", "Active Platforms"),
+        ("timeline_milestones_prefix", "Meilensteine", "Milestones"),
+        ("timeline_no_events", "Noch keine historischen Ereignisse protokolliert.", "No historical events logged yet."),
+        ("audio_awards_label", "Audio-Preise", "Audio Awards"),
     ];
 
     for &(k, de_val, en_val) in pairs {

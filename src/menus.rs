@@ -140,6 +140,7 @@ pub enum MenuAction {
     ResearchFeature(usize),
     ResearchTech(usize),
     ConfirmCustomEngine,
+    ToggleEngineLicense(usize),
     HireCandidate(usize),
     TrainEmployee(usize),
     VacationEmployee(usize),
@@ -188,6 +189,23 @@ pub struct MenuController {
     pub is_text_input: bool,
     pub settings_return_menu: MenuId,
     pub should_quit: bool,
+}
+
+fn platform_category_label(category: &str, is_en: bool) -> &str {
+    if !is_en {
+        return category;
+    }
+    match category {
+        "Rundfunk" => "Broadcast",
+        "Tonträger" => "Audio Media",
+        "Rechenwerk" => "Calculator",
+        "Automat" => "Mechanical Arcade",
+        "Frührechner" => "Early Computer",
+        "Großrechner" => "Mainframe",
+        "Heimcomputer" => "Home Computer",
+        "Konsole" => "Console",
+        _ => category,
+    }
 }
 
 impl MenuController {
@@ -507,8 +525,7 @@ impl MenuController {
                     action: MenuAction::Navigate(MenuId::SettingsMenu),
                 });
                 self.options.push(MenuOption {
-                    text: tr(lang, "menu_main_menu_return")
-                        .replace("menu_main_menu_return", if is_en { "Return to Main Menu" } else { "Zurück zum Hauptmenü" }),
+                    text: tr(lang, "menu_main_menu_return"),
                     speech_hint: String::new(),
                     action: MenuAction::Navigate(MenuId::MainMenu),
                 });
@@ -593,32 +610,44 @@ impl MenuController {
                 } else {
                     format!("Schritt 3: Zielplattform wählen ({})", year)
                 };
-                for p in get_available_platforms(year) {
+                let active_plats = get_available_platforms(year);
+                let mut display_plats: Vec<(&PlatformSpec, bool)> = active_plats
+                    .into_iter()
+                    .map(|p| (p, year > p.end_year))
+                    .collect();
+                for p in PLATFORMS {
+                    if year > p.end_year
+                        && state.bought_platforms.iter().any(|bp| bp == p.name)
+                        && !display_plats.iter().any(|(ap, _)| ap.name == p.name)
+                    {
+                        display_plats.push((p, true));
+                    }
+                }
+                for (p, is_retired) in display_plats {
                     let owned = state.bought_platforms.iter().any(|bp| bp == p.name);
-                    let status = if owned || p.license_fee == 0 {
-                        if is_en {
-                            "Licensed".to_string()
-                        } else {
-                            "Lizenziert".to_string()
-                        }
+                    let cat_label = platform_category_label(p.category, is_en);
+                    let era_window = format!("{}–{}", p.unlock_year, p.end_year);
+                    let status = if is_retired {
+                        tr(lang, "platform_retro_retired")
+                    } else if owned || p.license_fee == 0 {
+                        tr(lang, "platform_licensed")
                     } else if is_en {
                         format!("License: {} EUR", p.license_fee)
                     } else {
                         format!("Lizenz: {} Euro", p.license_fee)
                     };
                     self.options.push(MenuOption {
-                        text: if is_en {
-                            format!(
-                                "{} [{}] - Market x{:.1}",
-                                p.name, status, p.market_multi
-                            )
-                        } else {
-                            format!(
-                                "{} [{}] - Markt x{:.1}",
-                                p.name, status, p.market_multi
-                            )
-                        },
-                        speech_hint: p.audio_capabilities.to_string(),
+                        text: format!(
+                            "{} [{} | {}] ({}) - {} x{:.1} | {}",
+                            p.name,
+                            cat_label,
+                            era_window,
+                            status,
+                            tr(lang, "platform_market_label"),
+                            p.market_multi,
+                            p.audio_capabilities
+                        ),
+                        speech_hint: String::new(),
                         action: MenuAction::SelectPlatform(p.name.to_string()),
                     });
                 }
@@ -626,14 +655,22 @@ impl MenuController {
                     self.options.push(MenuOption {
                         text: if is_en {
                             format!(
-                                "{} [Custom Console] - Market Share {:.0}%",
+                                "{} [{} | {}+] ({}) - {} Share {:.0}%",
                                 cc.name,
+                                tr(lang, "platform_custom_console"),
+                                cc.release_year,
+                                tr(lang, "platform_licensed"),
+                                tr(lang, "platform_market_label"),
                                 cc.market_share * 100.0
                             )
                         } else {
                             format!(
-                                "{} [Eigene Konsole] - Marktanteil {:.0}%",
+                                "{} [{} | {}+] ({}) - {}anteil {:.0}%",
                                 cc.name,
+                                tr(lang, "platform_custom_console"),
+                                cc.release_year,
+                                tr(lang, "platform_licensed"),
+                                tr(lang, "platform_market_label"),
                                 cc.market_share * 100.0
                             )
                         },
@@ -1312,6 +1349,51 @@ impl MenuController {
                     speech_hint: String::new(),
                     action: MenuAction::Navigate(MenuId::CustomEngineNameInput),
                 });
+
+                if let Some(starter) = state.engines.first() {
+                    self.options.push(MenuOption {
+                        text: format!(
+                            "[Audio-Engine] {} (Tech {}, +{:.0}%) [{}]",
+                            starter.name,
+                            starter.tech_level,
+                            starter.quality_bonus * 100.0,
+                            tr(lang, "engine_starter_label")
+                        ),
+                        speech_hint: String::new(),
+                        action: MenuAction::NoOp,
+                    });
+                }
+                for (idx, eng) in state.engines.iter().enumerate().skip(1) {
+                    let royalty = (eng.tech_level as i64) * 350;
+                    let status_badge = if eng.licensed_out {
+                        tr(lang, "engine_status_licensed")
+                    } else {
+                        tr(lang, "engine_status_private")
+                    };
+                    self.options.push(MenuOption {
+                        text: if is_en {
+                            format!(
+                                "[Custom Engine] {} (Tech {}, +{:.0}%) [{}] - {} EUR/week (Enter to toggle license)",
+                                eng.name,
+                                eng.tech_level,
+                                eng.quality_bonus * 100.0,
+                                status_badge,
+                                royalty
+                            )
+                        } else {
+                            format!(
+                                "[Eigene Engine] {} (Tech {}, +{:.0}%) [{}] - {} EUR/Woche (Enter zum Umschalten)",
+                                eng.name,
+                                eng.tech_level,
+                                eng.quality_bonus * 100.0,
+                                status_badge,
+                                royalty
+                            )
+                        },
+                        speech_hint: String::new(),
+                        action: MenuAction::ToggleEngineLicense(idx),
+                    });
+                }
 
                 for (i, g) in RESEARCHABLE_GENRES.iter().enumerate() {
                     if !state.unlocked_genres.iter().any(|ug| ug == g.name) && year >= g.unlock_year
@@ -2018,21 +2100,40 @@ impl MenuController {
             }
 
             MenuId::ChartsGotyMenu => {
+                let year = state.calendar_year();
+                let active_platform_count = get_available_platforms(year).len();
                 self.title = if is_en {
                     format!(
-                        "{} (Best Score: {:.1}/10, GOTY Awards: {})",
+                        "{} (Best Score: {:.1}/10, GOTY Awards: {}, {}: {})",
                         tr(lang, "hub_charts_goty"),
                         state.high_score,
-                        state.goty_awards
+                        state.goty_awards,
+                        tr(lang, "audio_awards_label"),
+                        state.audio_awards
                     )
                 } else {
                     format!(
-                        "{} (Rekord: {:.1}/10, GOTY-Preise: {})",
+                        "{} (Rekord: {:.1}/10, GOTY-Preise: {}, {}: {})",
                         tr(lang, "hub_charts_goty"),
                         state.high_score,
-                        state.goty_awards
+                        state.goty_awards,
+                        tr(lang, "audio_awards_label"),
+                        state.audio_awards
                     )
                 };
+                self.options.push(MenuOption {
+                    text: format!(
+                        "=== {} | {}: {} ({}: {}/{}) ===",
+                        tr(lang, "timeline_chronicle_title"),
+                        if is_en { "Year" } else { "Jahr" },
+                        year,
+                        tr(lang, "timeline_active_platforms"),
+                        active_platform_count,
+                        PLATFORMS.len()
+                    ),
+                    speech_hint: String::new(),
+                    action: MenuAction::NoOp,
+                });
                 let era = state.current_era();
                 self.options.push(MenuOption {
                     text: if is_en {
@@ -2043,6 +2144,61 @@ impl MenuController {
                     speech_hint: String::new(),
                     action: MenuAction::NoOp,
                 });
+                let milestone_status = |unlock_yr: u32| -> &str {
+                    if year >= unlock_yr {
+                        if is_en { "Unlocked" } else { "Frei" }
+                    } else if is_en {
+                        "Locked"
+                    } else {
+                        "Gesperrt"
+                    }
+                };
+                self.options.push(MenuOption {
+                    text: if is_en {
+                        format!(
+                            "{}: 1975 Hardware Lab [{}] | 1985 Soundtrack Label [{}] | 1995 SoundCon & AudioPass [{}] | 2026 Endless Mode [{}]",
+                            tr(lang, "timeline_milestones_prefix"),
+                            milestone_status(1975),
+                            milestone_status(1985),
+                            milestone_status(1995),
+                            milestone_status(2026)
+                        )
+                    } else {
+                        format!(
+                            "{}: 1975 Hardware-Labor [{}] | 1985 Soundtrack-Label [{}] | 1995 SoundCon & AudioPass [{}] | 2026 Endlosmodus [{}]",
+                            tr(lang, "timeline_milestones_prefix"),
+                            milestone_status(1975),
+                            milestone_status(1985),
+                            milestone_status(1995),
+                            milestone_status(2026)
+                        )
+                    },
+                    speech_hint: String::new(),
+                    action: MenuAction::NoOp,
+                });
+                if state.event_log.is_empty() {
+                    self.options.push(MenuOption {
+                        text: format!(
+                            "[{}] {}",
+                            if is_en { "Chronicle" } else { "Chronik" },
+                            tr(lang, "timeline_no_events")
+                        ),
+                        speech_hint: String::new(),
+                        action: MenuAction::NoOp,
+                    });
+                } else {
+                    for ev in state.event_log.iter().rev().take(5) {
+                        self.options.push(MenuOption {
+                            text: format!(
+                                "[{}] {}",
+                                if is_en { "Chronicle" } else { "Chronik" },
+                                ev
+                            ),
+                            speech_hint: String::new(),
+                            action: MenuAction::NoOp,
+                        });
+                    }
+                }
                 for g in state.game_history.iter().rev() {
                     let avg = g.review.as_ref().map(|r| r.average()).unwrap_or(0.0);
                     self.options.push(MenuOption {
@@ -3131,6 +3287,19 @@ impl MenuController {
                     }
                 }
             }
+            MenuAction::ToggleEngineLicense(idx) => match state.toggle_engine_license(idx) {
+                Ok(msg) => {
+                    audio.play_sound("confirm");
+                    let keep = self.current_index;
+                    self.rebuild(state);
+                    self.current_index = keep.min(self.options.len().saturating_sub(1));
+                    audio.say_interrupt(&msg);
+                }
+                Err(e) => {
+                    audio.play_sound("error");
+                    audio.say_interrupt(&e);
+                }
+            },
             MenuAction::HireCandidate(idx) => match state.hire_candidate(idx) {
                 Ok(msg) => {
                     audio.play_sound("success");

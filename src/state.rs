@@ -81,6 +81,7 @@ pub struct GameState {
     pub high_score: f64,
     pub total_revenue: i64,
     pub goty_awards: u32,
+    pub audio_awards: u32,
 
     // Contracts
     pub available_contracts: Vec<ContractProject>,
@@ -251,6 +252,7 @@ impl GameState {
             high_score: 0.0,
             total_revenue: 0,
             goty_awards: 0,
+            audio_awards: 0,
             available_contracts: Vec::new(),
             active_contract: None,
             next_contract_id: 1,
@@ -381,6 +383,12 @@ impl GameState {
     }
 
     pub fn apply_year_event(&mut self, year: u32) {
+        let _ = self.apply_year_event_internal(year);
+    }
+
+    fn apply_year_event_internal(&mut self, year: u32) -> Vec<String> {
+        let mut notes = Vec::new();
+        let is_en = self.is_en();
         let ev = get_year_event(year);
         if let Some(t) = ev.trend_topic {
             self.trend_topic = t.to_string();
@@ -401,14 +409,153 @@ impl GameState {
         self.hype = (self.hype + ev.hype_bonus).clamp(0.0, 250.0);
 
         // Automatically unlock free platforms of the new era
-        for p in get_available_platforms(year) {
+        let avail_plats = get_available_platforms(year);
+        for p in &avail_plats {
             if p.license_fee == 0 && !self.bought_platforms.iter().any(|bp| bp == p.name) {
                 self.bought_platforms.push(p.name.to_string());
             }
         }
 
-        let log_entry = if self.is_en() {
-            format!("{}: {}", ev.title_en, ev.desc_en)
+        // Automatically switch draft platform if current standard platform has retired
+        let is_custom_console = self
+            .custom_consoles
+            .iter()
+            .any(|c| c.name == self.current_draft.platform);
+        let mut retired_switch_note: Option<(String, String)> = None;
+        if !is_custom_console && !is_platform_active(&self.current_draft.platform, year) {
+            let old_plat = self.current_draft.platform.clone();
+            let replacement = avail_plats
+                .iter()
+                .find(|p| self.bought_platforms.iter().any(|bp| bp == p.name))
+                .or_else(|| avail_plats.iter().find(|p| p.license_fee == 0))
+                .or_else(|| avail_plats.first())
+                .map(|p| p.name.to_string());
+            if let Some(new_plat) = replacement {
+                self.current_draft.platform = new_plat.clone();
+                if new_plat != old_plat {
+                    retired_switch_note = Some((old_plat, new_plat));
+                }
+            }
+        }
+
+        let newly_unlocked = get_newly_unlocked_platforms(year);
+        let newly_retired = get_newly_retired_platforms(year);
+
+        let milestone_msg: Option<&'static str> = match (year, is_en) {
+            (1975, true) => Some(
+                "1975 Milestone: Hardware Lab unlocked! You can now develop custom soundcards and consoles.",
+            ),
+            (1975, false) => Some(
+                "Meilenstein 1975: Das Hardware-Labor ist freigeschaltet! Du kannst nun eigene Soundkarten und Konsolen entwickeln.",
+            ),
+            (1985, true) => Some(
+                "1985 Milestone: Soundtrack Label unlocked! Found your own record label and host live concerts.",
+            ),
+            (1985, false) => Some(
+                "Meilenstein 1985: Das Soundtrack-Label ist freigeschaltet! Gründe dein eigenes Label und veranstalte Live-Konzerte.",
+            ),
+            (1995, true) => Some(
+                "1995 Milestone: SoundCon Expo & AudioPass subscription service are now unlocked!",
+            ),
+            (1995, false) => Some(
+                "Meilenstein 1995: Die SoundCon-Messe & der AudioPass Abo-Dienst sind jetzt freigeschaltet!",
+            ),
+            (2026, true) => Some(
+                "2026 Milestone: 96-Year Milestone reached! Endless Mode is now active.",
+            ),
+            (2026, false) => Some(
+                "Meilenstein 2026: 96-Jahre-Meilenstein erreicht! Der Endlosmodus ist nun aktiv.",
+            ),
+            _ => None,
+        };
+
+        let year_prefix = year.to_string();
+        let event_title = if is_en { ev.title_en } else { ev.title_de };
+        let trend_label = if is_en { "Trend" } else { "Markttrend" };
+        if event_title.starts_with(&year_prefix) {
+            notes.push(format!(
+                "{} ({}: {} + {}).",
+                event_title, trend_label, self.trend_topic, self.trend_genre
+            ));
+        } else {
+            notes.push(format!(
+                "{}: {} ({}: {} + {}).",
+                year, event_title, trend_label, self.trend_topic, self.trend_genre
+            ));
+        }
+
+        let mut body_parts = Vec::new();
+        body_parts.push(if is_en {
+            format!(
+                "{} New trend: {} + {}.",
+                ev.desc_en, self.trend_topic, self.trend_genre
+            )
+        } else {
+            format!(
+                "{} Neuer Markttrend: {} + {}.",
+                ev.desc_de, self.trend_topic, self.trend_genre
+            )
+        });
+
+        if !newly_unlocked.is_empty() {
+            let names: Vec<&str> = newly_unlocked.iter().map(|p| p.name).collect();
+            let msg = if is_en {
+                format!("New platforms unlocked ({}): {}.", year, names.join(", "))
+            } else {
+                format!("Neue Plattformen ({}): {}.", year, names.join(", "))
+            };
+            body_parts.push(msg.clone());
+            notes.push(msg);
+        }
+
+        if !newly_retired.is_empty() {
+            let names: Vec<&str> = newly_retired.iter().map(|p| p.name).collect();
+            let msg = if is_en {
+                format!(
+                    "Retired platforms ({}): {} (retro niche market).",
+                    year,
+                    names.join(", ")
+                )
+            } else {
+                format!(
+                    "Eingestellte Plattformen ({}): {} (jetzt Retro-Nische).",
+                    year,
+                    names.join(", ")
+                )
+            };
+            body_parts.push(msg.clone());
+            notes.push(msg);
+        }
+
+        if let Some((ref old_p, ref new_p)) = retired_switch_note {
+            let msg = if is_en {
+                format!(
+                    "Draft platform '{}' retired; automatically switched to '{}'.",
+                    old_p, new_p
+                )
+            } else {
+                format!(
+                    "Entwurfs-Plattform '{}' wurde eingestellt; automatisch auf '{}' gewechselt.",
+                    old_p, new_p
+                )
+            };
+            body_parts.push(msg.clone());
+            notes.push(msg);
+        }
+
+        if let Some(m) = milestone_msg {
+            body_parts.push(m.to_string());
+            notes.push(m.to_string());
+        }
+
+        let log_entry = if is_en {
+            if let Some(m) = milestone_msg {
+                format!("{}: {} [{}]", ev.title_en, ev.desc_en, m)
+            } else {
+                format!("{}: {}", ev.title_en, ev.desc_en)
+            }
+        } else if let Some(m) = milestone_msg {
+            format!("{}: {} [{}]", ev.title_de, ev.desc_de, m)
         } else {
             format!("{}: {}", ev.title_de, ev.desc_de)
         };
@@ -418,27 +565,19 @@ impl GameState {
             0,
             Email {
                 sender: tr(self.lang(), "sender_industry"),
-                subject: if self.is_en() {
+                subject: if is_en {
                     ev.title_en.to_string()
                 } else {
                     ev.title_de.to_string()
                 },
-                body: if self.is_en() {
-                    format!(
-                        "{} New trend: {} + {}.",
-                        ev.desc_en, self.trend_topic, self.trend_genre
-                    )
-                } else {
-                    format!(
-                        "{} Neuer Markttrend: {} + {}.",
-                        ev.desc_de, self.trend_topic, self.trend_genre
-                    )
-                },
+                body: body_parts.join(" "),
                 week: self.week,
                 year,
                 read: false,
             },
         );
+
+        notes
     }
 
     pub fn active_employees(&self) -> Vec<&Employee> {
@@ -1165,12 +1304,19 @@ impl GameState {
         Some(proj)
     }
 
-    fn compute_weekly_game_sales(&self, proj: &GameProject, is_launch_week: bool) -> (u64, i64) {
+    pub fn compute_weekly_game_sales(&self, proj: &GameProject, is_launch_week: bool) -> (u64, i64) {
         let avg = proj.review.as_ref().map(|r| r.average()).unwrap_or(5.0);
+        let curr_year = self.calendar_year();
         let plat_multi = PLATFORMS
             .iter()
             .find(|p| p.name == proj.platform)
-            .map(|p| p.market_multi)
+            .map(|p| {
+                if curr_year > p.end_year {
+                    p.market_multi * 0.55
+                } else {
+                    p.market_multi
+                }
+            })
             .or_else(|| {
                 self.custom_consoles
                     .iter()
@@ -1530,6 +1676,15 @@ impl GameState {
             self.total_revenue += hw_profit;
         }
 
+        // Custom Audio Engine third-party licensing royalties
+        for (idx, eng) in self.engines.iter().enumerate() {
+            if idx >= 1 && eng.licensed_out {
+                let license_rev = (eng.tech_level as i64) * 350;
+                self.money += license_rev;
+                self.total_revenue += license_rev;
+            }
+        }
+
         // Merchandising sales
         if self.merch_stock > 0 && self.fans > 0 {
             let sold = (self.fans / 50).max(5).min(self.merch_stock);
@@ -1589,12 +1744,16 @@ impl GameState {
             }
         }
 
-        // 8. Annual Transition (Year Event & GOTY Awards)
+        // 8. Annual Transition (Year Event, GOTY & Best Audio Design Awards)
         let curr_year = self.calendar_year();
         if curr_year > prev_year {
-            self.apply_year_event(curr_year);
+            let year_notes = self.apply_year_event_internal(curr_year);
+            notifications.extend(year_notes);
             if let Some(award_msg) = self.evaluate_annual_goty(prev_year) {
                 notifications.push(award_msg);
+            }
+            if let Some(audio_award_msg) = self.evaluate_annual_audio_award(prev_year) {
+                notifications.push(audio_award_msg);
             }
             self.refresh_contracts();
             self.refresh_hire_candidates();
@@ -1647,6 +1806,60 @@ impl GameState {
                     Email {
                         sender: tr(self.lang(), "sender_awards"),
                         subject: format!("GOTY {}", year),
+                        body: msg.clone(),
+                        week: self.week,
+                        year: self.calendar_year(),
+                        read: false,
+                    },
+                );
+                return Some(msg);
+            }
+        }
+        None
+    }
+
+    pub fn evaluate_annual_audio_award(&mut self, year: u32) -> Option<String> {
+        let best_audio_game = self
+            .game_history
+            .iter()
+            .filter(|g| g.release_year == year && g.sliders[2] >= 7)
+            .filter_map(|g| {
+                g.review
+                    .as_ref()
+                    .map(|r| (g.name.clone(), r.average(), g.sliders[2]))
+            })
+            .max_by(|a, b| {
+                a.1.partial_cmp(&b.1)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+                    .then_with(|| a.2.cmp(&b.2))
+            });
+
+        if let Some((best_name, best_score, sound_focus)) = best_audio_game {
+            if best_score >= 7.5 {
+                self.audio_awards += 1;
+                self.money += 15_000;
+                self.fans += 400;
+                self.hype = (self.hype + 15.0).clamp(0.0, 250.0);
+                let msg = if self.is_en() {
+                    format!(
+                        "Golden Microphone (Best Audio Design {}) awarded to '{}' ({:.1}/10, Sound {}/10)! Prize: +15,000 EUR, +400 fans, +15 hype!",
+                        year, best_name, best_score, sound_focus
+                    )
+                } else {
+                    format!(
+                        "Goldenes Mikrofon (Bester Sound des Jahres {}) gewonnen mit '{}' ({:.1}/10, Sound {}/10)! Preisgeld: +15.000 Euro, +400 Fans, +15 Hype!",
+                        year, best_name, best_score, sound_focus
+                    )
+                };
+                self.emails.insert(
+                    0,
+                    Email {
+                        sender: tr(self.lang(), "sender_awards"),
+                        subject: if self.is_en() {
+                            format!("Golden Microphone (Best Audio Design) {}", year)
+                        } else {
+                            format!("Goldenes Mikrofon (Bester Sound des Jahres) {}", year)
+                        },
                         body: msg.clone(),
                         week: self.week,
                         year: self.calendar_year(),
@@ -1761,6 +1974,51 @@ impl GameState {
                 name,
                 tech_level,
                 quality_bonus * 100.0
+            )
+        })
+    }
+
+    pub fn toggle_engine_license(&mut self, idx: usize) -> Result<String, String> {
+        let is_en = self.is_en();
+        if idx == 0 {
+            return Err(if is_en {
+                "The starter engine cannot be licensed out to third parties.".to_string()
+            } else {
+                "Die Basis-Engine kann nicht an Drittstudios lizenziert werden.".to_string()
+            });
+        }
+        let eng = self.engines.get_mut(idx).ok_or_else(|| {
+            if is_en {
+                "Invalid audio engine index.".to_string()
+            } else {
+                "Ungültige Audio-Engine.".to_string()
+            }
+        })?;
+        eng.licensed_out = !eng.licensed_out;
+        let weekly_royalty = (eng.tech_level as i64) * 350;
+        let name = eng.name.clone();
+        let now_licensed = eng.licensed_out;
+        Ok(if now_licensed {
+            if is_en {
+                format!(
+                    "Audio engine '{}' is now licensed to third parties (+{} EUR/week).",
+                    name, weekly_royalty
+                )
+            } else {
+                format!(
+                    "Audio-Engine '{}' ist jetzt an Drittstudios lizenziert (+{} Euro/Woche).",
+                    name, weekly_royalty
+                )
+            }
+        } else if is_en {
+            format!(
+                "Third-party licensing for '{}' paused (private studio use).",
+                name
+            )
+        } else {
+            format!(
+                "Drittlizenzierung für '{}' beendet (wieder exklusiv privat).",
+                name
             )
         })
     }
@@ -2613,6 +2871,10 @@ impl GameState {
             JsonValue::Number(self.goty_awards as f64),
         );
         m.insert(
+            "audio_awards".into(),
+            JsonValue::Number(self.audio_awards as f64),
+        );
+        m.insert(
             "available_contracts".into(),
             JsonValue::Array(
                 self.available_contracts
@@ -2804,6 +3066,7 @@ impl GameState {
         s.high_score = v.get_f64("high_score", 0.0);
         s.total_revenue = v.get_i64("total_revenue", 0);
         s.goty_awards = v.get_u32("goty_awards", v.get_u32("my_goty_wins", 0));
+        s.audio_awards = v.get_u32("audio_awards", 0);
 
         if let Some(arr) = v.get("available_contracts").and_then(|a| a.as_array()) {
             s.available_contracts = arr.iter().map(ContractProject::from_json).collect();

@@ -16,8 +16,10 @@ mod tests {
     use crate::data::*;
     use crate::i18n::{build_dictionary, Lang};
     use crate::json::parse_json;
-    use crate::menus::{KeyInput, MenuController, MenuId, ALL_MENU_IDS};
+    use crate::menus::{KeyInput, MenuAction, MenuController, MenuId, ALL_MENU_IDS};
+    use crate::models::{GameProject, ReviewScore};
     use crate::state::GameState;
+    use std::collections::HashSet;
     use std::fs;
     use std::path::Path;
 
@@ -725,5 +727,757 @@ mod tests {
         assert_eq!(restored.active_projects[0].project.name, "Aether Detective 2");
         assert_eq!(restored.active_projects[0].project.sequel_number, 2);
         assert!(restored.active_projects[0].project.quality_boost > 0.0);
+    }
+
+    #[test]
+    fn test_all_97_historical_year_events_1930_to_2026() {
+        assert_eq!(
+            HISTORICAL_YEAR_EVENTS.len(),
+            97,
+            "Must cover every single year from 1930 to 2026 (97 years)"
+        );
+
+        let forbidden = ["Ã¼", "Ã¶", "Ã¤", "ÃŸ", "Ã„", "Ã–", "Ãœ"];
+        let mut titles_de = HashSet::new();
+        let mut titles_en = HashSet::new();
+        let mut descs_de = HashSet::new();
+        let mut descs_en = HashSet::new();
+
+        for year in 1930..=2026 {
+            let ev = get_year_event(year);
+            assert_eq!(ev.year, year);
+            assert!(!ev.title_de.trim().is_empty(), "Empty title_de for {}", year);
+            assert!(!ev.title_en.trim().is_empty(), "Empty title_en for {}", year);
+            assert!(!ev.desc_de.trim().is_empty(), "Empty desc_de for {}", year);
+            assert!(!ev.desc_en.trim().is_empty(), "Empty desc_en for {}", year);
+
+            for bad in forbidden {
+                assert!(!ev.title_de.contains(bad), "Mojibake in title_de {}", year);
+                assert!(!ev.title_en.contains(bad), "Mojibake in title_en {}", year);
+                assert!(!ev.desc_de.contains(bad), "Mojibake in desc_de {}", year);
+                assert!(!ev.desc_en.contains(bad), "Mojibake in desc_en {}", year);
+            }
+
+            assert!(
+                titles_de.insert(ev.title_de),
+                "Duplicate title_de at year {}: {}",
+                year,
+                ev.title_de
+            );
+            assert!(
+                titles_en.insert(ev.title_en),
+                "Duplicate title_en at year {}: {}",
+                year,
+                ev.title_en
+            );
+            assert!(
+                descs_de.insert(ev.desc_de),
+                "Duplicate desc_de at year {}",
+                year
+            );
+            assert!(
+                descs_en.insert(ev.desc_en),
+                "Duplicate desc_en at year {}",
+                year
+            );
+
+            let topic = ev
+                .trend_topic
+                .unwrap_or_else(|| panic!("Missing trend_topic for {}", year));
+            let topic_unlocked = START_TOPICS.contains(&topic)
+                || RESEARCHABLE_TOPICS
+                    .iter()
+                    .any(|rt| rt.name == topic && rt.unlock_year <= year);
+            assert!(
+                topic_unlocked,
+                "Year {} trend_topic '{}' is missing or locked in {}",
+                year, topic, year
+            );
+
+            let genre = ev
+                .trend_genre
+                .unwrap_or_else(|| panic!("Missing trend_genre for {}", year));
+            let genre_unlocked = START_GENRES.contains(&genre)
+                || RESEARCHABLE_GENRES
+                    .iter()
+                    .any(|rg| rg.name == genre && rg.unlock_year <= year);
+            assert!(
+                genre_unlocked,
+                "Year {} trend_genre '{}' is missing or locked in {}",
+                year, genre, year
+            );
+        }
+
+        // Verify fallback events outside 1930..=2026 are also well-formed
+        for year in [1929u32, 2027u32, 2040u32] {
+            let ev = get_year_event(year);
+            assert_eq!(ev.year, year);
+            assert!(!ev.title_de.is_empty() && !ev.title_en.is_empty());
+            assert!(!ev.desc_de.is_empty() && !ev.desc_en.is_empty());
+            let topic = ev.trend_topic.unwrap();
+            let genre = ev.trend_genre.unwrap();
+            assert!(START_TOPICS.contains(&topic));
+            assert!(GENRES.contains(&genre));
+        }
+    }
+
+    #[test]
+    fn test_all_51_platforms_lifecycle_and_zero_softlock_invariant() {
+        assert_eq!(PLATFORMS.len(), 51, "PLATFORMS must contain exactly 51 entries");
+
+        let mut names = HashSet::new();
+        for p in PLATFORMS {
+            assert!(!p.name.is_empty());
+            assert!(names.insert(p.name), "Duplicate platform name: {}", p.name);
+            assert!(
+                p.unlock_year <= p.end_year,
+                "Platform '{}' has unlock_year {} > end_year {}",
+                p.name,
+                p.unlock_year,
+                p.end_year
+            );
+            assert!(!p.category.is_empty());
+            assert!(!p.audio_capabilities.is_empty());
+            assert!(p.market_multi > 0.0);
+        }
+
+        // Every year 1930..=2050 (including 1930..=2035) must have >= 1 active platform and >= 1 free platform
+        for year in 1930..=2050 {
+            let active = get_available_platforms(year);
+            assert!(
+                !active.is_empty(),
+                "Year {} must have at least 1 active platform",
+                year
+            );
+            for p in &active {
+                assert!(
+                    year >= p.unlock_year && year <= p.end_year,
+                    "Year {} returned fallback or inactive platform '{}'",
+                    year,
+                    p.name
+                );
+            }
+            assert!(
+                active.iter().any(|p| p.license_fee == 0),
+                "Year {} must have at least 1 free (license_fee == 0) active platform",
+                year
+            );
+        }
+
+        // Helper checks: get_newly_unlocked_platforms, get_newly_retired_platforms, is_platform_active
+        let unlocked_1930: Vec<&str> = get_newly_unlocked_platforms(1930)
+            .iter()
+            .map(|p| p.name)
+            .collect();
+        assert!(unlocked_1930.contains(&"Radio-Sendernetz (AM)"));
+        assert!(unlocked_1930.contains(&"Schellack-Schallplatte (78 RPM)"));
+        assert!(unlocked_1930.contains(&"Hand-Abakus"));
+
+        let unlocked_1982: Vec<&str> = get_newly_unlocked_platforms(1982)
+            .iter()
+            .map(|p| p.name)
+            .collect();
+        assert!(unlocked_1982.contains(&"Commodore 64 (SID 6581)"));
+
+        let unlocked_2026: Vec<&str> = get_newly_unlocked_platforms(2026)
+            .iter()
+            .map(|p| p.name)
+            .collect();
+        assert!(unlocked_2026.contains(&"Neural-Box 1 (BCI Audio)"));
+
+        let retired_1958: Vec<&str> = get_newly_retired_platforms(1958)
+            .iter()
+            .map(|p| p.name)
+            .collect();
+        assert!(!retired_1958.contains(&"Radio-Sendernetz (AM)"));
+
+        let retired_1959: Vec<&str> = get_newly_retired_platforms(1959)
+            .iter()
+            .map(|p| p.name)
+            .collect();
+        assert!(retired_1959.contains(&"Radio-Sendernetz (AM)"));
+
+        let retired_1947: Vec<&str> = get_newly_retired_platforms(1947)
+            .iter()
+            .map(|p| p.name)
+            .collect();
+        assert!(retired_1947.contains(&"Zuse Z1"));
+
+        assert!(is_platform_active("Radio-Sendernetz (AM)", 1930));
+        assert!(is_platform_active("Radio-Sendernetz (AM)", 1958));
+        assert!(!is_platform_active("Radio-Sendernetz (AM)", 1959));
+        assert!(!is_platform_active("Commodore 64 (SID 6581)", 1981));
+        assert!(is_platform_active("Commodore 64 (SID 6581)", 1982));
+        assert!(is_platform_active("Commodore 64 (SID 6581)", 1994));
+        assert!(!is_platform_active("Commodore 64 (SID 6581)", 1995));
+        assert!(!is_platform_active("Unknown Platform", 2000));
+    }
+
+    #[test]
+    fn test_retired_platform_draft_fallback_and_retro_niche_sales_factor() {
+        // 1. Automatic fallback when current_draft.platform retires (1958 -> 1959)
+        let mut state = GameState::new(1, 1958);
+        assert_eq!(state.current_draft.platform, "Radio-Sendernetz (AM)");
+        assert!(state
+            .bought_platforms
+            .iter()
+            .any(|p| p == "UKW-Transistorradio (FM)"));
+
+        let mut year_notes = Vec::new();
+        for _ in 0..WEEKS_PER_YEAR {
+            year_notes.extend(state.tick_week());
+        }
+        assert_eq!(state.calendar_year(), 1959);
+        assert_ne!(state.current_draft.platform, "Radio-Sendernetz (AM)");
+        assert_eq!(state.current_draft.platform, "UKW-Transistorradio (FM)");
+        assert!(is_platform_active(&state.current_draft.platform, 1959));
+        assert!(
+            year_notes
+                .iter()
+                .any(|n| n.contains("Radio-Sendernetz (AM)")
+                    && n.contains("UKW-Transistorradio (FM)")),
+            "Year transition notifications must announce draft platform switch: {:?}",
+            year_notes
+        );
+        assert!(state.emails[0].body.contains("Radio-Sendernetz (AM)"));
+
+        // Verify EN switch message and custom console preservation
+        let mut en_state = GameState::new(1, 1958);
+        en_state.settings.language = "en".to_string();
+        en_state.apply_year_event(1959);
+        assert_eq!(en_state.current_draft.platform, "UKW-Transistorradio (FM)");
+        assert!(en_state.emails[0]
+            .body
+            .contains("Draft platform 'Radio-Sendernetz (AM)' retired; automatically switched to 'UKW-Transistorradio (FM)'"));
+
+        let mut custom_state = GameState::new(0, 1985);
+        custom_state.money = 500_000;
+        custom_state.develop_console("SonicCustom 85").unwrap();
+        custom_state.current_draft.platform = "SonicCustom 85".to_string();
+        custom_state.apply_year_event(1986);
+        assert_eq!(
+            custom_state.current_draft.platform, "SonicCustom 85",
+            "Custom console must never be overwritten by standard retirement fallback"
+        );
+
+        // 2. Retro-niche 0.55x market factor on retired standard platforms
+        let mut market_state = GameState::new(1, 1958);
+        market_state.fans = 10_000;
+        market_state.hype = 60.0;
+        market_state.sales_multiplier = 1.0;
+
+        let retro_proj = GameProject {
+            name: "Äther Klassiker".to_string(),
+            topic: "Radio-Drama".to_string(),
+            genre: "Abenteuer".to_string(),
+            sub_genre: "Klassisch".to_string(),
+            platform: "Radio-Sendernetz (AM)".to_string(),
+            audience: "Jeder".to_string(),
+            size: "Groß".to_string(),
+            marketing: "Kein Marketing".to_string(),
+            engine_name: "Basis-Tonstudio V1".to_string(),
+            sliders: get_ideal_sliders("Abenteuer"),
+            review: Some(ReviewScore::new([8, 8, 8, 8], vec![])),
+            sales: 0,
+            revenue: 0,
+            dev_cost: 55_000,
+            release_week: 1,
+            release_year: 1958,
+            weeks_on_market: 0,
+            is_active: true,
+            bugs: 0,
+            patches_released: 0,
+            dlc_count: 0,
+            in_soundtrack_label: false,
+            in_subscription_vault: false,
+            sequel_number: 0,
+            publisher_idx: 0,
+            post_mortem_done: false,
+            quality_boost: 0.0,
+        };
+        let mut active_control_proj = retro_proj.clone();
+        active_control_proj.platform = "UKW-Transistorradio (FM)".to_string();
+
+        let (units_1958, rev_1958) = market_state.compute_weekly_game_sales(&retro_proj, true);
+        let (fm_1958, _) = market_state.compute_weekly_game_sales(&active_control_proj, true);
+
+        // Move state to 1959 week 1 without altering fans/hype/sales_multiplier
+        market_state.week = (1959 - START_YEAR) * WEEKS_PER_YEAR + 1;
+        let (units_1959, rev_1959) = market_state.compute_weekly_game_sales(&retro_proj, true);
+        let (fm_1959, _) = market_state.compute_weekly_game_sales(&active_control_proj, true);
+
+        assert_eq!(
+            fm_1959, fm_1958,
+            "Active platform sales must remain identical across 1958->1959"
+        );
+        assert!(units_1959 < units_1958);
+        assert!(rev_1959 < rev_1958);
+        let ratio = units_1959 as f64 / units_1958 as f64;
+        assert!(
+            (0.53..=0.57).contains(&ratio),
+            "Retired platform should apply 0.55x retro-niche factor (got ratio {:.4}: {} / {})",
+            ratio,
+            units_1959,
+            units_1958
+        );
+    }
+
+    #[test]
+    fn test_custom_engine_third_party_licensing_and_weekly_royalties() {
+        let mut state = GameState::new(1, 1985);
+        state.money = 200_000;
+
+        // Starter engine (idx 0) and invalid indices must be rejected in both DE and EN
+        assert!(state.toggle_engine_license(0).is_err());
+        assert!(state.toggle_engine_license(99).is_err());
+        state.settings.language = "en".to_string();
+        assert!(state
+            .toggle_engine_license(0)
+            .unwrap_err()
+            .contains("starter engine"));
+        assert!(state.toggle_engine_license(42).is_err());
+        state.settings.language = "de".to_string();
+
+        // Build custom engine (idx 1)
+        state.build_custom_engine("SonicForge V2").unwrap();
+        assert_eq!(state.engines.len(), 2);
+        assert!(!state.engines[1].licensed_out);
+        let expected_royalty = (state.engines[1].tech_level as i64) * 350;
+        assert!(expected_royalty > 0);
+
+        let on_msg = state.toggle_engine_license(1).unwrap();
+        assert!(state.engines[1].licensed_out);
+        assert!(on_msg.contains("SonicForge V2"));
+        assert!(on_msg.contains(&expected_royalty.to_string()));
+
+        // Tick week 1 -> week 2 (same month_index 0, no monthly expenses, no other passive sources)
+        let money_before = state.money;
+        let rev_before = state.total_revenue;
+        state.tick_week();
+        assert_eq!(
+            state.money,
+            money_before + expected_royalty,
+            "Licensed custom engine must pay tech_level * 350 EUR/week"
+        );
+        assert_eq!(state.total_revenue, rev_before + expected_royalty);
+
+        // Save/Load roundtrip preserves licensed_out = true
+        let temp_path = Path::new("save_slot_97.json");
+        state.save_to_file(temp_path).expect("Should save engine state");
+        let restored = GameState::load_from_file(temp_path).expect("Should load engine state");
+        let _ = fs::remove_file(temp_path);
+        assert!(restored.engines[1].licensed_out);
+
+        // Pause licensing -> next week pays 0 engine royalties
+        state.settings.language = "en".to_string();
+        let off_msg = state.toggle_engine_license(1).unwrap();
+        assert!(!state.engines[1].licensed_out);
+        assert!(off_msg.contains("paused"));
+
+        let money_after_pause = state.money;
+        let rev_after_pause = state.total_revenue;
+        state.tick_week(); // week 2 -> week 3 (still month_index 0)
+        assert_eq!(state.money, money_after_pause);
+        assert_eq!(state.total_revenue, rev_after_pause);
+    }
+
+    #[test]
+    fn test_annual_best_audio_design_award_golden_microphone() {
+        // 1. Ineligible: low Sound slider (< 7) even with high score
+        let mut low_sound_state = GameState::new(1, 1995);
+        low_sound_state.game_history.push(GameProject {
+            name: "Silent Tactics".to_string(),
+            topic: "Schach".to_string(),
+            genre: "Strategie".to_string(),
+            sub_genre: "Klassisch".to_string(),
+            platform: "PC (MS-DOS / Soundkarte)".to_string(),
+            audience: "Hardcore-Gamer".to_string(),
+            size: "Mittel".to_string(),
+            marketing: "Kein Marketing".to_string(),
+            engine_name: "Basis-Tonstudio V1".to_string(),
+            sliders: [9, 4, 6, 3, 6, 2], // Sound = 6 (< 7)
+            review: Some(ReviewScore::new([9, 9, 9, 9], vec![])),
+            sales: 1000,
+            revenue: 25_000,
+            dev_cost: 18_000,
+            release_week: 10,
+            release_year: 1995,
+            weeks_on_market: 10,
+            is_active: false,
+            bugs: 0,
+            patches_released: 0,
+            dlc_count: 0,
+            in_soundtrack_label: false,
+            in_subscription_vault: false,
+            sequel_number: 0,
+            publisher_idx: 0,
+            post_mortem_done: false,
+            quality_boost: 0.0,
+        });
+        assert!(low_sound_state.evaluate_annual_audio_award(1995).is_none());
+        assert_eq!(low_sound_state.audio_awards, 0);
+
+        // 2. Ineligible: Sound >= 7, but review score < 7.5
+        let mut low_score_state = low_sound_state.clone();
+        low_score_state.game_history[0].sliders = [5, 5, 9, 6, 2, 3];
+        low_score_state.game_history[0].review = Some(ReviewScore::new([7, 7, 7, 8], vec![])); // avg 7.25 < 7.5
+        assert!(low_score_state.evaluate_annual_audio_award(1995).is_none());
+        assert_eq!(low_score_state.audio_awards, 0);
+
+        // 3. Eligible: Sound >= 7 AND review avg >= 7.5 via full tick_week() year transition (DE)
+        let mut state = GameState::new(1, 1995);
+        state.money = 200_000;
+        state.fans = 500;
+        state.hype = 20.0;
+        state.rivals[3].reputation = 8.5; // Rival score 8.8 > 8.0 so only Audio Award triggers
+        state.game_history.push(GameProject {
+            name: "Echoes of Darkness".to_string(),
+            topic: "Horrorhaus".to_string(),
+            genre: "Horror".to_string(),
+            sub_genre: "Klassisch".to_string(),
+            platform: "PC (MS-DOS / Soundkarte)".to_string(),
+            audience: "Hardcore-Gamer".to_string(),
+            size: "Mittel".to_string(),
+            marketing: "Kein Marketing".to_string(),
+            engine_name: "Basis-Tonstudio V1".to_string(),
+            sliders: [5, 5, 9, 6, 2, 3], // Sound = 9 (>= 7)
+            review: Some(ReviewScore::new([8, 8, 8, 8], vec![])), // avg = 8.0 (>= 7.5)
+            sales: 1000,
+            revenue: 25_000,
+            dev_cost: 18_000,
+            release_week: 10,
+            release_year: 1995,
+            weeks_on_market: 24,
+            is_active: false, // Isolate year-end award payout from weekly sales
+            bugs: 0,
+            patches_released: 0,
+            dlc_count: 0,
+            in_soundtrack_label: false,
+            in_subscription_vault: false,
+            sequel_number: 0,
+            publisher_idx: 0,
+            post_mortem_done: false,
+            quality_boost: 0.0,
+        });
+
+        // Advance to week 48 of 1995, then cross into 1996
+        state.week = (1995 - START_YEAR) * WEEKS_PER_YEAR + WEEKS_PER_YEAR;
+        let hype_before_transition = (state.hype - 1.5).max(0.0); // week decay
+        let money_before = state.money;
+        let fans_before = state.fans;
+        let notes = state.tick_week();
+
+        assert_eq!(state.calendar_year(), 1996);
+        assert_eq!(state.goty_awards, 0);
+        assert_eq!(state.audio_awards, 1);
+        // Monthly rent in Garage is 200 EUR, award prize is +15,000 EUR
+        assert_eq!(state.money, money_before - 200 + 15_000);
+        assert_eq!(state.fans, fans_before + 400);
+        assert!((state.hype - (hype_before_transition + 26.0 + 15.0)).abs() < 1e-6);
+        assert!(
+            notes
+                .iter()
+                .any(|n| n.contains("Goldenes Mikrofon") && n.contains("Echoes of Darkness")),
+            "Notifications must announce Goldenes Mikrofon: {:?}",
+            notes
+        );
+        assert!(state
+            .emails
+            .iter()
+            .any(|e| e.subject.contains("Goldenes Mikrofon") && e.body.contains("Echoes of Darkness")));
+
+        // 4. Verify English notification & JSON roundtrip
+        let mut en_state = GameState::new(1, 1996);
+        en_state.settings.language = "en".to_string();
+        en_state.game_history = state.game_history.clone();
+        en_state.game_history[0].release_year = 1996;
+        let en_msg = en_state
+            .evaluate_annual_audio_award(1996)
+            .expect("Should award Golden Microphone in EN");
+        assert!(en_msg.contains("Golden Microphone (Best Audio Design 1996)"));
+        assert_eq!(en_state.audio_awards, 1);
+
+        let restored = GameState::from_json(&en_state.to_json());
+        assert_eq!(restored.audio_awards, 1);
+    }
+
+    #[test]
+    fn test_full_multi_decade_timeline_progression_1930_to_2026() {
+        let mut state = GameState::new(0, 1930);
+        assert_eq!(state.calendar_year(), 1930);
+        assert_eq!(state.current_era().id, "era_radio");
+        assert_eq!(state.event_log.len(), 1);
+
+        let mut saw_1975 = false;
+        let mut saw_1985 = false;
+        let mut saw_1995 = false;
+        let mut saw_2026 = false;
+
+        for expected_year in 1931..=2026 {
+            let mut year_notes = Vec::new();
+            for _ in 0..WEEKS_PER_YEAR {
+                year_notes.extend(state.tick_week());
+            }
+            assert_eq!(state.calendar_year(), expected_year);
+
+            let expected_era_id = match expected_year {
+                1930..=1949 => "era_radio",
+                1950..=1969 => "era_tape",
+                1970..=1979 => "era_arcade",
+                1980..=1989 => "era_8bit",
+                1990..=1999 => "era_multimedia",
+                2000..=2014 => "era_digital",
+                _ => "era_spatial",
+            };
+            assert_eq!(
+                state.current_era().id,
+                expected_era_id,
+                "Wrong era at year {}",
+                expected_year
+            );
+
+            assert!(
+                is_platform_active(&state.current_draft.platform, expected_year),
+                "Draft platform '{}' must remain active in {}",
+                state.current_draft.platform,
+                expected_year
+            );
+            assert!(
+                state
+                    .bought_platforms
+                    .iter()
+                    .any(|bp| is_platform_active(bp, expected_year)),
+                "Studio must always own at least one active platform in {}",
+                expected_year
+            );
+
+            if expected_year == 1975 {
+                saw_1975 = year_notes.iter().any(|n| n.contains("Hardware-Labor"));
+            }
+            if expected_year == 1985 {
+                saw_1985 = year_notes.iter().any(|n| n.contains("Soundtrack-Label"));
+            }
+            if expected_year == 1995 {
+                saw_1995 = year_notes.iter().any(|n| n.contains("SoundCon"));
+            }
+            if expected_year == 2026 {
+                saw_2026 = year_notes.iter().any(|n| n.contains("Endlosmodus"));
+            }
+        }
+
+        assert!(saw_1975, "Missing 1975 Hardware-Labor milestone notification");
+        assert!(saw_1985, "Missing 1985 Soundtrack-Label milestone notification");
+        assert!(saw_1995, "Missing 1995 SoundCon milestone notification");
+        assert!(saw_2026, "Missing 2026 Endless Mode milestone notification");
+        assert_eq!(state.event_log.len(), 97);
+        assert_eq!(state.trend_topic, "Neural-Link");
+        assert_eq!(state.trend_genre, "RPG");
+
+        // Advance into Endless Mode (2027..=2030) and confirm era stays at era_spatial
+        for yr in 2027..=2030 {
+            for _ in 0..WEEKS_PER_YEAR {
+                state.tick_week();
+            }
+            assert_eq!(state.calendar_year(), yr);
+            assert_eq!(state.current_era().id, "era_spatial");
+            assert!(is_platform_active(&state.current_draft.platform, yr));
+        }
+    }
+
+    #[test]
+    fn test_new_menus_and_i18n_symmetry_for_timeline_platforms_and_licensing() {
+        // 1. Verify all new i18n keys exist in both DE and EN with clean non-empty text
+        let de = build_dictionary(Lang::De);
+        let en = build_dictionary(Lang::En);
+        let new_keys = [
+            "menu_main_menu_return",
+            "platform_licensed",
+            "platform_retro_retired",
+            "platform_market_label",
+            "platform_custom_console",
+            "engine_status_licensed",
+            "engine_status_private",
+            "engine_starter_label",
+            "timeline_chronicle_title",
+            "timeline_active_platforms",
+            "timeline_milestones_prefix",
+            "timeline_no_events",
+            "audio_awards_label",
+        ];
+        for key in new_keys {
+            let de_val = de.get(key).unwrap_or_else(|| panic!("Missing DE key: {}", key));
+            let en_val = en.get(key).unwrap_or_else(|| panic!("Missing EN key: {}", key));
+            assert!(!de_val.trim().is_empty());
+            assert!(!en_val.trim().is_empty());
+        }
+
+        // 2. DevelopPlatformMenu in 1985: era windows, category, audio capabilities & retired retro tag
+        let mut state = GameState::new(1, 1985);
+        state.money = 250_000;
+        // Simulate a legacy licensed platform retired in 1958
+        state
+            .bought_platforms
+            .push("Radio-Sendernetz (AM)".to_string());
+        let mut audio = AudioManager::new(true);
+        let mut ctrl = MenuController::new(&state);
+
+        ctrl.switch_to(MenuId::DevelopPlatformMenu, &state, &audio);
+        let amiga_de = ctrl
+            .options
+            .iter()
+            .find(|o| o.text.contains("Commodore Amiga (Paula)"))
+            .expect("Amiga must appear in 1985 DevelopPlatformMenu");
+        assert!(amiga_de.text.contains("Heimcomputer | 1985–1996"));
+        assert!(amiga_de.text.contains("4-Kanal 8-Bit PCM Hardware-MOD-Tracker"));
+
+        let retro_de = ctrl
+            .options
+            .iter()
+            .find(|o| o.text.contains("Radio-Sendernetz (AM)"))
+            .expect("Owned legacy platform must appear with retro tag");
+        assert!(retro_de.text.contains("Retro / Eingestellt (0,55x Markt)"));
+
+        // 3. ResearchMenu: starter engine (NoOp) vs custom engine ToggleEngineLicense(1)
+        state.build_custom_engine("KlangMaster 85").unwrap();
+        ctrl.switch_to(MenuId::ResearchMenu, &state, &audio);
+        let starter_opt = ctrl
+            .options
+            .iter()
+            .find(|o| o.text.contains("Basis-Tonstudio V1"))
+            .expect("Starter engine option missing");
+        assert!(matches!(starter_opt.action, MenuAction::NoOp));
+        assert!(starter_opt.text.contains("Basis-Engine (Nicht lizenzierbar)"));
+
+        let custom_idx = ctrl
+            .options
+            .iter()
+            .position(|o| matches!(o.action, MenuAction::ToggleEngineLicense(1)))
+            .expect("Custom engine license toggle option missing");
+        assert!(ctrl.options[custom_idx].text.contains("[Privat]"));
+        assert!(ctrl.options[custom_idx].text.contains("EUR/Woche"));
+
+        ctrl.current_index = custom_idx;
+        ctrl.handle_input(KeyInput::Enter, &mut state, &mut audio);
+        assert!(state.engines[1].licensed_out);
+        assert!(ctrl.options[custom_idx].text.contains("[Lizenziert]"));
+
+        // 4. ChartsGotyMenu: audio_awards in title + Timeline & Era Chronicle in DE and EN
+        state.audio_awards = 2;
+        ctrl.switch_to(MenuId::ChartsGotyMenu, &state, &audio);
+        assert!(ctrl.title.contains("Audio-Preise: 2"));
+        assert!(ctrl
+            .options
+            .iter()
+            .any(|o| o.text.contains("Zeitstrahl & Epochen-Chronik (1930–2026)")));
+        assert!(ctrl
+            .options
+            .iter()
+            .any(|o| o.text.contains(&format!("/{}", PLATFORMS.len()))));
+        assert!(ctrl
+            .options
+            .iter()
+            .any(|o| o.text.contains("1975 Hardware-Labor [Frei]")
+                && o.text.contains("1985 Soundtrack-Label [Frei]")
+                && o.text.contains("1995 SoundCon & AudioPass [Gesperrt]")));
+
+        // Verify EN rendering of all 3 updated menus on an EN state
+        let mut en_state = GameState::new(1, 1985);
+        en_state.settings.language = "en".to_string();
+        en_state.money = 250_000;
+        en_state
+            .bought_platforms
+            .push("Radio-Sendernetz (AM)".to_string());
+        en_state.build_custom_engine("KlangMaster EN").unwrap();
+        en_state.audio_awards = 3;
+        en_state.apply_year_event(1986);
+
+        let mut en_ctrl = MenuController::new(&en_state);
+        en_ctrl.switch_to(MenuId::DevelopPlatformMenu, &en_state, &audio);
+        let amiga_en = en_ctrl
+            .options
+            .iter()
+            .find(|o| o.text.contains("Commodore Amiga (Paula)"))
+            .unwrap();
+        assert!(amiga_en.text.contains("Home Computer | 1985–1996"));
+        let retro_en = en_ctrl
+            .options
+            .iter()
+            .find(|o| o.text.contains("Radio-Sendernetz (AM)"))
+            .unwrap();
+        assert!(retro_en.text.contains("Retro / Retired (0.55x Market)"));
+
+        en_ctrl.switch_to(MenuId::ResearchMenu, &en_state, &audio);
+        assert!(en_ctrl
+            .options
+            .iter()
+            .any(|o| o.text.contains("Starter Engine (Non-licensable)")));
+        assert!(en_ctrl
+            .options
+            .iter()
+            .any(|o| o.text.contains("[Private]") && o.text.contains("EUR/week")));
+
+        en_ctrl.switch_to(MenuId::ChartsGotyMenu, &en_state, &audio);
+        assert!(en_ctrl.title.contains("Audio Awards: 3"));
+        assert!(en_ctrl
+            .options
+            .iter()
+            .any(|o| o.text.contains("Timeline & Era Chronicle (1930–2026)")));
+        assert!(en_ctrl
+            .options
+            .iter()
+            .any(|o| o.text.contains("1975 Hardware Lab [Unlocked]")
+                && o.text.contains("1995 SoundCon & AudioPass [Locked]")));
+        for opt in &en_ctrl.options {
+            for bad_de in [
+                "Aktive Plattformen",
+                "Meilensteine:",
+                "Aktuelle Ära:",
+                "[Chronik]",
+                "[Frei]",
+                "[Gesperrt]",
+            ] {
+                assert!(
+                    !opt.text.contains(bad_de),
+                    "EN ChartsGotyMenu leaked German string '{}': {}",
+                    bad_de,
+                    opt.text
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_custom_console_menu_display_and_legacy_save_defaults() {
+        let mut state = GameState::new(0, 1985);
+        state.money = 500_000;
+        state.develop_console("AetherStation 85").unwrap();
+
+        let audio = AudioManager::new(true);
+        let mut ctrl = MenuController::new(&state);
+        ctrl.switch_to(MenuId::DevelopPlatformMenu, &state, &audio);
+        assert!(ctrl
+            .options
+            .iter()
+            .any(|o| o.text.contains("AetherStation 85") && o.text.contains("Eigene Konsole | 1985+")));
+
+        state.settings.language = "en".to_string();
+        ctrl.switch_to(MenuId::DevelopPlatformMenu, &state, &audio);
+        assert!(ctrl
+            .options
+            .iter()
+            .any(|o| o.text.contains("AetherStation 85") && o.text.contains("Custom Console | 1985+")));
+
+        // Legacy save missing audio_awards & licensed_out must deserialize cleanly with safe defaults
+        let legacy = parse_json(
+            r#"{
+                "company_name": "Old Save",
+                "week": 1,
+                "engines": [{"name": "Basis-Tonstudio V1", "tech_level": 1}]
+            }"#,
+        )
+        .unwrap();
+        let loaded = GameState::from_json(&legacy);
+        assert_eq!(loaded.audio_awards, 0);
+        assert!(!loaded.engines[0].licensed_out);
     }
 }

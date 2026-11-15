@@ -14,15 +14,16 @@
 - Dedizierter Hintergrund-Thread für `prism.dll` und `Tolk.dll` verhindert jegliches Ruckeln bei der Sprachausgabe und fährt beim Beenden sauber herunter (`stop -> free -> shutdown`).
 - Akustischer Grenz-Bump am Anfang und Ende jeder Liste, Sprach-Wiederholung/Statusabfragen (`F`, `S`, `H`) sowie persistente Speicherslots (`save_slot_*.json`) und Einstellungen (`settings.json`).
 
-### 2. Historisch stimmige Zeitlinie (1930–2035+, 7 Ären & 38 Plattformen, 48 Wochen/Jahr)
-- **1930–1949 — Goldene Radio- & Schellack-Ära:** u. a. `Radio-Sendernetz (AM)`, `Schellack-Schallplatte (78 RPM)`, `Mechanischer Spielautomat`, `Zuse Z3 (Relais-Rechner)`, `ENIAC Röhrenrechner`.
-- **1950–1969 — Magnetband-, Stereo- & Mainframe-Ära:** u. a. `Vinyl-LP (33 RPM)`, `UNIVAC I Mainframe`, `UKW-Transistorradio (FM)`, `PDP-1 (Spacewar-System)`, `Kompaktkassette (MC Stereo)`, `IBM System/360`.
-- **1970–1979 — Arcade- & Analog-Synthesizer-Ära:** u. a. `Arcade-Automat (Münzspiel)`, `Magnavox Odyssey`, `Atari 2600 (VCS)`, `Apple II`.
-- **1980–1989 — 8-Bit Heimcomputer, FM-Synthese & CD-Ära:** u. a. `PC (MS-DOS / Soundkarte)`, `Commodore 64 (SID 6581)`, `ZX Spectrum`, `Famicom (NES)`, `Commodore Amiga (Paula)`, `Sega Genesis (Mega Drive)`, `Game Boy`.
-- **1990–1999 — 16/32-Bit Multimedia & 3D-Audio-Ära:** u. a. `SNES (Super Nintendo)`, `PlayStation 1`, `Nintendo 64`, `Dreamcast`.
-- **2000–2014 — Online-, Digitalvertrieb- & HD-Audio-Ära:** u. a. `PlayStation 2`, `PC (Digital / Steam)`, `Xbox 360`, `PlayStation 3`, `Smartphone (iOS / Android)`, `PlayStation 4`.
-- **2015–2035+ — Spatial Audio, VR, KI & Neural-Ära:** u. a. `VR-Headset (Spatial Audio)`, `Switch`, `PlayStation 5`, `Steam Deck`, `Neural-Box 1 (BCI Audio)`.
-- Jährliche historische Ereignisse aktualisieren dynamisch die aktuellen **Markttrends** (Trend-Thema & Trend-Genre).
+### 2. Historisch stimmige Zeitlinie (1930–2035+, 7 Ären, 51 Plattformen & 97 Jahresereignisse, 48 Wochen/Jahr)
+- **1930–1949 — Goldene Radio- & Schellack-Ära:** u. a. `Radio-Sendernetz (AM)`, `Schellack-Schallplatte (78 RPM)`, `Hand-Abakus`, `Mechanischer Spielautomat`, `Zuse Z1`, `Zuse Z3 (Relais-Rechner)`, `ENIAC Röhrenrechner`.
+- **1950–1969 — Magnetband-, Stereo- & Mainframe-Ära:** u. a. `Vinyl-LP (33 RPM)`, `UNIVAC I Mainframe`, `Nimrod`, `EDSAC (OXO)`, `UKW-Transistorradio (FM)`, `PDP-1 (Spacewar-System)`, `Kompaktkassette (MC Stereo)`, `IBM System/360`.
+- **1970–1979 — Arcade- & Analog-Synthesizer-Ära:** u. a. `Arcade-Automat (Münzspiel)`, `Magnavox Odyssey`, `Fairchild Channel F`, `Atari 2600 (VCS)`, `Apple II`, `Commodore PET`.
+- **1980–1989 — 8-Bit Heimcomputer, FM-Synthese & CD-Ära:** u. a. `PC (MS-DOS / Soundkarte)`, `Commodore 64 (SID 6581)`, `ZX Spectrum`, `Vectrex`, `Famicom (NES)`, `Commodore Amiga (Paula)`, `Atari ST (YM2149 MIDI)`, `Sega Genesis (Mega Drive)`, `Game Boy`.
+- **1990–1999 — 16/32-Bit Multimedia & 3D-Audio-Ära:** u. a. `SNES (Super Nintendo)`, `Neo Geo (YM2610)`, `PlayStation 1`, `Sega Saturn`, `Nintendo 64`, `Dreamcast`.
+- **2000–2014 — Online-, Digitalvertrieb- & HD-Audio-Ära:** u. a. `PlayStation 2`, `PC (Digital / Steam)`, `Game Boy Advance`, `Nintendo DS`, `Xbox 360`, `PlayStation 3`, `Smartphone (iOS / Android)`, `PlayStation 4`.
+- **2015–2035+ — Spatial Audio, VR, KI & Neural-Ära:** u. a. `VR-Headset (Spatial Audio)`, `Switch`, `Cloud-Console`, `PlayStation 5`, `Meta Quest 2 (VR)`, `Steam Deck`, `Neural-Box 1 (BCI Audio)`.
+- **97 individuelle historische Jahresereignisse (`1930–2026` + Endlosmodus):** Jedes Jahr bietet eigene Ereignisse, dynamische **Markttrends** (Trend-Thema & Trend-Genre), Plattform-Freischaltungen/Ruhestände, automatischen Entwurfs-Wechsel bei eingestellten Plattformen sowie einen `0,55x` Retro-Nischen-Marktfaktor für bereits eingestellte Plattformen.
+- **Zeitstrahl & Epochen-Chronik (`1930–2026`):** Übersicht in der Charts-/GOTY-Ansicht über aktuelle Ära, aktive Plattformen, freigeschaltete Meilensteine (`1975`, `1985`, `1995`, `2026`) und die jüngsten Chronik-Einträge.
 
 ### 3. Tiefgehende Spielentwicklungs- & Publisher-Mechaniken
 - **Themen- & Genre-Kompatibilität (29 Themen, 11 Genres):**
@@ -52,7 +53,8 @@
 - **Personal, Fortbildung & Erholungsurlaub:**
   - Fortbildungen (`5.000 €`, `2` Wochen) steigern alle Skills um `+6` und das Mitarbeiter-Level um `+1` (während Urlaub nicht startbar).
   - Erholungsurlaub (`1.000 €`, `3` Wochen) regeneriert Moral & Ausdauer; beurlaubte oder fortgebildete Mitarbeiter werden aktiv aus `active_employees()` gefiltert.
-- **21 Engine-Features (1930–2026) & 10 Forschungstechnologien (1930–2022).**
+- **21 Engine-Features (1930–2026), 10 Forschungstechnologien (1930–2022) & Eigene Engine-Lizenzierung:** Selbst entwickelte Custom-Audio-Engines (ab Index 1; die Starter-Engine `Basis-Tonstudio V1` ist nicht lizenzierbar) können im Forschungsmenü an Drittstudios lizenziert werden und bringen wöchentliche Royalties (`Tech-Level * 350 €`/Woche).
+- **Best Audio Design Award („Goldenes Mikrofon“):** Zum Jahreswechsel erhalten Spiele des Vorjahres mit hohem Sound-Fokus (`Sound >= 7`) und starker Wertung (`>= 7,5`) die Auszeichnung „Goldenes Mikrofon“ (`+15.000 €`, `+400` Fans, `+15` Hype).
 - **Strikte Jahres-Freischaltungen (Year-Gating):**
   - **Hardware-Labor (Eigene Soundkarten & Konsolen):** ab **1975** (oder mit entsprechender Forschung).
   - **Eigenes Soundtrack-Label:** ab **1985**.
@@ -94,5 +96,5 @@ cargo test
 cargo build --release
 Audio_Studio_Tycoon.exe --verify
 ```
-oder einfach per Doppelklick auf `build_game.bat` (führt `cargo test`, `cargo build --release`, den Kopierschritt nach `Audio_Studio_Tycoon.exe` und `--verify` automatisch aus).
+oder einfach per Doppelklick auf `build_game.bat` (führt die **24 automatisierten Unit- & Integrationstests** per `cargo test`, `cargo build --release`, den Kopierschritt nach `Audio_Studio_Tycoon.exe` und `--verify` automatisch aus).
 Für eine schnelle CLI-Prüfung unterstützt die Executable außerdem `--version` (`-V`) und `--headless-demo`.
